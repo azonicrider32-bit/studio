@@ -155,14 +155,38 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
   }, [activeTool, toast, drawOverlay, endLassoAndProcess]);
 
 
-  const getMousePos = (canvas: HTMLCanvasElement, evt: React.MouseEvent) => {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    return {
-      x: (evt.clientX - rect.left) * scaleX,
-      y: (evt.clientY - rect.top) * scaleY,
-    };
+  const getMousePos = (canvasEl: HTMLCanvasElement, evt: React.MouseEvent) => {
+    const rect = canvasEl.getBoundingClientRect();
+    const imageEl = imageRef.current;
+    if (!imageEl) return { x: 0, y: 0 };
+
+    // This handles the `object-contain` scaling
+    const imageAspectRatio = imageEl.naturalWidth / imageEl.naturalHeight;
+    const canvasAspectRatio = rect.width / rect.height;
+
+    let renderWidth = rect.width;
+    let renderHeight = rect.height;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    if (imageAspectRatio > canvasAspectRatio) {
+        // Image is wider than canvas, letterboxed top/bottom
+        renderHeight = rect.width / imageAspectRatio;
+        yOffset = (rect.height - renderHeight) / 2;
+    } else {
+        // Image is taller than canvas, letterboxed left/right
+        renderWidth = rect.height * imageAspectRatio;
+        xOffset = (rect.width - renderWidth) / 2;
+    }
+    
+    // Convert client coords to image-space coords
+    const clientX = evt.clientX - rect.left - xOffset;
+    const clientY = evt.clientY - rect.top - yOffset;
+
+    const imageX = (clientX / renderWidth) * imageEl.naturalWidth;
+    const imageY = (clientY / renderHeight) * imageEl.naturalHeight;
+
+    return { x: imageX, y: imageY };
   };
 
   const handleMagicWandClick = async (pos: { x: number, y: number }, contentType?: string) => {
@@ -313,5 +337,3 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
     </div>
   );
 }
-
-    

@@ -434,23 +434,19 @@ export class SelectionEngine {
   renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment) {
       if (!segment) return;
       overlayCtx.fillStyle = 'rgba(3, 169, 244, 0.3)'; // Highlight color
-      const segmentImageData = overlayCtx.createImageData(segment.bounds.width, segment.bounds.height);
       
+      const originalImageData = this.ctx.getImageData(0,0, this.width, this.height);
+      const segmentImageData = overlayCtx.createImageData(originalImageData);
+
       segment.pixels.forEach((idx: number) => {
-        const x = idx % this.width;
-        const y = Math.floor(idx / this.width);
-        
-        if (x >= segment.bounds.x && x < segment.bounds.x + segment.bounds.width &&
-            y >= segment.bounds.y && y < segment.bounds.y + segment.bounds.height) {
-              
-            const pixelIndex = ((y - segment.bounds.y) * segment.bounds.width + (x - segment.bounds.x)) * 4;
-            segmentImageData.data[pixelIndex] = 3;
-            segmentImageData.data[pixelIndex + 1] = 169;
-            segmentImageData.data[pixelIndex + 2] = 244;
-            segmentImageData.data[pixelIndex + 3] = 77; // 0.3 alpha
-        }
+        const i = idx * 4;
+        segmentImageData.data[i] = 3;
+        segmentImageData.data[i + 1] = 169;
+        segmentImageData.data[i + 2] = 244;
+        segmentImageData.data[i + 3] = 102; // ~0.4 alpha
       });
-      overlayCtx.putImageData(segmentImageData, segment.bounds.x, segment.bounds.y);
+
+      overlayCtx.putImageData(segmentImageData, 0, 0);
   }
 
 
@@ -517,5 +513,3 @@ export class SelectionEngine {
     }
   }
 }
-
-    
