@@ -31,6 +31,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
   const [isClient, setIsClient] = React.useState(false);
   const [hoveredSegment, setHoveredSegment] = React.useState<Segment | null>(null);
   const [mousePos, setMousePos] = React.useState<{ x: number, y: number } | null>(null);
+  const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
 
 
   const { toast } = useToast();
@@ -138,7 +139,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
       
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (settings.useEdgeSnapping) {
+        if (lassoSettings.useEdgeSnapping) {
             endLassoAndProcess();
         } else {
             engine.endLasso();
@@ -202,6 +203,12 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
     try {
         const initialSelection = engine.magicWand(pos.x, pos.y);
         drawOverlay();
+
+        if (!magicWandSettings.useAiAssist) {
+            toast({ title: "Selection created." });
+            setIsProcessing(false);
+            return;
+        }
 
         const input: MagicWandAssistedSegmentationInput = {
             photoDataUri: canvas.toDataURL(),
@@ -270,6 +277,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
 
     const pos = getMousePos(canvas, e);
     setMousePos({ x: e.clientX, y: e.clientY });
+    setCanvasMousePos(pos);
 
     if (activeTool === 'lasso') {
       if (engine.isDrawingLasso) {
@@ -284,6 +292,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
   const handleMouseLeave = () => {
     setHoveredSegment(null);
     setMousePos(null);
+    setCanvasMousePos(null);
     drawOverlay();
   }
 
@@ -336,14 +345,12 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
           />
         )}
       </Card>
-      {hoveredSegment && mousePos && activeTool === 'magic-wand' && (
+      {canvasMousePos && activeTool === 'magic-wand' && (
         <SegmentHoverPreview
             canvas={canvasRef.current}
-            segment={hoveredSegment}
+            mousePos={canvasMousePos}
         />
       )}
     </div>
   );
 }
-
-    

@@ -4,29 +4,42 @@ import React, { useEffect, useRef } from 'react';
 import { Segment } from '@/lib/types';
 
 interface SegmentHoverPreviewProps {
-  segment: Segment | null;
+  mousePos: { x: number; y: number } | null;
   canvas: HTMLCanvasElement | null;
 }
 
-export function SegmentHoverPreview({ segment, canvas }: SegmentHoverPreviewProps) {
+export function SegmentHoverPreview({ mousePos, canvas }: SegmentHoverPreviewProps) {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const size = 128; // Size of the preview window
-  const zoom = 4;   // Zoom level inside the preview
+  const zoom = 8;   // Zoom level inside the preview
 
   useEffect(() => {
     const previewCanvas = previewCanvasRef.current;
-    if (!previewCanvas || !segment || !canvas) return;
+    if (!previewCanvas || !mousePos || !canvas) return;
 
     const previewCtx = previewCanvas.getContext('2d');
     if (!previewCtx) return;
 
     previewCtx.imageSmoothingEnabled = false;
     previewCtx.clearRect(0, 0, size, size);
+    
+    // Fill with a checkerboard pattern for transparency
+    previewCtx.fillStyle = '#666';
+    previewCtx.fillRect(0, 0, size, size);
+    previewCtx.fillStyle = '#999';
+    for (let i = 0; i < size; i += 8) {
+        for (let j = 0; j < size; j += 8) {
+            if ((i / 8 + j / 8) % 2 == 0) {
+                previewCtx.fillRect(i, j, 8, 8);
+            }
+        }
+    }
+
 
     // Calculate the source rectangle on the main canvas
     const sourceSize = size / zoom;
-    const sourceX = segment.bounds.x + segment.bounds.width / 2 - sourceSize / 2;
-    const sourceY = segment.bounds.y + segment.bounds.height / 2 - sourceSize / 2;
+    const sourceX = mousePos.x - sourceSize / 2;
+    const sourceY = mousePos.y - sourceSize / 2;
 
     // Draw the zoomed-in image content
     previewCtx.drawImage(
@@ -40,41 +53,15 @@ export function SegmentHoverPreview({ segment, canvas }: SegmentHoverPreviewProp
       size,
       size
     );
-
-    // Draw the segment overlay
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    if(tempCtx) {
-        tempCtx.fillStyle = 'rgba(3, 169, 244, 0.5)';
-        segment.pixels.forEach(idx => {
-            const x = idx % canvas.width;
-            const y = Math.floor(idx / canvas.width);
-            tempCtx.fillRect(x, y, 1, 1);
-        });
-
-        previewCtx.drawImage(
-            tempCanvas,
-            sourceX,
-            sourceY,
-            sourceSize,
-            sourceSize,
-            0,
-            0,
-            size,
-            size
-        );
-    }
     
 
-  }, [segment, canvas, size, zoom]);
+  }, [mousePos, canvas, size, zoom]);
 
-  if (!segment) return null;
+  if (!mousePos) return null;
 
   return (
     <div
-      className="pointer-events-none fixed z-50 rounded-md border-2 border-white shadow-2xl overflow-hidden"
+      className="pointer-events-none fixed z-50 rounded-md border-2 border-white shadow-2xl overflow-hidden bg-background"
       style={{
         left: 20,
         bottom: 20,
