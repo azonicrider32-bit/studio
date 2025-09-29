@@ -16,30 +16,40 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { compareAiModels, CompareAiModelsOutput } from "@/ai/flows/compare-ai-models"
 import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationOutput } from "@/ai/flows/magic-wand-assisted-segmentation"
 import { Skeleton } from "../ui/skeleton"
+import { PlaceHolderImages } from "@/lib/placeholder-images"
 
-type AIModel = "bodypix" | "deeplab" | "sam" | "sam2"
+type AIModel = "googleai/gemini-2.5-flash-segment-it-preview" | "bodypix" | "deeplab" | "sam" | "sam2"
 
-export function AiModelsPanel() {
-  const [selectedModel, setSelectedModel] = React.useState<AIModel>("sam2")
+interface AiModelsPanelProps {
+  setSegmentationMask: (mask: string | null) => void;
+}
+
+
+export function AiModelsPanel({ setSegmentationMask }: AiModelsPanelProps) {
+  const [selectedModel, setSelectedModel] = React.useState<AIModel>("googleai/gemini-2.5-flash-segment-it-preview")
   const [isProcessing, setIsProcessing] = React.useState(false)
   const [isComparing, setIsComparing] = React.useState(false)
-  const [result, setResult] = React.useState<MagicWandAssistedSegmentationOutput | null>(null)
   const [comparison, setComparison] = React.useState<CompareAiModelsOutput | null>(null)
   const { toast } = useToast()
+  
+  const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")
+
 
   const handleRunAI = async () => {
+    if (!image) return;
     setIsProcessing(true)
-    setResult(null)
     setComparison(null)
+    setSegmentationMask(null);
     try {
-      // In a real app, you would get image data and coordinates.
       const res = await magicWandAssistedSegmentation({
-        photoDataUri: "data:image/jpeg;base64,",
+        photoDataUri: image.imageUrl,
         x: 100,
         y: 100,
-        contentType: selectedModel,
+        modelId: selectedModel,
       })
-      setResult(res)
+      if (res.maskDataUri) {
+        setSegmentationMask(res.maskDataUri);
+      }
       toast({ title: "AI Segmentation Complete", description: res.message })
     } catch (error) {
       console.error("AI segmentation failed:", error)
@@ -54,13 +64,15 @@ export function AiModelsPanel() {
   }
 
   const handleCompare = async () => {
+    if(!image) return;
     setIsComparing(true)
-    setResult(null)
     setComparison(null)
+    setSegmentationMask(null);
+
     try {
       const res = await compareAiModels({
-        photoDataUri: "data:image/jpeg;base64,",
-        modelIds: ["bodypix", "deeplab", "sam", "sam2"],
+        photoDataUri: image.imageUrl,
+        modelIds: ["googleai/gemini-2.5-flash-segment-it-preview", "bodypix", "deeplab"],
       })
       setComparison(res)
       toast({ title: "AI Model Comparison Complete" })
@@ -79,7 +91,7 @@ export function AiModelsPanel() {
   const renderComparisonResults = () => (
     <div className="grid grid-cols-2 gap-4 pt-4">
       {comparison?.results.map(res => (
-        <Card key={res.modelId}>
+        <Card key={res.modelId} onClick={() => res.segmentationDataUri && setSegmentationMask(res.segmentationDataUri)} className="cursor-pointer">
           <CardHeader className="p-2">
             <CardTitle className="text-sm">{res.modelName}</CardTitle>
           </CardHeader>
@@ -110,15 +122,14 @@ export function AiModelsPanel() {
             <SelectValue placeholder="Select AI model" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="sam2">SAM2 (Segment Anything 2)</SelectItem>
-            <SelectItem value="sam">Segment Anything (Meta)</SelectItem>
+            <SelectItem value="googleai/gemini-2.5-flash-segment-it-preview">Segment Anything (Google)</SelectItem>
             <SelectItem value="bodypix">BodyPix (Human)</SelectItem>
             <SelectItem value="deeplab">DeepLab (Semantic)</SelectItem>
           </SelectContent>
         </Select>
         <Button onClick={handleRunAI} disabled={isProcessing || isComparing} className="w-full">
           <BrainCircuit className="mr-2 h-4 w-4" />
-          {isProcessing ? "Segmenting..." : `Run ${selectedModel}`}
+          {isProcessing ? "Segmenting..." : `Run Segmentation`}
         </Button>
         <Button onClick={handleCompare} disabled={isProcessing || isComparing} variant="secondary" className="w-full">
           <GitCompareArrows className="mr-2 h-4 w-4" />

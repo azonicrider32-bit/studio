@@ -35,25 +35,6 @@ export async function intelligentLassoAssistedPathSnapping(
   return intelligentLassoAssistedPathSnappingFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'intelligentLassoAssistedPathSnappingPrompt',
-  input: {schema: IntelligentLassoInputSchema},
-  output: {schema: IntelligentLassoOutputSchema},
-  prompt: `You are an AI that enhances lasso paths by predicting object edges.
-
-  Given a photo and a lasso path drawn by the user, adjust the path to more accurately snap to the edges of the object described in the prompt. Return the enhanced path.
-
-  Here is the photo:
-  {{media url=photoDataUri}}
-
-  Here is the user-drawn lasso path:
-  {{lassoPath}}
-
-  Here is the description of the object to segment:
-  {{prompt}}
-  `,
-});
-
 const intelligentLassoAssistedPathSnappingFlow = ai.defineFlow(
   {
     name: 'intelligentLassoAssistedPathSnappingFlow',
@@ -61,7 +42,23 @@ const intelligentLassoAssistedPathSnappingFlow = ai.defineFlow(
     outputSchema: IntelligentLassoOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    // This is a simplified mock. A real implementation would involve complex computer vision algorithms.
+    // We'll simulate the AI "snapping" the path to a slightly modified version of the original path.
+    const enhancedPath = input.lassoPath.map(point => ({
+        x: point.x + Math.random() * 10 - 5, // a little jitter
+        y: point.y + Math.random() * 10 - 5,
+    }));
+
+    // Simulate closing the loop if it's a closed shape
+    if (enhancedPath.length > 2) {
+      const first = enhancedPath[0];
+      const last = enhancedPath[enhancedPath.length - 1];
+      const distance = Math.sqrt(Math.pow(last.x - first.x, 2) + Math.pow(last.y - first.y, 2));
+      if (distance < 30) { // arbitrary threshold to close the loop
+        enhancedPath.push(first);
+      }
+    }
+
+    return { enhancedPath };
   }
 );

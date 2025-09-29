@@ -42,6 +42,7 @@ type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments"
 export function ProSegmentAI() {
   const [activeTool, setActiveTool] = React.useState<Tool>("magic-wand")
   const [isClient, setIsClient] = React.useState(false)
+  const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setIsClient(true)
@@ -50,7 +51,7 @@ export function ProSegmentAI() {
   const renderToolOptions = () => {
     switch (activeTool) {
       case "magic-wand":
-        return <MagicWandPanel />
+        return <MagicWandPanel setSegmentationMask={setSegmentationMask} />
       case "lasso":
         return <LassoPanel />
       case "brush":
@@ -150,7 +151,7 @@ export function ProSegmentAI() {
             <div><SidebarTrigger /></div>
         </header>
         <div className="flex-1">
-            <ImageCanvas />
+            <ImageCanvas segmentationMask={segmentationMask} setSegmentationMask={setSegmentationMask} />
         </div>
       </SidebarInset>
       
@@ -182,7 +183,7 @@ export function ProSegmentAI() {
                         <TabsTrigger value="canny">Canny</TabsTrigger>
                     </TabsList>
                     <TabsContent value="models" className="m-0 flex-1">
-                        <AiModelsPanel />
+                        <AiModelsPanel setSegmentationMask={setSegmentationMask}/>
                     </TabsContent>
                     <TabsContent value="canny" className="m-0 flex-1">
                         <CannyTuningPanel />

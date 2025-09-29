@@ -51,29 +51,31 @@ const compareAiModelsFlow = ai.defineFlow(
     const results = await Promise.all(
       modelIds.map(async modelId => {
         try {
-          const {media, text} = await ai.generate({
-            model: modelId,
+          const startTime = Date.now();
+          const {media} = await ai.generate({
+            model: modelId as any,
             prompt: [
               {media: {url: photoDataUri}},
               {text: `Segment the image using model ${modelId}`},
             ],
           });
+          const endTime = Date.now();
 
           return {
             modelId: modelId,
-            modelName: modelId, 
+            modelName: modelId.split('/').pop()?.replace(/-/g, ' ') ?? modelId, 
             segmentationDataUri: media?.url,
-            inferenceTime: 0, 
+            inferenceTime: (endTime - startTime) / 1000, 
             error: undefined,
           };
         } catch (error: any) {
           console.error(`Error segmenting with model ${modelId}:`, error);
           return {
             modelId: modelId,
-            modelName: modelId,
+            modelName: modelId.split('/').pop()?.replace(/-/g, ' ') ?? modelId,
             segmentationDataUri: undefined,
             inferenceTime: undefined,
-            error: error.message,
+            error: "Model not available or failed.",
           };
         }
       })
