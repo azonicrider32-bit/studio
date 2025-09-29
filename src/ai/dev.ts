@@ -1,1 +1,7 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/compare-ai-models.ts';
+import '@/ai/flows/suggest-segmentation-presets.ts';
+import '@/ai/flows/intelligent-lasso-assisted-path-snapping.ts';
+import '@/ai/flows/magic-wand-assisted-segmentation.ts';
