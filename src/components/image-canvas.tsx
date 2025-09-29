@@ -7,15 +7,20 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { SelectionEngine } from "@/lib/selection-engine";
 import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-lasso-assisted-path-snapping";
-import { LassoSettings } from "@/lib/types";
+import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } from "@/ai/flows/magic-wand-assisted-segmentation";
+import { LassoSettings, MagicWandSettings, Segment } from "@/lib/types";
+import { SegmentHoverPreview } from "./segment-hover-preview";
+
 
 interface ImageCanvasProps {
   segmentationMask: string | null;
+  setSegmentationMask: (mask: string | null) => void;
   activeTool: string;
   lassoSettings: LassoSettings;
+  magicWandSettings: MagicWandSettings;
 }
 
-export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: ImageCanvasProps) {
+export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool, lassoSettings, magicWandSettings }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1");
   const imageRef = React.useRef<HTMLImageElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -23,6 +28,8 @@ export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: Ima
   const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
+  const [hoveredSegment, setHoveredSegment] = React.useState<Segment | null>(null);
+  const [mousePos, setMousePos] = React.useState<{ x: number, y: number } | null>(null);
 
 
   const { toast } = useToast();
@@ -40,8 +47,11 @@ export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: Ima
     if (overlayCtx) {
       overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
       engine.renderSelection(overlayCtx);
+      if (hoveredSegment && activeTool === 'magic-wand') {
+        engine.renderHoverSegment(overlayCtx, hoveredSegment);
+      }
     }
-  }, []);
+  }, [hoveredSegment, activeTool]);
 
 
   const initEngine = React.useCallback(() => {
@@ -73,9 +83,9 @@ export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: Ima
   
   React.useEffect(() => {
     if (selectionEngineRef.current) {
-        selectionEngineRef.current.updateSettings(lassoSettings);
+        selectionEngineRef.current.updateSettings(lassoSettings, magicWandSettings);
     }
-  }, [lassoSettings]);
+  }, [lassoSettings, magicWandSettings]);
 
 
   const endLassoAndProcess = React.useCallback(async () => {
@@ -155,6 +165,49 @@ export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: Ima
     };
   };
 
+  const handleMagicWandClick = async (pos: { x: number, y: number }, contentType?: string) => {
+    const engine = selectionEngineRef.current;
+    const canvas = canvasRef.current;
+    if (!engine || !canvas) return;
+    
+    setIsProcessing(true);
+    setSegmentationMask(null);
+    toast({ title: "Magic Wand is thinking...", description: "AI is refining the selection." });
+
+    try {
+        // Client-side quick selection for immediate feedback
+        const initialSelection = engine.magicWand(pos.x, pos.y);
+        drawOverlay();
+
+        const input: MagicWandAssistedSegmentationInput = {
+            photoDataUri: canvas.toDataURL(),
+            contentType: contentType || 'object',
+            modelId: 'googleai/gemini-2.5-flash-segment-it-preview',
+            initialSelectionMask: engine.selectionToMaskData(initialSelection),
+        };
+        
+        const result = await magicWandAssistedSegmentation(input);
+
+        if (result.maskDataUri) {
+            setSegmentationMask(result.maskDataUri);
+            toast({ title: "AI Segmentation successful!" });
+        } else {
+            throw new Error(result.message || "AI failed to produce a mask.");
+        }
+    } catch (error: any) {
+        console.error("Magic Wand segmentation failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Magic Wand Failed",
+            description: error.message || "Could not perform segmentation."
+        });
+        engine.clearSelection();
+        drawOverlay();
+    } finally {
+        setIsProcessing(false);
+    }
+};
+
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
     const engine = selectionEngineRef.current;
@@ -171,19 +224,37 @@ export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: Ima
         engine.addLassoNode(); 
       }
       drawOverlay();
+    } else if (activeTool === 'magic-wand') {
+        handleMagicWandClick(pos);
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
     const engine = selectionEngineRef.current;
-    if (!canvas || !engine || activeTool !== 'lasso' || !engine.isDrawingLasso || isProcessing) return;
+    if (!canvas || !engine || isProcessing) return;
 
     const pos = getMousePos(canvas, e);
-    engine.updateLassoPreview(pos.x, pos.y);
-    drawOverlay();
+    setMousePos({ x: e.clientX, y: e.clientY });
+
+    if (activeTool === 'lasso') {
+      if (engine.isDrawingLasso) {
+        engine.updateLassoPreview(pos.x, pos.y);
+        drawOverlay();
+      }
+    } else if (activeTool === 'magic-wand') {
+        const segment = engine.magicWand(pos.x, pos.y, true); // Preview only
+        setHoveredSegment(segment);
+        drawOverlay();
+    }
   };
   
+  const handleMouseLeave = () => {
+    setHoveredSegment(null);
+    setMousePos(null);
+    drawOverlay();
+  }
+
   const handleMouseUp = () => {
     // With the node-based lasso, mouse up doesn't end the drawing.
   };
@@ -220,8 +291,9 @@ export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: Ima
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
           className="absolute top-0 left-0 h-full w-full object-contain"
-          style={{ cursor: activeTool === 'lasso' ? 'crosshair' : 'default' }}
+          style={{ cursor: activeTool === 'magic-wand' ? 'crosshair' : activeTool === 'lasso' ? 'crosshair' : 'default' }}
         />
         {segmentationMask && (
           <Image
@@ -232,6 +304,15 @@ export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: Ima
           />
         )}
       </Card>
+      {hoveredSegment && mousePos && activeTool === 'magic-wand' && (
+        <SegmentHoverPreview
+            canvas={canvasRef.current}
+            segment={hoveredSegment}
+            mousePos={mousePos}
+        />
+      )}
     </div>
   );
 }
+
+    

@@ -19,17 +19,15 @@ import { magicWandAssistedSegmentation } from "@/ai/flows/magic-wand-assisted-se
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "../ui/badge"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
+import { MagicWandSettings } from "@/lib/types"
 
 interface MagicWandPanelProps {
+  settings: MagicWandSettings;
+  onSettingsChange: (settings: Partial<MagicWandSettings>) => void;
   setSegmentationMask: (mask: string | null) => void;
 }
 
-export function MagicWandPanel({ setSegmentationMask }: MagicWandPanelProps) {
-  const [tolerance, setTolerance] = React.useState(30)
-  const [colorSpace, setColorSpace] = React.useState("hsv")
-  const [contiguous, setContiguous] = React.useState(true)
-  const [antiAlias, setAntiAlias] = React.useState(true)
-  const [varianceExpansion, setVarianceExpansion] = React.useState(false)
+export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask }: MagicWandPanelProps) {
   const [isSuggesting, setIsSuggesting] = React.useState(false)
   const [isSegmenting, setIsSegmenting] = React.useState(false)
   const [suggestedPresets, setSuggestedPresets] = React.useState<SuggestSegmentationPresetsOutput | null>(null)
@@ -66,8 +64,6 @@ export function MagicWandPanel({ setSegmentationMask }: MagicWandPanelProps) {
       toast({title: "Performing Magic Wand Segmentation..."});
       const result = await magicWandAssistedSegmentation({
         photoDataUri: image.imageUrl,
-        x: 100, // Placeholder
-        y: 100, // Placeholder
         contentType: contentType || 'object',
         modelId: 'googleai/gemini-2.5-flash-segment-it-preview'
       });
@@ -95,7 +91,7 @@ export function MagicWandPanel({ setSegmentationMask }: MagicWandPanelProps) {
       <div className="space-y-2">
         <h3 className="font-headline text-lg">Magic Wand</h3>
         <p className="text-sm text-muted-foreground">
-          Select similar colored areas. Click on an image to create a selection.
+          Select similar colored areas. Hover to preview and click to select.
         </p>
       </div>
 
@@ -103,20 +99,20 @@ export function MagicWandPanel({ setSegmentationMask }: MagicWandPanelProps) {
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="tolerance">Tolerance: {tolerance}</Label>
+          <Label htmlFor="tolerance">Tolerance: {settings.tolerance}</Label>
           <Slider
             id="tolerance"
             min={0}
             max={100}
             step={1}
-            value={[tolerance]}
-            onValueChange={(value) => setTolerance(value[0])}
+            value={[settings.tolerance]}
+            onValueChange={(value) => onSettingsChange({ tolerance: value[0] })}
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="color-space">Color Space</Label>
-          <Select value={colorSpace} onValueChange={setColorSpace}>
+          <Select value={settings.colorSpace} onValueChange={(value) => onSettingsChange({ colorSpace: value })}>
             <SelectTrigger id="color-space">
               <SelectValue placeholder="Select color space" />
             </SelectTrigger>
@@ -124,7 +120,6 @@ export function MagicWandPanel({ setSegmentationMask }: MagicWandPanelProps) {
               <SelectItem value="rgb">RGB</SelectItem>
               <SelectItem value="hsv">HSV</SelectItem>
               <SelectItem value="lab">LAB</SelectItem>
-              <SelectItem value="quaternion">Quaternion</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -133,24 +128,12 @@ export function MagicWandPanel({ setSegmentationMask }: MagicWandPanelProps) {
           <Label htmlFor="contiguous">Contiguous</Label>
           <Switch
             id="contiguous"
-            checked={contiguous}
-            onCheckedChange={setContiguous}
+            checked={settings.contiguous}
+            onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
           />
         </div>
         <p className="text-xs text-muted-foreground -mt-3">
           If enabled, selects only adjacent areas using the same colors.
-        </p>
-
-        <div className="flex items-center justify-between">
-          <Label htmlFor="anti-alias">Anti-alias</Label>
-          <Switch
-            id="anti-alias"
-            checked={antiAlias}
-            onCheckedChange={setAntiAlias}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground -mt-3">
-          Creates a smoother outline for the selection.
         </p>
       </div>
       
@@ -160,16 +143,16 @@ export function MagicWandPanel({ setSegmentationMask }: MagicWandPanelProps) {
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <Label htmlFor="variance-expansion" className="font-semibold">Variance-Guided Expansion</Label>
+                <Label htmlFor="variance-expansion" className="font-semibold">AI-Assisted Selection</Label>
             </div>
           <Switch
             id="variance-expansion"
-            checked={varianceExpansion}
-            onCheckedChange={setVarianceExpansion}
+            checked={settings.useAiAssist}
+            onCheckedChange={(checked) => onSettingsChange({ useAiAssist: checked })}
           />
         </div>
         <p className="text-xs text-muted-foreground -mt-3">
-          AI-powered expansion to capture complex textures and patterns without inflating tolerance.
+          Uses AI to refine the Magic Wand click for a more accurate selection.
         </p>
         
         <Button onClick={handleSuggestPresets} disabled={isSuggesting || isSegmenting} className="w-full">
@@ -191,3 +174,5 @@ export function MagicWandPanel({ setSegmentationMask }: MagicWandPanelProps) {
     </div>
   )
 }
+
+    

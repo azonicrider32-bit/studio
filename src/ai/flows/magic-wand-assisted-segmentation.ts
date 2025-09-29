@@ -1,4 +1,4 @@
-'use server';
+"use server";
 /**
  * @fileOverview A Genkit flow for assisting Magic Wand tool with AI.
  *
@@ -20,6 +20,7 @@ const MagicWandAssistedSegmentationInputSchema = z.object({
     ),
   contentType: z.string().optional().describe('Content type hint (e.g., skin, sky) to guide AI.'),
   modelId: z.string().optional().describe('The ID of the model to use for segmentation.'),
+  initialSelectionMask: z.string().optional().describe('A data URI of a pre-selected mask to be refined by the AI.'),
 });
 export type MagicWandAssistedSegmentationInput = z.infer<typeof MagicWandAssistedSegmentationInputSchema>;
 
@@ -43,15 +44,23 @@ const magicWandAssistedSegmentationFlow = ai.defineFlow(
   },
   async input => {
     try {
+      
+      const prompts: any[] = [{
+          media: { url: input.photoDataUri },
+        }];
+
+      let promptText = `Segment the ${input.contentType || 'main object'} in the image.`;
+      
+      if (input.initialSelectionMask) {
+          prompts.push({ media: { url: input.initialSelectionMask }});
+          promptText += " Refine the provided selection mask.";
+      }
+      prompts.push({ text: promptText });
+
+
       const { media } = await ai.generate({
         model: (input.modelId as any) || 'googleai/gemini-2.5-flash-segment-it-preview',
-        prompt: [{
-          media: { url: input.photoDataUri },
-        },
-        {
-          text: `Segment the ${input.contentType || 'main object'} in the image.`
-        }
-        ],
+        prompt: prompts,
         config: {
           responseModalities: ['IMAGE'],
         }
@@ -76,3 +85,5 @@ const magicWandAssistedSegmentationFlow = ai.defineFlow(
     }
   }
 );
+
+    

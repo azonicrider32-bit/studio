@@ -36,12 +36,12 @@ import { ImageCanvas } from "./image-canvas"
 import { LayersPanel } from "./panels/layers-panel"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import { AiModelsPanel } from "./panels/ai-models-panel"
-import { LassoSettings } from "@/lib/types"
+import { LassoSettings, MagicWandSettings } from "@/lib/types"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments"
 
 export function ProSegmentAI() {
-  const [activeTool, setActiveTool] = React.useState<Tool>("lasso")
+  const [activeTool, setActiveTool] = React.useState<Tool>("magic-wand")
   const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
@@ -49,9 +49,19 @@ export function ProSegmentAI() {
     snapRadius: 10,
     snapThreshold: 0.3,
   });
+  const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
+    tolerance: 30,
+    colorSpace: 'hsv',
+    contiguous: true,
+    useAiAssist: true,
+  });
 
   const handleLassoSettingsChange = (newSettings: Partial<LassoSettings>) => {
     setLassoSettings(prev => ({ ...prev, ...newSettings }));
+  };
+
+  const handleMagicWandSettingsChange = (newSettings: Partial<MagicWandSettings>) => {
+    setMagicWandSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   React.useEffect(() => {
@@ -61,7 +71,7 @@ export function ProSegmentAI() {
   const renderToolOptions = () => {
     switch (activeTool) {
       case "magic-wand":
-        return <MagicWandPanel setSegmentationMask={setSegmentationMask} />
+        return <MagicWandPanel settings={magicWandSettings} onSettingsChange={handleMagicWandSettingsChange} setSegmentationMask={setSegmentationMask} />
       case "lasso":
         return <LassoPanel settings={lassoSettings} onSettingsChange={handleLassoSettingsChange} />
       case "brush":
@@ -162,9 +172,11 @@ export function ProSegmentAI() {
         </header>
         <div className="flex-1">
             <ImageCanvas 
-              segmentationMask={segmentationMask} 
+              segmentationMask={segmentationMask}
+              setSegmentationMask={setSegmentationMask}
               activeTool={activeTool}
               lassoSettings={lassoSettings}
+              magicWandSettings={magicWandSettings}
             />
         </div>
       </SidebarInset>
@@ -210,3 +222,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
