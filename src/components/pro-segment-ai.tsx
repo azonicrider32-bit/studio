@@ -36,6 +36,7 @@ import { ImageCanvas } from "./image-canvas"
 import { LayersPanel } from "./panels/layers-panel"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import { AiModelsPanel } from "./panels/ai-models-panel"
+import { LassoSettings } from "@/lib/types"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments"
 
@@ -43,6 +44,15 @@ export function ProSegmentAI() {
   const [activeTool, setActiveTool] = React.useState<Tool>("lasso")
   const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
+  const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
+    useEdgeSnapping: true,
+    snapRadius: 10,
+    snapThreshold: 0.3,
+  });
+
+  const handleLassoSettingsChange = (newSettings: Partial<LassoSettings>) => {
+    setLassoSettings(prev => ({ ...prev, ...newSettings }));
+  };
 
   React.useEffect(() => {
     setIsClient(true)
@@ -53,7 +63,7 @@ export function ProSegmentAI() {
       case "magic-wand":
         return <MagicWandPanel setSegmentationMask={setSegmentationMask} />
       case "lasso":
-        return <LassoPanel />
+        return <LassoPanel settings={lassoSettings} onSettingsChange={handleLassoSettingsChange} />
       case "brush":
         return <BrushPanel />
       case "eraser":
@@ -151,7 +161,11 @@ export function ProSegmentAI() {
             <div><SidebarTrigger /></div>
         </header>
         <div className="flex-1">
-            <ImageCanvas segmentationMask={segmentationMask} activeTool={activeTool} />
+            <ImageCanvas 
+              segmentationMask={segmentationMask} 
+              activeTool={activeTool}
+              lassoSettings={lassoSettings}
+            />
         </div>
       </SidebarInset>
       

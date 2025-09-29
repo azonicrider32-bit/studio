@@ -7,13 +7,15 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { SelectionEngine } from "@/lib/selection-engine";
 import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-lasso-assisted-path-snapping";
+import { LassoSettings } from "@/lib/types";
 
 interface ImageCanvasProps {
   segmentationMask: string | null;
   activeTool: string;
+  lassoSettings: LassoSettings;
 }
 
-export function ImageCanvas({ segmentationMask, activeTool }: ImageCanvasProps) {
+export function ImageCanvas({ segmentationMask, activeTool, lassoSettings }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1");
   const imageRef = React.useRef<HTMLImageElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -69,6 +71,13 @@ export function ImageCanvas({ segmentationMask, activeTool }: ImageCanvasProps) 
     initEngine();
   }
   
+  React.useEffect(() => {
+    if (selectionEngineRef.current) {
+        selectionEngineRef.current.updateSettings(lassoSettings);
+    }
+  }, [lassoSettings]);
+
+
   const endLassoAndProcess = React.useCallback(async () => {
     const engine = selectionEngineRef.current;
     if (!engine || !engine.isDrawingLasso) return;
@@ -113,16 +122,19 @@ export function ImageCanvas({ segmentationMask, activeTool }: ImageCanvasProps) 
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (activeTool !== 'lasso' || !selectionEngineRef.current?.isDrawingLasso) return;
+      const engine = selectionEngineRef.current;
+      if (!engine || !engine.isDrawingLasso) return;
       
       if (e.key === 'Enter') {
         e.preventDefault();
-        endLassoAndProcess();
+        engine.endLasso();
+        drawOverlay();
+        toast({ title: 'Lasso path completed.' });
       }
       
       if (e.key === 'Escape') {
         e.preventDefault();
-        selectionEngineRef.current?.cancelLasso();
+        engine.cancelLasso();
         drawOverlay();
         toast({ title: 'Lasso cancelled.' });
       }
@@ -155,7 +167,8 @@ export function ImageCanvas({ segmentationMask, activeTool }: ImageCanvasProps) 
         engine.startLasso(pos.x, pos.y);
         toast({ title: 'Lasso started', description: 'Click to add points. Press Enter to complete or Escape to cancel.' });
       } else {
-        engine.addLassoNode(pos.x, pos.y);
+        // The point is now added where the preview line ends, not where the click is.
+        engine.addLassoNode(); 
       }
       drawOverlay();
     }
