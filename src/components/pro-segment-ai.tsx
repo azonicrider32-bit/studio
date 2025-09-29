@@ -40,7 +40,7 @@ import { AiModelsPanel } from "./panels/ai-models-panel"
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments"
 
 export function ProSegmentAI() {
-  const [activeTool, setActiveTool] = React.useState<Tool>("magic-wand")
+  const [activeTool, setActiveTool] = React.useState<Tool>("lasso")
   const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
 
@@ -151,7 +151,7 @@ export function ProSegmentAI() {
             <div><SidebarTrigger /></div>
         </header>
         <div className="flex-1">
-            <ImageCanvas segmentationMask={segmentationMask} setSegmentationMask={setSegmentationMask} />
+            <ImageCanvas segmentationMask={segmentationMask} activeTool={activeTool} />
         </div>
       </SidebarInset>
       

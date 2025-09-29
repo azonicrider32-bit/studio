@@ -35,6 +35,22 @@ export async function intelligentLassoAssistedPathSnapping(
   return intelligentLassoAssistedPathSnappingFlow(input);
 }
 
+const prompt = ai.definePrompt({
+    name: 'intelligentLassoPrompt',
+    input: { schema: IntelligentLassoInputSchema },
+    output: { schema: IntelligentLassoOutputSchema },
+    prompt: `You are an expert image analysis assistant. Your task is to refine a user-drawn lasso path to snap to the most likely object boundary.
+Analyze the user's lasso path and the provided image.
+The user is trying to select: {{{prompt}}}.
+Adjust the points in the lassoPath to follow the object's edges precisely.
+Return the refined path as 'enhancedPath'.
+
+Image: {{media url=photoDataUri}}
+User's Lasso Path (JSON): {{{JSON.stringify(lassoPath)}}}
+`,
+});
+
+
 const intelligentLassoAssistedPathSnappingFlow = ai.defineFlow(
   {
     name: 'intelligentLassoAssistedPathSnappingFlow',
@@ -42,21 +58,16 @@ const intelligentLassoAssistedPathSnappingFlow = ai.defineFlow(
     outputSchema: IntelligentLassoOutputSchema,
   },
   async input => {
-    // This is a simplified mock. A real implementation would involve complex computer vision algorithms.
-    // We'll simulate the AI "snapping" the path to a slightly modified version of the original path.
+    // For now, we are returning a slightly modified path to simulate the AI.
+    // A real implementation would call a model like the 'prompt' defined above.
     const enhancedPath = input.lassoPath.map(point => ({
-        x: point.x + Math.random() * 10 - 5, // a little jitter
-        y: point.y + Math.random() * 10 - 5,
+        x: point.x + Math.random() * 4 - 2, // a little jitter
+        y: point.y + Math.random() * 4 - 2,
     }));
 
-    // Simulate closing the loop if it's a closed shape
+    // close the loop
     if (enhancedPath.length > 2) {
-      const first = enhancedPath[0];
-      const last = enhancedPath[enhancedPath.length - 1];
-      const distance = Math.sqrt(Math.pow(last.x - first.x, 2) + Math.pow(last.y - first.y, 2));
-      if (distance < 30) { // arbitrary threshold to close the loop
-        enhancedPath.push(first);
-      }
+       enhancedPath.push(enhancedPath[0]);
     }
 
     return { enhancedPath };

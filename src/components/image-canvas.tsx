@@ -1,130 +1,128 @@
-"use client"
+"use client";
 
-import Image from "next/image"
+import Image from "next/image";
 import * as React from 'react';
-import { PlaceHolderImages } from "@/lib/placeholder-images"
-import { Card } from "@/components/ui/card"
-import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-lasso-assisted-path-snapping";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { SelectionEngine } from "@/lib/selection-engine";
 
 interface ImageCanvasProps {
   segmentationMask: string | null;
-  setSegmentationMask: (mask: string | null) => void;
+  activeTool: string;
 }
 
-
-export function ImageCanvas({segmentationMask, setSegmentationMask}: ImageCanvasProps) {
-  const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")
+export function ImageCanvas({ segmentationMask, activeTool }: ImageCanvasProps) {
+  const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1");
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const overlayCanvasRef = React.useRef<HTMLCanvasElement>(null);
+  const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
   const [isDrawing, setIsDrawing] = React.useState(false);
-  const [path, setPath] = React.useState<{x: number; y: number}[]>([]);
-  const { toast } = useToast()
 
+  const { toast } = useToast();
 
-  const drawOnCanvas = React.useCallback(() => {
+  React.useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const overlayCanvas = overlayCanvasRef.current;
+    if (!canvas || !overlayCanvas || !image) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const img = new window.Image();
     img.crossOrigin = "anonymous";
-    img.src = image?.imageUrl || '';
+    img.src = image.imageUrl;
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
+      overlayCanvas.width = img.width;
+      overlayCanvas.height = img.height;
+
       ctx.drawImage(img, 0, 0);
 
-      if (segmentationMask) {
-        const maskImg = new window.Image();
-        maskImg.src = segmentationMask;
-        maskImg.onload = () => {
-          ctx.globalAlpha = 0.5;
-          ctx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
-          ctx.globalAlpha = 1.0;
-        }
-      }
+      selectionEngineRef.current = new SelectionEngine(canvas, ctx);
+      selectionEngineRef.current.initialize();
     };
-  }, [image, segmentationMask]);
-
+  }, [image]);
 
   React.useEffect(() => {
-    drawOnCanvas();
-  }, [drawOnCanvas]);
-
-
-  const startDrawing = ({ nativeEvent }: React.MouseEvent<HTMLCanvasElement>) => {
-    const { offsetX, offsetY } = nativeEvent;
-    setPath([{ x: offsetX, y: offsetY }]);
-    setIsDrawing(true);
-  };
-
-  const draw = ({ nativeEvent }: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-    const { offsetX, offsetY } = nativeEvent;
-    setPath(prevPath => [...prevPath, { x: offsetX, y: offsetY }]);
-    
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (ctx && canvas) {
-      ctx.beginPath();
-      ctx.moveTo(path[path.length - 1].x, path[path.length - 1].y);
-      ctx.lineTo(offsetX, offsetY);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  };
+    const overlay = overlayCanvasRef.current;
+    if (!canvas || !overlay) return;
 
-  const stopDrawing = async () => {
-    if (path.length > 1) {
-      try {
-        toast({ title: 'Optimizing lasso path...' });
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const result = await intelligentLassoAssistedPathSnapping({
-            photoDataUri: canvas.toDataURL('image/jpeg'),
-            lassoPath: path,
-            prompt: "the main object in the foreground"
-        });
-        
-        const ctx = canvas.getContext('2d');
-        if (ctx && result.enhancedPath.length > 0) {
-          drawOnCanvas(); // Redraw original image
-          ctx.beginPath();
-          ctx.moveTo(result.enhancedPath[0].x, result.enhancedPath[0].y);
-          for(let i = 1; i < result.enhancedPath.length; i++) {
-            ctx.lineTo(result.enhancedPath[i].x, result.enhancedPath[i].y);
-          }
-          ctx.closePath();
-          ctx.fillStyle = 'rgba(199, 98%, 48%, 0.5)';
-          ctx.fill();
-          ctx.strokeStyle = 'hsl(var(--accent))';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-        toast({ title: 'Lasso path optimized!' });
-      } catch (e) {
-        console.error(e);
-        toast({
-          variant: 'destructive',
-          title: 'Error optimizing path',
-          description: 'Could not optimize the lasso path.',
-        });
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (activeTool !== 'lasso' || !selectionEngineRef.current) return;
+      
+      if (e.key === 'Enter' && selectionEngineRef.current.isDrawingLasso) {
+        selectionEngineRef.current.endLasso();
+        const overlayCtx = overlay.getContext('2d');
+        if (overlayCtx) selectionEngineRef.current.renderSelection(overlayCtx);
+        toast({ title: 'Lasso path completed!' });
       }
-    }
-    setPath([]);
-    setIsDrawing(false);
+      
+      if (e.key === 'Escape' && selectionEngineRef.current.isDrawingLasso) {
+        selectionEngineRef.current.cancelLasso();
+        const overlayCtx = overlay.getContext('2d');
+        if (overlayCtx) selectionEngineRef.current.renderSelection(overlayCtx);
+        toast({ title: 'Lasso cancelled.' });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTool, toast]);
+
+
+  const getMousePos = (canvas: HTMLCanvasElement, evt: React.MouseEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top,
+    };
   };
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = overlayCanvasRef.current;
+    const engine = selectionEngineRef.current;
+    if (!canvas || !engine) return;
+
+    const pos = getMousePos(canvas, e);
+    
+    if (activeTool === 'lasso') {
+      if (!engine.isDrawingLasso) {
+        engine.startLasso(pos.x, pos.y);
+        toast({ title: 'Lasso started', description: 'Click to add points. Press Enter to complete or Escape to cancel.' });
+      } else {
+        engine.addLassoNode(pos.x, pos.y);
+      }
+      setIsDrawing(true);
+      const overlayCtx = canvas.getContext('2d');
+      if (overlayCtx) engine.renderSelection(overlayCtx);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = overlayCanvasRef.current;
+    const engine = selectionEngineRef.current;
+    if (!canvas || !engine || activeTool !== 'lasso' || !engine.isDrawingLasso) return;
+
+    const pos = getMousePos(canvas, e);
+    engine.updateLassoPreview(pos.x, pos.y);
+    const overlayCtx = canvas.getContext('2d');
+    if (overlayCtx) engine.renderSelection(overlayCtx);
+  };
+  
+  const handleMouseUp = () => {
+    // With the node-based lasso, mouse up doesn't end the drawing.
+    // Kept for other potential tools.
+  };
 
   if (!image) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-muted">
         <p>Image not found</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -132,11 +130,15 @@ export function ImageCanvas({segmentationMask, setSegmentationMask}: ImageCanvas
       <Card className="relative aspect-[4/3] w-full max-w-5xl overflow-hidden shadow-2xl">
         <canvas
           ref={canvasRef}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          className="h-full w-full object-cover"
+          className="absolute top-0 left-0 h-full w-full object-cover"
+        />
+        <canvas
+          ref={overlayCanvasRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          className="absolute top-0 left-0 h-full w-full object-cover"
+          style={{ cursor: activeTool === 'lasso' ? 'crosshair' : 'default' }}
         />
         {segmentationMask && (
           <Image
@@ -148,5 +150,5 @@ export function ImageCanvas({segmentationMask, setSegmentationMask}: ImageCanvas
         )}
       </Card>
     </div>
-  )
+  );
 }
