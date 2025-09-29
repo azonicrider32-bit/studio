@@ -26,7 +26,6 @@ export class SelectionEngine {
   }
 
   initialize() {
-    console.log('SelectionEngine.initialize() called');
     this.imageData = this.ctx.getImageData(0, 0, this.width, this.height);
     this.pixelData = this.imageData.data;
     this.visited = new Uint8Array(this.width * this.height);
@@ -62,7 +61,6 @@ export class SelectionEngine {
         this.edgeMap[idx] = Math.sqrt(gx * gx + gy * gy) / (255 * Math.sqrt(2));
       }
     }
-    console.log('Edge map computed');
   }
 
   getGrayscale(x: number, y: number, data: Uint8ClampedArray) {
@@ -71,6 +69,9 @@ export class SelectionEngine {
   }
 
   startLasso(x: number, y: number) {
+    this.cancelLasso();
+    this.segments = [];
+    this.selectedSegmentIds.clear();
     this.lassoNodes = [[x, y]];
     this.lassoCurrentPos = [x, y];
     this.isDrawingLasso = true;
@@ -92,6 +93,25 @@ export class SelectionEngine {
     this.lassoNodes.push([x, y]);
     this.lassoCurrentPos = [x, y];
   }
+  
+  endLassoWithEnhancedPath(enhancedPath: {x:number, y:number}[]) {
+      if (!this.isDrawingLasso) return;
+
+      const pathAsTuples: [number, number][] = enhancedPath.map(p => [p.x, p.y]);
+      
+      // Ensure the path is closed for selection
+      if (pathAsTuples.length > 2) {
+          const first = pathAsTuples[0];
+          const last = pathAsTuples[pathAsTuples.length - 1];
+          if (first[0] !== last[0] || first[1] !== last[1]) {
+              pathAsTuples.push(first);
+          }
+      }
+      
+      this.selectedPixels = this.pathToSelection(pathAsTuples);
+      this.createSegmentFromSelection();
+      this.cancelLasso();
+  }
 
   endLasso() {
     if (!this.isDrawingLasso || this.lassoNodes.length < 3) {
@@ -101,7 +121,6 @@ export class SelectionEngine {
 
     const fullPath = this.getLassoPath(true);
     this.selectedPixels = this.pathToSelection(fullPath);
-    console.log('Lasso selected pixels:', this.selectedPixels.size);
     this.createSegmentFromSelection();
 
     this.cancelLasso();
@@ -110,13 +129,13 @@ export class SelectionEngine {
   getLassoPath(closed = false) {
     if (!this.isDrawingLasso || this.lassoNodes.length === 0) return [];
     
-    const path: [number, number][] = [];
+    let path: [number, number][] = [];
     
     const nodesToConnect = [...this.lassoNodes];
     if(!closed && this.lassoCurrentPos) {
         nodesToConnect.push(this.lassoCurrentPos);
     }
-    if (closed) {
+    if (closed && nodesToConnect.length > 1) {
         nodesToConnect.push(this.lassoNodes[0]);
     }
 
@@ -256,7 +275,7 @@ export class SelectionEngine {
     // Render segments
     this.segments.forEach(segment => {
       const isSelected = this.selectedSegmentIds.has(segment.id);
-      const color = isSelected ? 'rgba(0, 255, 0, 0.4)' : 'rgba(0, 128, 255, 0.4)';
+      const color = isSelected ? 'rgba(3, 169, 244, 0.4)' : 'rgba(3, 169, 244, 0.4)';
       
       overlayCtx.fillStyle = color;
       segment.pixels.forEach((idx: number) => {

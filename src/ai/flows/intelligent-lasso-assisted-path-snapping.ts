@@ -42,11 +42,11 @@ const prompt = ai.definePrompt({
     prompt: `You are an expert image analysis assistant. Your task is to refine a user-drawn lasso path to snap to the most likely object boundary.
 Analyze the user's lasso path and the provided image.
 The user is trying to select: {{{prompt}}}.
-Adjust the points in the lassoPath to follow the object's edges precisely.
+The user has provided a rough polygon with these vertices: {{{JSONstringify lassoPath}}}.
+Your task is to analyze the image content within and near this polygon and return a refined, more accurate list of vertices that tightly follows the boundary of the specified object. The new path should have a similar number of points but be snapped to the object's edges.
 Return the refined path as 'enhancedPath'.
 
 Image: {{media url=photoDataUri}}
-User's Lasso Path (JSON): {{{JSON.stringify(lassoPath)}}}
 `,
 });
 
@@ -58,18 +58,7 @@ const intelligentLassoAssistedPathSnappingFlow = ai.defineFlow(
     outputSchema: IntelligentLassoOutputSchema,
   },
   async input => {
-    // For now, we are returning a slightly modified path to simulate the AI.
-    // A real implementation would call a model like the 'prompt' defined above.
-    const enhancedPath = input.lassoPath.map(point => ({
-        x: point.x + Math.random() * 4 - 2, // a little jitter
-        y: point.y + Math.random() * 4 - 2,
-    }));
-
-    // close the loop
-    if (enhancedPath.length > 2) {
-       enhancedPath.push(enhancedPath[0]);
-    }
-
-    return { enhancedPath };
+    const {output} = await prompt(input);
+    return output!;
   }
 );
