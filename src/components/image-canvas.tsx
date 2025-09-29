@@ -308,7 +308,6 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
         <SegmentHoverPreview
             canvas={canvasRef.current}
             segment={hoveredSegment}
-            mousePos={mousePos}
         />
       )}
     </div>

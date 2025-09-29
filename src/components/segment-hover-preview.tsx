@@ -5,11 +5,10 @@ import { Segment } from '@/lib/types';
 
 interface SegmentHoverPreviewProps {
   segment: Segment | null;
-  mousePos: { x: number; y: number } | null;
   canvas: HTMLCanvasElement | null;
 }
 
-export function SegmentHoverPreview({ segment, mousePos, canvas }: SegmentHoverPreviewProps) {
+export function SegmentHoverPreview({ segment, canvas }: SegmentHoverPreviewProps) {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const size = 128; // Size of the preview window
   const zoom = 4;   // Zoom level inside the preview
@@ -71,14 +70,14 @@ export function SegmentHoverPreview({ segment, mousePos, canvas }: SegmentHoverP
 
   }, [segment, canvas, size, zoom]);
 
-  if (!segment || !mousePos) return null;
+  if (!segment) return null;
 
   return (
     <div
-      className="pointer-events-none fixed z-50 rounded-full border-2 border-white shadow-2xl overflow-hidden"
+      className="pointer-events-none fixed z-50 rounded-md border-2 border-white shadow-2xl overflow-hidden"
       style={{
-        left: mousePos.x - size / 2,
-        top: mousePos.y - size / 2,
+        left: 20,
+        bottom: 20,
         width: size,
         height: size,
       }}
@@ -91,5 +90,3 @@ export function SegmentHoverPreview({ segment, mousePos, canvas }: SegmentHoverP
     </div>
   );
 }
-
-    
