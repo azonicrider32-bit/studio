@@ -320,8 +320,6 @@ export class SelectionEngine {
                   }
               }
           }
-          // Break if queue gets too large for a preview
-          if (previewOnly && queue.length > 20000) break;
       }
       
       if (previewOnly) {
