@@ -22,6 +22,9 @@ export class SelectionEngine {
   lassoCurrentPos: [number, number] | null = null;
   isDrawingLasso: boolean = false;
   
+  // New Lasso Path Memory
+  lassoPreviewPath: [number, number][] = [];
+  
   // Edge Detection
   edgeMap: Float32Array | null = null;
 
@@ -53,9 +56,9 @@ export class SelectionEngine {
     this.computeEdgeMap();
   }
   
-  updateSettings(newWandSettings: Partial<LassoSettings>, newLassoSettings: Partial<MagicWandSettings>) {
-    this.lassoSettings = { ...this.lassoSettings, ...newWandSettings };
-    this.magicWandSettings = { ...this.magicWandSettings, ...newLassoSettings };
+  updateSettings(newLassoSettings: Partial<LassoSettings>, newWandSettings: Partial<MagicWandSettings>) {
+    this.lassoSettings = { ...this.lassoSettings, ...newLassoSettings };
+    this.magicWandSettings = { ...this.magicWandSettings, ...newWandSettings };
   }
 
   computeEdgeMap() {
@@ -109,22 +112,74 @@ export class SelectionEngine {
     this.lassoNodes = [];
     this.lassoCurrentPos = null;
     this.isDrawingLasso = false;
+    this.lassoPreviewPath = [];
   }
 
   updateLassoPreview(x: number, y: number) {
-    if (!this.isDrawingLasso) return;
+    if (!this.isDrawingLasso || !this.lassoNodes.length) return;
     this.lassoCurrentPos = [x, y];
-  }
+
+    const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
+    
+    // Progressive Undo: Check if cursor is moving back along the path
+    if (this.lassoPreviewPath.length > 2) {
+      const thirdLastPoint = this.lassoPreviewPath[this.lassoPreviewPath.length - 3];
+      const distToCursor = Math.hypot(x - thirdLastPoint[0], y - thirdLastPoint[1]);
+      const distBetweenPoints = Math.hypot(
+        this.lassoPreviewPath[this.lassoPreviewPath.length - 1][0] - thirdLastPoint[0],
+        this.lassoPreviewPath[this.lassoPreviewPath.length - 1][1] - thirdLastPoint[1]
+      );
+
+      // If cursor is closer to a previous point on the path than the end of the path is, start erasing
+      if (distToCursor < distBetweenPoints) {
+        this.lassoPreviewPath.pop();
+        return;
+      }
+    }
+
+    const newSegment = this.findEdgePath(
+      this.lassoPreviewPath.length > 0 ? this.lassoPreviewPath[this.lassoPreviewPath.length-1] : lastAnchor,
+      [x, y]
+    );
+
+    // Elasticity: Blend the new path segment with the existing one
+    const newFullPath = this.findEdgePath(lastAnchor, [x,y]);
+
+    if (this.lassoPreviewPath.length === 0) {
+      this.lassoPreviewPath = newFullPath;
+    } else {
+        const blendedPath: [number, number][] = [];
+        const longerLength = Math.max(this.lassoPreviewPath.length, newFullPath.length);
+        
+        for (let i = 0; i < longerLength; i++) {
+            const oldPoint = this.lassoPreviewPath[i] || this.lassoPreviewPath[this.lassoPreviewPath.length - 1];
+            const newPoint = newFullPath[i] || newFullPath[newFullPath.length - 1];
+            
+            // Gradient of rigidity: more rigid near the start, more free near the end
+            const weight = Math.pow(i / (longerLength - 1 || 1), 1.5);
+
+            const blendedX = oldPoint[0] * (1 - weight) + newPoint[0] * weight;
+            const blendedY = oldPoint[1] * (1 - weight) + newPoint[1] * weight;
+            blendedPath.push([blendedX, blendedY]);
+        }
+        this.lassoPreviewPath = blendedPath;
+    }
+}
+
 
   addLassoNode() {
-    if (!this.isDrawingLasso || !this.lassoCurrentPos) return;
+    if (!this.isDrawingLasso || !this.lassoCurrentPos || this.lassoPreviewPath.length === 0) return;
 
     // The point to add is the end of the current preview path.
-    const lastNode = this.lassoNodes[this.lassoNodes.length - 1];
-    const newPathSegment = this.findEdgePath(lastNode[0], lastNode[1], this.lassoCurrentPos[0], this.lassoCurrentPos[1]);
-    const newNode = newPathSegment[newPathSegment.length - 1];
+    const newNode = this.lassoPreviewPath[this.lassoPreviewPath.length - 1];
     
+    // Solidify the preview path into the main nodes path.
+    // For simplicity, we just add the new anchor. A more complex implementation could
+    // add simplified nodes from the preview path.
     this.lassoNodes.push(newNode);
+
+    // Reset the preview path for the next segment
+    this.lassoPreviewPath = [];
   }
   
   endLassoWithEnhancedPath(enhancedPath: {x:number, y:number}[]) {
@@ -146,7 +201,7 @@ export class SelectionEngine {
   }
 
   endLasso() {
-    if (!this.isDrawingLasso || this.lassoNodes.length < 3) {
+    if (!this.isDrawingLasso || this.lassoNodes.length < 2) {
       this.cancelLasso();
       return;
     }
@@ -163,48 +218,46 @@ export class SelectionEngine {
     
     let path: [number, number][] = [];
     
-    // Path between existing nodes
+    // Path between existing anchor nodes
     for (let i = 0; i < this.lassoNodes.length - 1; i++) {
         const [x1, y1] = this.lassoNodes[i];
         const [x2, y2] = this.lassoNodes[i+1];
-        path.push(...this.findEdgePath(x1, y1, x2, y2));
+        path.push(...this.findEdgePath([x1, y1], [x2, y2]));
     }
     
-    const lastNode = this.lassoNodes[this.lassoNodes.length - 1];
-
+    // Add the current elastic preview path
+    path.push(...this.lassoPreviewPath);
+    
     if (closed) {
         const firstNode = this.lassoNodes[0];
-        path.push(...this.findEdgePath(lastNode[0], lastNode[1], firstNode[0], firstNode[1]));
-    } else if (this.lassoCurrentPos) {
-        // Preview path from last node to cursor
-        path.push(...this.findEdgePath(lastNode[0], lastNode[1], this.lassoCurrentPos[0], this.lassoCurrentPos[1]));
+        const lastNode = path.length > 0 ? path[path.length - 1] : this.lassoNodes[this.lassoNodes.length-1];
+        path.push(...this.findEdgePath(lastNode, firstNode));
     }
     
     return path;
   }
-
-  findEdgePath(x1: number, y1: number, x2: number, y2: number): [number, number][] {
+  
+  findEdgePath(p1: [number, number], p2: [number, number]): [number, number][] {
+      const [x1, y1] = p1;
+      const [x2, y2] = p2;
     if (!this.lassoSettings.useEdgeSnapping) {
-      return [[x1,y1], [x2, y2]];
+      return [p1, p2];
     }
 
-    const path: [number, number][] = [[x1, y1]];
+    const path: [number, number][] = [p1];
     let currentX = Math.round(x1);
     let currentY = Math.round(y1);
 
-    const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    const dist = Math.hypot(x2 - x1, y2 - y1);
     const stepCount = Math.max(1, Math.round(dist / (this.lassoSettings.snapRadius / 2)));
 
-    for (let i = 0; i < stepCount; i++) {
-        const targetX = x1 + (x2 - x1) * ((i + 1) / stepCount);
-        const targetY = y1 + (y2 - y1) * ((i + 1) / stepCount);
+    for (let i = 1; i <= stepCount; i++) {
+        const targetX = x1 + (x2 - x1) * (i / stepCount);
+        const targetY = y1 + (y2 - y1) * (i / stepCount);
         
         const snappedPoint = this.snapToEdge(targetX, targetY);
-        currentX = snappedPoint[0];
-        currentY = snappedPoint[1];
-        path.push([currentX, currentY]);
+        path.push(snappedPoint);
     }
-    path.push([Math.round(x2), Math.round(y2)]);
     return path;
   }
 
@@ -256,8 +309,8 @@ export class SelectionEngine {
         const p2 = path[(i + 1) % path.length];
   
         if ((p1[1] <= y && p2[1] > y) || (p2[1] <= y && p1[1] > y)) {
-          const x = (y - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0];
-          intersections.push(x);
+          const x_intersect = (y - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0];
+          intersections.push(x_intersect);
         }
       }
   
@@ -455,9 +508,7 @@ export class SelectionEngine {
 
     this.segments.forEach(segment => {
       const isSelected = this.selectedSegmentIds.has(segment.id);
-      const color = isSelected ? 'rgba(3, 169, 244, 0.4)' : 'rgba(3, 169, 244, 0.4)';
       
-      overlayCtx.fillStyle = color;
       const segmentImageData = overlayCtx.createImageData(segment.bounds.width, segment.bounds.height);
       
       segment.pixels.forEach((idx: number) => {
@@ -511,3 +562,5 @@ export class SelectionEngine {
     }
   }
 }
+
+    
