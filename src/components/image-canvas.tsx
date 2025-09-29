@@ -10,6 +10,7 @@ import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-las
 import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } from "@/ai/flows/magic-wand-assisted-segmentation";
 import { LassoSettings, MagicWandSettings, Segment } from "@/lib/types";
 import { SegmentHoverPreview } from "./segment-hover-preview";
+import { debounce } from "@/lib/utils";
 
 
 interface ImageCanvasProps {
@@ -108,7 +109,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
 
         const response = await intelligentLassoAssistedPathSnapping({
             photoDataUri: canvas.toDataURL(),
-            lassoPath: engine.lassoNodes,
+            lassoPath: engine.lassoNodes.map(n => ({x: n[0], y: n[1]})),
             prompt: 'the main subject'
         });
 
@@ -137,9 +138,13 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
       
       if (e.key === 'Enter') {
         e.preventDefault();
-        engine.endLasso();
-        drawOverlay();
-        toast({ title: 'Lasso path completed.' });
+        if (settings.useEdgeSnapping) {
+            endLassoAndProcess();
+        } else {
+            engine.endLasso();
+            drawOverlay();
+            toast({ title: 'Lasso path completed.' });
+        }
       }
       
       if (e.key === 'Escape') {
@@ -152,7 +157,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTool, toast, drawOverlay, endLassoAndProcess]);
+  }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useEdgeSnapping]);
 
 
   const getMousePos = (canvasEl: HTMLCanvasElement, evt: React.MouseEvent) => {
@@ -160,7 +165,6 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
     const imageEl = imageRef.current;
     if (!imageEl) return { x: 0, y: 0 };
 
-    // This handles the `object-contain` scaling
     const imageAspectRatio = imageEl.naturalWidth / imageEl.naturalHeight;
     const canvasAspectRatio = rect.width / rect.height;
 
@@ -170,16 +174,13 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
     let yOffset = 0;
 
     if (imageAspectRatio > canvasAspectRatio) {
-        // Image is wider than canvas, letterboxed top/bottom
         renderHeight = rect.width / imageAspectRatio;
         yOffset = (rect.height - renderHeight) / 2;
     } else {
-        // Image is taller than canvas, letterboxed left/right
         renderWidth = rect.height * imageAspectRatio;
         xOffset = (rect.width - renderWidth) / 2;
     }
     
-    // Convert client coords to image-space coords
     const clientX = evt.clientX - rect.left - xOffset;
     const clientY = evt.clientY - rect.top - yOffset;
 
@@ -199,7 +200,6 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
     toast({ title: "Magic Wand is thinking...", description: "AI is refining the selection." });
 
     try {
-        // Client-side quick selection for immediate feedback
         const initialSelection = engine.magicWand(pos.x, pos.y);
         drawOverlay();
 
@@ -244,7 +244,6 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
         engine.startLasso(pos.x, pos.y);
         toast({ title: 'Lasso started', description: 'Click to add points. Press Enter to complete or Escape to cancel.' });
       } else {
-        // The point is now added where the preview line ends, not where the click is.
         engine.addLassoNode(); 
       }
       drawOverlay();
@@ -252,6 +251,17 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
         handleMagicWandClick(pos);
     }
   };
+  
+  const debouncedWandPreview = React.useCallback(
+    debounce((x: number, y: number) => {
+      const engine = selectionEngineRef.current;
+      if (!engine) return;
+      const segment = engine.magicWand(x, y, true); // Preview only
+      setHoveredSegment(segment);
+      drawOverlay();
+    }, 50),
+    [drawOverlay] 
+  );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
@@ -267,9 +277,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
         drawOverlay();
       }
     } else if (activeTool === 'magic-wand') {
-        const segment = engine.magicWand(pos.x, pos.y, true); // Preview only
-        setHoveredSegment(segment);
-        drawOverlay();
+        debouncedWandPreview(pos.x, pos.y);
     }
   };
   
@@ -337,3 +345,5 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
     </div>
   );
 }
+
+    
