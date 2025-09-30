@@ -270,11 +270,11 @@ export function ProSegmentAI() {
               lassoSettings={lassoSettings}
               magicWandSettings={magicWandSettings}
               negativeMagicWandSettings={negativeMagicWandSettings}
-              setNegativeMagicWandSettings={setNegativeMagicWandSettings}
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
               onMagicWandSettingChange={handleMagicWandSettingsChange}
+              onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               activeLassoScrollSetting={activeLassoScrollSetting}
               activeWandScrollSetting={activeWandScrollSetting}
               canvasMousePos={canvasMousePos}
@@ -338,3 +338,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    

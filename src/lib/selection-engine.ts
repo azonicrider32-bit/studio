@@ -39,10 +39,15 @@ export class SelectionEngine {
   };
   magicWandSettings: MagicWandSettings = {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
-    colorSpace: 'hsv',
     contiguous: true,
-    useAiAssist: true,
+    useAiAssist: false,
     activeTolerances: new Set(['h', 's', 'v']),
+  };
+   negativeMagicWandSettings: MagicWandSettings = {
+    tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
+    contiguous: true,
+    useAiAssist: false,
+    activeTolerances: new Set(),
   };
 
 
@@ -60,9 +65,14 @@ export class SelectionEngine {
     this.computeEdgeMap();
   }
   
-  updateSettings(newLassoSettings: Partial<LassoSettings>, newWandSettings: Partial<MagicWandSettings>) {
+  updateSettings(
+    newLassoSettings: Partial<LassoSettings>,
+    newWandSettings: Partial<MagicWandSettings>,
+    newNegativeWandSettings: Partial<MagicWandSettings>
+  ) {
     this.lassoSettings = { ...this.lassoSettings, ...newLassoSettings };
     this.magicWandSettings = { ...this.magicWandSettings, ...newWandSettings };
+    this.negativeMagicWandSettings = { ...this.negativeMagicWandSettings, ...newNegativeWandSettings };
   }
 
   computeEdgeMap() {
@@ -380,7 +390,7 @@ export class SelectionEngine {
       if (x < 0 || x >= this.width || y < 0 || y >= this.height) return null;
 
       const seedIndex = y * this.width + x;
-      const seedColor = this.getPixelColor(seedIndex);
+      const seedColor = this.getPixelColors(seedIndex);
 
       const selected = new Set<number>();
       const queue: number[] = [seedIndex];
@@ -404,7 +414,7 @@ export class SelectionEngine {
           for (const neighborIndex of neighbors) {
               if (this.visited && !this.visited[neighborIndex]) {
                   this.visited[neighborIndex] = 1;
-                  const neighborColor = this.getPixelColor(neighborIndex);
+                  const neighborColor = this.getPixelColors(neighborIndex);
                   if (this.isWithinTolerance(seedColor, neighborColor)) {
                       queue.push(neighborIndex);
                   }
@@ -421,51 +431,67 @@ export class SelectionEngine {
       }
   }
 
-  getPixelColor(index: number): { [key: string]: number } {
+  getPixelColors(index: number): { rgb: any, hsv: any, lab: any } {
     if (!this.pixelData) throw new Error("Pixel data not loaded");
     const i = index * 4;
     const r = this.pixelData[i];
     const g = this.pixelData[i + 1];
     const b = this.pixelData[i + 2];
     
-    switch (this.magicWandSettings.colorSpace) {
-        case 'hsv':
-            return rgbToHsv(r, g, b);
-        case 'lab':
-            return rgbToLab(r, g, b);
-        default: // 'rgb'
-            return { r, g, b };
+    return {
+      rgb: { r, g, b },
+      hsv: rgbToHsv(r, g, b),
+      lab: rgbToLab(r, g, b)
     }
   }
 
-  isWithinTolerance(c1: { [key: string]: number }, c2: { [key: string]: number }): boolean {
-    const { tolerances, colorSpace, activeTolerances } = this.magicWandSettings;
+  isInsideTolerance(seedColor: any, neighborColor: any, settings: MagicWandSettings): boolean {
+    const { tolerances, activeTolerances } = settings;
 
-    const checks = {
-        rgb: ['r', 'g', 'b'],
-        hsv: ['h', 's', 'v'],
-        lab: ['l', 'a', 'b_lab'],
-    };
+    const colorSpaces: (keyof typeof seedColor)[] = ['rgb', 'hsv', 'lab'];
 
-    const componentsToCheck = checks[colorSpace];
+    for (const space of colorSpaces) {
+        const components = Object.keys(seedColor[space]);
+        for (const key of components) {
+            if (!activeTolerances.has(key as keyof typeof tolerances)) continue;
 
-    for (const key of componentsToCheck) {
-        if (!activeTolerances.has(key as keyof typeof tolerances)) continue;
+            const tolerance = tolerances[key as keyof typeof tolerances];
+            const c1 = seedColor[space];
+            const c2 = neighborColor[space];
+            let diff: number;
 
-        const tolerance = tolerances[key as keyof typeof tolerances];
-        let diff: number;
+            if (key === 'h') { // Handle hue's circular nature
+                const hDiff = Math.abs(c1.h - c2.h);
+                diff = Math.min(hDiff, 360 - hDiff);
+            } else {
+                diff = Math.abs(c1[key] - c2[key]);
+            }
 
-        if (key === 'h') { // Handle hue's circular nature
-            const hDiff = Math.abs(c1.h - c2.h);
-            diff = Math.min(hDiff, 360 - hDiff);
-        } else {
-            diff = Math.abs(c1[key] - c2[key]);
-        }
-
-        if (diff > tolerance) {
-            return false;
+            if (diff > tolerance) {
+                return false;
+            }
         }
     }
+    return true;
+  }
+
+  isWithinTolerance(seedColor: any, neighborColor: any): boolean {
+    const isIncluded = this.isInsideTolerance(seedColor, neighborColor, this.magicWandSettings);
+    if (!isIncluded) {
+        return false;
+    }
+    
+    // If there are active exclusion tolerances, check them
+    if (this.negativeMagicWandSettings.activeTolerances.size > 0 && this.negativeMagicWandSettings.seedColor) {
+        const exclusionSeedColor = {
+            rgb: { r: this.negativeMagicWandSettings.seedColor.r, g: this.negativeMagicWandSettings.seedColor.g, b: this.negativeMagicWandSettings.seedColor.b },
+            hsv: { h: this.negativeMagicWandSettings.seedColor.h, s: this.negativeMagicWandSettings.seedColor.s, v: this.negativeMagicWandSettings.seedColor.v },
+            lab: { l: this.negativeMagicWandSettings.seedColor.l, a: this.negativeMagicWandSettings.seedColor.a, b_lab: this.negativeMagicWandSettings.seedColor.b_lab },
+        }
+        const isExcluded = this.isInsideTolerance(exclusionSeedColor, neighborColor, this.negativeMagicWandSettings);
+        return !isExcluded;
+    }
+
     return true;
   }
   // #endregion
@@ -661,3 +687,5 @@ export class SelectionEngine {
     }
   }
 }
+
+    

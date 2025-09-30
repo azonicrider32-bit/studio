@@ -18,6 +18,7 @@ export interface MagicWandSettings {
     contiguous: boolean;
     useAiAssist: boolean;
     activeTolerances: Set<keyof MagicWandSettings['tolerances']>;
+    seedColor?: { [key: string]: number };
 }
 
 
@@ -26,3 +27,5 @@ export interface Segment {
     pixels: Set<number>;
     bounds: { x: number; y: number; width: number; height: number };
 }
+
+    

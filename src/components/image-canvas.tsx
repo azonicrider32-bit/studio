@@ -23,16 +23,16 @@ interface ImageCanvasProps {
   lassoSettings: LassoSettings;
   magicWandSettings: MagicWandSettings;
   negativeMagicWandSettings: MagicWandSettings;
-  setNegativeMagicWandSettings: (settings: MagicWandSettings) => void;
-  getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
-  clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
   onMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
+  onNegativeMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
   activeLassoScrollSetting: keyof LassoSettings | null;
   activeWandScrollSetting: keyof MagicWandSettings['tolerances'] | null;
   canvasMousePos: { x: number; y: number } | null;
   setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
   getCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
+  clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
 }
 
 export function ImageCanvas({
@@ -43,16 +43,16 @@ export function ImageCanvas({
   lassoSettings,
   magicWandSettings,
   negativeMagicWandSettings,
-  setNegativeMagicWandSettings,
-  getSelectionMaskRef,
-  clearSelectionRef,
   onLassoSettingChange,
   onMagicWandSettingChange,
+  onNegativeMagicWandSettingChange,
   activeLassoScrollSetting,
   activeWandScrollSetting,
   canvasMousePos,
   setCanvasMousePos,
-  getCanvasRef
+  getCanvasRef,
+  getSelectionMaskRef,
+  clearSelectionRef,
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -129,9 +129,9 @@ export function ImageCanvas({
   
   React.useEffect(() => {
     if (selectionEngineRef.current) {
-        selectionEngineRef.current.updateSettings(lassoSettings, magicWandSettings);
+        selectionEngineRef.current.updateSettings(lassoSettings, magicWandSettings, negativeMagicWandSettings);
     }
-  }, [lassoSettings, magicWandSettings]);
+  }, [lassoSettings, magicWandSettings, negativeMagicWandSettings]);
 
 
   const endLassoAndProcess = React.useCallback(async () => {
@@ -308,10 +308,12 @@ export function ImageCanvas({
 
     const hsv = rgbToHsv(r, g, b);
     const lab = rgbToLab(r, g, b);
+    
+    onNegativeMagicWandSettingChange({
+        ...negativeMagicWandSettings,
+        seedColor: { r,g,b, ...hsv, ...lab }
+    })
 
-    // This is a placeholder for where we'll store the sampled color
-    // For now, we'll just log it. In the next step, we'll update the state.
-    console.log("Sampled exclusion color:", { rgb: {r,g,b}, hsv, lab });
 
     toast({
         title: "Exclusion Color Sampled",
@@ -491,3 +493,5 @@ export function ImageCanvas({
     </div>
   );
 }
+
+    
