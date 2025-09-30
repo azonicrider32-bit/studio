@@ -557,21 +557,23 @@ export class SelectionEngine {
         while(straightPath.length < maxLength) straightPath.push(straightPath[straightPath.length-1]);
         
         // Draw the ribbon
-        const gradient = overlayCtx.createLinearGradient(lastAnchor[0], lastAnchor[1], this.lassoCurrentPos[0], this.lassoCurrentPos[1]);
-        gradient.addColorStop(0, "rgba(3, 169, 244, 0.05)");
-        gradient.addColorStop(1, "rgba(3, 169, 244, 0.4)");
+        if(straightPath.length > 0 && snappedPath.length > 0) {
+            const gradient = overlayCtx.createLinearGradient(lastAnchor[0], lastAnchor[1], this.lassoCurrentPos[0], this.lassoCurrentPos[1]);
+            gradient.addColorStop(0, "rgba(3, 169, 244, 0.05)");
+            gradient.addColorStop(1, "rgba(3, 169, 244, 0.4)");
 
-        overlayCtx.fillStyle = gradient;
-        overlayCtx.beginPath();
-        overlayCtx.moveTo(straightPath[0][0], straightPath[0][1]);
-        for(let i=1; i < maxLength; i++) {
-          overlayCtx.lineTo(straightPath[i][0], straightPath[i][1]);
+            overlayCtx.fillStyle = gradient;
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(straightPath[0][0], straightPath[0][1]);
+            for(let i=1; i < maxLength; i++) {
+              overlayCtx.lineTo(straightPath[i][0], straightPath[i][1]);
+            }
+            for(let i = maxLength - 1; i >= 0; i--) {
+              overlayCtx.lineTo(snappedPath[i][0], snappedPath[i][1]);
+            }
+            overlayCtx.closePath();
+            overlayCtx.fill();
         }
-        for(let i = maxLength - 1; i >= 0; i--) {
-          overlayCtx.lineTo(snappedPath[i][0], snappedPath[i][1]);
-        }
-        overlayCtx.closePath();
-        overlayCtx.fill();
         
         // Draw the final snapped path
         const path = this.getLassoPath();
