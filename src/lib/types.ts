@@ -3,6 +3,7 @@ export interface LassoSettings {
     useEdgeSnapping: boolean;
     snapRadius: number;
     snapThreshold: number;
+    curveStrength: number;
 }
 
 export interface MagicWandSettings {

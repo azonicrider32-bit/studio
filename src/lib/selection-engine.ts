@@ -33,6 +33,7 @@ export class SelectionEngine {
     useEdgeSnapping: true,
     snapRadius: 10,
     snapThreshold: 0.3,
+    curveStrength: 0.5,
   };
   magicWandSettings: MagicWandSettings = {
     tolerance: 30,
@@ -121,6 +122,31 @@ export class SelectionEngine {
 
     const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
     
+    // Check for progressive undo
+    const lastPointInPreview = this.lassoPreviewPath[this.lassoPreviewPath.length - 1];
+    if (lastPointInPreview) {
+      const distToCursor = Math.hypot(lastPointInPreview[0] - x, lastPointInPreview[1] - y);
+      const distToAnchor = Math.hypot(lastPointInPreview[0] - lastAnchor[0], lastPointInPreview[1] - lastAnchor[1]);
+      const newDistToAnchor = Math.hypot(x - lastAnchor[0], y - lastAnchor[1]);
+
+      if (newDistToAnchor < distToAnchor && distToCursor < this.lassoSettings.snapRadius) {
+        // Find closest point on path to cursor
+        let closestIndex = -1;
+        let minDistance = Infinity;
+        for (let i = 0; i < this.lassoPreviewPath.length; i++) {
+          const dist = Math.hypot(this.lassoPreviewPath[i][0] - x, this.lassoPreviewPath[i][1] - y);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestIndex = i;
+          }
+        }
+        if (closestIndex !== -1) {
+          this.lassoPreviewPath = this.lassoPreviewPath.slice(0, closestIndex + 1);
+          return;
+        }
+      }
+    }
+    
     this.lassoPreviewPath = this.findEdgePath(lastAnchor, [x, y]);
 }
 
@@ -128,9 +154,13 @@ export class SelectionEngine {
   addLassoNode() {
     if (!this.isDrawingLasso || !this.lassoCurrentPos || this.lassoPreviewPath.length === 0) return;
     
-    const newNode = this.lassoPreviewPath[this.lassoPreviewPath.length - 1];
-    this.lassoNodes.push(newNode);
+    // Add the entire preview path to the main nodes list
+    this.lassoNodes.push(...this.lassoPreviewPath);
     this.lassoPreviewPath = [];
+    
+    // Set the new anchor point
+    const newAnchor = this.lassoNodes[this.lassoNodes.length-1];
+    this.updateLassoPreview(newAnchor[0], newAnchor[1]);
   }
   
   endLassoWithEnhancedPath(enhancedPath: {x:number, y:number}[]) {
@@ -165,100 +195,129 @@ export class SelectionEngine {
   }
 
   getLassoPath(closed = false) {
-    if (!this.isDrawingLasso || this.lassoNodes.length === 0) return [];
+    if (!this.isDrawingLasso) return [];
     
-    let path: [number, number][] = [];
-    
-    for (let i = 0; i < this.lassoNodes.length - 1; i++) {
-        const [x1, y1] = this.lassoNodes[i];
-        const [x2, y2] = this.lassoNodes[i+1];
-        path.push(...this.findEdgePath([x1, y1], [x2, y2]));
-    }
-    
+    let path = [...this.lassoNodes];
     path.push(...this.lassoPreviewPath);
     
-    if (closed) {
-        const firstNode = this.lassoNodes[0];
-        const lastNode = path.length > 0 ? path[path.length - 1] : this.lassoNodes[this.lassoNodes.length-1];
-        path.push(...this.findEdgePath(lastNode, firstNode));
+    if (closed && path.length > 1) {
+        const firstNode = path[0];
+        const lastNode = path[path.length - 1];
+        if (Math.hypot(firstNode[0] - lastNode[0], firstNode[1] - lastNode[1]) > 1) {
+            path.push(firstNode);
+        }
     }
     
     return path;
   }
   
   findEdgePath(p1: [number, number], p2: [number, number]): [number, number][] {
-      if (!this.lassoSettings.useEdgeSnapping || !this.edgeMap) {
-          return [p1, p2];
-      }
-      
-      const path: [number, number][] = [p1];
-      let currentPoint = p1;
-      const visitedInPath = new Set<number>();
-      visitedInPath.add(p1[1] * this.width + p1[0]);
+    if (!this.lassoSettings.useEdgeSnapping || !this.edgeMap) {
+        return [p1, p2];
+    }
 
-      const maxSteps = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 2;
-      let steps = 0;
+    const path: [number, number][] = [];
+    let currentPoint = p1;
+    const visitedInPath = new Set<number>();
+    visitedInPath.add(Math.round(p1[1]) * this.width + Math.round(p1[0]));
 
-      while (steps < maxSteps) {
-          steps++;
-          const distToTarget = Math.hypot(p2[0] - currentPoint[0], p2[1] - currentPoint[1]);
-          if (distToTarget < this.lassoSettings.snapRadius) {
-              break; 
-          }
+    const maxSteps = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 2;
+    let steps = 0;
+    
+    let lastDirection: [number, number] | null = null;
 
-          let bestNextPoint: [number, number] | null = null;
-          let minCost = Infinity;
+    while (steps < maxSteps) {
+        steps++;
+        const distToTarget = Math.hypot(p2[0] - currentPoint[0], p2[1] - currentPoint[1]);
+        if (distToTarget < this.lassoSettings.snapRadius) {
+            break;
+        }
 
-          const searchRadius = this.lassoSettings.snapRadius;
-          const startY = Math.max(0, Math.round(currentPoint[1]) - searchRadius);
-          const endY = Math.min(this.height - 1, Math.round(currentPoint[1]) + searchRadius);
-          const startX = Math.max(0, Math.round(currentPoint[0]) - searchRadius);
-          const endX = Math.min(this.width - 1, Math.round(currentPoint[0]) + searchRadius);
+        let bestNextPoint: [number, number] | null = null;
+        let minCost = Infinity;
 
-          for (let y = startY; y <= endY; y++) {
-              for (let x = startX; x <= endX; x++) {
-                  const idx = y * this.width + x;
-                  if (visitedInPath.has(idx)) continue;
+        const searchRadius = Math.max(1, Math.min(this.lassoSettings.snapRadius, Math.floor(distToTarget / 4)));
+        
+        const startY = Math.max(0, Math.round(currentPoint[1]) - searchRadius);
+        const endY = Math.min(this.height - 1, Math.round(currentPoint[1]) + searchRadius);
+        const startX = Math.max(0, Math.round(currentPoint[0]) - searchRadius);
+        const endX = Math.min(this.width - 1, Math.round(currentPoint[0]) + searchRadius);
 
-                  const distSq = (x - currentPoint[0])**2 + (y - currentPoint[1])**2;
-                  if (distSq > searchRadius * searchRadius) continue;
+        const vectorToTarget = [p2[0] - currentPoint[0], p2[1] - currentPoint[1]];
+        const magToTarget = Math.hypot(vectorToTarget[0], vectorToTarget[1]);
+        const dirToTarget = [vectorToTarget[0] / magToTarget, vectorToTarget[1] / magToTarget];
 
-                  const edgeStrength = this.edgeMap[idx];
-                  if (edgeStrength < this.lassoSettings.snapThreshold * 255) continue;
-                  
-                  // Cost function
-                  const distToTargetAfter = Math.hypot(p2[0] - x, p2[1] - y);
-                  const directionCost = (distToTargetAfter - distToTarget) * 0.5; // Penalize moving away from target
-                  const edgeCost = (1 / (edgeStrength + 1)) * 1000; // Penalize weak edges
+        for (let y = startY; y <= endY; y++) {
+            for (let x = startX; x <= endX; x++) {
+                const idx = y * this.width + x;
+                if (visitedInPath.has(idx)) continue;
 
-                  const cost = directionCost + edgeCost;
+                const distSq = (x - currentPoint[0])**2 + (y - currentPoint[1])**2;
+                if (distSq === 0 || distSq > searchRadius * searchRadius) continue;
 
-                  if (cost < minCost) {
-                      minCost = cost;
-                      bestNextPoint = [x, y];
-                  }
+                const edgeStrength = this.edgeMap[idx];
+                if (edgeStrength < this.lassoSettings.snapThreshold * 255) continue;
+                
+                // Cost function
+                const vectorToCandidate = [x - currentPoint[0], y - currentPoint[1]];
+                const magToCandidate = Math.hypot(vectorToCandidate[0], vectorToCandidate[1]);
+                const dirToCandidate = [vectorToCandidate[0] / magToCandidate, vectorToCandidate[1] / magToCandidate];
+
+                const directionSimilarity = (dirToCandidate[0] * dirToTarget[0] + dirToCandidate[1] * dirToTarget[1] + 1) / 2; // Range 0-1
+                const directionCost = (1 - directionSimilarity) * 500;
+
+                const edgeCost = (1 / (edgeStrength + 1)) * 1000;
+                
+                let curvatureCost = 0;
+                if (lastDirection) {
+                    const dot = dirToCandidate[0] * lastDirection[0] + dirToCandidate[1] * lastDirection[1];
+                    const angleChange = Math.acos(Math.max(-1, Math.min(1, dot))); // 0 to PI
+                    curvatureCost = (angleChange / Math.PI) * 1000 * this.lassoSettings.curveStrength;
+                }
+
+                const cost = directionCost + edgeCost + curvatureCost;
+
+                if (cost < minCost) {
+                    minCost = cost;
+                    bestNextPoint = [x, y];
+                }
+            }
+        }
+
+        if (bestNextPoint) {
+            path.push(bestNextPoint);
+            if (lastDirection) {
+              lastDirection = [bestNextPoint[0] - currentPoint[0], bestNextPoint[1] - currentPoint[1]];
+              const mag = Math.hypot(lastDirection[0], lastDirection[1]);
+              if (mag > 0) {
+                lastDirection[0] /= mag;
+                lastDirection[1] /= mag;
               }
-          }
+            } else if (path.length > 0) {
+              const prev = path.length > 1 ? path[path.length - 2] : p1;
+              lastDirection = [bestNextPoint[0] - prev[0], bestNextPoint[1] - prev[1]];
+              const mag = Math.hypot(lastDirection[0], lastDirection[1]);
+               if (mag > 0) {
+                lastDirection[0] /= mag;
+                lastDirection[1] /= mag;
+              }
+            }
 
-          if (bestNextPoint) {
-              path.push(bestNextPoint);
-              currentPoint = bestNextPoint;
-              visitedInPath.add(bestNextPoint[1] * this.width + bestNextPoint[0]);
-          } else {
-              // No good point found, jump forward
-              const dx = p2[0] - currentPoint[0];
-              const dy = p2[1] - currentPoint[1];
-              const jumpDist = Math.min(this.lassoSettings.snapRadius, distToTarget);
-              const nextX = Math.round(currentPoint[0] + dx / distToTarget * jumpDist);
-              const nextY = Math.round(currentPoint[1] + dy / distToTarget * jumpDist);
-              const nextPoint: [number, number] = [nextX, nextY];
-              path.push(nextPoint);
-              currentPoint = nextPoint;
-          }
-      }
-      path.push(p2);
-      return path;
-  }
+            currentPoint = bestNextPoint;
+            visitedInPath.add(Math.round(bestNextPoint[1]) * this.width + Math.round(bestNextPoint[0]));
+        } else {
+            // No good point found, jump forward along the straight line
+            const jumpDist = Math.min(this.lassoSettings.snapRadius, distToTarget);
+            const nextX = Math.round(currentPoint[0] + dirToTarget[0] * jumpDist);
+            const nextY = Math.round(currentPoint[1] + dirToTarget[1] * jumpDist);
+            const nextPoint: [number, number] = [nextX, nextY];
+            path.push(nextPoint);
+            currentPoint = nextPoint;
+            lastDirection = null; // Reset curvature check after a jump
+        }
+    }
+    return path;
+}
 
 
   snapToEdge(x: number, y: number): [number, number] {
@@ -534,13 +593,7 @@ export class SelectionEngine {
     });
 
     if (this.isDrawingLasso) {
-      let fullPath: [number, number][] = [];
-      for (let i = 0; i < this.lassoNodes.length - 1; i++) {
-        fullPath.push(...this.findEdgePath(this.lassoNodes[i], this.lassoNodes[i+1]));
-      }
-      if (this.lassoCurrentPos) {
-        fullPath.push(...this.findEdgePath(this.lassoNodes[this.lassoNodes.length-1], this.lassoCurrentPos));
-      }
+      const fullPath = this.getLassoPath(false);
       
       if (fullPath.length > 0) {
         overlayCtx.strokeStyle = 'hsl(var(--accent))';

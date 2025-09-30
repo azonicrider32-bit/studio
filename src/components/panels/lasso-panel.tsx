@@ -55,6 +55,19 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           />
           <p className="text-xs text-muted-foreground">How strong an edge must be to be considered for snapping. Lower is more sensitive.</p>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="curveStrength">Curve Strength: {settings.curveStrength.toFixed(2)}</Label>
+           <Slider
+            id="curveStrength"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[settings.curveStrength]}
+            onValueChange={(value) => onSettingsChange({ curveStrength: value[0] })}
+          />
+          <p className="text-xs text-muted-foreground">Higher values create smoother, more curved lines, ignoring small details.</p>
+        </div>
         
         <div className="flex items-center justify-between">
           <Label htmlFor="useEdgeSnapping">Enable AI Edge Snapping</Label>
