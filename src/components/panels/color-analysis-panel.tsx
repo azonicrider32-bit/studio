@@ -59,7 +59,12 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
         }
       }
     } else {
-        setAnalysis(null);
+        setAnalysis({
+          rgb: { r: 0, g: 0, b: 0 },
+          hex: "#000000",
+          hsv: { h: 0, s: 0, v: 0 },
+          lab: { l: 0, a: 0, b: 0 },
+        });
     }
   }, [canvas, mousePos]);
 
@@ -79,7 +84,7 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
              <div className={cn("w-full", color)} style={{ height: `${(value/max) * 100}%`}}></div>
         </div>
         <button onClick={onLabelClick} className={cn("font-mono text-xs text-muted-foreground rounded-sm px-1", isActive && "bg-primary text-primary-foreground")}>{label}</button>
-        <span className="font-mono text-sm">{Math.round(value)}</span>
+        <span className="font-mono text-sm">{analysis ? Math.round(value) : "-"}</span>
     </div>
   );
 
@@ -124,7 +129,7 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
                  {renderColorBreakdown("LAB", {
                     "L": { id: 'l', value: analysis?.lab.l ?? 0, max: 100, color: "bg-gray-500" },
                     "A": { id: 'a', value: (analysis?.lab.a ?? 0) + 128, max: 256, color: "bg-gradient-to-t from-green-500 to-red-500" },
-                    "B": { id: 'b_lab', value: (analysis?.lab.b ?? 0) + 128, max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
+                    "b_lab": { id: 'b_lab', value: (analysis?.lab.b ?? 0) + 128, max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
                 })}
             </div>
         </div>

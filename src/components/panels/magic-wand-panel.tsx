@@ -16,6 +16,7 @@ import { MagicWandSettings } from "@/lib/types"
 import { handleApiError } from "@/lib/error-handling"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { cn } from "@/lib/utils"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
@@ -116,8 +117,8 @@ export function MagicWandPanel({
       title: 'LAB',
       components: [
         { id: 'l', label: 'L', max: 100 },
-        { id: 'a', label: 'A', max: 128 },
-        { id: 'b_lab', label: 'B', max: 128 },
+        { id: 'a', label: 'a', max: 128 },
+        { id: 'b_lab', label: 'b', max: 128 },
       ]
     }
   ]
@@ -136,23 +137,22 @@ export function MagicWandPanel({
 
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-center">Color Tolerances</h4>
+        <p className="text-xs text-muted-foreground -mt-2 text-center">Toggle a setting to adjust it with the mouse wheel while drawing.</p>
         <TooltipProvider>
-            <div className="flex justify-around items-end h-64 bg-muted/50 p-2 rounded-md gap-1">
+            <div className="flex justify-around items-end h-64 bg-muted/50 p-4 rounded-md gap-1">
                 {ALL_COMPONENTS.map((group, groupIndex) => 
                     <React.Fragment key={group.title}>
                         {group.components.map(config => (
-                            <VerticalSettingSlider
+                            <VerticalToleranceSlider
                                 key={config.id}
                                 id={config.id}
                                 label={config.label}
-                                value={settings.tolerances[config.id]}
-                                min={0}
+                                tolerance={settings.tolerances[config.id]}
                                 max={config.max}
-                                step={1}
                                 description={`Adjusts the tolerance for the ${config.label} component.`}
                                 isActive={activeScrollSetting === config.id}
                                 onToggle={() => handleToggle(config.id)}
-                                onValueChange={(value) => handleToleranceChange(config.id, value)}
+                                onToleranceChange={(value) => handleToleranceChange(config.id, value)}
                             />
                         ))}
                         {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-56 bg-border/50" />}
@@ -215,19 +215,35 @@ export function MagicWandPanel({
 }
 
 
-interface VerticalSettingSliderProps {
+interface VerticalToleranceSliderProps {
     id: keyof MagicWandSettings['tolerances'];
     label: string;
-    value: number;
-    min: number; max: number; step: number;
+    tolerance: number;
+    max: number;
     description: string;
     isActive: boolean;
     onToggle: () => void;
-    onValueChange: (value: number) => void;
+    onToleranceChange: (value: number) => void;
 }
 
-function VerticalSettingSlider({ id, label, value, min, max, step, description, isActive, onToggle, onValueChange }: VerticalSettingSliderProps) {
-    const displayValue = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2);
+function VerticalToleranceSlider({ id, label, tolerance, max, description, isActive, onToggle, onToleranceChange }: VerticalToleranceSliderProps) {
+    const displayValue = tolerance.toFixed(0);
+    const pixelValue = 128; // Example value, this should come from canvas hover
+    
+    // The base value is the center of the bar
+    const basePercent = 50; 
+    
+    // The tolerance is a percentage of the max value
+    const tolerancePercent = (tolerance / max) * 100;
+    
+    // The range is centered on the base value
+    let bottom = basePercent - (tolerancePercent / 2);
+    let top = basePercent + (tolerancePercent / 2);
+
+    // For H (hue), the tolerance is circular. For simplicity, we keep it linear here.
+    // A more complex visualization could wrap around.
+    
+    const rangeHeight = top - bottom;
     
     return (
         <div className="flex flex-col items-center justify-between gap-2 h-full flex-1">
@@ -239,16 +255,26 @@ function VerticalSettingSlider({ id, label, value, min, max, step, description, 
                     <p>{label} Tolerance</p>
                 </TooltipContent>
             </Tooltip>
+
+             <div className="w-4 h-full bg-muted/50 rounded-full overflow-hidden flex flex-col justify-end relative">
+                 <div 
+                    className={cn("w-full absolute bg-primary/50")} 
+                    style={{ 
+                        bottom: `${bottom}%`, 
+                        height: `${rangeHeight}%`
+                    }}
+                ></div>
+            </div>
             
             <Slider
                 id={id}
-                min={min}
+                min={0}
                 max={max}
-                step={step}
-                value={[value]}
-                onValueChange={(v) => onValueChange(v[0])}
+                step={1}
+                value={[tolerance]}
+                onValueChange={(v) => onToleranceChange(v[0])}
                 orientation="vertical"
-                className="h-full"
+                className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0"
             />
             <span className="font-mono text-xs">{displayValue}</span>
              <div className="flex flex-col items-center gap-2">
