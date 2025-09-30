@@ -477,10 +477,15 @@ export class SelectionEngine {
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return "";
 
-    tempCtx.fillStyle = 'white'; // Unselected area
+    // The mask for inpainting should have black where you want to inpaint
+    // and white where you want to preserve the original image.
+    // However, for the magic wand AI assist, we are providing a "hint" of
+    // where to look. Let's make the hint area black and the rest transparent
+    // so the model knows where the important texture is.
+    tempCtx.fillStyle = 'white';
     tempCtx.fillRect(0, 0, this.width, this.height);
 
-    tempCtx.fillStyle = 'black'; // Selected area
+    tempCtx.fillStyle = 'black';
     tempCtx.beginPath();
     tempCtx.arc(x, y, radius, 0, Math.PI * 2);
     tempCtx.fill();

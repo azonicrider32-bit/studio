@@ -11,6 +11,7 @@ import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } fro
 import { LassoSettings, MagicWandSettings, Segment } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { handleApiError } from "@/lib/error-handling";
+import { SegmentHoverPreview } from "./segment-hover-preview";
 
 
 interface ImageCanvasProps {
@@ -82,11 +83,11 @@ export function ImageCanvas({
     if (overlayCtx) {
       overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
       engine.renderSelection(overlayCtx);
-      if (hoveredSegment && activeTool === 'magic-wand') {
+      if (hoveredSegment && activeTool === 'magic-wand' && !magicWandSettings.useAiAssist) {
         engine.renderHoverSegment(overlayCtx, hoveredSegment);
       }
     }
-  }, [hoveredSegment, activeTool]);
+  }, [hoveredSegment, activeTool, magicWandSettings.useAiAssist]);
 
 
   const initEngine = React.useCallback(() => {
@@ -244,13 +245,13 @@ export function ImageCanvas({
             engine.magicWand(pos.x, pos.y);
             drawOverlay();
             toast({ title: "Selection created." });
+            setIsProcessing(false);
             return;
         }
 
         toast({ title: "Magic Wand is thinking...", description: "AI is analyzing the pattern." });
 
-        // Create a search area mask for the AI
-        const searchRadius = 15; // Example radius
+        const searchRadius = 15;
         const initialSelectionMask = engine.createCircularMask(pos.x, pos.y, searchRadius);
 
         const input: MagicWandAssistedSegmentationInput = {
