@@ -70,7 +70,7 @@ export function LassoPanel({ settings, onSettingsChange, activeScrollSetting, on
         <p className="text-xs text-muted-foreground -mt-2">Toggle a setting to adjust it with the mouse wheel while drawing.</p>
 
         <TooltipProvider>
-            <div className="flex justify-around items-end h-56">
+            <div className="flex justify-around items-end h-64">
                 {SETTINGS_CONFIG.map(config => (
                     <VerticalSettingSlider
                         key={config.id}
@@ -153,7 +153,7 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
                     id={`${id}-toggle`}
                     checked={isActive}
                     onCheckedChange={onToggle}
-                    className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input h-5 w-9 [&>span]:h-4 [&>span]:w-4 [&>span]:data-[state=checked]:translate-x-4"
+                    orientation="vertical"
                 />
                  <Popover>
                     <PopoverTrigger>

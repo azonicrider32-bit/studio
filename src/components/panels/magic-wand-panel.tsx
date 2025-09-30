@@ -2,13 +2,6 @@
 
 import * as React from "react"
 import { Sparkles, BrainCircuit, Info } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -144,7 +137,7 @@ export function MagicWandPanel({
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-center">Color Tolerances</h4>
         <TooltipProvider>
-            <div className="flex justify-around items-end h-56 bg-muted/50 p-2 rounded-md gap-1">
+            <div className="flex justify-around items-end h-64 bg-muted/50 p-2 rounded-md gap-1">
                 {ALL_COMPONENTS.map((group, groupIndex) => 
                     <React.Fragment key={group.title}>
                         {group.components.map(config => (
@@ -162,7 +155,7 @@ export function MagicWandPanel({
                                 onValueChange={(value) => handleToleranceChange(config.id, value)}
                             />
                         ))}
-                        {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-48 bg-border/50" />}
+                        {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-56 bg-border/50" />}
                     </React.Fragment>
                 )}
             </div>
@@ -263,7 +256,7 @@ function VerticalSettingSlider({ id, label, value, min, max, step, description, 
                     id={`${id}-toggle`}
                     checked={isActive}
                     onCheckedChange={onToggle}
-                    className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input h-5 w-9 [&>span]:h-4 [&>span]:w-4 [&>span]:data-[state=checked]:translate-x-4"
+                    orientation="vertical"
                 />
                  <Popover>
                     <PopoverTrigger>
