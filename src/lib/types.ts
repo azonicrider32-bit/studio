@@ -1,10 +1,12 @@
 
+
 export interface LassoSettings {
     useEdgeSnapping: boolean;
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number;
     directionalStrength: number;
+    cursorInfluence: number;
 }
 
 export interface MagicWandSettings {

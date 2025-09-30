@@ -51,8 +51,9 @@ export function ProSegmentAI() {
     useEdgeSnapping: true,
     snapRadius: 10,
     snapThreshold: 0.3,
-    curveStrength: 0.5,
-    directionalStrength: 0.5,
+    curveStrength: 0.75,
+    directionalStrength: 0.2,
+    cursorInfluence: 0.2,
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerance: 30,
@@ -60,6 +61,8 @@ export function ProSegmentAI() {
     contiguous: true,
     useAiAssist: true,
   });
+  const [activeScrollSetting, setActiveScrollSetting] = React.useState<keyof LassoSettings | null>(null);
+
 
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
   const clearSelectionRef = React.useRef<() => void>();
@@ -82,7 +85,12 @@ export function ProSegmentAI() {
       case "magic-wand":
         return <MagicWandPanel settings={magicWandSettings} onSettingsChange={handleMagicWandSettingsChange} setSegmentationMask={setSegmentationMask} />
       case "lasso":
-        return <LassoPanel settings={lassoSettings} onSettingsChange={handleLassoSettingsChange} />
+        return <LassoPanel 
+                    settings={lassoSettings} 
+                    onSettingsChange={handleLassoSettingsChange} 
+                    activeScrollSetting={activeScrollSetting}
+                    onActiveScrollSettingChange={setActiveScrollSetting}
+                />
       case "brush":
         return <BrushPanel />
       case "eraser":
@@ -189,6 +197,8 @@ export function ProSegmentAI() {
               magicWandSettings={magicWandSettings}
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
+              onLassoSettingChange={handleLassoSettingsChange}
+              activeScrollSetting={activeScrollSetting}
             />
         </div>
       </SidebarInset>
@@ -243,5 +253,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    

@@ -33,8 +33,9 @@ export class SelectionEngine {
     useEdgeSnapping: true,
     snapRadius: 10,
     snapThreshold: 0.3,
-    curveStrength: 0.5,
-    directionalStrength: 0.5,
+    curveStrength: 0.75,
+    directionalStrength: 0.2,
+    cursorInfluence: 0.2,
   };
   magicWandSettings: MagicWandSettings = {
     tolerance: 30,
@@ -123,33 +124,8 @@ export class SelectionEngine {
 
     const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
     
-    // Check for progressive undo
-    const lastPointInPreview = this.lassoPreviewPath[this.lassoPreviewPath.length - 1];
-    if (lastPointInPreview) {
-      const distToCursor = Math.hypot(lastPointInPreview[0] - x, lastPointInPreview[1] - y);
-      const distToAnchor = Math.hypot(lastPointInPreview[0] - lastAnchor[0], lastPointInPreview[1] - lastAnchor[1]);
-      const newDistToAnchor = Math.hypot(x - lastAnchor[0], y - lastAnchor[1]);
-
-      if (newDistToAnchor < distToAnchor && distToCursor < this.lassoSettings.snapRadius) {
-        // Find closest point on path to cursor
-        let closestIndex = -1;
-        let minDistance = Infinity;
-        for (let i = 0; i < this.lassoPreviewPath.length; i++) {
-          const dist = Math.hypot(this.lassoPreviewPath[i][0] - x, this.lassoPreviewPath[i][1] - y);
-          if (dist < minDistance) {
-            minDistance = dist;
-            closestIndex = i;
-          }
-        }
-        if (closestIndex !== -1) {
-          this.lassoPreviewPath = this.lassoPreviewPath.slice(0, closestIndex + 1);
-          return;
-        }
-      }
-    }
-    
     this.lassoPreviewPath = this.findEdgePath(lastAnchor, [x, y]);
-}
+  }
 
 
   addLassoNode() {
@@ -226,6 +202,7 @@ export class SelectionEngine {
     let steps = 0;
     
     let lastDirection: [number, number] | null = null;
+    const falloffDistance = 50; 
 
     while (steps < maxSteps) {
         steps++;
@@ -256,9 +233,6 @@ export class SelectionEngine {
 
                 const distSq = (x - currentPoint[0])**2 + (y - currentPoint[1])**2;
                 if (distSq === 0 || distSq > searchRadius * searchRadius) continue;
-
-                const edgeStrength = this.edgeMap[idx];
-                if (edgeStrength < this.lassoSettings.snapThreshold * 255) continue;
                 
                 // Cost function
                 const vectorToCandidate = [x - currentPoint[0], y - currentPoint[1]];
@@ -266,18 +240,27 @@ export class SelectionEngine {
                 const dirToCandidate = [vectorToCandidate[0] / magToCandidate, vectorToCandidate[1] / magToCandidate];
 
                 const directionSimilarity = (dirToCandidate[0] * dirToTarget[0] + dirToCandidate[1] * dirToTarget[1] + 1) / 2; // Range 0-1
-                const directionCost = (1 - directionSimilarity) * 500 * (1-this.lassoSettings.directionalStrength);
-
-                const edgeCost = (1 / (edgeStrength + 1)) * 1000;
+                
+                const edgeStrength = this.edgeMap[idx] || 0;
+                
+                const cursorCost = (1 - directionSimilarity) * 500 * (this.lassoSettings.cursorInfluence);
+                const edgeCost = (1 / (edgeStrength + 1)) * 1000 * (1 - this.lassoSettings.cursorInfluence);
                 
                 let curvatureCost = 0;
+                let directionalCost = 0;
+
                 if (lastDirection) {
                     const dot = dirToCandidate[0] * lastDirection[0] + dirToCandidate[1] * lastDirection[1];
                     const angleChange = Math.acos(Math.max(-1, Math.min(1, dot))); // 0 to PI
-                    curvatureCost = (angleChange / Math.PI) * 1000 * this.lassoSettings.curveStrength;
+                    
+                    const stepsFromAnchor = path.length;
+                    const falloff = Math.min(1, stepsFromAnchor / falloffDistance);
+
+                    curvatureCost = (angleChange / Math.PI) * 1000 * this.lassoSettings.curveStrength * falloff;
+                    directionalCost = (1 - dot) * 500 * this.lassoSettings.directionalStrength * falloff;
                 }
 
-                const cost = directionCost + edgeCost + curvatureCost;
+                const cost = cursorCost + edgeCost + curvatureCost + directionalCost;
 
                 if (cost < minCost) {
                     minCost = cost;
@@ -287,24 +270,13 @@ export class SelectionEngine {
         }
 
         if (bestNextPoint) {
-            path.push(bestNextPoint);
-            if (lastDirection) {
-              lastDirection = [bestNextPoint[0] - currentPoint[0], bestNextPoint[1] - currentPoint[1]];
-              const mag = Math.hypot(lastDirection[0], lastDirection[1]);
-              if (mag > 0) {
-                lastDirection[0] /= mag;
-                lastDirection[1] /= mag;
-              }
-            } else if (path.length > 0) {
-              const prev = path.length > 1 ? path[path.length - 2] : p1;
-              lastDirection = [bestNextPoint[0] - prev[0], bestNextPoint[1] - prev[1]];
-              const mag = Math.hypot(lastDirection[0], lastDirection[1]);
-               if (mag > 0) {
-                lastDirection[0] /= mag;
-                lastDirection[1] /= mag;
-              }
+            const newDirection = [bestNextPoint[0] - currentPoint[0], bestNextPoint[1] - currentPoint[1]];
+            const mag = Math.hypot(newDirection[0], newDirection[1]);
+            if (mag > 0) {
+              lastDirection = [newDirection[0] / mag, newDirection[1] / mag];
             }
 
+            path.push(bestNextPoint);
             currentPoint = bestNextPoint;
             visitedInPath.add(Math.round(bestNextPoint[1]) * this.width + Math.round(bestNextPoint[0]));
         } else {

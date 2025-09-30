@@ -23,6 +23,8 @@ interface ImageCanvasProps {
   magicWandSettings: MagicWandSettings;
   getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
+  onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
+  activeScrollSetting: keyof LassoSettings | null;
 }
 
 export function ImageCanvas({
@@ -33,7 +35,9 @@ export function ImageCanvas({
   lassoSettings,
   magicWandSettings,
   getSelectionMaskRef,
-  clearSelectionRef
+  clearSelectionRef,
+  onLassoSettingChange,
+  activeScrollSetting
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -191,7 +195,7 @@ export function ImageCanvas({
   }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useEdgeSnapping]);
 
 
-  const getMousePos = (canvasEl: HTMLCanvasElement, evt: React.MouseEvent) => {
+  const getMousePos = (canvasEl: HTMLCanvasElement, evt: React.MouseEvent | React.WheelEvent) => {
     const rect = canvasEl.getBoundingClientRect();
     const imageEl = imageRef.current;
     if (!imageEl) return { x: 0, y: 0 };
@@ -328,6 +332,38 @@ export function ImageCanvas({
     // With the node-based lasso, mouse up doesn't end the drawing.
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    const engine = selectionEngineRef.current;
+    if (!engine || !engine.isDrawingLasso || !activeScrollSetting) return;
+
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -1 : 1; // Invert scroll for natural feel (scroll up = increase)
+    
+    let step = 0.05;
+    if (activeScrollSetting === 'snapRadius') step = 1;
+
+    let currentValue = lassoSettings[activeScrollSetting];
+    let min = 0;
+    let max = 1;
+
+    switch(activeScrollSetting) {
+        case 'snapRadius': min = 1; max = 20; break;
+        case 'snapThreshold': min = 0.05; max = 1; break;
+        case 'curveStrength': min = 0; max = 1; break;
+        case 'directionalStrength': min = 0; max = 1; break;
+        case 'cursorInfluence': min = 0; max = 1; break;
+    }
+    
+    let newValue = currentValue + delta * step;
+    newValue = Math.max(min, Math.min(max, newValue));
+
+    onLassoSettingChange({ [activeScrollSetting]: newValue });
+
+    const pos = getMousePos(e.currentTarget, e);
+    engine.updateLassoPreview(pos.x, pos.y);
+    drawOverlay();
+  };
+
   if (!imageUrl) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-muted">
@@ -362,6 +398,7 @@ export function ImageCanvas({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
+          onWheel={handleWheel}
           className="absolute top-0 left-0 h-full w-full object-contain"
           style={{ cursor: activeTool === 'magic-wand' ? 'crosshair' : activeTool === 'lasso' ? 'crosshair' : 'default' }}
         />
@@ -383,5 +420,3 @@ export function ImageCanvas({
     </div>
   );
 }
-
-    
