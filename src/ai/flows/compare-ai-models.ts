@@ -52,12 +52,17 @@ const compareAiModelsFlow = ai.defineFlow(
       modelIds.map(async modelId => {
         try {
           const startTime = Date.now();
+          // Use gemini-2.5-flash-image-preview for image segmentation tasks
+          const modelToUse = modelId === 'googleai/gemini-2.5-flash-image-preview' ? 'googleai/gemini-2.5-flash-image-preview' : modelId;
           const {media} = await ai.generate({
-            model: modelId as any,
+            model: modelToUse as any,
             prompt: [
               {media: {url: photoDataUri}},
               {text: `Segment the image using model ${modelId}`},
             ],
+             config: {
+              responseModalities: ['IMAGE'],
+            }
           });
           const endTime = Date.now();
 

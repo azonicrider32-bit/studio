@@ -18,7 +18,7 @@ import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationOutput } fr
 import { Skeleton } from "../ui/skeleton"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 
-type AIModel = "googleai/gemini-2.5-flash-segment-it-preview" | "bodypix" | "deeplab" | "sam" | "sam2"
+type AIModel = "googleai/gemini-2.5-flash-image-preview" | "bodypix" | "deeplab" | "sam" | "sam2"
 
 interface AiModelsPanelProps {
   setSegmentationMask: (mask: string | null) => void;
@@ -26,7 +26,7 @@ interface AiModelsPanelProps {
 
 
 export function AiModelsPanel({ setSegmentationMask }: AiModelsPanelProps) {
-  const [selectedModel, setSelectedModel] = React.useState<AIModel>("googleai/gemini-2.5-flash-segment-it-preview")
+  const [selectedModel, setSelectedModel] = React.useState<AIModel>("googleai/gemini-2.5-flash-image-preview")
   const [isProcessing, setIsProcessing] = React.useState(false)
   const [isComparing, setIsComparing] = React.useState(false)
   const [comparison, setComparison] = React.useState<CompareAiModelsOutput | null>(null)
@@ -43,8 +43,6 @@ export function AiModelsPanel({ setSegmentationMask }: AiModelsPanelProps) {
     try {
       const res = await magicWandAssistedSegmentation({
         photoDataUri: image.imageUrl,
-        x: 100,
-        y: 100,
         modelId: selectedModel,
       })
       if (res.maskDataUri) {
@@ -72,7 +70,7 @@ export function AiModelsPanel({ setSegmentationMask }: AiModelsPanelProps) {
     try {
       const res = await compareAiModels({
         photoDataUri: image.imageUrl,
-        modelIds: ["googleai/gemini-2.5-flash-segment-it-preview", "bodypix", "deeplab"],
+        modelIds: ["googleai/gemini-2.5-flash-image-preview", "bodypix", "deeplab"],
       })
       setComparison(res)
       toast({ title: "AI Model Comparison Complete" })
@@ -122,7 +120,7 @@ export function AiModelsPanel({ setSegmentationMask }: AiModelsPanelProps) {
             <SelectValue placeholder="Select AI model" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="googleai/gemini-2.5-flash-segment-it-preview">Segment Anything (Google)</SelectItem>
+            <SelectItem value="googleai/gemini-2.5-flash-image-preview">Segment Anything (Google)</SelectItem>
             <SelectItem value="bodypix">BodyPix (Human)</SelectItem>
             <SelectItem value="deeplab">DeepLab (Semantic)</SelectItem>
           </SelectContent>

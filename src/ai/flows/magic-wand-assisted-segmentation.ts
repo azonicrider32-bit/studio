@@ -59,7 +59,7 @@ const magicWandAssistedSegmentationFlow = ai.defineFlow(
 
 
       const { media } = await ai.generate({
-        model: (input.modelId as any) || 'googleai/gemini-2.5-flash-segment-it-preview',
+        model: (input.modelId as any) || 'googleai/gemini-2.5-flash-image-preview',
         prompt: prompts,
         config: {
           responseModalities: ['IMAGE'],
@@ -85,5 +85,3 @@ const magicWandAssistedSegmentationFlow = ai.defineFlow(
     }
   }
 );
-
-    

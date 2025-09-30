@@ -65,7 +65,7 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
       const result = await magicWandAssistedSegmentation({
         photoDataUri: image.imageUrl,
         contentType: contentType || 'object',
-        modelId: 'googleai/gemini-2.5-flash-segment-it-preview'
+        modelId: 'googleai/gemini-2.5-flash-image-preview'
       });
       if(result.maskDataUri) {
         setSegmentationMask(result.maskDataUri);
