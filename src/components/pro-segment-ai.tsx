@@ -10,6 +10,7 @@ import {
   Settings2,
   SlidersHorizontal,
   Wand2,
+  Image as ImageIcon,
 } from "lucide-react"
 
 import {
@@ -39,6 +40,9 @@ import { AiModelsPanel } from "./panels/ai-models-panel"
 import { InpaintingPanel } from "./panels/inpainting-panel"
 import { LassoSettings, MagicWandSettings } from "@/lib/types"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { Button } from "./ui/button"
+import Image from "next/image"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments"
 
@@ -46,7 +50,7 @@ export function ProSegmentAI() {
   const [activeTool, setActiveTool] = React.useState<Tool>("magic-wand")
   const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
-  const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")?.imageUrl);
+  const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     useEdgeSnapping: true,
     snapRadius: 10,
@@ -77,6 +81,15 @@ export function ProSegmentAI() {
   const handleMagicWandSettingsChange = (newSettings: Partial<MagicWandSettings>) => {
     setMagicWandSettings(prev => ({ ...prev, ...newSettings }));
   };
+  
+  const handleImageSelect = (url: string) => {
+    setImageUrl(url);
+    setSegmentationMask(null);
+    if(clearSelectionRef.current) {
+        clearSelectionRef.current();
+    }
+  }
+
 
   React.useEffect(() => {
     setIsClient(true)
@@ -187,7 +200,25 @@ export function ProSegmentAI() {
       <SidebarInset>
         <header className="flex h-12 items-center justify-between border-b px-4">
             <h2 className="font-headline text-xl font-semibold">Workspace</h2>
-            <div><SidebarTrigger /></div>
+             <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <ImageIcon className="mr-2 h-4 w-4" />
+                      Load Image
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="grid grid-cols-2 gap-2 w-[400px]">
+                    {PlaceHolderImages.map(img => (
+                        <button key={img.id} onClick={() => handleImageSelect(img.imageUrl)} className="block relative aspect-video w-full rounded-md overflow-hidden hover:opacity-80 transition-opacity">
+                             <Image src={img.imageUrl} alt={img.description} fill className="object-cover" />
+                        </button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
+
+                <SidebarTrigger />
+            </div>
         </header>
         <div className="flex-1">
             <ImageCanvas 
@@ -246,7 +277,7 @@ export function ProSegmentAI() {
                         <InpaintingPanel
                           imageUrl={imageUrl}
                           getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
-                          onGenerationComplete={(newUrl) => setImageUrl(newUrl)}
+                          onGenerationComplete={(newUrl) => handleImageSelect(newUrl)}
                           clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
                         />
                     </TabsContent>

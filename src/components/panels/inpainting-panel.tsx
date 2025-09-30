@@ -23,7 +23,10 @@ export function InpaintingPanel({ imageUrl, getSelectionMask, onGenerationComple
   const { toast } = useToast()
 
   const handleGenerate = async () => {
-    if (!imageUrl) {
+    // We need a stable reference to the imageUrl for the async operation.
+    const currentImageUrl = imageUrl;
+
+    if (!currentImageUrl) {
       toast({ variant: "destructive", title: "No image loaded." })
       return
     }
@@ -44,7 +47,7 @@ export function InpaintingPanel({ imageUrl, getSelectionMask, onGenerationComple
 
     try {
       const result = await inpaintWithPrompt({
-        photoDataUri: imageUrl,
+        photoDataUri: currentImageUrl,
         maskDataUri: maskDataUri,
         prompt: prompt,
       })
@@ -102,5 +105,3 @@ export function InpaintingPanel({ imageUrl, getSelectionMask, onGenerationComple
     </div>
   )
 }
-
-    

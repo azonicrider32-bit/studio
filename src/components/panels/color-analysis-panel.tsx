@@ -4,6 +4,7 @@ import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { rgbToHex, rgbToHsv, rgbToLab } from "@/lib/color-utils"
 import { SegmentHoverPreview } from "../segment-hover-preview"
+import { cn } from "@/lib/utils"
 
 interface ColorAnalysisPanelProps {
   canvas: HTMLCanvasElement | null;
@@ -61,16 +62,16 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
   const VerticalValueBar = ({ value, max, color, label }: { value: number; max: number; color: string; label: string }) => (
     <div className="flex flex-col items-center gap-2 flex-1">
         <div className="w-8 h-32 bg-muted rounded-full overflow-hidden flex flex-col justify-end">
-             <div className={color} style={{ height: `${(value/max) * 100}%`}}></div>
+             <div className={cn("w-full", color)} style={{ height: `${(value/max) * 100}%`}}></div>
         </div>
         <span className="font-mono text-xs text-muted-foreground">{label}</span>
-        <span className="font-mono text-sm">{value}</span>
+        <span className="font-mono text-sm">{Math.round(value)}</span>
     </div>
   );
 
   const renderColorBreakdown = (label: string, values: { [key: string]: { value: number, max: number, color: string }}) => (
      <div className="space-y-2">
-        <h5 className="font-semibold text-sm mb-2">{label}</h5>
+        <h5 className="font-semibold text-sm mb-2 text-center">{label}</h5>
         <div className="flex justify-around gap-2 p-2 rounded-md bg-muted/50">
             {Object.entries(values).map(([key, data]) => (
                 <VerticalValueBar key={key} label={key} value={data.value} max={data.max} color={data.color} />
@@ -97,23 +98,23 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
             <div className="space-y-4">
                 {renderColorValue("Hex", analysis.hex, analysis.hex)}
                 <Separator />
-                {renderColorBreakdown("RGB", { 
-                    "R": { value: analysis.rgb.r, max: 255, color: "bg-red-500" },
-                    "G": { value: analysis.rgb.g, max: 255, color: "bg-green-500" },
-                    "B": { value: analysis.rgb.b, max: 255, color: "bg-blue-500" },
-                })}
-                <Separator />
-                 {renderColorBreakdown("HSV", {
-                    "H": { value: analysis.hsv.h, max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500" },
-                    "S": { value: analysis.hsv.s, max: 100, color: "bg-slate-400" },
-                    "V": { value: analysis.hsv.v, max: 100, color: "bg-white" },
-                })}
-                <Separator />
-                 {renderColorBreakdown("LAB", {
-                    "L": { value: analysis.lab.l, max: 100, color: "bg-gray-500" },
-                    "A": { value: analysis.lab.a, max: 100, color: "bg-gradient-to-t from-green-500 to-red-500" },
-                    "B": { value: analysis.lab.b, max: 100, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
-                })}
+                <div className="flex gap-2">
+                    {renderColorBreakdown("RGB", { 
+                        "R": { value: analysis.rgb.r, max: 255, color: "bg-red-500" },
+                        "G": { value: analysis.rgb.g, max: 255, color: "bg-green-500" },
+                        "B": { value: analysis.rgb.b, max: 255, color: "bg-blue-500" },
+                    })}
+                     {renderColorBreakdown("HSV", {
+                        "H": { value: analysis.hsv.h, max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500" },
+                        "S": { value: analysis.hsv.s, max: 100, color: "bg-slate-400" },
+                        "V": { value: analysis.hsv.v, max: 100, color: "bg-white" },
+                    })}
+                     {renderColorBreakdown("LAB", {
+                        "L": { value: analysis.lab.l, max: 100, color: "bg-gray-500" },
+                        "A": { value: analysis.lab.a + 128, max: 256, color: "bg-gradient-to-t from-green-500 to-red-500" },
+                        "B": { value: analysis.lab.b + 128, max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
+                    })}
+                </div>
             </div>
         ) : (
             <p className="text-sm text-muted-foreground text-center pt-8">
