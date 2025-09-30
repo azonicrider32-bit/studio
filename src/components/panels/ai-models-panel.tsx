@@ -22,10 +22,11 @@ type AIModel = "googleai/gemini-2.5-flash-image-preview" | "bodypix" | "deeplab"
 
 interface AiModelsPanelProps {
   setSegmentationMask: (mask: string | null) => void;
+  setImageUrl: (url: string) => void;
 }
 
 
-export function AiModelsPanel({ setSegmentationMask }: AiModelsPanelProps) {
+export function AiModelsPanel({ setSegmentationMask, setImageUrl }: AiModelsPanelProps) {
   const [selectedModel, setSelectedModel] = React.useState<AIModel>("googleai/gemini-2.5-flash-image-preview")
   const [isProcessing, setIsProcessing] = React.useState(false)
   const [isComparing, setIsComparing] = React.useState(false)

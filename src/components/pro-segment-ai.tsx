@@ -36,7 +36,9 @@ import { ImageCanvas } from "./image-canvas"
 import { LayersPanel } from "./panels/layers-panel"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import { AiModelsPanel } from "./panels/ai-models-panel"
+import { InpaintingPanel } from "./panels/inpainting-panel"
 import { LassoSettings, MagicWandSettings } from "@/lib/types"
+import { PlaceHolderImages } from "@/lib/placeholder-images"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments"
 
@@ -44,6 +46,7 @@ export function ProSegmentAI() {
   const [activeTool, setActiveTool] = React.useState<Tool>("magic-wand")
   const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
+  const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")?.imageUrl);
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     useEdgeSnapping: true,
     snapRadius: 10,
@@ -56,6 +59,10 @@ export function ProSegmentAI() {
     contiguous: true,
     useAiAssist: true,
   });
+
+  const getSelectionMaskRef = React.useRef<() => string | undefined>();
+  const clearSelectionRef = React.useRef<() => void>();
+
 
   const handleLassoSettingsChange = (newSettings: Partial<LassoSettings>) => {
     setLassoSettings(prev => ({ ...prev, ...newSettings }));
@@ -173,11 +180,14 @@ export function ProSegmentAI() {
         </header>
         <div className="flex-1">
             <ImageCanvas 
+              imageUrl={imageUrl}
               segmentationMask={segmentationMask}
               setSegmentationMask={setSegmentationMask}
               activeTool={activeTool}
               lassoSettings={lassoSettings}
               magicWandSettings={magicWandSettings}
+              getSelectionMaskRef={getSelectionMaskRef}
+              clearSelectionRef={clearSelectionRef}
             />
         </div>
       </SidebarInset>
@@ -205,15 +215,24 @@ export function ProSegmentAI() {
             </TabsContent>
             <TabsContent value="ai" className="m-0">
                 <Tabs defaultValue="models" className="flex h-full flex-col">
-                    <TabsList className="m-2 grid grid-cols-2">
+                    <TabsList className="m-2 grid grid-cols-3">
                         <TabsTrigger value="models">Models</TabsTrigger>
                         <TabsTrigger value="canny">Canny</TabsTrigger>
+                        <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
                     </TabsList>
                     <TabsContent value="models" className="m-0 flex-1">
-                        <AiModelsPanel setSegmentationMask={setSegmentationMask}/>
+                        <AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} />
                     </TabsContent>
                     <TabsContent value="canny" className="m-0 flex-1">
                         <CannyTuningPanel />
+                    </TabsContent>
+                     <TabsContent value="inpaint" className="m-0 flex-1">
+                        <InpaintingPanel
+                          imageUrl={imageUrl}
+                          getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
+                          onGenerationComplete={(newUrl) => setImageUrl(newUrl)}
+                          clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
+                        />
                     </TabsContent>
                 </Tabs>
             </TabsContent>

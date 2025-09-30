@@ -213,7 +213,7 @@ export class SelectionEngine {
   
   findEdgePath(p1: [number, number], p2: [number, number]): [number, number][] {
     if (!this.lassoSettings.useEdgeSnapping || !this.edgeMap) {
-        return [p1, p2];
+        return [p2];
     }
 
     const path: [number, number][] = [];
@@ -230,6 +230,7 @@ export class SelectionEngine {
         steps++;
         const distToTarget = Math.hypot(p2[0] - currentPoint[0], p2[1] - currentPoint[1]);
         if (distToTarget < this.lassoSettings.snapRadius) {
+            path.push(p2);
             break;
         }
 
@@ -521,21 +522,47 @@ export class SelectionEngine {
     this.segments = [];
   }
   
-  selectionToMaskData(selection: Segment | null): string | undefined {
-      if (!selection || selection.pixels.size === 0) return undefined;
+  selectionToMaskData(selection?: Segment | null): string | undefined {
+      const finalSelection = new Set<number>();
+      this.segments.forEach(seg => {
+        if(this.selectedSegmentIds.has(seg.id)){
+            seg.pixels.forEach(p => finalSelection.add(p));
+        }
+      });
+
+      if (finalSelection.size === 0) return undefined;
 
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = this.width;
       tempCanvas.height = this.height;
       const tempCtx = tempCanvas.getContext('2d');
       if (!tempCtx) return undefined;
+      
+      // Black background for "inpaint here"
+      tempCtx.fillStyle = 'black';
+      tempCtx.fillRect(0, 0, this.width, this.height);
 
-      const maskImageData = tempCtx.createImageData(this.width, this.height);
-      selection.pixels.forEach(idx => {
-          maskImageData.data[idx * 4 + 3] = 255; // Set alpha to 255 for selected pixels
-      });
-
+      // White foreground for "keep this"
+      tempCtx.fillStyle = 'white';
+      const maskImageData = tempCtx.getImageData(0,0,this.width, this.height);
+      const data = maskImageData.data;
+      for(let i = 0; i < data.length; i+=4) {
+          const idx = i / 4;
+          if (!finalSelection.has(idx)) {
+              data[i] = 255;
+              data[i+1] = 255;
+              data[i+2] = 255;
+              data[i+3] = 255;
+          } else {
+              data[i] = 0;
+              data[i+1] = 0;
+              data[i+2] = 0;
+              data[i+3] = 255;
+          }
+      }
       tempCtx.putImageData(maskImageData, 0, 0);
+
+
       return tempCanvas.toDataURL();
   }
 
@@ -622,3 +649,4 @@ export class SelectionEngine {
     }
   }
 }
+

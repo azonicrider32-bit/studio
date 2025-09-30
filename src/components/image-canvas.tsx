@@ -14,15 +14,27 @@ import { debounce } from "@/lib/utils";
 
 
 interface ImageCanvasProps {
+  imageUrl: string | undefined;
   segmentationMask: string | null;
   setSegmentationMask: (mask: string | null) => void;
   activeTool: string;
   lassoSettings: LassoSettings;
   magicWandSettings: MagicWandSettings;
+  getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
+  clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
 }
 
-export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool, lassoSettings, magicWandSettings }: ImageCanvasProps) {
-  const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1");
+export function ImageCanvas({
+  imageUrl,
+  segmentationMask,
+  setSegmentationMask,
+  activeTool,
+  lassoSettings,
+  magicWandSettings,
+  getSelectionMaskRef,
+  clearSelectionRef
+}: ImageCanvasProps) {
+  const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -39,6 +51,19 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
   React.useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  React.useEffect(() => {
+    if (getSelectionMaskRef) {
+      getSelectionMaskRef.current = () => selectionEngineRef.current?.selectionToMaskData();
+    }
+    if (clearSelectionRef) {
+      clearSelectionRef.current = () => {
+        selectionEngineRef.current?.clearSelection();
+        drawOverlay();
+      }
+    }
+  }, [getSelectionMaskRef, clearSelectionRef]);
+
 
   const drawOverlay = React.useCallback(() => {
     const overlayCanvas = overlayCanvasRef.current;
@@ -213,7 +238,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
         const input: MagicWandAssistedSegmentationInput = {
             photoDataUri: canvas.toDataURL(),
             contentType: contentType || 'object',
-            modelId: 'googleai/gemini-2.5-flash-segment-it-preview',
+            modelId: 'googleai/gemini-2.5-flash-image-preview',
             initialSelectionMask: engine.selectionToMaskData(initialSelection),
         };
         
@@ -300,7 +325,7 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
     // With the node-based lasso, mouse up doesn't end the drawing.
   };
 
-  if (!image) {
+  if (!imageUrl) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-muted">
         <p>Image not found</p>
@@ -314,12 +339,13 @@ export function ImageCanvas({ segmentationMask, setSegmentationMask, activeTool,
         {isClient && (
              <Image
                 ref={imageRef}
-                src={image.imageUrl}
-                alt={image.description}
+                src={imageUrl}
+                alt={image?.description || "Workspace image"}
                 fill
                 className="object-contain"
                 onLoad={handleImageLoad}
                 crossOrigin="anonymous"
+                key={imageUrl} 
             />
         )}
        
