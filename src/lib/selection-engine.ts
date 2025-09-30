@@ -1,3 +1,4 @@
+
 import { LassoSettings, MagicWandSettings, Segment } from "./types";
 import { rgbToHsv, rgbToLab } from "./color-utils";
 
@@ -48,6 +49,7 @@ export class SelectionEngine {
     contiguous: true,
     useAiAssist: false,
     activeTolerances: new Set(),
+    seedColor: undefined,
   };
 
 
@@ -453,9 +455,10 @@ export class SelectionEngine {
     for (const space of colorSpaces) {
         const components = Object.keys(seedColor[space]);
         for (const key of components) {
-            if (!activeTolerances.has(key as keyof typeof tolerances)) continue;
+            const toleranceKey = key as keyof typeof tolerances;
+            if (activeTolerances && !activeTolerances.has(toleranceKey)) continue;
 
-            const tolerance = tolerances[key as keyof typeof tolerances];
+            const tolerance = tolerances[toleranceKey];
             const c1 = seedColor[space];
             const c2 = neighborColor[space];
             let diff: number;
@@ -687,5 +690,3 @@ export class SelectionEngine {
     }
   }
 }
-
-    

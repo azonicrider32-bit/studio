@@ -27,5 +27,3 @@ export interface Segment {
     pixels: Set<number>;
     bounds: { x: number; y: number; width: number; height: number };
 }
-
-    

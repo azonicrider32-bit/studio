@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -71,6 +72,7 @@ export function ProSegmentAI() {
     contiguous: true,
     useAiAssist: false,
     activeTolerances: new Set(),
+    seedColor: undefined,
   });
   const [activeLassoScrollSetting, setActiveLassoScrollSetting] = React.useState<keyof LassoSettings | null>(null);
   const [activeWandScrollSetting, setActiveWandScrollSetting] = React.useState<keyof MagicWandSettings['tolerances'] | null>(null);
@@ -338,5 +340,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
