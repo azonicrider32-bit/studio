@@ -34,6 +34,7 @@ export class SelectionEngine {
     snapRadius: 10,
     snapThreshold: 0.3,
     curveStrength: 0.5,
+    directionalStrength: 0.5,
   };
   magicWandSettings: MagicWandSettings = {
     tolerance: 30,
@@ -265,7 +266,7 @@ export class SelectionEngine {
                 const dirToCandidate = [vectorToCandidate[0] / magToCandidate, vectorToCandidate[1] / magToCandidate];
 
                 const directionSimilarity = (dirToCandidate[0] * dirToTarget[0] + dirToCandidate[1] * dirToTarget[1] + 1) / 2; // Range 0-1
-                const directionCost = (1 - directionSimilarity) * 500;
+                const directionCost = (1 - directionSimilarity) * 500 * (1-this.lassoSettings.directionalStrength);
 
                 const edgeCost = (1 / (edgeStrength + 1)) * 1000;
                 

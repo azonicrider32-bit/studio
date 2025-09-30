@@ -4,6 +4,7 @@ export interface LassoSettings {
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number;
+    directionalStrength: number;
 }
 
 export interface MagicWandSettings {

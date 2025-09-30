@@ -57,7 +57,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="curveStrength">Curve Strength: {settings.curveStrength.toFixed(2)}</Label>
+          <Label htmlFor="curveStrength">Smoothness: {settings.curveStrength.toFixed(2)}</Label>
            <Slider
             id="curveStrength"
             min={0}
@@ -69,6 +69,19 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           <p className="text-xs text-muted-foreground">Higher values create smoother, more curved lines, ignoring small details.</p>
         </div>
         
+        <div className="space-y-2">
+          <Label htmlFor="directionalStrength">Directional Strength: {settings.directionalStrength.toFixed(2)}</Label>
+           <Slider
+            id="directionalStrength"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[settings.directionalStrength]}
+            onValueChange={(value) => onSettingsChange({ directionalStrength: value[0] })}
+          />
+          <p className="text-xs text-muted-foreground">How strongly the path maintains its direction. Higher values resist deviation.</p>
+        </div>
+
         <div className="flex items-center justify-between">
           <Label htmlFor="useEdgeSnapping">Enable AI Edge Snapping</Label>
           <Switch

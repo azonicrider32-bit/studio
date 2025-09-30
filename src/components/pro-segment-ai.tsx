@@ -52,6 +52,7 @@ export function ProSegmentAI() {
     snapRadius: 10,
     snapThreshold: 0.3,
     curveStrength: 0.5,
+    directionalStrength: 0.5,
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerance: 30,
