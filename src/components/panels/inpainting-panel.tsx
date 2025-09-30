@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Wand2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
+import { handleApiError } from "@/lib/error-handling"
 
 interface InpaintingPanelProps {
   imageUrl: string | undefined;
@@ -61,12 +62,10 @@ export function InpaintingPanel({ imageUrl, getSelectionMask, onGenerationComple
       }
 
     } catch (error: any) {
-      console.error("Inpainting failed:", error)
-      toast({
-        variant: "destructive",
+      handleApiError(error, toast, {
         title: "Inpainting Failed",
-        description: error.message || "An unknown error occurred.",
-      })
+        description: "An unknown error occurred during inpainting.",
+      });
     } finally {
       setIsGenerating(false)
     }
@@ -103,3 +102,5 @@ export function InpaintingPanel({ imageUrl, getSelectionMask, onGenerationComple
     </div>
   )
 }
+
+    

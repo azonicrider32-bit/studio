@@ -111,3 +111,5 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     </div>
   )
 }
+
+    

@@ -17,6 +17,7 @@ import { compareAiModels, CompareAiModelsOutput } from "@/ai/flows/compare-ai-mo
 import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationOutput } from "@/ai/flows/magic-wand-assisted-segmentation"
 import { Skeleton } from "../ui/skeleton"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
+import { handleApiError } from "@/lib/error-handling"
 
 type AIModel = "googleai/gemini-2.5-flash-image-preview" | "bodypix" | "deeplab" | "sam" | "sam2"
 
@@ -46,17 +47,17 @@ export function AiModelsPanel({ setSegmentationMask, setImageUrl }: AiModelsPane
         photoDataUri: image.imageUrl,
         modelId: selectedModel,
       })
-      if (res.maskDataUri) {
+      if (res.isSuccessful && res.maskDataUri) {
         setSegmentationMask(res.maskDataUri);
+        toast({ title: "AI Segmentation Complete", description: res.message })
+      } else {
+        throw new Error(res.message || "AI Segmentation failed to produce a mask.")
       }
-      toast({ title: "AI Segmentation Complete", description: res.message })
-    } catch (error) {
-      console.error("AI segmentation failed:", error)
-      toast({
-        variant: "destructive",
+    } catch (error: any) {
+      handleApiError(error, toast, {
         title: "AI Segmentation Failed",
         description: "Could not process the image with the selected model.",
-      })
+      });
     } finally {
       setIsProcessing(false)
     }
@@ -75,13 +76,11 @@ export function AiModelsPanel({ setSegmentationMask, setImageUrl }: AiModelsPane
       })
       setComparison(res)
       toast({ title: "AI Model Comparison Complete" })
-    } catch (error) {
-      console.error("AI comparison failed:", error)
-      toast({
-        variant: "destructive",
+    } catch (error: any) {
+      handleApiError(error, toast, {
         title: "AI Comparison Failed",
         description: "Could not compare the AI models.",
-      })
+      });
     } finally {
       setIsComparing(false)
     }
@@ -152,3 +151,5 @@ export function AiModelsPanel({ setSegmentationMask, setImageUrl }: AiModelsPane
     </div>
   )
 }
+
+    

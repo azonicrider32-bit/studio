@@ -11,6 +11,7 @@ import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } fro
 import { LassoSettings, MagicWandSettings, Segment } from "@/lib/types";
 import { SegmentHoverPreview } from "./segment-hover-preview";
 import { debounce } from "@/lib/utils";
+import { handleApiError } from "@/lib/error-handling";
 
 
 interface ImageCanvasProps {
@@ -146,10 +147,14 @@ export function ImageCanvas({
             engine.endLasso();
             toast({ title: 'Lasso path completed.', description: 'AI could not enhance path, used manual path.' });
         }
-    } catch (error) {
-        console.error("Lasso enhancement failed:", error);
-        toast({ variant: 'destructive', title: 'Lasso AI Failed', description: 'Using manual path instead.' });
-        engine.endLasso();
+    } catch (error: any) {
+        handleApiError(error, toast, {
+            title: "Lasso AI Failed",
+            description: 'Using manual path instead.'
+        });
+        if (engine.isDrawingLasso) {
+            engine.endLasso();
+        }
     } finally {
         setIsProcessing(false);
         drawOverlay();
@@ -244,18 +249,16 @@ export function ImageCanvas({
         
         const result = await magicWandAssistedSegmentation(input);
 
-        if (result.maskDataUri) {
+        if (result.isSuccessful && result.maskDataUri) {
             setSegmentationMask(result.maskDataUri);
             toast({ title: "AI Segmentation successful!" });
         } else {
-            throw new Error(result.message || "AI failed to produce a mask.");
+             throw new Error(result.message || "AI failed to produce a mask.");
         }
     } catch (error: any) {
-        console.error("Magic Wand segmentation failed:", error);
-        toast({
-            variant: "destructive",
+        handleApiError(error, toast, {
             title: "Magic Wand Failed",
-            description: error.message || "Could not perform segmentation."
+            description: "Could not perform segmentation."
         });
         engine.clearSelection();
         drawOverlay();
@@ -380,3 +383,5 @@ export function ImageCanvas({
     </div>
   );
 }
+
+    

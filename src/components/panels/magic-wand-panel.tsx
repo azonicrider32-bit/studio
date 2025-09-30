@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Badge } from "../ui/badge"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { MagicWandSettings } from "@/lib/types"
+import { handleApiError } from "@/lib/error-handling"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
@@ -44,13 +45,11 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
       const imageDataUri = image.imageUrl;
       const result = await suggestSegmentationPresets({ imageDataUri });
       setSuggestedPresets(result);
-    } catch (error) {
-      console.error("Error suggesting presets:", error)
-      toast({
-        variant: "destructive",
+    } catch (error: any) {
+      handleApiError(error, toast, {
         title: "AI Suggestion Failed",
         description: "Could not get suggestions from the AI model.",
-      })
+      });
     } finally {
       setIsSuggesting(false)
     }
@@ -67,18 +66,16 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
         contentType: contentType || 'object',
         modelId: 'googleai/gemini-2.5-flash-image-preview'
       });
-      if(result.maskDataUri) {
+      if(result.isSuccessful && result.maskDataUri) {
         setSegmentationMask(result.maskDataUri);
         toast({title: "Segmentation successful!"});
       } else {
         throw new Error(result.message || "Segmentation failed to produce a mask.");
       }
     } catch (error: any) {
-        console.error("Magic Wand segmentation failed:", error);
-        toast({
-            variant: "destructive",
+        handleApiError(error, toast, {
             title: "Magic Wand Failed",
-            description: error.message || "Could not perform segmentation."
+            description: "Could not perform segmentation."
         });
     } finally {
         setIsSegmenting(false);
@@ -174,5 +171,7 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
     </div>
   )
 }
+
+    
 
     
