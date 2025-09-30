@@ -83,13 +83,6 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
 
   return (
     <div className="p-4 space-y-6">
-      <div className="space-y-2">
-        <h3 className="font-headline text-lg">Color Analysis</h3>
-        <p className="text-sm text-muted-foreground">
-          Real-time analysis of the area under your cursor.
-        </p>
-      </div>
-
        <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
 
       <Separator />
