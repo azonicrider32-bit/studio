@@ -20,6 +20,20 @@ interface Analysis {
 
 export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps) {
   const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
+  const [activeTolerances, setActiveTolerances] = React.useState<Set<string>>(new Set());
+
+  const handleToggleTolerance = (key: string) => {
+    setActiveTolerances(prev => {
+        const newSet = new Set(prev);
+        if(newSet.has(key)) {
+            newSet.delete(key);
+        } else {
+            newSet.add(key);
+        }
+        return newSet;
+    });
+  }
+
 
   React.useEffect(() => {
     if (canvas && mousePos) {
@@ -59,22 +73,30 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
     </div>
   );
   
-  const VerticalValueBar = ({ value, max, color, label }: { value: number; max: number; color: string; label: string }) => (
+  const VerticalValueBar = ({ value, max, color, label, onLabelClick, isActive }: { value: number; max: number; color: string; label: string, onLabelClick: () => void, isActive: boolean }) => (
     <div className="flex flex-col items-center gap-2 flex-1">
-        <div className="w-6 h-32 bg-muted rounded-full overflow-hidden flex flex-col justify-end">
+        <div className="w-4 h-32 bg-muted rounded-full overflow-hidden flex flex-col justify-end">
              <div className={cn("w-full", color)} style={{ height: `${(value/max) * 100}%`}}></div>
         </div>
-        <span className="font-mono text-xs text-muted-foreground">{label}</span>
+        <button onClick={onLabelClick} className={cn("font-mono text-xs text-muted-foreground rounded-sm px-1", isActive && "bg-primary text-primary-foreground")}>{label}</button>
         <span className="font-mono text-sm">{Math.round(value)}</span>
     </div>
   );
 
-  const renderColorBreakdown = (label: string, values: { [key: string]: { value: number, max: number, color: string }}) => (
+  const renderColorBreakdown = (label: string, values: { [key: string]: { value: number, max: number, color: string, id: string }}) => (
      <div className="space-y-2 flex-1">
         <h5 className="font-semibold text-sm mb-2 text-center">{label}</h5>
         <div className="flex justify-around gap-2 p-2 rounded-md bg-muted/50">
             {Object.entries(values).map(([key, data]) => (
-                <VerticalValueBar key={key} label={key} value={data.value} max={data.max} color={data.color} />
+                <VerticalValueBar 
+                    key={data.id} 
+                    label={key} 
+                    value={data.value} 
+                    max={data.max} 
+                    color={data.color}
+                    onLabelClick={() => handleToggleTolerance(data.id)}
+                    isActive={activeTolerances.has(data.id)}
+                />
             ))}
         </div>
      </div>
@@ -84,36 +106,28 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
   return (
     <div className="p-4 space-y-6">
        <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
-
-      <Separator />
         
-        {analysis ? (
-            <div className="space-y-4">
-                {renderColorValue("Hex", analysis.hex, analysis.hex)}
-                <Separator />
-                <div className="flex gap-2">
-                    {renderColorBreakdown("RGB", { 
-                        "R": { value: analysis.rgb.r, max: 255, color: "bg-red-500" },
-                        "G": { value: analysis.rgb.g, max: 255, color: "bg-green-500" },
-                        "B": { value: analysis.rgb.b, max: 255, color: "bg-blue-500" },
-                    })}
-                     {renderColorBreakdown("HSV", {
-                        "H": { value: analysis.hsv.h, max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500" },
-                        "S": { value: analysis.hsv.s, max: 100, color: "bg-slate-400" },
-                        "V": { value: analysis.hsv.v, max: 100, color: "bg-white" },
-                    })}
-                     {renderColorBreakdown("LAB", {
-                        "L": { value: analysis.lab.l, max: 100, color: "bg-gray-500" },
-                        "A": { value: analysis.lab.a + 128, max: 256, color: "bg-gradient-to-t from-green-500 to-red-500" },
-                        "B": { value: analysis.lab.b + 128, max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
-                    })}
-                </div>
+        <div className="space-y-4">
+            {renderColorValue("Hex", analysis?.hex ?? "#000000", analysis?.hex ?? "#000000")}
+            <Separator />
+            <div className="flex gap-1">
+                {renderColorBreakdown("RGB", { 
+                    "R": { id: 'r', value: analysis?.rgb.r ?? 0, max: 255, color: "bg-red-500" },
+                    "G": { id: 'g', value: analysis?.rgb.g ?? 0, max: 255, color: "bg-green-500" },
+                    "B": { id: 'b', value: analysis?.rgb.b ?? 0, max: 255, color: "bg-blue-500" },
+                })}
+                 {renderColorBreakdown("HSV", {
+                    "H": { id: 'h', value: analysis?.hsv.h ?? 0, max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500" },
+                    "S": { id: 's', value: analysis?.hsv.s ?? 0, max: 100, color: "bg-slate-400" },
+                    "V": { id: 'v', value: analysis?.hsv.v ?? 0, max: 100, color: "bg-white" },
+                })}
+                 {renderColorBreakdown("LAB", {
+                    "L": { id: 'l', value: analysis?.lab.l ?? 0, max: 100, color: "bg-gray-500" },
+                    "A": { id: 'a', value: (analysis?.lab.a ?? -128) + 128, max: 256, color: "bg-gradient-to-t from-green-500 to-red-500" },
+                    "B": { id: 'b_lab', value: (analysis?.lab.b ?? -128) + 128, max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
+                })}
             </div>
-        ) : (
-            <p className="text-sm text-muted-foreground text-center pt-8">
-                Hover over the image to see color data.
-            </p>
-        )}
+        </div>
 
     </div>
   )
