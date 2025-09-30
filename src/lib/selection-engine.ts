@@ -535,21 +535,61 @@ export class SelectionEngine {
     });
 
     if (this.isDrawingLasso) {
-      const path = this.getLassoPath();
-
-      if (path.length > 0) {
-        overlayCtx.strokeStyle = 'hsl(var(--accent))';
-        overlayCtx.lineWidth = 2;
-        overlayCtx.lineJoin = 'round';
-        overlayCtx.lineCap = 'round';
-        overlayCtx.beginPath();
-        overlayCtx.moveTo(path[0][0], path[0][1]);
-        for(let i=1; i < path.length; i++) {
-          overlayCtx.lineTo(path[i][0], path[i][1]);
+      if (this.lassoNodes.length > 0 && this.lassoCurrentPos) {
+        const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
+        const snappedPath = this.lassoPreviewPath; // The "smart" path
+        
+        // Create the straight-line path for comparison
+        const straightPath: [number, number][] = [];
+        const dist = Math.hypot(this.lassoCurrentPos[0] - lastAnchor[0], this.lassoCurrentPos[1] - lastAnchor[1]);
+        const steps = Math.max(10, Math.round(dist / 5)); // More steps for a smoother ribbon
+        for(let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          straightPath.push([
+            lastAnchor[0] * (1-t) + this.lassoCurrentPos[0] * t,
+            lastAnchor[1] * (1-t) + this.lassoCurrentPos[1] * t,
+          ]);
         }
-        overlayCtx.stroke();
+        
+        // Ensure paths have the same length for ribbon drawing
+        const maxLength = Math.max(snappedPath.length, straightPath.length);
+        while(snappedPath.length < maxLength) snappedPath.push(snappedPath[snappedPath.length-1]);
+        while(straightPath.length < maxLength) straightPath.push(straightPath[straightPath.length-1]);
+        
+        // Draw the ribbon
+        const gradient = overlayCtx.createLinearGradient(lastAnchor[0], lastAnchor[1], this.lassoCurrentPos[0], this.lassoCurrentPos[1]);
+        gradient.addColorStop(0, "rgba(3, 169, 244, 0.05)");
+        gradient.addColorStop(1, "rgba(3, 169, 244, 0.4)");
+
+        overlayCtx.fillStyle = gradient;
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(straightPath[0][0], straightPath[0][1]);
+        for(let i=1; i < maxLength; i++) {
+          overlayCtx.lineTo(straightPath[i][0], straightPath[i][1]);
+        }
+        for(let i = maxLength - 1; i >= 0; i--) {
+          overlayCtx.lineTo(snappedPath[i][0], snappedPath[i][1]);
+        }
+        overlayCtx.closePath();
+        overlayCtx.fill();
+        
+        // Draw the final snapped path
+        const path = this.getLassoPath();
+        if (path.length > 0) {
+          overlayCtx.strokeStyle = 'hsl(var(--accent))';
+          overlayCtx.lineWidth = 2;
+          overlayCtx.lineJoin = 'round';
+          overlayCtx.lineCap = 'round';
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(path[0][0], path[0][1]);
+          for(let i=1; i < path.length; i++) {
+            overlayCtx.lineTo(path[i][0], path[i][1]);
+          }
+          overlayCtx.stroke();
+        }
       }
 
+      // Draw anchor points
       this.lassoNodes.forEach(([x, y], index) => {
         overlayCtx.fillStyle = index === 0 ? 'hsl(var(--accent))' : '#fff';
         overlayCtx.beginPath();
@@ -562,5 +602,3 @@ export class SelectionEngine {
     }
   }
 }
-
-    
