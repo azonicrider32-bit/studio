@@ -198,7 +198,8 @@ export class SelectionEngine {
     const visitedInPath = new Set<number>();
     visitedInPath.add(Math.round(p1[1]) * this.width + Math.round(p1[0]));
 
-    const maxSteps = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 2;
+    const initialDistToTarget = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+    const maxSteps = initialDistToTarget * 2;
     let steps = 0;
     
     let lastDirection: [number, number] | null = null;
@@ -226,6 +227,10 @@ export class SelectionEngine {
         const magToTarget = Math.hypot(vectorToTarget[0], vectorToTarget[1]);
         const dirToTarget = [vectorToTarget[0] / magToTarget, vectorToTarget[1] / magToTarget];
 
+        // Linear falloff for cursor influence
+        const progress = Math.max(0, 1 - (distToTarget / initialDistToTarget));
+        const currentCursorInfluence = this.lassoSettings.cursorInfluence * progress;
+
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
                 const idx = y * this.width + x;
@@ -243,8 +248,8 @@ export class SelectionEngine {
                 
                 const edgeStrength = this.edgeMap[idx] || 0;
                 
-                const cursorCost = (1 - directionSimilarity) * 500 * (this.lassoSettings.cursorInfluence);
-                const edgeCost = (1 / (edgeStrength + 1)) * 1000 * (1 - this.lassoSettings.cursorInfluence);
+                const cursorCost = (1 - directionSimilarity) * 500 * currentCursorInfluence;
+                const edgeCost = (1 / (edgeStrength + 1)) * 1000 * (1 - currentCursorInfluence);
                 
                 let curvatureCost = 0;
                 let directionalCost = 0;
