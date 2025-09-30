@@ -120,40 +120,16 @@ export class SelectionEngine {
     this.lassoCurrentPos = [x, y];
 
     const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
-
-    // The "smart" path is just the edge-snapped path from the last anchor to the cursor
-    this.lassoPreviewPath = this.findEdgePath(lastAnchor, [x, y]);
     
-    // Progressive Undo: Check if cursor is moving back along the path
-    if (this.lassoPreviewPath.length > 2) {
-      const thirdLastPoint = this.lassoPreviewPath[this.lassoPreviewPath.length - 3];
-      const distToCursor = Math.hypot(x - thirdLastPoint[0], y - thirdLastPoint[1]);
-      const distBetweenPoints = Math.hypot(
-        this.lassoPreviewPath[this.lassoPreviewPath.length - 1][0] - thirdLastPoint[0],
-        this.lassoPreviewPath[this.lassoPreviewPath.length - 1][1] - thirdLastPoint[1]
-      );
-
-      // If cursor is closer to a previous point on the path than the end of the path is, start erasing
-      if (distToCursor < distBetweenPoints) {
-        this.lassoPreviewPath.pop();
-        return;
-      }
-    }
+    this.lassoPreviewPath = this.findEdgePath(lastAnchor, [x, y]);
 }
 
 
   addLassoNode() {
     if (!this.isDrawingLasso || !this.lassoCurrentPos || this.lassoPreviewPath.length === 0) return;
-
-    // The point to add is the end of the current preview path.
-    const newNode = this.lassoPreviewPath[this.lassoPreviewPath.length - 1];
     
-    // Solidify the preview path into the main nodes path.
-    // For simplicity, we just add the new anchor. A more complex implementation could
-    // add simplified nodes from the preview path.
+    const newNode = this.lassoPreviewPath[this.lassoPreviewPath.length - 1];
     this.lassoNodes.push(newNode);
-
-    // Reset the preview path for the next segment
     this.lassoPreviewPath = [];
   }
   
@@ -193,14 +169,12 @@ export class SelectionEngine {
     
     let path: [number, number][] = [];
     
-    // Path between existing anchor nodes
     for (let i = 0; i < this.lassoNodes.length - 1; i++) {
         const [x1, y1] = this.lassoNodes[i];
         const [x2, y2] = this.lassoNodes[i+1];
         path.push(...this.findEdgePath([x1, y1], [x2, y2]));
     }
     
-    // Add the current elastic preview path
     path.push(...this.lassoPreviewPath);
     
     if (closed) {
@@ -213,27 +187,77 @@ export class SelectionEngine {
   }
   
   findEdgePath(p1: [number, number], p2: [number, number]): [number, number][] {
-      const [x1, y1] = p1;
-      const [x2, y2] = p2;
-    if (!this.lassoSettings.useEdgeSnapping) {
-      return [p1, p2];
-    }
+      if (!this.lassoSettings.useEdgeSnapping || !this.edgeMap) {
+          return [p1, p2];
+      }
+      
+      const path: [number, number][] = [p1];
+      let currentPoint = p1;
+      const visitedInPath = new Set<number>();
+      visitedInPath.add(p1[1] * this.width + p1[0]);
 
-    const path: [number, number][] = [];
-    let currentX = Math.round(x1);
-    let currentY = Math.round(y1);
+      const maxSteps = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 2;
+      let steps = 0;
 
-    const dist = Math.hypot(x2 - x1, y2 - y1);
-    const stepCount = Math.max(1, Math.round(dist / (this.lassoSettings.snapRadius / 2)));
+      while (steps < maxSteps) {
+          steps++;
+          const distToTarget = Math.hypot(p2[0] - currentPoint[0], p2[1] - currentPoint[1]);
+          if (distToTarget < this.lassoSettings.snapRadius) {
+              break; 
+          }
 
-    for (let i = 0; i <= stepCount; i++) {
-        const targetX = x1 + (x2 - x1) * (i / stepCount);
-        const targetY = y1 + (y2 - y1) * (i / stepCount);
-        
-        const snappedPoint = this.snapToEdge(targetX, targetY);
-        path.push(snappedPoint);
-    }
-    return path;
+          let bestNextPoint: [number, number] | null = null;
+          let minCost = Infinity;
+
+          const searchRadius = this.lassoSettings.snapRadius;
+          const startY = Math.max(0, Math.round(currentPoint[1]) - searchRadius);
+          const endY = Math.min(this.height - 1, Math.round(currentPoint[1]) + searchRadius);
+          const startX = Math.max(0, Math.round(currentPoint[0]) - searchRadius);
+          const endX = Math.min(this.width - 1, Math.round(currentPoint[0]) + searchRadius);
+
+          for (let y = startY; y <= endY; y++) {
+              for (let x = startX; x <= endX; x++) {
+                  const idx = y * this.width + x;
+                  if (visitedInPath.has(idx)) continue;
+
+                  const distSq = (x - currentPoint[0])**2 + (y - currentPoint[1])**2;
+                  if (distSq > searchRadius * searchRadius) continue;
+
+                  const edgeStrength = this.edgeMap[idx];
+                  if (edgeStrength < this.lassoSettings.snapThreshold * 255) continue;
+                  
+                  // Cost function
+                  const distToTargetAfter = Math.hypot(p2[0] - x, p2[1] - y);
+                  const directionCost = (distToTargetAfter - distToTarget) * 0.5; // Penalize moving away from target
+                  const edgeCost = (1 / (edgeStrength + 1)) * 1000; // Penalize weak edges
+
+                  const cost = directionCost + edgeCost;
+
+                  if (cost < minCost) {
+                      minCost = cost;
+                      bestNextPoint = [x, y];
+                  }
+              }
+          }
+
+          if (bestNextPoint) {
+              path.push(bestNextPoint);
+              currentPoint = bestNextPoint;
+              visitedInPath.add(bestNextPoint[1] * this.width + bestNextPoint[0]);
+          } else {
+              // No good point found, jump forward
+              const dx = p2[0] - currentPoint[0];
+              const dy = p2[1] - currentPoint[1];
+              const jumpDist = Math.min(this.lassoSettings.snapRadius, distToTarget);
+              const nextX = Math.round(currentPoint[0] + dx / distToTarget * jumpDist);
+              const nextY = Math.round(currentPoint[1] + dy / distToTarget * jumpDist);
+              const nextPoint: [number, number] = [nextX, nextY];
+              path.push(nextPoint);
+              currentPoint = nextPoint;
+          }
+      }
+      path.push(p2);
+      return path;
   }
 
 
@@ -510,74 +534,27 @@ export class SelectionEngine {
     });
 
     if (this.isDrawingLasso) {
-      if (this.lassoNodes.length > 0 && this.lassoCurrentPos) {
-        const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
-        const snappedPath = this.lassoPreviewPath; // The "smart" path from the last anchor to cursor
-        
-        // Create the straight-line path from anchor to cursor
-        const straightPath: [number, number][] = [];
-        const dist = Math.hypot(this.lassoCurrentPos[0] - lastAnchor[0], this.lassoCurrentPos[1] - lastAnchor[1]);
-        const steps = Math.max(10, Math.round(dist / 5)); 
-        for(let i = 0; i <= steps; i++) {
-          const t = i / steps;
-          straightPath.push([
-            lastAnchor[0] * (1-t) + this.lassoCurrentPos[0] * t,
-            lastAnchor[1] * (1-t) + this.lassoCurrentPos[1] * t,
-          ]);
-        }
-        
-        // Blend the straight and snapped paths to create the final elastic line
-        const blendedPath: [number, number][] = [];
-        const maxLength = Math.max(snappedPath.length, straightPath.length);
-
-        for (let i = 0; i < maxLength; i++) {
-          const straightPoint = straightPath[i] || straightPath[straightPath.length - 1];
-          const snappedPoint = snappedPath[i] || snappedPath[snappedPath.length - 1];
-          
-          if (!straightPoint || !snappedPoint) continue;
-
-          // The weight determines the "elasticity" with a linear falloff
-          const weight = 1 - (i / (maxLength - 1 || 1)); // 1 at anchor (fully snapped), 0 at cursor (fully straight)
-
-          blendedPath.push([
-              snappedPoint[0] * weight + straightPoint[0] * (1 - weight),
-              snappedPoint[1] * weight + straightPoint[1] * (1 - weight)
-          ]);
-        }
-
-        // Draw the ribbon between the new blended path and the snapped path
-        if (blendedPath.length > 0 && snappedPath.length > 0) {
-            const gradient = overlayCtx.createLinearGradient(lastAnchor[0], lastAnchor[1], this.lassoCurrentPos[0], this.lassoCurrentPos[1]);
-            gradient.addColorStop(0, "rgba(3, 169, 244, 0.05)");
-            gradient.addColorStop(1, "rgba(3, 169, 244, 0.4)");
-
-            overlayCtx.fillStyle = gradient;
-            overlayCtx.beginPath();
-            overlayCtx.moveTo(blendedPath[0][0], blendedPath[0][1]);
-            for (let i = 1; i < blendedPath.length; i++) {
-              overlayCtx.lineTo(blendedPath[i][0], blendedPath[i][1]);
-            }
-            for (let i = snappedPath.length - 1; i >= 0; i--) {
-              overlayCtx.lineTo(snappedPath[i][0], snappedPath[i][1]);
-            }
-            overlayCtx.closePath();
-            overlayCtx.fill();
-        }
-        
-        // Draw the final elastic path
-        if (blendedPath.length > 0) {
-          overlayCtx.strokeStyle = 'hsl(var(--accent))';
-          overlayCtx.lineWidth = 2;
-          overlayCtx.lineJoin = 'round';
-          overlayCtx.lineCap = 'round';
-          overlayCtx.beginPath();
-          overlayCtx.moveTo(blendedPath[0][0], blendedPath[0][1]);
-          for (let i = 1; i < blendedPath.length; i++) {
-            overlayCtx.lineTo(blendedPath[i][0], blendedPath[i][1]);
-          }
-          overlayCtx.stroke();
-        }
+      let fullPath: [number, number][] = [];
+      for (let i = 0; i < this.lassoNodes.length - 1; i++) {
+        fullPath.push(...this.findEdgePath(this.lassoNodes[i], this.lassoNodes[i+1]));
       }
+      if (this.lassoCurrentPos) {
+        fullPath.push(...this.findEdgePath(this.lassoNodes[this.lassoNodes.length-1], this.lassoCurrentPos));
+      }
+      
+      if (fullPath.length > 0) {
+        overlayCtx.strokeStyle = 'hsl(var(--accent))';
+        overlayCtx.lineWidth = 2;
+        overlayCtx.lineJoin = 'round';
+        overlayCtx.lineCap = 'round';
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(fullPath[0][0], fullPath[0][1]);
+        for (let i = 1; i < fullPath.length; i++) {
+            overlayCtx.lineTo(fullPath[i][0], fullPath[i][1]);
+        }
+        overlayCtx.stroke();
+      }
+
 
       // Draw anchor points
       this.lassoNodes.forEach(([x, y], index) => {
