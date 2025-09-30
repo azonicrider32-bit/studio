@@ -12,14 +12,16 @@ const Slider = React.forwardRef<
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
-      "relative flex w-full touch-none select-none items-center",
-      props.orientation === 'vertical' && 'flex-col h-full w-2',
+      "relative flex touch-none select-none items-center",
+      props.orientation === 'vertical'
+        ? 'h-full w-2 flex-col'
+        : 'h-2 w-full',
       className
     )}
     {...props}
   >
     <SliderPrimitive.Track className={cn(
-        "relative w-full grow overflow-hidden rounded-full bg-secondary",
+        "relative grow overflow-hidden rounded-full bg-secondary",
         props.orientation === 'vertical' ? 'h-full w-2' : 'h-2 w-full'
     )}>
       <SliderPrimitive.Range className={cn(
