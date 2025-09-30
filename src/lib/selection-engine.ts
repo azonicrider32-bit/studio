@@ -120,6 +120,9 @@ export class SelectionEngine {
     this.lassoCurrentPos = [x, y];
 
     const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
+
+    // The "smart" path is just the edge-snapped path from the last anchor to the cursor
+    this.lassoPreviewPath = this.findEdgePath(lastAnchor, [x, y]);
     
     // Progressive Undo: Check if cursor is moving back along the path
     if (this.lassoPreviewPath.length > 2) {
@@ -135,34 +138,6 @@ export class SelectionEngine {
         this.lassoPreviewPath.pop();
         return;
       }
-    }
-
-    const newSegment = this.findEdgePath(
-      this.lassoPreviewPath.length > 0 ? this.lassoPreviewPath[this.lassoPreviewPath.length-1] : lastAnchor,
-      [x, y]
-    );
-
-    // Elasticity: Blend the new path segment with the existing one
-    const newFullPath = this.findEdgePath(lastAnchor, [x,y]);
-
-    if (this.lassoPreviewPath.length === 0) {
-      this.lassoPreviewPath = newFullPath;
-    } else {
-        const blendedPath: [number, number][] = [];
-        const longerLength = Math.max(this.lassoPreviewPath.length, newFullPath.length);
-        
-        for (let i = 0; i < longerLength; i++) {
-            const oldPoint = this.lassoPreviewPath[i] || this.lassoPreviewPath[this.lassoPreviewPath.length - 1];
-            const newPoint = newFullPath[i] || newFullPath[newFullPath.length - 1];
-            
-            // Gradient of rigidity: more rigid near the start, more free near the end
-            const weight = Math.pow(i / (longerLength - 1 || 1), 1.5);
-
-            const blendedX = oldPoint[0] * (1 - weight) + newPoint[0] * weight;
-            const blendedY = oldPoint[1] * (1 - weight) + newPoint[1] * weight;
-            blendedPath.push([blendedX, blendedY]);
-        }
-        this.lassoPreviewPath = blendedPath;
     }
 }
 
@@ -537,12 +512,12 @@ export class SelectionEngine {
     if (this.isDrawingLasso) {
       if (this.lassoNodes.length > 0 && this.lassoCurrentPos) {
         const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
-        const snappedPath = this.lassoPreviewPath; // The "smart" path
+        const snappedPath = this.lassoPreviewPath; // The "smart" path from the last anchor to cursor
         
-        // Create the straight-line path for comparison
+        // Create the straight-line path from anchor to cursor
         const straightPath: [number, number][] = [];
         const dist = Math.hypot(this.lassoCurrentPos[0] - lastAnchor[0], this.lassoCurrentPos[1] - lastAnchor[1]);
-        const steps = Math.max(10, Math.round(dist / 5)); // More steps for a smoother ribbon
+        const steps = Math.max(10, Math.round(dist / 5)); 
         for(let i = 0; i <= steps; i++) {
           const t = i / steps;
           straightPath.push([
@@ -551,26 +526,27 @@ export class SelectionEngine {
           ]);
         }
         
+        // Blend the straight and snapped paths to create the final elastic line
         const blendedPath: [number, number][] = [];
         const maxLength = Math.max(snappedPath.length, straightPath.length);
 
-        for (let i=0; i<maxLength; i++) {
-          const straightPoint = straightPath[i] || straightPath[straightPath.length-1];
-          const snappedPoint = snappedPath[i] || snappedPath[snappedPath.length -1];
+        for (let i = 0; i < maxLength; i++) {
+          const straightPoint = straightPath[i] || straightPath[straightPath.length - 1];
+          const snappedPoint = snappedPath[i] || snappedPath[snappedPath.length - 1];
           
-          if(!straightPoint || !snappedPoint) continue;
+          if (!straightPoint || !snappedPoint) continue;
 
-          // The weight determines the "elasticity"
-          const weight = 1 - (i / (maxLength -1 || 1)); // Linear falloff
+          // The weight determines the "elasticity" with a linear falloff
+          const weight = 1 - (i / (maxLength - 1 || 1)); // 1 at anchor (fully snapped), 0 at cursor (fully straight)
 
           blendedPath.push([
-              snappedPoint[0] * weight + straightPoint[0] * (1-weight),
-              snappedPoint[1] * weight + straightPoint[1] * (1-weight)
+              snappedPoint[0] * weight + straightPoint[0] * (1 - weight),
+              snappedPoint[1] * weight + straightPoint[1] * (1 - weight)
           ]);
         }
 
         // Draw the ribbon between the new blended path and the snapped path
-        if(blendedPath.length > 0 && snappedPath.length > 0) {
+        if (blendedPath.length > 0 && snappedPath.length > 0) {
             const gradient = overlayCtx.createLinearGradient(lastAnchor[0], lastAnchor[1], this.lassoCurrentPos[0], this.lassoCurrentPos[1]);
             gradient.addColorStop(0, "rgba(3, 169, 244, 0.05)");
             gradient.addColorStop(1, "rgba(3, 169, 244, 0.4)");
@@ -578,10 +554,10 @@ export class SelectionEngine {
             overlayCtx.fillStyle = gradient;
             overlayCtx.beginPath();
             overlayCtx.moveTo(blendedPath[0][0], blendedPath[0][1]);
-            for(let i=1; i < blendedPath.length; i++) {
+            for (let i = 1; i < blendedPath.length; i++) {
               overlayCtx.lineTo(blendedPath[i][0], blendedPath[i][1]);
             }
-            for(let i = snappedPath.length - 1; i >= 0; i--) {
+            for (let i = snappedPath.length - 1; i >= 0; i--) {
               overlayCtx.lineTo(snappedPath[i][0], snappedPath[i][1]);
             }
             overlayCtx.closePath();
@@ -596,7 +572,7 @@ export class SelectionEngine {
           overlayCtx.lineCap = 'round';
           overlayCtx.beginPath();
           overlayCtx.moveTo(blendedPath[0][0], blendedPath[0][1]);
-          for(let i=1; i < blendedPath.length; i++) {
+          for (let i = 1; i < blendedPath.length; i++) {
             overlayCtx.lineTo(blendedPath[i][0], blendedPath[i][1]);
           }
           overlayCtx.stroke();
