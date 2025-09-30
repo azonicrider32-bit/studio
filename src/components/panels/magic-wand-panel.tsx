@@ -171,7 +171,3 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
     </div>
   )
 }
-
-    
-
-    

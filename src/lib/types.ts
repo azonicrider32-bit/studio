@@ -14,6 +14,7 @@ export interface MagicWandSettings {
     colorSpace: string;
     contiguous: boolean;
     useAiAssist: boolean;
+    activeTolerances: Set<string>;
 }
 
 export interface Segment {
@@ -21,5 +22,3 @@ export interface Segment {
     pixels: Set<number>;
     bounds: { x: number; y: number; width: number; height: number };
 }
-
-    

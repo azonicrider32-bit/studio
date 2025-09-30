@@ -5,10 +5,13 @@ import { Separator } from "@/components/ui/separator"
 import { rgbToHex, rgbToHsv, rgbToLab } from "@/lib/color-utils"
 import { SegmentHoverPreview } from "../segment-hover-preview"
 import { cn } from "@/lib/utils"
+import { MagicWandSettings } from "@/lib/types"
 
 interface ColorAnalysisPanelProps {
   canvas: HTMLCanvasElement | null;
   mousePos: { x: number; y: number } | null;
+  magicWandSettings: MagicWandSettings;
+  onMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void;
 }
 
 interface Analysis {
@@ -18,21 +21,18 @@ interface Analysis {
   lab: { l: number; a: number; b: number };
 }
 
-export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps) {
+export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagicWandSettingsChange }: ColorAnalysisPanelProps) {
   const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
-  const [activeTolerances, setActiveTolerances] = React.useState<Set<string>>(new Set());
 
   const handleToggleTolerance = (key: string) => {
-    setActiveTolerances(prev => {
-        const newSet = new Set(prev);
-        if(newSet.has(key)) {
-            newSet.delete(key);
-        } else {
-            newSet.add(key);
-        }
-        return newSet;
-    });
-  }
+    const newActiveTolerances = new Set(magicWandSettings.activeTolerances);
+    if (newActiveTolerances.has(key)) {
+      newActiveTolerances.delete(key);
+    } else {
+      newActiveTolerances.add(key);
+    }
+    onMagicWandSettingsChange({ activeTolerances: newActiveTolerances });
+  };
 
 
   React.useEffect(() => {
@@ -95,7 +95,7 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
                     max={data.max} 
                     color={data.color}
                     onLabelClick={() => handleToggleTolerance(data.id)}
-                    isActive={activeTolerances.has(data.id)}
+                    isActive={magicWandSettings.activeTolerances.has(data.id)}
                 />
             ))}
         </div>

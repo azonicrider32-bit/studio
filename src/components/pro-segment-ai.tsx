@@ -64,6 +64,7 @@ export function ProSegmentAI() {
     colorSpace: 'hsv',
     contiguous: true,
     useAiAssist: true,
+    activeTolerances: new Set(['h', 's', 'v']),
   });
   const [activeScrollSetting, setActiveScrollSetting] = React.useState<keyof LassoSettings | null>(null);
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
@@ -258,7 +259,7 @@ export function ProSegmentAI() {
               <LayersPanel />
             </TabsContent>
             <TabsContent value="analysis" className="m-0">
-              <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos}/>
+              <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange} />
             </TabsContent>
             <TabsContent value="ai" className="m-0">
                 <Tabs defaultValue="models" className="flex h-full flex-col">
