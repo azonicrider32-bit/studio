@@ -229,30 +229,34 @@ export function ImageCanvas({
     return { x: imageX, y: imageY };
   };
 
-  const handleMagicWandClick = async (pos: { x: number, y: number }, contentType?: string) => {
+  const handleMagicWandClick = async (pos: { x: number, y: number }) => {
     const engine = selectionEngineRef.current;
     const canvas = canvasRef.current;
     if (!engine || !canvas) return;
     
     setIsProcessing(true);
     setSegmentationMask(null);
-    toast({ title: "Magic Wand is thinking...", description: "AI is refining the selection." });
+    engine.clearSelection();
 
     try {
-        const initialSelection = engine.magicWand(pos.x, pos.y);
-        drawOverlay();
-
         if (!magicWandSettings.useAiAssist) {
+            toast({ title: "Creating selection..." });
+            engine.magicWand(pos.x, pos.y);
+            drawOverlay();
             toast({ title: "Selection created." });
-            setIsProcessing(false);
             return;
         }
 
+        toast({ title: "Magic Wand is thinking...", description: "AI is analyzing the pattern." });
+
+        // Create a search area mask for the AI
+        const searchRadius = 15; // Example radius
+        const initialSelectionMask = engine.createCircularMask(pos.x, pos.y, searchRadius);
+
         const input: MagicWandAssistedSegmentationInput = {
             photoDataUri: canvas.toDataURL(),
-            contentType: contentType || 'object',
-            modelId: 'googleai/gemini-2.5-flash-image-preview',
-            initialSelectionMask: engine.selectionToMaskData(initialSelection),
+            initialSelectionMask: initialSelectionMask,
+            contentType: 'region with similar texture and pattern'
         };
         
         const result = await magicWandAssistedSegmentation(input);
@@ -298,12 +302,16 @@ export function ImageCanvas({
   const debouncedWandPreview = React.useCallback(
     debounce((x: number, y: number) => {
       const engine = selectionEngineRef.current;
-      if (!engine) return;
+      if (!engine || magicWandSettings.useAiAssist) {
+        setHoveredSegment(null);
+        drawOverlay();
+        return;
+      };
       const segment = engine.magicWand(x, y, true); // Preview only
       setHoveredSegment(segment);
       drawOverlay();
     }, 50),
-    [drawOverlay] 
+    [drawOverlay, magicWandSettings.useAiAssist] 
   );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {

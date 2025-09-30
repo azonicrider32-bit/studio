@@ -49,11 +49,15 @@ const magicWandAssistedSegmentationFlow = ai.defineFlow(
           media: { url: input.photoDataUri },
         }];
 
-      let promptText = `Segment the ${input.contentType || 'main object'} in the image.`;
+      let promptText = `Find all areas in the image that have a similar texture and pattern as the region indicated by the selection mask.`;
       
       if (input.initialSelectionMask) {
-          prompts.push({ media: { url: input.initialSelectionMask }});
-          promptText += " Refine the provided selection mask.";
+          prompts.push({ media: { url: input.initialSelectionMask, role: 'mask' }});
+          if (input.contentType) {
+             promptText = `Segment the ${input.contentType} in the image, using the provided mask as a strong hint for the desired texture and pattern.`;
+          }
+      } else {
+         promptText = `Segment the main ${input.contentType || 'object'} in the image.`;
       }
       prompts.push({ text: promptText });
 

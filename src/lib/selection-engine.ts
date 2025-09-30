@@ -439,35 +439,55 @@ export class SelectionEngine {
   }
 
   isWithinTolerance(c1: { [key: string]: number }, c2: { [key: string]: number }): boolean {
-    const { tolerances, colorSpace } = this.magicWandSettings;
+    const { tolerances, colorSpace, activeTolerances } = this.magicWandSettings;
 
-    switch (colorSpace) {
-        case 'rgb':
-            return (
-                Math.abs(c1.r - c2.r) <= tolerances.r &&
-                Math.abs(c1.g - c2.g) <= tolerances.g &&
-                Math.abs(c1.b - c2.b) <= tolerances.b
-            );
-        case 'hsv':
+    const checks = {
+        rgb: ['r', 'g', 'b'],
+        hsv: ['h', 's', 'v'],
+        lab: ['l', 'a', 'b_lab'],
+    };
+
+    const componentsToCheck = checks[colorSpace];
+
+    for (const key of componentsToCheck) {
+        if (!activeTolerances.has(key as keyof typeof tolerances)) continue;
+
+        const tolerance = tolerances[key as keyof typeof tolerances];
+        let diff: number;
+
+        if (key === 'h') { // Handle hue's circular nature
             const hDiff = Math.abs(c1.h - c2.h);
-            const hueDistance = Math.min(hDiff, 360 - hDiff);
-            return (
-                hueDistance <= tolerances.h &&
-                Math.abs(c1.s - c2.s) <= tolerances.s &&
-                Math.abs(c1.v - c2.v) <= tolerances.v
-            );
-        case 'lab':
-            return (
-                Math.abs(c1.l - c2.l) <= tolerances.l &&
-                Math.abs(c1.a - c2.a) <= tolerances.a &&
-                Math.abs(c1.b_lab - c2.b_lab) <= tolerances.b_lab
-            );
-        default:
+            diff = Math.min(hDiff, 360 - hDiff);
+        } else {
+            diff = Math.abs(c1[key] - c2[key]);
+        }
+
+        if (diff > tolerance) {
             return false;
+        }
     }
+    return true;
   }
   // #endregion
   
+  createCircularMask(x: number, y: number, radius: number): string {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = this.width;
+    tempCanvas.height = this.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) return "";
+
+    tempCtx.fillStyle = 'white'; // Unselected area
+    tempCtx.fillRect(0, 0, this.width, this.height);
+
+    tempCtx.fillStyle = 'black'; // Selected area
+    tempCtx.beginPath();
+    tempCtx.arc(x, y, radius, 0, Math.PI * 2);
+    tempCtx.fill();
+
+    return tempCanvas.toDataURL();
+  }
+
   createSegmentFromPixels(pixels: Set<number>, addToSegments: boolean = true): Segment | null {
     if (pixels.size === 0) return null;
 
