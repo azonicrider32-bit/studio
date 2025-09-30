@@ -15,7 +15,6 @@ export interface MagicWandSettings {
         h: number; s: number; v: number;
         l: number; a: number; b_lab: number;
     };
-    colorSpace: 'rgb' | 'hsv' | 'lab';
     contiguous: boolean;
     useAiAssist: boolean;
     activeTolerances: Set<keyof MagicWandSettings['tolerances']>;

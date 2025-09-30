@@ -61,12 +61,12 @@ export function ProSegmentAI() {
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
-    colorSpace: 'hsv',
     contiguous: true,
     useAiAssist: true,
     activeTolerances: new Set(['h', 's', 'v']),
   });
-  const [activeScrollSetting, setActiveScrollSetting] = React.useState<keyof LassoSettings | null>(null);
+  const [activeLassoScrollSetting, setActiveLassoScrollSetting] = React.useState<keyof LassoSettings | null>(null);
+  const [activeWandScrollSetting, setActiveWandScrollSetting] = React.useState<keyof MagicWandSettings['tolerances'] | null>(null);
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
 
@@ -99,13 +99,18 @@ export function ProSegmentAI() {
   const renderToolOptions = () => {
     switch (activeTool) {
       case "magic-wand":
-        return <MagicWandPanel settings={magicWandSettings} onSettingsChange={handleMagicWandSettingsChange} setSegmentationMask={setSegmentationMask} />
+        return <MagicWandPanel 
+                  settings={magicWandSettings} 
+                  onSettingsChange={handleMagicWandSettingsChange}
+                  activeScrollSetting={activeWandScrollSetting}
+                  onActiveScrollSettingChange={setActiveWandScrollSetting}
+               />
       case "lasso":
         return <LassoPanel 
                     settings={lassoSettings} 
                     onSettingsChange={handleLassoSettingsChange} 
-                    activeScrollSetting={activeScrollSetting}
-                    onActiveScrollSettingChange={setActiveScrollSetting}
+                    activeScrollSetting={activeLassoScrollSetting}
+                    onActiveScrollSettingChange={setActiveLassoScrollSetting}
                 />
       case "brush":
         return <BrushPanel />
@@ -232,7 +237,9 @@ export function ProSegmentAI() {
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
-              activeScrollSetting={activeScrollSetting}
+              onMagicWandSettingChange={handleMagicWandSettingsChange}
+              activeLassoScrollSetting={activeLassoScrollSetting}
+              activeWandScrollSetting={activeWandScrollSetting}
               canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
               getCanvasRef={canvasRef}

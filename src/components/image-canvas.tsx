@@ -24,7 +24,9 @@ interface ImageCanvasProps {
   getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
-  activeScrollSetting: keyof LassoSettings | null;
+  onMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
+  activeLassoScrollSetting: keyof LassoSettings | null;
+  activeWandScrollSetting: keyof MagicWandSettings['tolerances'] | null;
   canvasMousePos: { x: number; y: number } | null;
   setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
   getCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
@@ -40,7 +42,9 @@ export function ImageCanvas({
   getSelectionMaskRef,
   clearSelectionRef,
   onLassoSettingChange,
-  activeScrollSetting,
+  onMagicWandSettingChange,
+  activeLassoScrollSetting,
+  activeWandScrollSetting,
   canvasMousePos,
   setCanvasMousePos,
   getCanvasRef
@@ -344,36 +348,60 @@ export function ImageCanvas({
   };
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    const engine = selectionEngineRef.current;
-    if (!engine || !engine.isDrawingLasso || !activeScrollSetting) return;
-
     e.preventDefault();
     const delta = e.deltaY > 0 ? -1 : 1; // Invert scroll for natural feel (scroll up = increase)
-    
-    let step = 0.05;
-    if (activeScrollSetting === 'snapRadius') step = 1;
+    const engine = selectionEngineRef.current;
 
-    let currentValue = lassoSettings[activeScrollSetting];
-    let min = 0;
-    let max = 1;
+    if (activeTool === 'lasso' && engine && engine.isDrawingLasso && activeLassoScrollSetting) {
+        let step = 0.05;
+        if (activeLassoScrollSetting === 'snapRadius') step = 1;
 
-    switch(activeScrollSetting) {
-        case 'snapRadius': min = 1; max = 20; break;
-        case 'snapThreshold': min = 0.05; max = 1; break;
-        case 'curveStrength': min = 0; max = 1; break;
-        case 'directionalStrength': min = 0; max = 1; break;
-        case 'cursorInfluence': min = 0; max = 1; break;
+        let currentValue = lassoSettings[activeLassoScrollSetting];
+        let min = 0, max = 1;
+
+        switch(activeLassoScrollSetting) {
+            case 'snapRadius': min = 1; max = 20; break;
+            case 'snapThreshold': min = 0.05; max = 1; break;
+            case 'curveStrength': min = 0; max = 1; break;
+            case 'directionalStrength': min = 0; max = 1; break;
+            case 'cursorInfluence': min = 0; max = 1; break;
+        }
+        
+        let newValue = currentValue + delta * step;
+        newValue = Math.max(min, Math.min(max, newValue));
+
+        onLassoSettingChange({ [activeLassoScrollSetting]: newValue });
+
+        const pos = getMousePos(e.currentTarget, e);
+        engine.updateLassoPreview(pos.x, pos.y);
+        drawOverlay();
+
+    } else if (activeTool === 'magic-wand' && activeWandScrollSetting) {
+        const key = activeWandScrollSetting;
+        const currentTolerance = magicWandSettings.tolerances[key];
+        let step = 1;
+        if (key === 'h') step = 2; // Hue is more sensitive
+        if (key === 's' || key === 'v' || key === 'l') step = 2;
+
+        let newValue = currentTolerance + delta * step;
+        
+        let max = 100;
+        if (key === 'r' || key === 'g' || key === 'b') max = 255;
+        if (key === 'h') max = 180;
+        if (key === 'a' || key === 'b_lab') max = 128;
+
+
+        newValue = Math.max(0, Math.min(max, newValue));
+
+        onMagicWandSettingChange({
+            tolerances: {
+                ...magicWandSettings.tolerances,
+                [key]: newValue,
+            }
+        });
     }
-    
-    let newValue = currentValue + delta * step;
-    newValue = Math.max(min, Math.min(max, newValue));
-
-    onLassoSettingChange({ [activeScrollSetting]: newValue });
-
-    const pos = getMousePos(e.currentTarget, e);
-    engine.updateLassoPreview(pos.x, pos.y);
-    drawOverlay();
   };
+
 
   if (!imageUrl) {
     return (

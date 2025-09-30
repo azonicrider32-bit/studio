@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Sparkles, BrainCircuit } from "lucide-react"
+import { Sparkles, BrainCircuit, Info } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -21,21 +21,28 @@ import { Badge } from "../ui/badge"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { MagicWandSettings } from "@/lib/types"
 import { handleApiError } from "@/lib/error-handling"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
   onSettingsChange: (settings: Partial<MagicWandSettings>) => void;
-  setSegmentationMask: (mask: string | null) => void;
+  activeScrollSetting: keyof MagicWandSettings['tolerances'] | null;
+  onActiveScrollSettingChange: (setting: keyof MagicWandSettings['tolerances'] | null) => void;
 }
 
-export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask }: MagicWandPanelProps) {
+export function MagicWandPanel({ 
+  settings, 
+  onSettingsChange,
+  activeScrollSetting,
+  onActiveScrollSettingChange
+}: MagicWandPanelProps) {
   const [isSuggesting, setIsSuggesting] = React.useState(false)
   const [isSegmenting, setIsSegmenting] = React.useState(false)
   const [suggestedPresets, setSuggestedPresets] = React.useState<SuggestSegmentationPresetsOutput | null>(null)
   const { toast } = useToast()
 
   const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")
-
 
   const handleSuggestPresets = async () => {
     if (!image) return;
@@ -58,7 +65,7 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
   const handleMagicWandSegmentation = async (contentType?: string) => {
     if (!image) return;
     setIsSegmenting(true);
-    setSegmentationMask(null);
+    // setSegmentationMask(null); // This should be handled by the parent component
     try {
       toast({title: "Performing Magic Wand Segmentation..."});
       const result = await magicWandAssistedSegmentation({
@@ -67,7 +74,7 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
         modelId: 'googleai/gemini-2.5-flash-image-preview'
       });
       if(result.isSuccessful && result.maskDataUri) {
-        setSegmentationMask(result.maskDataUri);
+        // setSegmentationMask(result.maskDataUri); // Parent handles this
         toast({title: "Segmentation successful!"});
       } else {
         throw new Error(result.message || "Segmentation failed to produce a mask.");
@@ -82,50 +89,93 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
     }
   };
 
+  const handleToggle = (setting: keyof MagicWandSettings['tolerances']) => {
+    onActiveScrollSettingChange(activeScrollSetting === setting ? null : setting);
+  };
+  
+  const handleToleranceChange = (key: keyof MagicWandSettings['tolerances'], value: number) => {
+      onSettingsChange({
+          tolerances: {
+              ...settings.tolerances,
+              [key]: value
+          }
+      });
+  }
+
+  const ToleranceSliderGroup = ({ title, components }: { title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number}[] }) => (
+    <div className="space-y-4">
+      <h4 className="text-sm font-semibold text-center">{title}</h4>
+      <TooltipProvider>
+        <div className="flex justify-around items-end h-48 bg-muted/50 p-2 rounded-md">
+            {components.map(config => (
+                <VerticalSettingSlider
+                    key={config.id}
+                    id={config.id}
+                    label={config.label}
+                    value={settings.tolerances[config.id]}
+                    min={0}
+                    max={config.max}
+                    step={1}
+                    description={`Adjusts the tolerance for the ${config.label} component.`}
+                    isActive={activeScrollSetting === config.id}
+                    onToggle={() => handleToggle(config.id)}
+                    onValueChange={(value) => handleToleranceChange(config.id, value)}
+                />
+            ))}
+        </div>
+      </TooltipProvider>
+    </div>
+  );
 
   return (
     <div className="p-4 space-y-6">
       <div className="space-y-2">
         <h3 className="font-headline text-lg">Magic Wand</h3>
         <p className="text-sm text-muted-foreground">
-          Select similar colored areas. Hover to preview and click to select.
+          Select similar colored areas. Fine-tune tolerances below.
         </p>
       </div>
 
       <Separator />
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="tolerance">Tolerance</Label>
-           <p className="text-xs text-muted-foreground">Adjust individual tolerances in the Analysis panel.</p>
-        </div>
+      <ToleranceSliderGroup 
+        title="RGB"
+        components={[
+          { id: 'r', label: 'R', max: 255 },
+          { id: 'g', label: 'G', max: 255 },
+          { id: 'b', label: 'B', max: 255 },
+        ]}
+      />
+      <ToleranceSliderGroup 
+        title="HSV"
+        components={[
+          { id: 'h', label: 'H', max: 180 },
+          { id: 's', label: 'S', max: 100 },
+          { id: 'v', label: 'V', max: 100 },
+        ]}
+      />
+       <ToleranceSliderGroup 
+        title="LAB"
+        components={[
+          { id: 'l', label: 'L', max: 100 },
+          { id: 'a', label: 'A', max: 128 },
+          { id: 'b_lab', label: 'B', max: 128 },
+        ]}
+      />
 
-        <div className="space-y-2">
-          <Label htmlFor="color-space">Color Space</Label>
-          <Select value={settings.colorSpace} onValueChange={(value) => onSettingsChange({ colorSpace: value as MagicWandSettings['colorSpace'] })}>
-            <SelectTrigger id="color-space">
-              <SelectValue placeholder="Select color space" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="rgb">RGB</SelectItem>
-              <SelectItem value="hsv">HSV</SelectItem>
-              <SelectItem value="lab">LAB</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <Separator />
 
-        <div className="flex items-center justify-between">
-          <Label htmlFor="contiguous">Contiguous</Label>
-          <Switch
-            id="contiguous"
-            checked={settings.contiguous}
-            onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground -mt-3">
-          If enabled, selects only adjacent areas using the same colors.
-        </p>
+      <div className="flex items-center justify-between">
+        <Label htmlFor="contiguous">Contiguous</Label>
+        <Switch
+          id="contiguous"
+          checked={settings.contiguous}
+          onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
+        />
       </div>
+      <p className="text-xs text-muted-foreground -mt-3">
+        If enabled, selects only adjacent areas using the same colors.
+      </p>
       
       <Separator />
 
@@ -145,7 +195,7 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
           Uses AI to refine the Magic Wand click for a more accurate selection.
         </p>
         
-        <Button onClick={handleSuggestPresets} disabled={isSuggesting || isSegmenting} className="w-full">
+        <Button onClick={handleSuggestPresets} disabled={isSuggesting || isSegmenting || !settings.useAiAssist} className="w-full">
             <BrainCircuit className="mr-2 h-4 w-4" />
             {isSuggesting ? "Analyzing Image..." : "Suggest AI Presets"}
         </Button>
@@ -164,3 +214,62 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
     </div>
   )
 }
+
+
+interface VerticalSettingSliderProps {
+    id: keyof MagicWandSettings['tolerances'];
+    label: string;
+    value: number;
+    min: number; max: number; step: number;
+    description: string;
+    isActive: boolean;
+    onToggle: () => void;
+    onValueChange: (value: number) => void;
+}
+
+function VerticalSettingSlider({ id, label, value, min, max, step, description, isActive, onToggle, onValueChange }: VerticalSettingSliderProps) {
+    const displayValue = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2);
+    
+    return (
+        <div className="flex flex-col items-center gap-2 h-full flex-1">
+            <Tooltip>
+                <TooltipTrigger asChild>
+                     <span className="text-sm font-semibold">{label}</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{label} Tolerance</p>
+                </TooltipContent>
+            </Tooltip>
+            
+            <Slider
+                id={id}
+                min={min}
+                max={max}
+                step={step}
+                value={[value]}
+                onValueChange={(v) => onValueChange(v[0])}
+                orientation="vertical"
+                className="h-full"
+            />
+            <span className="font-mono text-xs">{displayValue}</span>
+             <div className="flex items-center gap-2">
+                <Switch
+                    id={`${id}-toggle`}
+                    checked={isActive}
+                    onCheckedChange={onToggle}
+                    className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input h-5 w-9 [&>span]:h-4 [&>span]:w-4 [&>span]:data-[state=checked]:translate-x-4"
+                />
+                 <Popover>
+                    <PopoverTrigger>
+                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    </PopoverTrigger>
+                    <PopoverContent side="top" className="text-sm">
+                        <h4 className="font-semibold mb-2">{label} Tolerance</h4>
+                        <p>{description}</p>
+                    </PopoverContent>
+                </Popover>
+            </div>
+        </div>
+    );
+}
+
