@@ -37,6 +37,11 @@ export class SelectionEngine {
     curveStrength: 0.75,
     directionalStrength: 0.2,
     cursorInfluence: 0.2,
+    snapRadiusEnabled: true,
+    snapThresholdEnabled: true,
+    curveStrengthEnabled: true,
+    directionalStrengthEnabled: true,
+    cursorInfluenceEnabled: true,
   };
   magicWandSettings: MagicWandSettings = {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -221,16 +226,16 @@ export class SelectionEngine {
     while (steps < maxSteps) {
         steps++;
         const distToTarget = Math.hypot(p2[0] - currentPoint[0], p2[1] - currentPoint[1]);
-        if (distToTarget < this.lassoSettings.snapRadius) {
+        if (distToTarget < (this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1)) {
             path.push(p2);
             break;
         }
 
         let bestNextPoint: [number, number] | null = null;
         let minCost = Infinity;
-
-        const searchRadius = Math.max(1, Math.min(this.lassoSettings.snapRadius, Math.floor(distToTarget / 4)));
         
+        const searchRadius = Math.max(1, Math.min((this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1), Math.floor(distToTarget / 4)));
+
         const startY = Math.max(0, Math.round(currentPoint[1]) - searchRadius);
         const endY = Math.min(this.height - 1, Math.round(currentPoint[1]) + searchRadius);
         const startX = Math.max(0, Math.round(currentPoint[0]) - searchRadius);
@@ -242,7 +247,7 @@ export class SelectionEngine {
 
         // Linear falloff for cursor influence
         const progress = Math.max(0, 1 - (distToTarget / initialDistToTarget));
-        const currentCursorInfluence = this.lassoSettings.cursorInfluence * progress;
+        const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence * progress : 0;
 
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
@@ -259,7 +264,7 @@ export class SelectionEngine {
 
                 const directionSimilarity = (dirToCandidate[0] * dirToTarget[0] + dirToCandidate[1] * dirToTarget[1] + 1) / 2; // Range 0-1
                 
-                const edgeStrength = this.edgeMap[idx] || 0;
+                const edgeStrength = (this.edgeMap[idx] || 0) > (this.lassoSettings.snapThresholdEnabled ? this.lassoSettings.snapThreshold : 1) ? this.edgeMap[idx] : 0;
                 
                 const cursorCost = (1 - directionSimilarity) * 500 * currentCursorInfluence;
                 const edgeCost = (1 / (edgeStrength + 1)) * 1000 * (1 - currentCursorInfluence);
@@ -274,8 +279,8 @@ export class SelectionEngine {
                     const stepsFromAnchor = path.length;
                     const falloff = Math.min(1, stepsFromAnchor / falloffDistance);
 
-                    curvatureCost = (angleChange / Math.PI) * 1000 * this.lassoSettings.curveStrength * falloff;
-                    directionalCost = (1 - dot) * 500 * this.lassoSettings.directionalStrength * falloff;
+                    curvatureCost = (angleChange / Math.PI) * 1000 * (this.lassoSettings.curveStrengthEnabled ? this.lassoSettings.curveStrength : 0) * falloff;
+                    directionalCost = (1 - dot) * 500 * (this.lassoSettings.directionalStrengthEnabled ? this.lassoSettings.directionalStrength : 0) * falloff;
                 }
 
                 const cost = cursorCost + edgeCost + curvatureCost + directionalCost;
@@ -299,7 +304,7 @@ export class SelectionEngine {
             visitedInPath.add(Math.round(bestNextPoint[1]) * this.width + Math.round(bestNextPoint[0]));
         } else {
             // No good point found, jump forward along the straight line
-            const jumpDist = Math.min(this.lassoSettings.snapRadius, distToTarget);
+            const jumpDist = Math.min((this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1), distToTarget);
             const nextX = Math.round(currentPoint[0] + dirToTarget[0] * jumpDist);
             const nextY = Math.round(currentPoint[1] + dirToTarget[1] * jumpDist);
             const nextPoint: [number, number] = [nextX, nextY];
@@ -315,7 +320,7 @@ export class SelectionEngine {
   snapToEdge(x: number, y: number): [number, number] {
     if (!this.edgeMap || !this.lassoSettings.useEdgeSnapping) return [Math.round(x), Math.round(y)];
     
-    const radius = this.lassoSettings.snapRadius;
+    const radius = this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1;
     let maxEdge = -1;
     let bestX = Math.round(x);
     let bestY = Math.round(y);
@@ -333,7 +338,7 @@ export class SelectionEngine {
         const idx = sy * this.width + sx;
         const edgeStrength = this.edgeMap[idx];
 
-        if (edgeStrength > maxEdge && edgeStrength > (this.lassoSettings.snapThreshold * 255)) {
+        if (edgeStrength > maxEdge && edgeStrength > ((this.lassoSettings.snapThresholdEnabled ? this.lassoSettings.snapThreshold : 1) * 255)) {
             maxEdge = edgeStrength;
             bestX = sx;
             bestY = sy;

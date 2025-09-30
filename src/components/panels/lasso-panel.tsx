@@ -15,22 +15,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 interface LassoPanelProps {
   settings: LassoSettings;
   onSettingsChange: (settings: Partial<LassoSettings>) => void;
-  activeScrollSetting: keyof LassoSettings | null;
-  onActiveScrollSettingChange: (setting: keyof LassoSettings | null) => void;
 }
 
 
-export function LassoPanel({ settings, onSettingsChange, activeScrollSetting, onActiveScrollSettingChange }: LassoPanelProps) {
+export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     
   const handleToggle = (setting: keyof LassoSettings) => {
-    if (activeScrollSetting === setting) {
-      onActiveScrollSettingChange(null);
-    } else {
-      onActiveScrollSettingChange(setting);
-    }
+    onSettingsChange({ [setting]: !settings[setting] });
   };
 
-  const SETTINGS_CONFIG: { id: keyof LassoSettings; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useEdgeSnapping'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 20, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
@@ -67,7 +61,7 @@ export function LassoPanel({ settings, onSettingsChange, activeScrollSetting, on
 
       <div className="space-y-4">
         <h4 className="text-sm font-semibold">Live Adjustment Settings</h4>
-        <p className="text-xs text-muted-foreground -mt-2">Toggle a setting to adjust it with the mouse wheel while drawing.</p>
+        <p className="text-xs text-muted-foreground -mt-2">Toggle a setting on/off. You can adjust all enabled settings with the mouse wheel while drawing.</p>
 
         <TooltipProvider>
             <div className="flex justify-around items-end h-64">
@@ -77,14 +71,14 @@ export function LassoPanel({ settings, onSettingsChange, activeScrollSetting, on
                         id={config.id}
                         label={config.label}
                         icon={config.icon}
-                        value={settings[config.id]}
+                        value={settings[config.id] as number}
                         min={config.min}
                         max={config.max}
                         step={config.step}
                         unit={config.unit}
                         description={config.description}
-                        isActive={activeScrollSetting === config.id}
-                        onToggle={() => handleToggle(config.id)}
+                        isEnabled={settings[`${config.id}Enabled`]}
+                        onToggle={() => onSettingsChange({ [`${config.id}Enabled`]: !settings[`${config.id}Enabled`] })}
                         onValueChange={(value) => onSettingsChange({ [config.id]: value })}
                     />
                 ))}
@@ -98,7 +92,7 @@ export function LassoPanel({ settings, onSettingsChange, activeScrollSetting, on
         <AlertDescription>
           <ul className="list-disc list-inside space-y-1 mt-2">
             <li>Click on the image to start your path and add points.</li>
-            <li>Toggle a setting to activate scroll-wheel adjustment while drawing.</li>
+            <li>Use the sliders and toggles to configure the intelligent pathfinding.</li>
             <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Enter</kbd> to complete the selection.</li>
             <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Esc</kbd> to cancel.</li>
           </ul>
@@ -109,19 +103,19 @@ export function LassoPanel({ settings, onSettingsChange, activeScrollSetting, on
 }
 
 interface VerticalSettingSliderProps {
-    id: keyof LassoSettings;
+    id: string;
     label: string;
     icon: React.ElementType;
     value: number;
     min: number; max: number; step: number;
     unit?: string;
     description: string;
-    isActive: boolean;
+    isEnabled: boolean;
     onToggle: () => void;
     onValueChange: (value: number) => void;
 }
 
-function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, unit, description, isActive, onToggle, onValueChange }: VerticalSettingSliderProps) {
+function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, unit, description, isEnabled, onToggle, onValueChange }: VerticalSettingSliderProps) {
     const displayValue = Number.isInteger(step) ? value.toFixed(0) : value.toFixed(2);
     
     return (
@@ -147,17 +141,18 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
                 onValueChange={(v) => onValueChange(v[0])}
                 orientation="vertical"
                 className="h-full"
+                disabled={!isEnabled}
             />
              <div className="flex flex-col items-center gap-2">
                 <Switch
                     id={`${id}-toggle`}
-                    checked={isActive}
+                    checked={isEnabled}
                     onCheckedChange={onToggle}
                     orientation="vertical"
                 />
                  <Popover>
                     <PopoverTrigger>
-                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors mt-2" />
                     </PopoverTrigger>
                     <PopoverContent side="top" className="text-sm">
                         <h4 className="font-semibold mb-2">{label}</h4>

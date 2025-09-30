@@ -7,6 +7,11 @@ export interface LassoSettings {
     curveStrength: number;
     directionalStrength: number;
     cursorInfluence: number;
+    snapRadiusEnabled: boolean;
+    snapThresholdEnabled: boolean;
+    curveStrengthEnabled: boolean;
+    directionalStrengthEnabled: boolean;
+    cursorInfluenceEnabled: boolean;
 }
 
 export interface MagicWandSettings {

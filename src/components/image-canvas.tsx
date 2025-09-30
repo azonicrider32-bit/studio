@@ -26,7 +26,6 @@ interface ImageCanvasProps {
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
   onMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
   onNegativeMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
-  activeLassoScrollSetting: keyof LassoSettings | null;
   activeWandScrollSetting: keyof MagicWandSettings['tolerances'] | null;
   canvasMousePos: { x: number; y: number } | null;
   setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
@@ -46,7 +45,6 @@ export function ImageCanvas({
   onLassoSettingChange,
   onMagicWandSettingChange,
   onNegativeMagicWandSettingChange,
-  activeLassoScrollSetting,
   activeWandScrollSetting,
   canvasMousePos,
   setCanvasMousePos,
@@ -392,25 +390,39 @@ export function ImageCanvas({
     const delta = e.deltaY > 0 ? -1 : 1; // Invert scroll for natural feel (scroll up = increase)
     const engine = selectionEngineRef.current;
 
-    if (activeTool === 'lasso' && engine && engine.isDrawingLasso && activeLassoScrollSetting) {
+    if (activeTool === 'lasso' && engine && engine.isDrawingLasso) {
         let step = 0.05;
-        if (activeLassoScrollSetting === 'snapRadius') step = 1;
+        const changes: Partial<LassoSettings> = {};
 
-        let currentValue = lassoSettings[activeLassoScrollSetting];
-        let min = 0, max = 1;
+        const activeSettings: (keyof LassoSettings)[] = [
+            'snapRadius', 'snapThreshold', 'curveStrength', 'directionalStrength', 'cursorInfluence'
+        ];
 
-        switch(activeLassoScrollSetting) {
-            case 'snapRadius': min = 1; max = 20; break;
-            case 'snapThreshold': min = 0.05; max = 1; break;
-            case 'curveStrength': min = 0; max = 1; break;
-            case 'directionalStrength': min = 0; max = 1; break;
-            case 'cursorInfluence': min = 0; max = 1; break;
-        }
+        activeSettings.forEach(settingKey => {
+            if (lassoSettings[`${settingKey}Enabled`]) {
+                let currentStep = step;
+                 if (settingKey === 'snapRadius') currentStep = 1;
+
+                let currentValue = lassoSettings[settingKey] as number;
+                let min = 0, max = 1;
+
+                switch(settingKey) {
+                    case 'snapRadius': min = 1; max = 20; break;
+                    case 'snapThreshold': min = 0.05; max = 1; break;
+                    case 'curveStrength': min = 0; max = 1; break;
+                    case 'directionalStrength': min = 0; max = 1; break;
+                    case 'cursorInfluence': min = 0; max = 1; break;
+                }
+                
+                let newValue = currentValue + delta * currentStep;
+                newValue = Math.max(min, Math.min(max, newValue));
+                (changes as any)[settingKey] = newValue;
+            }
+        });
         
-        let newValue = currentValue + delta * step;
-        newValue = Math.max(min, Math.min(max, newValue));
-
-        onLassoSettingChange({ [activeLassoScrollSetting]: newValue });
+        if (Object.keys(changes).length > 0) {
+            onLassoSettingChange(changes);
+        }
 
         const pos = getMousePos(e.currentTarget, e);
         engine.updateLassoPreview(pos.x, pos.y);

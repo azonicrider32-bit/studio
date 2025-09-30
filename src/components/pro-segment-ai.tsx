@@ -60,6 +60,11 @@ export function ProSegmentAI() {
     curveStrength: 0.75,
     directionalStrength: 0.2,
     cursorInfluence: 0.2,
+    snapRadiusEnabled: true,
+    snapThresholdEnabled: true,
+    curveStrengthEnabled: true,
+    directionalStrengthEnabled: true,
+    cursorInfluenceEnabled: true,
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -74,7 +79,6 @@ export function ProSegmentAI() {
     activeTolerances: new Set(),
     seedColor: undefined,
   });
-  const [activeLassoScrollSetting, setActiveLassoScrollSetting] = React.useState<keyof LassoSettings | null>(null);
   const [activeWandScrollSetting, setActiveWandScrollSetting] = React.useState<keyof MagicWandSettings['tolerances'] | null>(null);
   const [activeNegativeWandScrollSetting, setActiveNegativeWandScrollSetting] = React.useState<keyof MagicWandSettings['tolerances'] | null>(null);
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
@@ -136,8 +140,6 @@ export function ProSegmentAI() {
         return <LassoPanel 
                     settings={lassoSettings} 
                     onSettingsChange={handleLassoSettingsChange} 
-                    activeScrollSetting={activeLassoScrollSetting}
-                    onActiveScrollSettingChange={setActiveLassoScrollSetting}
                 />
       case "brush":
         return <BrushPanel />
@@ -277,7 +279,6 @@ export function ProSegmentAI() {
               onLassoSettingChange={handleLassoSettingsChange}
               onMagicWandSettingChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
-              activeLassoScrollSetting={activeLassoScrollSetting}
               activeWandScrollSetting={activeWandScrollSetting}
               canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
