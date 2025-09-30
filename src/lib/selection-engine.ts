@@ -244,14 +244,14 @@ export class SelectionEngine {
       return [p1, p2];
     }
 
-    const path: [number, number][] = [p1];
+    const path: [number, number][] = [];
     let currentX = Math.round(x1);
     let currentY = Math.round(y1);
 
     const dist = Math.hypot(x2 - x1, y2 - y1);
     const stepCount = Math.max(1, Math.round(dist / (this.lassoSettings.snapRadius / 2)));
 
-    for (let i = 1; i <= stepCount; i++) {
+    for (let i = 0; i <= stepCount; i++) {
         const targetX = x1 + (x2 - x1) * (i / stepCount);
         const targetY = y1 + (y2 - y1) * (i / stepCount);
         
@@ -348,10 +348,8 @@ export class SelectionEngine {
       const selected = new Set<number>();
       const queue: number[] = [seedIndex];
       this.visited?.fill(0);
-      this.visited![seedIndex] = 1;
+      if(this.visited) this.visited[seedIndex] = 1;
       let head = 0;
-      let iterations = 0;
-
 
       while(head < queue.length) {
           const currentIndex = queue[head++];
@@ -553,45 +551,53 @@ export class SelectionEngine {
           ]);
         }
         
-        // Ensure paths have the same length for ribbon drawing
+        const blendedPath: [number, number][] = [];
         const maxLength = Math.max(snappedPath.length, straightPath.length);
-        if (snappedPath.length > 0) {
-            while(snappedPath.length < maxLength) snappedPath.push(snappedPath[snappedPath.length-1]);
+
+        for (let i=0; i<maxLength; i++) {
+          const straightPoint = straightPath[i] || straightPath[straightPath.length-1];
+          const snappedPoint = snappedPath[i] || snappedPath[snappedPath.length -1];
+          
+          if(!straightPoint || !snappedPoint) continue;
+
+          // The weight determines the "elasticity"
+          const weight = 1 - (i / (maxLength -1 || 1)); // Linear falloff
+
+          blendedPath.push([
+              snappedPoint[0] * weight + straightPoint[0] * (1-weight),
+              snappedPoint[1] * weight + straightPoint[1] * (1-weight)
+          ]);
         }
-        if (straightPath.length > 0) {
-            while(straightPath.length < maxLength) straightPath.push(straightPath[straightPath.length-1]);
-        }
-        
-        // Draw the ribbon
-        if(straightPath.length > 0 && snappedPath.length > 0) {
+
+        // Draw the ribbon between the new blended path and the snapped path
+        if(blendedPath.length > 0 && snappedPath.length > 0) {
             const gradient = overlayCtx.createLinearGradient(lastAnchor[0], lastAnchor[1], this.lassoCurrentPos[0], this.lassoCurrentPos[1]);
             gradient.addColorStop(0, "rgba(3, 169, 244, 0.05)");
             gradient.addColorStop(1, "rgba(3, 169, 244, 0.4)");
 
             overlayCtx.fillStyle = gradient;
             overlayCtx.beginPath();
-            overlayCtx.moveTo(straightPath[0][0], straightPath[0][1]);
-            for(let i=1; i < maxLength; i++) {
-              overlayCtx.lineTo(straightPath[i][0], straightPath[i][1]);
+            overlayCtx.moveTo(blendedPath[0][0], blendedPath[0][1]);
+            for(let i=1; i < blendedPath.length; i++) {
+              overlayCtx.lineTo(blendedPath[i][0], blendedPath[i][1]);
             }
-            for(let i = maxLength - 1; i >= 0; i--) {
+            for(let i = snappedPath.length - 1; i >= 0; i--) {
               overlayCtx.lineTo(snappedPath[i][0], snappedPath[i][1]);
             }
             overlayCtx.closePath();
             overlayCtx.fill();
         }
         
-        // Draw the final snapped path
-        const path = this.getLassoPath();
-        if (path.length > 0) {
+        // Draw the final elastic path
+        if (blendedPath.length > 0) {
           overlayCtx.strokeStyle = 'hsl(var(--accent))';
           overlayCtx.lineWidth = 2;
           overlayCtx.lineJoin = 'round';
           overlayCtx.lineCap = 'round';
           overlayCtx.beginPath();
-          overlayCtx.moveTo(path[0][0], path[0][1]);
-          for(let i=1; i < path.length; i++) {
-            overlayCtx.lineTo(path[i][0], path[i][1]);
+          overlayCtx.moveTo(blendedPath[0][0], blendedPath[0][1]);
+          for(let i=1; i < blendedPath.length; i++) {
+            overlayCtx.lineTo(blendedPath[i][0], blendedPath[i][1]);
           }
           overlayCtx.stroke();
         }
