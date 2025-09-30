@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -26,7 +27,6 @@ interface ImageCanvasProps {
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
   onMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
   onNegativeMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
-  activeWandScrollSetting: keyof MagicWandSettings['tolerances'] | null;
   canvasMousePos: { x: number; y: number } | null;
   setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
   getCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
@@ -45,7 +45,6 @@ export function ImageCanvas({
   onLassoSettingChange,
   onMagicWandSettingChange,
   onNegativeMagicWandSettingChange,
-  activeWandScrollSetting,
   canvasMousePos,
   setCanvasMousePos,
   getCanvasRef,
@@ -428,29 +427,32 @@ export function ImageCanvas({
         engine.updateLassoPreview(pos.x, pos.y);
         drawOverlay();
 
-    } else if (activeTool === 'magic-wand' && activeWandScrollSetting) {
-        const key = activeWandScrollSetting;
-        const currentTolerance = magicWandSettings.tolerances[key];
-        let step = 1;
-        if (key === 'h') step = 2; // Hue is more sensitive
-        if (key === 's' || key === 'v' || key === 'l') step = 2;
-
-        let newValue = currentTolerance + delta * step;
+    } else if (activeTool === 'magic-wand') {
         
-        let max = 100;
-        if (key === 'r' || key === 'g' || key === 'b') max = 255;
-        if (key === 'h') max = 180;
-        if (key === 'a' || key === 'b_lab') max = 128;
+        const newTolerances = { ...magicWandSettings.tolerances };
+        let changed = false;
 
+        magicWandSettings.scrollAdjustTolerances.forEach(key => {
+            const currentTolerance = newTolerances[key];
+            let step = 1;
+            if (key === 'h') step = 2;
+            if (key === 's' || key === 'v' || key === 'l') step = 2;
 
-        newValue = Math.max(0, Math.min(max, newValue));
+            let newValue = currentTolerance + delta * step;
+            
+            let max = 100;
+            if (key === 'r' || key === 'g' || key === 'b') max = 255;
+            if (key === 'h') max = 180;
+            if (key === 'a' || key === 'b_lab') max = 128;
 
-        onMagicWandSettingChange({
-            tolerances: {
-                ...magicWandSettings.tolerances,
-                [key]: newValue,
-            }
+            newValue = Math.max(0, Math.min(max, newValue));
+            newTolerances[key] = newValue;
+            changed = true;
         });
+
+        if (changed) {
+            onMagicWandSettingChange({ tolerances: newTolerances });
+        }
     }
   };
 

@@ -47,13 +47,15 @@ export class SelectionEngine {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     contiguous: true,
     useAiAssist: false,
-    activeTolerances: new Set(['h', 's', 'v']),
+    enabledTolerances: new Set(['h', 's', 'v']),
+    scrollAdjustTolerances: new Set(),
   };
    negativeMagicWandSettings: MagicWandSettings = {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
     contiguous: true,
     useAiAssist: false,
-    activeTolerances: new Set(),
+    enabledTolerances: new Set(),
+    scrollAdjustTolerances: new Set(),
     seedColor: undefined,
   };
 
@@ -453,7 +455,8 @@ export class SelectionEngine {
   }
 
   isInsideTolerance(seedColor: any, neighborColor: any, settings: MagicWandSettings): boolean {
-    const { tolerances, activeTolerances } = settings;
+    const { tolerances, enabledTolerances } = settings;
+    if (!enabledTolerances) return true;
 
     const colorSpaces: (keyof typeof seedColor)[] = ['rgb', 'hsv', 'lab'];
 
@@ -461,7 +464,7 @@ export class SelectionEngine {
         const components = Object.keys(seedColor[space]);
         for (const key of components) {
             const toleranceKey = key as keyof typeof tolerances;
-            if (activeTolerances && !activeTolerances.has(toleranceKey)) continue;
+            if (enabledTolerances && !enabledTolerances.has(toleranceKey)) continue;
 
             const tolerance = tolerances[toleranceKey];
             const c1 = seedColor[space];
@@ -490,7 +493,7 @@ export class SelectionEngine {
     }
     
     // If there are active exclusion tolerances, check them
-    if (this.negativeMagicWandSettings.activeTolerances.size > 0 && this.negativeMagicWandSettings.seedColor) {
+    if (this.negativeMagicWandSettings.enabledTolerances.size > 0 && this.negativeMagicWandSettings.seedColor) {
         const exclusionSeedColor = {
             rgb: { r: this.negativeMagicWandSettings.seedColor.r, g: this.negativeMagicWandSettings.seedColor.g, b: this.negativeMagicWandSettings.seedColor.b },
             hsv: { h: this.negativeMagicWandSettings.seedColor.h, s: this.negativeMagicWandSettings.seedColor.s, v: this.negativeMagicWandSettings.seedColor.v },

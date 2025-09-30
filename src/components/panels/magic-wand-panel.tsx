@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -22,10 +23,9 @@ import { rgbToHsv, rgbToLab } from "@/lib/color-utils"
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
   onSettingsChange: (settings: Partial<MagicWandSettings>) => void;
-  activeScrollSetting: keyof MagicWandSettings['tolerances'] | null;
-  onActiveScrollSettingChange: (setting: keyof MagicWandSettings['tolerances'] | null) => void;
   canvas: HTMLCanvasElement | null;
   mousePos: { x: number; y: number } | null;
+  isExclusionPanel?: boolean;
 }
 
 interface Analysis {
@@ -37,10 +37,9 @@ interface Analysis {
 export function MagicWandPanel({ 
   settings, 
   onSettingsChange,
-  activeScrollSetting,
-  onActiveScrollSettingChange,
   canvas,
-  mousePos
+  mousePos,
+  isExclusionPanel = false,
 }: MagicWandPanelProps) {
   const [isSuggesting, setIsSuggesting] = React.useState(false)
   const [isSegmenting, setIsSegmenting] = React.useState(false)
@@ -51,7 +50,14 @@ export function MagicWandPanel({
   const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")
 
   React.useEffect(() => {
-    if (canvas && mousePos) {
+    if (isExclusionPanel && settings.seedColor) {
+        setAnalysis({
+            rgb: { r: settings.seedColor.r, g: settings.seedColor.g, b: settings.seedColor.b },
+            hsv: { h: settings.seedColor.h, s: settings.seedColor.s, v: settings.seedColor.v },
+            lab: { l: settings.seedColor.l, a: settings.seedColor.a, b: settings.seedColor.b_lab },
+        });
+
+    } else if (canvas && mousePos) {
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (ctx) {
         const x = Math.floor(mousePos.x);
@@ -75,7 +81,7 @@ export function MagicWandPanel({
     } else {
         setAnalysis(null);
     }
-  }, [canvas, mousePos]);
+  }, [canvas, mousePos, isExclusionPanel, settings.seedColor]);
 
   const handleSuggestPresets = async () => {
     if (!image) return;
@@ -122,10 +128,26 @@ export function MagicWandPanel({
     }
   };
 
-  const handleToggle = (setting: keyof MagicWandSettings['tolerances']) => {
-    onActiveScrollSettingChange(activeScrollSetting === setting ? null : setting);
+  const handleToggleEnabled = (setting: keyof MagicWandSettings['tolerances']) => {
+    const newSet = new Set(settings.enabledTolerances);
+    if (newSet.has(setting)) {
+      newSet.delete(setting);
+    } else {
+      newSet.add(setting);
+    }
+    onSettingsChange({ enabledTolerances: newSet });
   };
   
+  const handleToggleScrollAdjust = (setting: keyof MagicWandSettings['tolerances']) => {
+     const newSet = new Set(settings.scrollAdjustTolerances);
+    if (newSet.has(setting)) {
+      newSet.delete(setting);
+    } else {
+      newSet.add(setting);
+    }
+    onSettingsChange({ scrollAdjustTolerances: newSet });
+  }
+
   const handleToleranceChange = (key: keyof MagicWandSettings['tolerances'], value: number) => {
       onSettingsChange({
           tolerances: {
@@ -166,9 +188,12 @@ export function MagicWandPanel({
   return (
     <div className="p-4 space-y-6">
       <div className="space-y-2">
-        <h3 className="font-headline text-lg">Magic Wand</h3>
+        <h3 className="font-headline text-lg">{isExclusionPanel ? "Exclusion Tolerances" : "Magic Wand"}</h3>
         <p className="text-sm text-muted-foreground">
-          Select similar colored areas. Fine-tune tolerances below.
+          {isExclusionPanel 
+            ? "Define colors to exclude from the selection."
+            : "Select similar colored areas. Fine-tune tolerances below."
+          }
         </p>
       </div>
 
@@ -176,7 +201,7 @@ export function MagicWandPanel({
 
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-center">Color Tolerances</h4>
-        <p className="text-xs text-muted-foreground -mt-2 text-center">Toggle a setting to adjust it with the mouse wheel on the canvas, or scroll over a slider to adjust it directly.</p>
+        <p className="text-xs text-muted-foreground -mt-2 text-center">Click a slider to select for scroll-wheel adjustment. Use toggles to enable/disable a channel.</p>
         <TooltipProvider>
             <div className="flex justify-around items-end h-64 bg-muted/50 p-4 rounded-md gap-1">
                 {ALL_COMPONENTS.map((group, groupIndex) => 
@@ -191,8 +216,10 @@ export function MagicWandPanel({
                                 color={config.color}
                                 pixelValue={config.value}
                                 description={`Adjusts the tolerance for the ${config.label} component.`}
-                                isActive={activeScrollSetting === config.id}
-                                onToggle={() => handleToggle(config.id)}
+                                isEnabled={settings.enabledTolerances.has(config.id)}
+                                isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
+                                onToggleEnabled={() => handleToggleEnabled(config.id)}
+                                onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
                                 onToleranceChange={(value) => handleToleranceChange(config.id, value)}
                             />
                         ))}
@@ -205,51 +232,57 @@ export function MagicWandPanel({
 
       <Separator />
 
-      <div className="flex items-center justify-between">
-        <Label htmlFor="contiguous">Contiguous</Label>
-        <Switch
-          id="contiguous"
-          checked={settings.contiguous}
-          onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
-        />
-      </div>
-      <p className="text-xs text-muted-foreground -mt-3">
-        If enabled, selects only adjacent areas using the same colors.
-      </p>
-      
-      <Separator />
+      {!isExclusionPanel && (
+          <>
+            <div className="flex items-center justify-between">
+                <Label htmlFor="contiguous">Contiguous</Label>
+                <Switch
+                id="contiguous"
+                checked={settings.contiguous}
+                onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
+                />
+            </div>
+            <p className="text-xs text-muted-foreground -mt-3">
+                If enabled, selects only adjacent areas using the same colors.
+            </p>
+            
+            <Separator />
+          </>
+      )}
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <Label htmlFor="variance-expansion" className="font-semibold">AI-Assisted Selection</Label>
+      {!isExclusionPanel && (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <Label htmlFor="variance-expansion" className="font-semibold">AI-Assisted Selection</Label>
+                </div>
+            <Switch
+                id="variance-expansion"
+                checked={settings.useAiAssist}
+                onCheckedChange={(checked) => onSettingsChange({ useAiAssist: checked })}
+            />
             </div>
-          <Switch
-            id="variance-expansion"
-            checked={settings.useAiAssist}
-            onCheckedChange={(checked) => onSettingsChange({ useAiAssist: checked })}
-          />
+            <p className="text-xs text-muted-foreground -mt-3">
+            Uses AI to refine the Magic Wand click for a more accurate selection.
+            </p>
+            
+            <Button onClick={handleSuggestPresets} disabled={isSuggesting || isSegmenting || !settings.useAiAssist} className="w-full">
+                <BrainCircuit className="mr-2 h-4 w-4" />
+                {isSuggesting ? "Analyzing Image..." : "Suggest AI Presets"}
+            </Button>
+            {suggestedPresets && (
+            <div className="space-y-2 pt-2">
+                <h4 className="text-sm font-semibold">Suggested Presets:</h4>
+                <div className="flex flex-wrap gap-2">
+                {suggestedPresets.map((preset, index) => (
+                    <Badge key={index} variant="secondary" className="cursor-pointer hover:bg-accent" onClick={() => handleMagicWandSegmentation(preset.presetName)}>{preset.presetName}</Badge>
+                ))}
+                </div>
+            </div>
+            )}
         </div>
-        <p className="text-xs text-muted-foreground -mt-3">
-          Uses AI to refine the Magic Wand click for a more accurate selection.
-        </p>
-        
-        <Button onClick={handleSuggestPresets} disabled={isSuggesting || isSegmenting || !settings.useAiAssist} className="w-full">
-            <BrainCircuit className="mr-2 h-4 w-4" />
-            {isSuggesting ? "Analyzing Image..." : "Suggest AI Presets"}
-        </Button>
-        {suggestedPresets && (
-          <div className="space-y-2 pt-2">
-            <h4 className="text-sm font-semibold">Suggested Presets:</h4>
-            <div className="flex flex-wrap gap-2">
-              {suggestedPresets.map((preset, index) => (
-                <Badge key={index} variant="secondary" className="cursor-pointer hover:bg-accent" onClick={() => handleMagicWandSegmentation(preset.presetName)}>{preset.presetName}</Badge>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
     </div>
   )
@@ -264,12 +297,14 @@ interface VerticalToleranceSliderProps {
     color: string;
     pixelValue: number | undefined;
     description: string;
-    isActive: boolean;
-    onToggle: () => void;
+    isEnabled: boolean;
+    isSelectedForScroll: boolean;
+    onToggleEnabled: () => void;
+    onToggleScrollAdjust: () => void;
     onToleranceChange: (value: number) => void;
 }
 
-function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue, description, isActive, onToggle, onToleranceChange }: VerticalToleranceSliderProps) {
+function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue, description, isEnabled, isSelectedForScroll, onToggleEnabled, onToggleScrollAdjust, onToleranceChange }: VerticalToleranceSliderProps) {
     const displayValue = tolerance.toFixed(0);
 
     const baseValue = pixelValue ?? (id === 'h' ? 0 : max / 2);
@@ -301,7 +336,7 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
     };
     
     return (
-        <div className="flex flex-col items-center justify-between gap-2 h-full flex-1" onWheel={handleWheel}>
+        <div className={cn("flex flex-col items-center justify-between gap-2 h-full flex-1 cursor-pointer p-1 rounded-md", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
             <Tooltip>
                 <TooltipTrigger asChild>
                      <span className="text-sm font-semibold">{label}</span>
@@ -335,18 +370,20 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
                 onValueChange={(v) => onToleranceChange(v[0])}
                 orientation="vertical"
                 className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0 cursor-row-resize"
+                disabled={!isEnabled}
             />
             <span className="font-mono text-xs">{displayValue}</span>
              <div className="flex flex-col items-center gap-2">
                 <Switch
                     id={`${id}-toggle`}
-                    checked={isActive}
-                    onCheckedChange={onToggle}
+                    checked={isEnabled}
+                    onCheckedChange={onToggleEnabled}
                     orientation="vertical"
+                    onClick={(e) => e.stopPropagation()}
                 />
                  <Popover>
-                    <PopoverTrigger>
-                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    <PopoverTrigger onClick={(e) => e.stopPropagation()}>
+                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors mt-2" />
                     </PopoverTrigger>
                     <PopoverContent side="top" className="text-sm">
                         <h4 className="font-semibold mb-2">{label} Tolerance</h4>

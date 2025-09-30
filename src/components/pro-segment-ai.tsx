@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -70,17 +71,17 @@ export function ProSegmentAI() {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     contiguous: true,
     useAiAssist: false,
-    activeTolerances: new Set(['h', 's', 'v']),
+    enabledTolerances: new Set(['h', 's', 'v']),
+    scrollAdjustTolerances: new Set(),
   });
   const [negativeMagicWandSettings, setNegativeMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
     contiguous: true,
     useAiAssist: false,
-    activeTolerances: new Set(),
+    enabledTolerances: new Set(),
+    scrollAdjustTolerances: new Set(),
     seedColor: undefined,
   });
-  const [activeWandScrollSetting, setActiveWandScrollSetting] = React.useState<keyof MagicWandSettings['tolerances'] | null>(null);
-  const [activeNegativeWandScrollSetting, setActiveNegativeWandScrollSetting] = React.useState<keyof MagicWandSettings['tolerances'] | null>(null);
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
 
@@ -119,10 +120,9 @@ export function ProSegmentAI() {
       return <MagicWandPanel 
                 settings={negativeMagicWandSettings} 
                 onSettingsChange={handleNegativeMagicWandSettingsChange}
-                activeScrollSetting={activeNegativeWandScrollSetting}
-                onActiveScrollSettingChange={setActiveNegativeWandScrollSetting}
                 canvas={canvasRef.current}
                 mousePos={canvasMousePos}
+                isExclusionPanel={true}
              />
     }
 
@@ -131,8 +131,6 @@ export function ProSegmentAI() {
         return <MagicWandPanel 
                   settings={magicWandSettings} 
                   onSettingsChange={handleMagicWandSettingsChange}
-                  activeScrollSetting={activeWandScrollSetting}
-                  onActiveScrollSettingChange={setActiveWandScrollSetting}
                   canvas={canvasRef.current}
                   mousePos={canvasMousePos}
                />
@@ -279,7 +277,6 @@ export function ProSegmentAI() {
               onLassoSettingChange={handleLassoSettingsChange}
               onMagicWandSettingChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
-              activeWandScrollSetting={activeWandScrollSetting}
               canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
               getCanvasRef={canvasRef}
