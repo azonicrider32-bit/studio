@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -31,7 +32,7 @@ interface MagicWandPanelProps {
 interface Analysis {
   rgb: { r: number; g: number; b: number };
   hsv: { h: number; s: number; v: number };
-  lab: { l: number; a: number; b: number };
+  lab: { l: number; a: number; b_lab: number };
 }
 
 export function MagicWandPanel({ 
@@ -54,7 +55,7 @@ export function MagicWandPanel({
         setAnalysis({
             rgb: { r: settings.seedColor.r, g: settings.seedColor.g, b: settings.seedColor.b },
             hsv: { h: settings.seedColor.h, s: settings.seedColor.s, v: settings.seedColor.v },
-            lab: { l: settings.seedColor.l, a: settings.seedColor.a, b: settings.seedColor.b_lab },
+            lab: { l: settings.seedColor.l, a: settings.seedColor.a, b_lab: settings.seedColor.b_lab },
         });
 
     } else if (canvas && mousePos) {
@@ -156,6 +157,18 @@ export function MagicWandPanel({
           }
       });
   }
+
+  const handleToggleGroup = (groupKeys: (keyof MagicWandSettings['tolerances'])[]) => {
+    const newEnabledTolerances = new Set(settings.enabledTolerances);
+    const allEnabled = groupKeys.every(key => newEnabledTolerances.has(key));
+
+    if (allEnabled) {
+      groupKeys.forEach(key => newEnabledTolerances.delete(key));
+    } else {
+      groupKeys.forEach(key => newEnabledTolerances.add(key));
+    }
+    onSettingsChange({ enabledTolerances: newEnabledTolerances });
+  };
   
   const ALL_COMPONENTS: {title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, value: number | undefined}[]}[] = [
     {
@@ -179,7 +192,7 @@ export function MagicWandPanel({
       components: [
         { id: 'l', label: 'L', max: 100, color: "bg-gray-500", value: analysis?.lab.l },
         { id: 'a', label: 'a', max: 256, color: "bg-gradient-to-t from-green-500 to-red-500", value: (analysis?.lab.a ?? -128) + 128 },
-        { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500", value: (analysis?.lab.b ?? -128) + 128 },
+        { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500", value: (analysis?.lab.b_lab ?? -128) + 128 },
       ]
     }
   ]
@@ -203,29 +216,38 @@ export function MagicWandPanel({
         <h4 className="text-sm font-semibold text-center">Color Tolerances</h4>
         <p className="text-xs text-muted-foreground -mt-2 text-center">Click a slider to select for scroll-wheel adjustment. Use toggles to enable/disable a channel.</p>
         <TooltipProvider>
-            <div className="flex justify-around items-end h-64 bg-muted/50 p-4 rounded-md gap-1">
-                {ALL_COMPONENTS.map((group, groupIndex) => 
-                    <React.Fragment key={group.title}>
-                        {group.components.map(config => (
-                            <VerticalToleranceSlider
-                                key={config.id}
-                                id={config.id}
-                                label={config.label}
-                                tolerance={settings.tolerances[config.id]}
-                                max={config.max}
-                                color={config.color}
-                                pixelValue={config.value}
-                                description={`Adjusts the tolerance for the ${config.label} component.`}
-                                isEnabled={settings.enabledTolerances.has(config.id)}
-                                isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
-                                onToggleEnabled={() => handleToggleEnabled(config.id)}
-                                onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
-                                onToleranceChange={(value) => handleToleranceChange(config.id, value)}
-                            />
-                        ))}
-                        {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-56 bg-border/50" />}
-                    </React.Fragment>
-                )}
+            <div className="space-y-2">
+                <div className="flex justify-around bg-muted/50 p-4 rounded-md">
+                    {ALL_COMPONENTS.map((group, groupIndex) => 
+                        <React.Fragment key={group.title}>
+                           <div className="flex flex-col items-center gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(group.components.map(c => c.id))} className="font-semibold text-sm h-auto p-1">
+                                {group.title}
+                              </Button>
+                              <div className="flex items-end h-64 gap-1">
+                                {group.components.map(config => (
+                                    <VerticalToleranceSlider
+                                        key={config.id}
+                                        id={config.id}
+                                        label={config.label}
+                                        tolerance={settings.tolerances[config.id]}
+                                        max={config.max}
+                                        color={config.color}
+                                        pixelValue={config.value}
+                                        description={`Adjusts the tolerance for the ${config.label} component.`}
+                                        isEnabled={settings.enabledTolerances.has(config.id)}
+                                        isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
+                                        onToggleEnabled={() => handleToggleEnabled(config.id)}
+                                        onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
+                                        onToleranceChange={(value) => handleToleranceChange(config.id, value)}
+                                    />
+                                ))}
+                              </div>
+                           </div>
+                           {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-auto bg-border/50" />}
+                        </React.Fragment>
+                    )}
+                </div>
             </div>
         </TooltipProvider>
       </div>
@@ -307,22 +329,28 @@ interface VerticalToleranceSliderProps {
 function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue, description, isEnabled, isSelectedForScroll, onToggleEnabled, onToggleScrollAdjust, onToleranceChange }: VerticalToleranceSliderProps) {
     const displayValue = tolerance.toFixed(0);
 
-    const baseValue = pixelValue ?? (id === 'h' ? 0 : max / 2);
-    
-    let bottomPercent = ((baseValue - tolerance) / max) * 100;
-    let topPercent = ((baseValue + tolerance) / max) * 100;
-    
-    // Handle hue's circular nature
-    if (id === 'h') {
-        // This simplified visualization doesn't wrap around, but we'll clamp it.
-        bottomPercent = Math.max(0, bottomPercent);
-        topPercent = Math.min(100, topPercent);
-    } else {
-        bottomPercent = Math.max(0, bottomPercent);
-        topPercent = Math.min(100, topPercent);
+    let bottomPercent = 0;
+    let rangeHeight = 0;
+
+    if (pixelValue !== undefined) {
+        const baseValue = (id === 'a' || id === 'b_lab') ? pixelValue : pixelValue;
+        
+        // Handle hue's circular nature for visualization
+        if (id === 'h') {
+            const lowerBound = (baseValue - tolerance + 360) % 360;
+            const upperBound = (baseValue + tolerance) % 360;
+            
+            // This is a simplification and doesn't show wrapping around the bar.
+            // A more complex visualization would be needed for a perfect circular representation.
+            bottomPercent = (Math.max(0, baseValue - tolerance) / max) * 100;
+            rangeHeight = (Math.min(max, baseValue + tolerance) - Math.max(0, baseValue - tolerance)) / max * 100;
+        } else {
+            bottomPercent = (Math.max(0, baseValue - tolerance) / max) * 100;
+            const topValue = Math.min(max, baseValue + tolerance);
+            rangeHeight = (topValue - Math.max(0, baseValue - tolerance)) / max * 100;
+        }
     }
-    
-    const rangeHeight = topPercent - bottomPercent;
+
 
     const handleWheel = (e: React.WheelEvent) => {
         e.preventDefault();
@@ -336,10 +364,10 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
     };
     
     return (
-        <div className={cn("flex flex-col items-center justify-between gap-2 h-full flex-1 cursor-pointer p-1 rounded-md", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
+        <div className={cn("flex flex-col items-center justify-end gap-2 h-full w-8 cursor-pointer p-1 rounded-md", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                     <span className="text-sm font-semibold">{label}</span>
+                     <span className="text-xs font-semibold">{label}</span>
                 </TooltipTrigger>
                 <TooltipContent>
                     <p>{label} Tolerance</p>
@@ -394,5 +422,7 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
         </div>
     );
 }
+
+    
 
     
