@@ -38,10 +38,11 @@ export class SelectionEngine {
     cursorInfluence: 0.2,
   };
   magicWandSettings: MagicWandSettings = {
-    tolerance: 30,
+    tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     colorSpace: 'hsv',
     contiguous: true,
     useAiAssist: true,
+    activeTolerances: new Set(['h', 's', 'v']),
   };
 
 
@@ -378,7 +379,6 @@ export class SelectionEngine {
 
       if (x < 0 || x >= this.width || y < 0 || y >= this.height) return null;
 
-      const tolerance = this.magicWandSettings.tolerance / 100;
       const seedIndex = y * this.width + x;
       const seedColor = this.getPixelColor(seedIndex);
 
@@ -405,7 +405,7 @@ export class SelectionEngine {
               if (this.visited && !this.visited[neighborIndex]) {
                   this.visited[neighborIndex] = 1;
                   const neighborColor = this.getPixelColor(neighborIndex);
-                  if (this.colorDistance(seedColor, neighborColor) < tolerance) {
+                  if (this.isWithinTolerance(seedColor, neighborColor)) {
                       queue.push(neighborIndex);
                   }
               }
@@ -421,41 +421,50 @@ export class SelectionEngine {
       }
   }
 
-  getPixelColor(index: number) {
-      if (!this.pixelData) throw new Error("Pixel data not loaded");
-      const i = index * 4;
-      const r = this.pixelData[i];
-      const g = this.pixelData[i + 1];
-      const b = this.pixelData[i + 2];
-      
-      switch (this.magicWandSettings.colorSpace) {
-          case 'hsv':
-              return rgbToHsv(r, g, b);
-          case 'lab':
-              return rgbToLab(r, g, b);
-          default: // 'rgb'
-              return { r: r / 255, g: g / 255, b: b / 255 };
-      }
+  getPixelColor(index: number): { [key: string]: number } {
+    if (!this.pixelData) throw new Error("Pixel data not loaded");
+    const i = index * 4;
+    const r = this.pixelData[i];
+    const g = this.pixelData[i + 1];
+    const b = this.pixelData[i + 2];
+    
+    switch (this.magicWandSettings.colorSpace) {
+        case 'hsv':
+            return rgbToHsv(r, g, b);
+        case 'lab':
+            return rgbToLab(r, g, b);
+        default: // 'rgb'
+            return { r, g, b };
+    }
   }
 
-  colorDistance(c1: any, c2: any): number {
-      switch (this.magicWandSettings.colorSpace) {
-          case 'hsv':
-              const dH = Math.min(Math.abs(c1.h - c2.h), 360 - Math.abs(c1.h - c2.h)) / 180;
-              const dS = Math.abs(c1.s - c2.s) / 100;
-              const dV = Math.abs(c1.v - c2.v) / 100;
-              return Math.sqrt(dH * dH + dS * dS + dV * dV);
-          case 'lab':
-              const dL = c1.l - c2.l;
-              const dA = c1.a - c2.a;
-              const dB = c1.b - c2.b;
-              return Math.sqrt(dL*dL + dA*dA + dB*dB) / 100; // Normalize roughly to 0-1
-          default: // 'rgb'
-              const dR = c1.r - c2.r;
-              const dG = c1.g - c2.g;
-              const dB_ = c1.b - c2.b;
-              return Math.sqrt(dR*dR + dG*dG + dB_*dB_);
-      }
+  isWithinTolerance(c1: { [key: string]: number }, c2: { [key: string]: number }): boolean {
+    const { tolerances, colorSpace } = this.magicWandSettings;
+
+    switch (colorSpace) {
+        case 'rgb':
+            return (
+                Math.abs(c1.r - c2.r) <= tolerances.r &&
+                Math.abs(c1.g - c2.g) <= tolerances.g &&
+                Math.abs(c1.b - c2.b) <= tolerances.b
+            );
+        case 'hsv':
+            const hDiff = Math.abs(c1.h - c2.h);
+            const hueDistance = Math.min(hDiff, 360 - hDiff);
+            return (
+                hueDistance <= tolerances.h &&
+                Math.abs(c1.s - c2.s) <= tolerances.s &&
+                Math.abs(c1.v - c2.v) <= tolerances.v
+            );
+        case 'lab':
+            return (
+                Math.abs(c1.l - c2.l) <= tolerances.l &&
+                Math.abs(c1.a - c2.a) <= tolerances.a &&
+                Math.abs(c1.b_lab - c2.b_lab) <= tolerances.b_lab
+            );
+        default:
+            return false;
+    }
   }
   // #endregion
   

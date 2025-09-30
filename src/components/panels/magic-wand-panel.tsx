@@ -96,20 +96,13 @@ export function MagicWandPanel({ settings, onSettingsChange, setSegmentationMask
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="tolerance">Tolerance: {settings.tolerance}</Label>
-          <Slider
-            id="tolerance"
-            min={0}
-            max={100}
-            step={1}
-            value={[settings.tolerance]}
-            onValueChange={(value) => onSettingsChange({ tolerance: value[0] })}
-          />
+          <Label htmlFor="tolerance">Tolerance</Label>
+           <p className="text-xs text-muted-foreground">Adjust individual tolerances in the Analysis panel.</p>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="color-space">Color Space</Label>
-          <Select value={settings.colorSpace} onValueChange={(value) => onSettingsChange({ colorSpace: value })}>
+          <Select value={settings.colorSpace} onValueChange={(value) => onSettingsChange({ colorSpace: value as MagicWandSettings['colorSpace'] })}>
             <SelectTrigger id="color-space">
               <SelectValue placeholder="Select color space" />
             </SelectTrigger>

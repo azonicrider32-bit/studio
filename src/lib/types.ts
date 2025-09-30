@@ -10,12 +10,17 @@ export interface LassoSettings {
 }
 
 export interface MagicWandSettings {
-    tolerance: number;
-    colorSpace: string;
+    tolerances: {
+        r: number; g: number; b: number;
+        h: number; s: number; v: number;
+        l: number; a: number; b_lab: number;
+    };
+    colorSpace: 'rgb' | 'hsv' | 'lab';
     contiguous: boolean;
     useAiAssist: boolean;
-    activeTolerances: Set<string>;
+    activeTolerances: Set<keyof MagicWandSettings['tolerances']>;
 }
+
 
 export interface Segment {
     id: number;

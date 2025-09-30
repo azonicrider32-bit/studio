@@ -24,7 +24,7 @@ interface Analysis {
 export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagicWandSettingsChange }: ColorAnalysisPanelProps) {
   const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
 
-  const handleToggleTolerance = (key: string) => {
+  const handleToggleTolerance = (key: keyof MagicWandSettings['tolerances']) => {
     const newActiveTolerances = new Set(magicWandSettings.activeTolerances);
     if (newActiveTolerances.has(key)) {
       newActiveTolerances.delete(key);
@@ -83,7 +83,7 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
     </div>
   );
 
-  const renderColorBreakdown = (label: string, values: { [key: string]: { value: number, max: number, color: string, id: string }}) => (
+  const renderColorBreakdown = (label: string, values: { [key: string]: { value: number, max: number, color: string, id: keyof MagicWandSettings['tolerances'] }}) => (
      <div className="space-y-2 flex-1">
         <h5 className="font-semibold text-sm mb-2 text-center">{label}</h5>
         <div className="flex justify-around gap-2 p-2 rounded-md bg-muted/50">
@@ -108,7 +108,7 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
        <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
         
         <div className="space-y-4">
-            {renderColorValue("Hex", analysis?.hex ?? "#000000", analysis?.hex ?? "#000000")}
+            {renderColorValue("Hex", analysis?.hex ?? "#------", analysis?.hex ?? "transparent")}
             <Separator />
             <div className="flex gap-1">
                 {renderColorBreakdown("RGB", { 
@@ -123,8 +123,8 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
                 })}
                  {renderColorBreakdown("LAB", {
                     "L": { id: 'l', value: analysis?.lab.l ?? 0, max: 100, color: "bg-gray-500" },
-                    "A": { id: 'a', value: (analysis?.lab.a ?? -128) + 128, max: 256, color: "bg-gradient-to-t from-green-500 to-red-500" },
-                    "B": { id: 'b_lab', value: (analysis?.lab.b ?? -128) + 128, max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
+                    "A": { id: 'a', value: (analysis?.lab.a ?? 0) + 128, max: 256, color: "bg-gradient-to-t from-green-500 to-red-500" },
+                    "B": { id: 'b_lab', value: (analysis?.lab.b ?? 0) + 128, max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
                 })}
             </div>
         </div>

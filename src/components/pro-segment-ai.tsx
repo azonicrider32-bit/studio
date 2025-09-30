@@ -60,7 +60,7 @@ export function ProSegmentAI() {
     cursorInfluence: 0.2,
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
-    tolerance: 30,
+    tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     colorSpace: 'hsv',
     contiguous: true,
     useAiAssist: true,
