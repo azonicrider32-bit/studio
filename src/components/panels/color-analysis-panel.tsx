@@ -61,7 +61,7 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
   
   const VerticalValueBar = ({ value, max, color, label }: { value: number; max: number; color: string; label: string }) => (
     <div className="flex flex-col items-center gap-2 flex-1">
-        <div className="w-8 h-32 bg-muted rounded-full overflow-hidden flex flex-col justify-end">
+        <div className="w-6 h-32 bg-muted rounded-full overflow-hidden flex flex-col justify-end">
              <div className={cn("w-full", color)} style={{ height: `${(value/max) * 100}%`}}></div>
         </div>
         <span className="font-mono text-xs text-muted-foreground">{label}</span>
@@ -70,7 +70,7 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
   );
 
   const renderColorBreakdown = (label: string, values: { [key: string]: { value: number, max: number, color: string }}) => (
-     <div className="space-y-2">
+     <div className="space-y-2 flex-1">
         <h5 className="font-semibold text-sm mb-2 text-center">{label}</h5>
         <div className="flex justify-around gap-2 p-2 rounded-md bg-muted/50">
             {Object.entries(values).map(([key, data]) => (
