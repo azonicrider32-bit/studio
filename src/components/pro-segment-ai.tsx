@@ -62,6 +62,8 @@ export function ProSegmentAI() {
     useAiAssist: true,
   });
   const [activeScrollSetting, setActiveScrollSetting] = React.useState<keyof LassoSettings | null>(null);
+  const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
 
 
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
@@ -199,6 +201,8 @@ export function ProSegmentAI() {
               clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
               activeScrollSetting={activeScrollSetting}
+              setCanvasMousePos={setCanvasMousePos}
+              getCanvasRef={canvasRef}
             />
         </div>
       </SidebarInset>
@@ -222,7 +226,7 @@ export function ProSegmentAI() {
               <LayersPanel />
             </TabsContent>
             <TabsContent value="analysis" className="m-0">
-              <ColorAnalysisPanel />
+              <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos}/>
             </TabsContent>
             <TabsContent value="ai" className="m-0">
                 <Tabs defaultValue="models" className="flex h-full flex-col">

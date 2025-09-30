@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-import { Segment } from '@/lib/types';
 
 interface SegmentHoverPreviewProps {
   mousePos: { x: number; y: number } | null;

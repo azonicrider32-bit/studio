@@ -25,6 +25,8 @@ interface ImageCanvasProps {
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
   activeScrollSetting: keyof LassoSettings | null;
+  setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
+  getCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
 }
 
 export function ImageCanvas({
@@ -37,7 +39,9 @@ export function ImageCanvas({
   getSelectionMaskRef,
   clearSelectionRef,
   onLassoSettingChange,
-  activeScrollSetting
+  activeScrollSetting,
+  setCanvasMousePos,
+  getCanvasRef
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -47,8 +51,6 @@ export function ImageCanvas({
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
   const [hoveredSegment, setHoveredSegment] = React.useState<Segment | null>(null);
-  const [mousePos, setMousePos] = React.useState<{ x: number, y: number } | null>(null);
-  const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
 
 
   const { toast } = useToast();
@@ -106,8 +108,9 @@ export function ImageCanvas({
 
     selectionEngineRef.current = new SelectionEngine(canvas, ctx);
     selectionEngineRef.current.initialize();
+    getCanvasRef.current = canvas;
     console.log("Selection Engine Initialized");
-  }, [image]);
+  }, [image, getCanvasRef]);
 
   const handleImageLoad = () => {
     initEngine();
@@ -308,7 +311,6 @@ export function ImageCanvas({
     if (!canvas || !engine || isProcessing) return;
 
     const pos = getMousePos(canvas, e);
-    setMousePos({ x: e.clientX, y: e.clientY });
     setCanvasMousePos(pos);
 
     if (activeTool === 'lasso') {
@@ -323,7 +325,6 @@ export function ImageCanvas({
   
   const handleMouseLeave = () => {
     setHoveredSegment(null);
-    setMousePos(null);
     setCanvasMousePos(null);
     drawOverlay();
   }
@@ -411,12 +412,10 @@ export function ImageCanvas({
           />
         )}
       </Card>
-      {canvasMousePos && activeTool === 'magic-wand' && (
-        <SegmentHoverPreview
-            canvas={canvasRef.current}
-            mousePos={canvasMousePos}
-        />
-      )}
+      <SegmentHoverPreview
+          canvas={canvasRef.current}
+          mousePos={getCanvasRef.current ? (setCanvasMousePos as any) : null}
+      />
     </div>
   );
 }
