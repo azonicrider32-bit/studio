@@ -4,6 +4,7 @@ import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { rgbToHex, rgbToHsv, rgbToLab } from "@/lib/color-utils"
 import { Progress } from "../ui/progress"
+import { SegmentHoverPreview } from "../segment-hover-preview"
 
 interface ColorAnalysisPanelProps {
   canvas: HTMLCanvasElement | null;
@@ -86,6 +87,8 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
           Real-time analysis of the area under your cursor.
         </p>
       </div>
+
+       <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
 
       <Separator />
         

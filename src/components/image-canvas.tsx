@@ -9,7 +9,6 @@ import { SelectionEngine } from "@/lib/selection-engine";
 import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-lasso-assisted-path-snapping";
 import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } from "@/ai/flows/magic-wand-assisted-segmentation";
 import { LassoSettings, MagicWandSettings, Segment } from "@/lib/types";
-import { SegmentHoverPreview } from "./segment-hover-preview";
 import { debounce } from "@/lib/utils";
 import { handleApiError } from "@/lib/error-handling";
 
@@ -414,10 +413,6 @@ export function ImageCanvas({
           />
         )}
       </Card>
-      <SegmentHoverPreview
-          canvas={canvasRef.current}
-          mousePos={canvasMousePos}
-      />
     </div>
   );
 }
