@@ -101,31 +101,34 @@ export function MagicWandPanel({
           }
       });
   }
+  
+  const ALL_COMPONENTS: {title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number}[]}[] = [
+    {
+      title: 'RGB',
+      components: [
+        { id: 'r', label: 'R', max: 255 },
+        { id: 'g', label: 'G', max: 255 },
+        { id: 'b', label: 'B', max: 255 },
+      ]
+    },
+    {
+      title: 'HSV',
+      components: [
+        { id: 'h', label: 'H', max: 180 },
+        { id: 's', label: 'S', max: 100 },
+        { id: 'v', label: 'V', max: 100 },
+      ]
+    },
+    {
+      title: 'LAB',
+      components: [
+        { id: 'l', label: 'L', max: 100 },
+        { id: 'a', label: 'A', max: 128 },
+        { id: 'b_lab', label: 'B', max: 128 },
+      ]
+    }
+  ]
 
-  const ToleranceSliderGroup = ({ title, components }: { title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number}[] }) => (
-    <div className="space-y-4">
-      <h4 className="text-sm font-semibold text-center">{title}</h4>
-      <TooltipProvider>
-        <div className="flex justify-around items-end h-48 bg-muted/50 p-2 rounded-md">
-            {components.map(config => (
-                <VerticalSettingSlider
-                    key={config.id}
-                    id={config.id}
-                    label={config.label}
-                    value={settings.tolerances[config.id]}
-                    min={0}
-                    max={config.max}
-                    step={1}
-                    description={`Adjusts the tolerance for the ${config.label} component.`}
-                    isActive={activeScrollSetting === config.id}
-                    onToggle={() => handleToggle(config.id)}
-                    onValueChange={(value) => handleToleranceChange(config.id, value)}
-                />
-            ))}
-        </div>
-      </TooltipProvider>
-    </div>
-  );
 
   return (
     <div className="p-4 space-y-6">
@@ -138,30 +141,33 @@ export function MagicWandPanel({
 
       <Separator />
 
-      <ToleranceSliderGroup 
-        title="RGB"
-        components={[
-          { id: 'r', label: 'R', max: 255 },
-          { id: 'g', label: 'G', max: 255 },
-          { id: 'b', label: 'B', max: 255 },
-        ]}
-      />
-      <ToleranceSliderGroup 
-        title="HSV"
-        components={[
-          { id: 'h', label: 'H', max: 180 },
-          { id: 's', label: 'S', max: 100 },
-          { id: 'v', label: 'V', max: 100 },
-        ]}
-      />
-       <ToleranceSliderGroup 
-        title="LAB"
-        components={[
-          { id: 'l', label: 'L', max: 100 },
-          { id: 'a', label: 'A', max: 128 },
-          { id: 'b_lab', label: 'B', max: 128 },
-        ]}
-      />
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-center">Color Tolerances</h4>
+        <TooltipProvider>
+            <div className="flex justify-around items-end h-48 bg-muted/50 p-2 rounded-md gap-1">
+                {ALL_COMPONENTS.map((group, groupIndex) => 
+                    <React.Fragment key={group.title}>
+                        {group.components.map(config => (
+                            <VerticalSettingSlider
+                                key={config.id}
+                                id={config.id}
+                                label={config.label}
+                                value={settings.tolerances[config.id]}
+                                min={0}
+                                max={config.max}
+                                step={1}
+                                description={`Adjusts the tolerance for the ${config.label} component.`}
+                                isActive={activeScrollSetting === config.id}
+                                onToggle={() => handleToggle(config.id)}
+                                onValueChange={(value) => handleToleranceChange(config.id, value)}
+                            />
+                        ))}
+                        {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-40 bg-border/50" />}
+                    </React.Fragment>
+                )}
+            </div>
+        </TooltipProvider>
+      </div>
 
       <Separator />
 
@@ -272,4 +278,3 @@ function VerticalSettingSlider({ id, label, value, min, max, step, description, 
         </div>
     );
 }
-
