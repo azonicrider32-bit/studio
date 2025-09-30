@@ -17,26 +17,65 @@ import { handleApiError } from "@/lib/error-handling"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { cn } from "@/lib/utils"
+import { rgbToHsv, rgbToLab } from "@/lib/color-utils"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
   onSettingsChange: (settings: Partial<MagicWandSettings>) => void;
   activeScrollSetting: keyof MagicWandSettings['tolerances'] | null;
   onActiveScrollSettingChange: (setting: keyof MagicWandSettings['tolerances'] | null) => void;
+  canvas: HTMLCanvasElement | null;
+  mousePos: { x: number; y: number } | null;
+}
+
+interface Analysis {
+  rgb: { r: number; g: number; b: number };
+  hsv: { h: number; s: number; v: number };
+  lab: { l: number; a: number; b: number };
 }
 
 export function MagicWandPanel({ 
   settings, 
   onSettingsChange,
   activeScrollSetting,
-  onActiveScrollSettingChange
+  onActiveScrollSettingChange,
+  canvas,
+  mousePos
 }: MagicWandPanelProps) {
   const [isSuggesting, setIsSuggesting] = React.useState(false)
   const [isSegmenting, setIsSegmenting] = React.useState(false)
   const [suggestedPresets, setSuggestedPresets] = React.useState<SuggestSegmentationPresetsOutput | null>(null)
+  const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
   const { toast } = useToast()
 
   const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")
+
+  React.useEffect(() => {
+    if (canvas && mousePos) {
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (ctx) {
+        const x = Math.floor(mousePos.x);
+        const y = Math.floor(mousePos.y);
+        
+        if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+          const pixel = ctx.getImageData(x, y, 1, 1).data;
+          const r = pixel[0];
+          const g = pixel[1];
+          const b = pixel[2];
+          
+          setAnalysis({
+            rgb: { r, g, b },
+            hsv: rgbToHsv(r, g, b),
+            lab: rgbToLab(r, g, b),
+          });
+        } else {
+          setAnalysis(null);
+        }
+      }
+    } else {
+        setAnalysis(null);
+    }
+  }, [canvas, mousePos]);
 
   const handleSuggestPresets = async () => {
     if (!image) return;
@@ -96,29 +135,29 @@ export function MagicWandPanel({
       });
   }
   
-  const ALL_COMPONENTS: {title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number}[]}[] = [
+  const ALL_COMPONENTS: {title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, value: number | undefined}[]}[] = [
     {
       title: 'RGB',
       components: [
-        { id: 'r', label: 'R', max: 255 },
-        { id: 'g', label: 'G', max: 255 },
-        { id: 'b', label: 'B', max: 255 },
+        { id: 'r', label: 'R', max: 255, color: "bg-red-500", value: analysis?.rgb.r },
+        { id: 'g', label: 'G', max: 255, color: "bg-green-500", value: analysis?.rgb.g },
+        { id: 'b', label: 'B', max: 255, color: "bg-blue-500", value: analysis?.rgb.b },
       ]
     },
     {
       title: 'HSV',
       components: [
-        { id: 'h', label: 'H', max: 180 },
-        { id: 's', label: 'S', max: 100 },
-        { id: 'v', label: 'V', max: 100 },
+        { id: 'h', label: 'H', max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500", value: analysis?.hsv.h },
+        { id: 's', label: 'S', max: 100, color: "bg-slate-400", value: analysis?.hsv.s },
+        { id: 'v', label: 'V', max: 100, color: "bg-white", value: analysis?.hsv.v },
       ]
     },
     {
       title: 'LAB',
       components: [
-        { id: 'l', label: 'L', max: 100 },
-        { id: 'a', label: 'a', max: 128 },
-        { id: 'b_lab', label: 'b', max: 128 },
+        { id: 'l', label: 'L', max: 100, color: "bg-gray-500", value: analysis?.lab.l },
+        { id: 'a', label: 'a', max: 256, color: "bg-gradient-to-t from-green-500 to-red-500", value: (analysis?.lab.a ?? -128) + 128 },
+        { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500", value: (analysis?.lab.b ?? -128) + 128 },
       ]
     }
   ]
@@ -137,7 +176,7 @@ export function MagicWandPanel({
 
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-center">Color Tolerances</h4>
-        <p className="text-xs text-muted-foreground -mt-2 text-center">Toggle a setting to adjust it with the mouse wheel while drawing.</p>
+        <p className="text-xs text-muted-foreground -mt-2 text-center">Toggle a setting to adjust it with the mouse wheel on the canvas, or scroll over a slider to adjust it directly.</p>
         <TooltipProvider>
             <div className="flex justify-around items-end h-64 bg-muted/50 p-4 rounded-md gap-1">
                 {ALL_COMPONENTS.map((group, groupIndex) => 
@@ -149,6 +188,8 @@ export function MagicWandPanel({
                                 label={config.label}
                                 tolerance={settings.tolerances[config.id]}
                                 max={config.max}
+                                color={config.color}
+                                pixelValue={config.value}
                                 description={`Adjusts the tolerance for the ${config.label} component.`}
                                 isActive={activeScrollSetting === config.id}
                                 onToggle={() => handleToggle(config.id)}
@@ -220,33 +261,47 @@ interface VerticalToleranceSliderProps {
     label: string;
     tolerance: number;
     max: number;
+    color: string;
+    pixelValue: number | undefined;
     description: string;
     isActive: boolean;
     onToggle: () => void;
     onToleranceChange: (value: number) => void;
 }
 
-function VerticalToleranceSlider({ id, label, tolerance, max, description, isActive, onToggle, onToleranceChange }: VerticalToleranceSliderProps) {
+function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue, description, isActive, onToggle, onToleranceChange }: VerticalToleranceSliderProps) {
     const displayValue = tolerance.toFixed(0);
-    const pixelValue = 128; // Example value, this should come from canvas hover
-    
-    // The base value is the center of the bar
-    const basePercent = 50; 
-    
-    // The tolerance is a percentage of the max value
-    const tolerancePercent = (tolerance / max) * 100;
-    
-    // The range is centered on the base value
-    let bottom = basePercent - (tolerancePercent / 2);
-    let top = basePercent + (tolerancePercent / 2);
 
-    // For H (hue), the tolerance is circular. For simplicity, we keep it linear here.
-    // A more complex visualization could wrap around.
+    const baseValue = pixelValue ?? (id === 'h' ? 0 : max / 2);
     
-    const rangeHeight = top - bottom;
+    let bottomPercent = ((baseValue - tolerance) / max) * 100;
+    let topPercent = ((baseValue + tolerance) / max) * 100;
+    
+    // Handle hue's circular nature
+    if (id === 'h') {
+        // This simplified visualization doesn't wrap around, but we'll clamp it.
+        bottomPercent = Math.max(0, bottomPercent);
+        topPercent = Math.min(100, topPercent);
+    } else {
+        bottomPercent = Math.max(0, bottomPercent);
+        topPercent = Math.min(100, topPercent);
+    }
+    
+    const rangeHeight = topPercent - bottomPercent;
+
+    const handleWheel = (e: React.WheelEvent) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -1 : 1;
+        let step = 1;
+        if (id === 'h') step = 2;
+        
+        let newValue = tolerance + delta * step;
+        newValue = Math.max(0, Math.min(max, newValue));
+        onToleranceChange(newValue);
+    };
     
     return (
-        <div className="flex flex-col items-center justify-between gap-2 h-full flex-1">
+        <div className="flex flex-col items-center justify-between gap-2 h-full flex-1" onWheel={handleWheel}>
             <Tooltip>
                 <TooltipTrigger asChild>
                      <span className="text-sm font-semibold">{label}</span>
@@ -256,14 +311,19 @@ function VerticalToleranceSlider({ id, label, tolerance, max, description, isAct
                 </TooltipContent>
             </Tooltip>
 
-             <div className="w-4 h-full bg-muted/50 rounded-full overflow-hidden flex flex-col justify-end relative">
-                 <div 
-                    className={cn("w-full absolute bg-primary/50")} 
-                    style={{ 
-                        bottom: `${bottom}%`, 
-                        height: `${rangeHeight}%`
-                    }}
-                ></div>
+             <div className={cn("w-4 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
+                {pixelValue !== undefined && (
+                  <div 
+                      className={cn("w-full absolute bg-primary/75 border-y border-primary-foreground/50")} 
+                      style={{ 
+                          bottom: `${bottomPercent}%`, 
+                          height: `${rangeHeight}%`
+                      }}
+                  ></div>
+                )}
+                 {pixelValue !== undefined && (
+                    <div className="w-full h-0.5 bg-accent-foreground absolute" style={{ bottom: `${(pixelValue / max) * 100}%`}}></div>
+                )}
             </div>
             
             <Slider
@@ -274,7 +334,7 @@ function VerticalToleranceSlider({ id, label, tolerance, max, description, isAct
                 value={[tolerance]}
                 onValueChange={(v) => onToleranceChange(v[0])}
                 orientation="vertical"
-                className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0"
+                className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0 cursor-row-resize"
             />
             <span className="font-mono text-xs">{displayValue}</span>
              <div className="flex flex-col items-center gap-2">
@@ -297,3 +357,5 @@ function VerticalToleranceSlider({ id, label, tolerance, max, description, isAct
         </div>
     );
 }
+
+    

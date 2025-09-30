@@ -104,6 +104,8 @@ export function ProSegmentAI() {
                   onSettingsChange={handleMagicWandSettingsChange}
                   activeScrollSetting={activeWandScrollSetting}
                   onActiveScrollSettingChange={setActiveWandScrollSetting}
+                  canvas={canvasRef.current}
+                  mousePos={canvasMousePos}
                />
       case "lasso":
         return <LassoPanel 
@@ -297,3 +299,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
