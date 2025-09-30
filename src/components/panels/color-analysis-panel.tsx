@@ -3,7 +3,6 @@
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { rgbToHex, rgbToHsv, rgbToLab } from "@/lib/color-utils"
-import { Progress } from "../ui/progress"
 import { SegmentHoverPreview } from "../segment-hover-preview"
 
 interface ColorAnalysisPanelProps {
@@ -59,20 +58,22 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
     </div>
   );
   
-  const ValueBar = ({ value, max, color, label }: { value: number; max: number; color: string; label: string }) => (
-    <div className="grid grid-cols-[20px_1fr_40px] items-center gap-2 text-sm">
-        <span className="font-mono text-muted-foreground">{label}</span>
-        <Progress value={(value / max) * 100} indicatorClassName={color} />
-        <span className="font-mono text-right">{value}</span>
+  const VerticalValueBar = ({ value, max, color, label }: { value: number; max: number; color: string; label: string }) => (
+    <div className="flex flex-col items-center gap-2 flex-1">
+        <div className="w-8 h-32 bg-muted rounded-full overflow-hidden flex flex-col justify-end">
+             <div className={color} style={{ height: `${(value/max) * 100}%`}}></div>
+        </div>
+        <span className="font-mono text-xs text-muted-foreground">{label}</span>
+        <span className="font-mono text-sm">{value}</span>
     </div>
   );
 
   const renderColorBreakdown = (label: string, values: { [key: string]: { value: number, max: number, color: string }}) => (
      <div className="space-y-2">
         <h5 className="font-semibold text-sm mb-2">{label}</h5>
-        <div className="space-y-2 pl-2">
+        <div className="flex justify-around gap-2 p-2 rounded-md bg-muted/50">
             {Object.entries(values).map(([key, data]) => (
-                <ValueBar key={key} label={key} value={data.value} max={data.max} color={data.color} />
+                <VerticalValueBar key={key} label={key} value={data.value} max={data.max} color={data.color} />
             ))}
         </div>
      </div>
@@ -103,15 +104,15 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
                 })}
                 <Separator />
                  {renderColorBreakdown("HSV", {
-                    "H": { value: analysis.hsv.h, max: 360, color: "bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500" },
+                    "H": { value: analysis.hsv.h, max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500" },
                     "S": { value: analysis.hsv.s, max: 100, color: "bg-slate-400" },
                     "V": { value: analysis.hsv.v, max: 100, color: "bg-white" },
                 })}
                 <Separator />
                  {renderColorBreakdown("LAB", {
                     "L": { value: analysis.lab.l, max: 100, color: "bg-gray-500" },
-                    "A": { value: analysis.lab.a, max: 100, color: "bg-gradient-to-r from-green-500 to-red-500" },
-                    "B": { value: analysis.lab.b, max: 100, color: "bg-gradient-to-r from-blue-500 to-yellow-500" },
+                    "A": { value: analysis.lab.a, max: 100, color: "bg-gradient-to-t from-green-500 to-red-500" },
+                    "B": { value: analysis.lab.b, max: 100, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
                 })}
             </div>
         ) : (
