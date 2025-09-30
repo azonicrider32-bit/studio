@@ -12,6 +12,7 @@ import { LassoSettings, MagicWandSettings, Segment } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { handleApiError } from "@/lib/error-handling";
 import { SegmentHoverPreview } from "./segment-hover-preview";
+import { rgbToHsv, rgbToLab } from "@/lib/color-utils";
 
 
 interface ImageCanvasProps {
@@ -21,6 +22,8 @@ interface ImageCanvasProps {
   activeTool: string;
   lassoSettings: LassoSettings;
   magicWandSettings: MagicWandSettings;
+  negativeMagicWandSettings: MagicWandSettings;
+  setNegativeMagicWandSettings: (settings: MagicWandSettings) => void;
   getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
@@ -39,6 +42,8 @@ export function ImageCanvas({
   activeTool,
   lassoSettings,
   magicWandSettings,
+  negativeMagicWandSettings,
+  setNegativeMagicWandSettings,
   getSelectionMaskRef,
   clearSelectionRef,
   onLassoSettingChange,
@@ -282,7 +287,38 @@ export function ImageCanvas({
     } finally {
         setIsProcessing(false);
     }
-};
+  };
+
+  const sampleExclusionColor = (pos: { x: number, y: number }) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+    
+    const x = Math.floor(pos.x);
+    const y = Math.floor(pos.y);
+    
+    if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
+
+    const pixel = ctx.getImageData(x, y, 1, 1).data;
+    const r = pixel[0];
+    const g = pixel[1];
+    const b = pixel[2];
+
+    const hsv = rgbToHsv(r, g, b);
+    const lab = rgbToLab(r, g, b);
+
+    // This is a placeholder for where we'll store the sampled color
+    // For now, we'll just log it. In the next step, we'll update the state.
+    console.log("Sampled exclusion color:", { rgb: {r,g,b}, hsv, lab });
+
+    toast({
+        title: "Exclusion Color Sampled",
+        description: `RGB: (${r}, ${g}, ${b})`,
+    });
+  };
+
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
@@ -301,6 +337,8 @@ export function ImageCanvas({
       drawOverlay();
     } else if (activeTool === 'magic-wand') {
         handleMagicWandClick(pos);
+    } else if (activeTool === 'pipette-minus') {
+        sampleExclusionColor(pos);
     }
   };
   
@@ -439,7 +477,7 @@ export function ImageCanvas({
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
           className="absolute top-0 left-0 h-full w-full object-contain"
-          style={{ cursor: activeTool === 'magic-wand' ? 'crosshair' : activeTool === 'lasso' ? 'crosshair' : 'default' }}
+          style={{ cursor: activeTool === 'magic-wand' ? 'crosshair' : activeTool === 'lasso' ? 'crosshair' : activeTool === 'pipette-minus' ? 'copy' : 'default' }}
         />
         {segmentationMask && (
           <Image

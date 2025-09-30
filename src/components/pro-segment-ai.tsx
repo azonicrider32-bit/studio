@@ -43,8 +43,9 @@ import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import Image from "next/image"
+import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments"
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus"
 
 export function ProSegmentAI() {
   const [activeTool, setActiveTool] = React.useState<Tool>("magic-wand")
@@ -65,8 +66,15 @@ export function ProSegmentAI() {
     useAiAssist: false,
     activeTolerances: new Set(['h', 's', 'v']),
   });
+  const [negativeMagicWandSettings, setNegativeMagicWandSettings] = React.useState<MagicWandSettings>({
+    tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
+    contiguous: true,
+    useAiAssist: false,
+    activeTolerances: new Set(),
+  });
   const [activeLassoScrollSetting, setActiveLassoScrollSetting] = React.useState<keyof LassoSettings | null>(null);
   const [activeWandScrollSetting, setActiveWandScrollSetting] = React.useState<keyof MagicWandSettings['tolerances'] | null>(null);
+  const [activeNegativeWandScrollSetting, setActiveNegativeWandScrollSetting] = React.useState<keyof MagicWandSettings['tolerances'] | null>(null);
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
 
@@ -82,6 +90,10 @@ export function ProSegmentAI() {
   const handleMagicWandSettingsChange = (newSettings: Partial<MagicWandSettings>) => {
     setMagicWandSettings(prev => ({ ...prev, ...newSettings }));
   };
+
+  const handleNegativeMagicWandSettingsChange = (newSettings: Partial<MagicWandSettings>) => {
+    setNegativeMagicWandSettings(prev => ({ ...prev, ...newSettings }));
+  };
   
   const handleImageSelect = (url: string) => {
     setImageUrl(url);
@@ -96,7 +108,18 @@ export function ProSegmentAI() {
     setIsClient(true)
   }, [])
 
-  const renderToolOptions = () => {
+  const renderToolOptions = (isExclusion = false) => {
+     if (isExclusion) {
+      return <MagicWandPanel 
+                settings={negativeMagicWandSettings} 
+                onSettingsChange={handleNegativeMagicWandSettingsChange}
+                activeScrollSetting={activeNegativeWandScrollSetting}
+                onActiveScrollSettingChange={setActiveNegativeWandScrollSetting}
+                canvas={canvasRef.current}
+                mousePos={canvasMousePos}
+             />
+    }
+
     switch (activeTool) {
       case "magic-wand":
         return <MagicWandPanel 
@@ -181,6 +204,16 @@ export function ProSegmentAI() {
                 <span>Eraser</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Sample Exclusion Color (I)"
+                isActive={activeTool === "pipette-minus"}
+                onClick={() => setActiveTool("pipette-minus")}
+              >
+                <PipetteMinusIcon />
+                <span>Exclusion Pipette</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton
                 tooltip="Adjustments (A)"
@@ -236,6 +269,8 @@ export function ProSegmentAI() {
               activeTool={activeTool}
               lassoSettings={lassoSettings}
               magicWandSettings={magicWandSettings}
+              negativeMagicWandSettings={negativeMagicWandSettings}
+              setNegativeMagicWandSettings={setNegativeMagicWandSettings}
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
@@ -252,8 +287,9 @@ export function ProSegmentAI() {
       <Sidebar side="right" className="w-[380px] border-l">
         <Tabs defaultValue="options" className="flex h-full flex-col">
           <SidebarHeader>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="options">Options</TabsTrigger>
+              <TabsTrigger value="exclusions">Exclusions</TabsTrigger>
               <TabsTrigger value="layers">Layers</TabsTrigger>
               <TabsTrigger value="analysis">Analysis</TabsTrigger>
               <TabsTrigger value="ai">AI</TabsTrigger>
@@ -263,6 +299,9 @@ export function ProSegmentAI() {
           <SidebarContent className="p-0">
             <TabsContent value="options" className="m-0 h-full">
               {renderToolOptions()}
+            </TabsContent>
+            <TabsContent value="exclusions" className="m-0 h-full">
+              {renderToolOptions(true)}
             </TabsContent>
             <TabsContent value="layers" className="m-0">
               <LayersPanel />
@@ -299,5 +338,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
