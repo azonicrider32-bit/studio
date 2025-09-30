@@ -201,6 +201,7 @@ export function ProSegmentAI() {
               clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
               activeScrollSetting={activeScrollSetting}
+              canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
               getCanvasRef={canvasRef}
             />

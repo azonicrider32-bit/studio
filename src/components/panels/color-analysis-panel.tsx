@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { rgbToHex, rgbToHsv, rgbToLab } from "@/lib/color-utils"
+import { Progress } from "../ui/progress"
 
 interface ColorAnalysisPanelProps {
   canvas: HTMLCanvasElement | null;
@@ -49,24 +49,29 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
   }, [canvas, mousePos]);
 
   const renderColorValue = (label: string, value: string, color?: string) => (
-    <div className="grid grid-cols-2 items-center">
-      <span className="text-muted-foreground">{label}:</span>
+    <div className="grid grid-cols-[80px_1fr] items-center">
+      <span className="text-sm text-muted-foreground">{label}</span>
       <div className="flex items-center gap-2">
         {color && <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: color }}></div>}
-        <span>{value}</span>
+        <span className="font-mono text-sm">{value}</span>
       </div>
     </div>
   );
+  
+  const ValueBar = ({ value, max, color, label }: { value: number; max: number; color: string; label: string }) => (
+    <div className="grid grid-cols-[20px_1fr_40px] items-center gap-2 text-sm">
+        <span className="font-mono text-muted-foreground">{label}</span>
+        <Progress value={(value / max) * 100} indicatorClassName={color} />
+        <span className="font-mono text-right">{value}</span>
+    </div>
+  );
 
-  const renderColorBreakdown = (label: string, values: { [key: string]: number | string }) => (
-     <div>
-        <h5 className="font-semibold text-sm mb-1">{label}</h5>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
-            {Object.entries(values).map(([key, value]) => (
-                 <React.Fragment key={key}>
-                    <span className="text-muted-foreground">{key.toUpperCase()}:</span>
-                    <span>{value}</span>
-                 </React.Fragment>
+  const renderColorBreakdown = (label: string, values: { [key: string]: { value: number, max: number, color: string }}) => (
+     <div className="space-y-2">
+        <h5 className="font-semibold text-sm mb-2">{label}</h5>
+        <div className="space-y-2 pl-2">
+            {Object.entries(values).map(([key, data]) => (
+                <ValueBar key={key} label={key} value={data.value} max={data.max} color={data.color} />
             ))}
         </div>
      </div>
@@ -89,21 +94,21 @@ export function ColorAnalysisPanel({ canvas, mousePos }: ColorAnalysisPanelProps
                 {renderColorValue("Hex", analysis.hex, analysis.hex)}
                 <Separator />
                 {renderColorBreakdown("RGB", { 
-                    R: analysis.rgb.r, 
-                    G: analysis.rgb.g, 
-                    B: analysis.rgb.b 
+                    "R": { value: analysis.rgb.r, max: 255, color: "bg-red-500" },
+                    "G": { value: analysis.rgb.g, max: 255, color: "bg-green-500" },
+                    "B": { value: analysis.rgb.b, max: 255, color: "bg-blue-500" },
                 })}
                 <Separator />
                  {renderColorBreakdown("HSV", {
-                    H: `${analysis.hsv.h}°`,
-                    S: `${analysis.hsv.s}%`,
-                    V: `${analysis.hsv.v}%`
+                    "H": { value: analysis.hsv.h, max: 360, color: "bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500" },
+                    "S": { value: analysis.hsv.s, max: 100, color: "bg-slate-400" },
+                    "V": { value: analysis.hsv.v, max: 100, color: "bg-white" },
                 })}
                 <Separator />
                  {renderColorBreakdown("LAB", {
-                    L: analysis.lab.l,
-                    A: analysis.lab.a,
-                    B: analysis.lab.b
+                    "L": { value: analysis.lab.l, max: 100, color: "bg-gray-500" },
+                    "A": { value: analysis.lab.a, max: 100, color: "bg-gradient-to-r from-green-500 to-red-500" },
+                    "B": { value: analysis.lab.b, max: 100, color: "bg-gradient-to-r from-blue-500 to-yellow-500" },
                 })}
             </div>
         ) : (

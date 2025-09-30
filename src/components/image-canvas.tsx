@@ -25,6 +25,7 @@ interface ImageCanvasProps {
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
   activeScrollSetting: keyof LassoSettings | null;
+  canvasMousePos: { x: number; y: number } | null;
   setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
   getCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
 }
@@ -40,6 +41,7 @@ export function ImageCanvas({
   clearSelectionRef,
   onLassoSettingChange,
   activeScrollSetting,
+  canvasMousePos,
   setCanvasMousePos,
   getCanvasRef
 }: ImageCanvasProps) {
@@ -414,7 +416,7 @@ export function ImageCanvas({
       </Card>
       <SegmentHoverPreview
           canvas={canvasRef.current}
-          mousePos={getCanvasRef.current ? (setCanvasMousePos as any) : null}
+          mousePos={canvasMousePos}
       />
     </div>
   );
