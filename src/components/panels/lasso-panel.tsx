@@ -70,7 +70,7 @@ export function LassoPanel({ settings, onSettingsChange, activeScrollSetting, on
         <p className="text-xs text-muted-foreground -mt-2">Toggle a setting to adjust it with the mouse wheel while drawing.</p>
 
         <TooltipProvider>
-            <div className="flex justify-around items-end h-48">
+            <div className="flex justify-around items-end h-56">
                 {SETTINGS_CONFIG.map(config => (
                     <VerticalSettingSlider
                         key={config.id}
@@ -125,7 +125,7 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
     const displayValue = Number.isInteger(step) ? value.toFixed(0) : value.toFixed(2);
     
     return (
-        <div className="flex flex-col items-center gap-2 h-full">
+        <div className="flex flex-col items-center justify-between gap-2 h-full">
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div className="flex flex-col items-center gap-2">
@@ -148,7 +148,7 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
                 orientation="vertical"
                 className="h-full"
             />
-             <div className="flex items-center gap-2">
+             <div className="flex flex-col items-center gap-2">
                 <Switch
                     id={`${id}-toggle`}
                     checked={isActive}

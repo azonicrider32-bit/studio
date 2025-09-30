@@ -144,7 +144,7 @@ export function MagicWandPanel({
       <div className="space-y-4">
         <h4 className="text-sm font-semibold text-center">Color Tolerances</h4>
         <TooltipProvider>
-            <div className="flex justify-around items-end h-48 bg-muted/50 p-2 rounded-md gap-1">
+            <div className="flex justify-around items-end h-56 bg-muted/50 p-2 rounded-md gap-1">
                 {ALL_COMPONENTS.map((group, groupIndex) => 
                     <React.Fragment key={group.title}>
                         {group.components.map(config => (
@@ -162,7 +162,7 @@ export function MagicWandPanel({
                                 onValueChange={(value) => handleToleranceChange(config.id, value)}
                             />
                         ))}
-                        {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-40 bg-border/50" />}
+                        {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-48 bg-border/50" />}
                     </React.Fragment>
                 )}
             </div>
@@ -237,7 +237,7 @@ function VerticalSettingSlider({ id, label, value, min, max, step, description, 
     const displayValue = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2);
     
     return (
-        <div className="flex flex-col items-center gap-2 h-full flex-1">
+        <div className="flex flex-col items-center justify-between gap-2 h-full flex-1">
             <Tooltip>
                 <TooltipTrigger asChild>
                      <span className="text-sm font-semibold">{label}</span>
@@ -258,7 +258,7 @@ function VerticalSettingSlider({ id, label, value, min, max, step, description, 
                 className="h-full"
             />
             <span className="font-mono text-xs">{displayValue}</span>
-             <div className="flex items-center gap-2">
+             <div className="flex flex-col items-center gap-2">
                 <Switch
                     id={`${id}-toggle`}
                     checked={isActive}

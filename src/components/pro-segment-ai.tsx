@@ -62,7 +62,7 @@ export function ProSegmentAI() {
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     contiguous: true,
-    useAiAssist: true,
+    useAiAssist: false,
     activeTolerances: new Set(['h', 's', 'v']),
   });
   const [activeLassoScrollSetting, setActiveLassoScrollSetting] = React.useState<keyof LassoSettings | null>(null);
