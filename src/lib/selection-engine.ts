@@ -350,6 +350,8 @@ export class SelectionEngine {
       this.visited?.fill(0);
       this.visited![seedIndex] = 1;
       let head = 0;
+      let iterations = 0;
+
 
       while(head < queue.length) {
           const currentIndex = queue[head++];
@@ -553,8 +555,12 @@ export class SelectionEngine {
         
         // Ensure paths have the same length for ribbon drawing
         const maxLength = Math.max(snappedPath.length, straightPath.length);
-        while(snappedPath.length < maxLength) snappedPath.push(snappedPath[snappedPath.length-1]);
-        while(straightPath.length < maxLength) straightPath.push(straightPath[straightPath.length-1]);
+        if (snappedPath.length > 0) {
+            while(snappedPath.length < maxLength) snappedPath.push(snappedPath[snappedPath.length-1]);
+        }
+        if (straightPath.length > 0) {
+            while(straightPath.length < maxLength) straightPath.push(straightPath[straightPath.length-1]);
+        }
         
         // Draw the ribbon
         if(straightPath.length > 0 && snappedPath.length > 0) {
