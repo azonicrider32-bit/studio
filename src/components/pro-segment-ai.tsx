@@ -52,9 +52,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import Image from "next/image"
 import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider } from "./ui/tooltip"
 import { SelectionEngine } from "@/lib/selection-engine"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
+import { TooltipTrigger } from "@radix-ui/react-tooltip"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus"
 
