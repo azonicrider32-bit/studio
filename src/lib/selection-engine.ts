@@ -3,6 +3,16 @@
 import { LassoSettings, MagicWandSettings, Segment, Layer } from "./types";
 import { rgbToHsv, rgbToLab } from "./color-utils";
 
+const PRESET_HIGHLIGHT_COLORS = [
+    'hsl(199, 98%, 48%)', // Blue
+    'hsl(350, 98%, 55%)', // Red
+    'hsl(140, 78%, 45%)', // Green
+    'hsl(45, 98%, 52%)',  // Yellow
+    'hsl(280, 88%, 60%)', // Purple
+    'hsl(25, 95%, 55%)',  // Orange
+];
+let randomColorIndex = 0;
+
 
 /**
  * Advanced Selection Engine
@@ -63,6 +73,8 @@ export class SelectionEngine {
     scrollAdjustTolerances: new Set(),
     useAntiAlias: true,
     useFeather: false,
+    highlightColorMode: 'random',
+    fixedHighlightColor: '#00aaff',
   };
    negativeMagicWandSettings: MagicWandSettings = {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -76,6 +88,8 @@ export class SelectionEngine {
     seedColor: undefined,
     useAntiAlias: true,
     useFeather: false,
+    highlightColorMode: 'fixed',
+    fixedHighlightColor: '#ff0000',
   };
 
 
@@ -712,7 +726,16 @@ export class SelectionEngine {
     const segment = this.createSegmentFromPixels(pixels);
     if (!segment) return null;
 
-    const { createAsMask } = this.magicWandSettings;
+    const { createAsMask, highlightColorMode, fixedHighlightColor } = this.magicWandSettings;
+
+    let highlightColor = 'hsl(var(--primary))';
+    if (highlightColorMode === 'random') {
+        highlightColor = PRESET_HIGHLIGHT_COLORS[randomColorIndex];
+        randomColorIndex = (randomColorIndex + 1) % PRESET_HIGHLIGHT_COLORS.length;
+    } else {
+        highlightColor = fixedHighlightColor;
+    }
+
 
     const newLayer: Layer = {
       id: `segment-${segment.id}`,
@@ -722,6 +745,7 @@ export class SelectionEngine {
       locked: false,
       pixels: segment.pixels,
       bounds: segment.bounds,
+      highlightColor: highlightColor,
     };
     
     if (createAsMask && activeLayerId) {
@@ -788,7 +812,7 @@ export class SelectionEngine {
         return ctx.createPattern(tempCanvas, 'repeat');
     }
 
-  renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment, isMask: boolean) {
+  renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment, isMask: boolean, color: string) {
       if (!segment || segment.pixels.size === 0) return;
       
       overlayCtx.save();
@@ -801,7 +825,8 @@ export class SelectionEngine {
         };
         overlayCtx.fillStyle = pattern;
       } else {
-        overlayCtx.fillStyle = 'hsla(var(--primary), 0.5)';
+        const tempColor = color.startsWith('hsl') ? color : `hsl(${color})`;
+        overlayCtx.fillStyle = tempColor.replace(')', ', 0.5)').replace('hsl', 'hsla');
       }
       
       segment.pixels.forEach((idx: number) => {
@@ -823,14 +848,16 @@ export class SelectionEngine {
 
     if (showMasks) {
         layers.forEach(layer => {
-            if (layer.visible && layer.maskVisible) {
+            if (layer.visible && layer.maskVisible && (layer.type === 'segmentation' || layer.subType === 'mask')) {
                 overlayCtx.save();
 
                 if (layer.subType === 'mask') {
                     const pattern = this.renderCheckerboardPattern(overlayCtx);
                     if(pattern) overlayCtx.fillStyle = pattern;
                 } else {
-                    overlayCtx.fillStyle = 'hsla(var(--primary), 0.5)';
+                    const color = layer.highlightColor || 'hsl(var(--primary))';
+                    const tempColor = color.startsWith('hsl') ? color : `hsl(${color})`;
+                    overlayCtx.fillStyle = tempColor.replace(')', ', 0.5)').replace('hsl', 'hsla');
                 }
 
                 layer.pixels.forEach(idx => {
@@ -845,7 +872,8 @@ export class SelectionEngine {
     }
     
     if (hoveredSegment && wandSettings.useAiAssist === false) {
-      this.renderHoverSegment(overlayCtx, hoveredSegment, wandSettings.createAsMask);
+       const color = wandSettings.highlightColorMode === 'fixed' ? wandSettings.fixedHighlightColor : 'hsl(var(--primary))';
+      this.renderHoverSegment(overlayCtx, hoveredSegment, wandSettings.createAsMask, color);
     }
 
 

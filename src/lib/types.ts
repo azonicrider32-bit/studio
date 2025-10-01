@@ -12,6 +12,7 @@ export interface Layer {
     bounds: { x: number; y: number; width: number; height: number };
     imageData?: ImageData;
     maskVisible?: boolean;
+    highlightColor?: string; // e.g., 'hsl(210, 40%, 96.1%)'
 }
 
 export interface LassoSettings {
@@ -52,6 +53,8 @@ export interface MagicWandSettings {
     seedColor?: { [key: string]: number };
     useAntiAlias: boolean;
     useFeather: boolean;
+    highlightColorMode: 'fixed' | 'random';
+    fixedHighlightColor: string;
 }
 
 
