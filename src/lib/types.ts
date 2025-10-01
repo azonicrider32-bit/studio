@@ -13,7 +13,6 @@ export interface Layer {
 export interface LassoSettings {
     drawMode: 'magic' | 'polygon' | 'free';
     useAiEnhancement: boolean;
-    useColorAwareness: boolean;
     showMouseTrace: boolean;
     snapRadius: number;
     snapThreshold: number;
@@ -21,12 +20,14 @@ export interface LassoSettings {
     directionalStrength: number;
     cursorInfluence: number;
     traceInfluence: number;
+    colorInfluence: number;
     snapRadiusEnabled: boolean;
     snapThresholdEnabled: boolean;
     curveStrengthEnabled: boolean;
     directionalStrengthEnabled: boolean;
     cursorInfluenceEnabled: boolean;
     traceInfluenceEnabled: boolean;
+    colorInfluenceEnabled: boolean;
 }
 
 export interface MagicWandSettings {

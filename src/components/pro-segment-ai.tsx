@@ -78,7 +78,6 @@ export function ProSegmentAI() {
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     drawMode: 'magic',
     useAiEnhancement: false,
-    useColorAwareness: false,
     showMouseTrace: true,
     snapRadius: 20,
     snapThreshold: 0.3,
@@ -86,12 +85,14 @@ export function ProSegmentAI() {
     directionalStrength: 0.2,
     cursorInfluence: 0.1,
     traceInfluence: 0.2,
+    colorInfluence: 0.25,
     snapRadiusEnabled: true,
     snapThresholdEnabled: true,
     curveStrengthEnabled: true,
     directionalStrengthEnabled: false,
     cursorInfluenceEnabled: true,
     traceInfluenceEnabled: true,
+    colorInfluenceEnabled: true,
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },

@@ -41,12 +41,14 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           directionalStrength: 0.00,
           cursorInfluence: 0.25,
           traceInfluence: 0.5,
+          colorInfluence: 0,
           snapRadiusEnabled: true,
           snapThresholdEnabled: true,
           curveStrengthEnabled: false,
           directionalStrengthEnabled: false,
           cursorInfluenceEnabled: true,
           traceInfluenceEnabled: true,
+          colorInfluenceEnabled: false,
         };
         break;
       case 'loose':
@@ -57,12 +59,14 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           directionalStrength: 0.5,
           cursorInfluence: 0.05,
           traceInfluence: 0.1,
+          colorInfluence: 0.5,
           snapRadiusEnabled: true,
           snapThresholdEnabled: true,
           curveStrengthEnabled: true,
           directionalStrengthEnabled: true,
           cursorInfluenceEnabled: false,
           traceInfluenceEnabled: true,
+          colorInfluenceEnabled: true,
         };
         break;
       default: // default
@@ -73,12 +77,14 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           directionalStrength: 0.2,
           cursorInfluence: 0.1,
           traceInfluence: 0.2,
+          colorInfluence: 0.25,
           snapRadiusEnabled: true,
           snapThresholdEnabled: true,
           curveStrengthEnabled: true,
           directionalStrengthEnabled: false,
           cursorInfluenceEnabled: true,
           traceInfluenceEnabled: true,
+          colorInfluenceEnabled: true,
         };
         break;
     }
@@ -94,13 +100,14 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
   const currentMode = DRAW_MODES.find(m => m.id === settings.drawMode);
 
 
-  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | 'useColorAwareness' | `${string}Enabled` | 'drawMode' | 'showMouseTrace'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | `${string}Enabled` | 'drawMode' | 'showMouseTrace'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 40, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
     { id: 'directionalStrength', label: 'Directional Strength', icon: TrendingUp, min: 0, max: 1, step: 0.05, description: 'How strongly the path maintains its direction. Higher values resist deviation.' },
     { id: 'cursorInfluence', label: 'Cursor Influence', icon: MousePointerClick, min: 0, max: 1, step: 0.05, description: 'How strongly the path is pulled towards the cursor. Higher is stronger.' },
     { id: 'traceInfluence', label: 'Trace Influence', icon: Footprints, min: 0, max: 1, step: 0.05, description: 'How strongly the path follows your exact mouse movement.' },
+    { id: 'colorInfluence', label: 'Color Influence', icon: Palette, min: 0, max: 1, step: 0.05, description: 'How much influence color differences have on edge detection. Leverages Magic Wand tolerances.' },
   ];
   
   const HowToUseContent = () => (
@@ -182,37 +189,6 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
             />
         </div>
 
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Label htmlFor="useColorAwareness" className="flex items-center gap-2">
-                            <Palette className="h-4 w-4" />
-                            Color-Aware Edges
-                        </Label>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Use color differences to help find edges. Only active in Magic Snap mode.</p>
-                    </TooltipContent>
-                </Tooltip>
-                 <Popover>
-                    <PopoverTrigger>
-                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                    </PopoverTrigger>
-                    <PopoverContent side="top" className="text-sm">
-                        <h4 className="font-semibold mb-2">Color-Aware Edges</h4>
-                        <p>Integrates color analysis into the edge-finding algorithm. Instead of only looking for changes in brightness, it will also detect edges between areas of different colors, even if their brightness is similar. This uses the tolerances set in the Magic Wand panel but can be more computationally intensive.</p>
-                    </PopoverContent>
-                </Popover>
-            </div>
-            <Switch
-                id="useColorAwareness"
-                checked={settings.useColorAwareness}
-                onCheckedChange={(checked) => onSettingsChange({ useColorAwareness: checked })}
-                disabled={settings.drawMode !== 'magic'}
-            />
-        </div>
-
          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
                  <Tooltip>
@@ -266,15 +242,15 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
                     id={config.id}
                     label={config.label}
                     icon={config.icon}
-                    value={settings[config.id] as number}
+                    value={settings[config.id as keyof typeof settings] as number}
                     min={config.min}
                     max={config.max}
                     step={config.step}
                     unit={config.unit}
                     description={config.description}
-                    isEnabled={settings[`${config.id}Enabled`]}
-                    onToggle={() => onSettingsChange({ [`${config.id}Enabled`]: !settings[`${config.id}Enabled`] })}
-                    onValueChange={(value) => onSettingsChange({ [config.id]: value })}
+                    isEnabled={settings[`${config.id}Enabled` as keyof typeof settings] as boolean}
+                    onToggle={() => onSettingsChange({ [`${config.id}Enabled`]: !settings[`${config.id}Enabled` as keyof typeof settings] } as Partial<LassoSettings>)}
+                    onValueChange={(value) => onSettingsChange({ [config.id]: value } as Partial<LassoSettings>)}
                 />
             ))}
         </div>

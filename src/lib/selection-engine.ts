@@ -33,7 +33,6 @@ export class SelectionEngine {
   lassoSettings: LassoSettings = {
     drawMode: 'magic',
     useAiEnhancement: false,
-    useColorAwareness: false,
     showMouseTrace: true,
     snapRadius: 20,
     snapThreshold: 0.3,
@@ -41,12 +40,14 @@ export class SelectionEngine {
     directionalStrength: 0.2,
     cursorInfluence: 0.1,
     traceInfluence: 0.2,
+    colorInfluence: 0.25,
     snapRadiusEnabled: true,
     snapThresholdEnabled: true,
     curveStrengthEnabled: true,
     directionalStrengthEnabled: false,
     cursorInfluenceEnabled: true,
     traceInfluenceEnabled: true,
+    colorInfluenceEnabled: true,
   };
   magicWandSettings: MagicWandSettings = {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -304,6 +305,7 @@ export class SelectionEngine {
 
         const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence : 0;
         const currentTraceInfluence = this.lassoSettings.traceInfluenceEnabled ? this.lassoSettings.traceInfluence : 0;
+        const currentColorInfluence = this.lassoSettings.colorInfluenceEnabled ? this.lassoSettings.colorInfluence : 0;
 
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
@@ -337,11 +339,11 @@ export class SelectionEngine {
                 const edgeCost = (1 / (edgeStrength + 1)) * 1000;
 
                 let colorCost = 0;
-                if (this.lassoSettings.useColorAwareness) {
+                if (currentColorInfluence > 0) {
                     const lastPathPointColor = this.getPixelColors(Math.round(currentPoint[1]) * this.width + Math.round(currentPoint[0]));
                     const candidateColor = this.getPixelColors(idx);
                     const colorDifference = this.getColorDifference(lastPathPointColor, candidateColor, this.magicWandSettings);
-                    colorCost = (1 - colorDifference) * 500;
+                    colorCost = (1 - colorDifference) * 500 * currentColorInfluence;
                 }
                 
                 let curvatureCost = 0;
