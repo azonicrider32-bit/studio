@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Image from "next/image";
@@ -185,7 +186,7 @@ export function ImageCanvas({
       
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (lassoSettings.useEdgeSnapping) {
+        if (lassoSettings.useAiEnhancement) {
             endLassoAndProcess();
         } else {
             engine.endLasso();
@@ -204,7 +205,7 @@ export function ImageCanvas({
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useEdgeSnapping]);
+  }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useAiEnhancement]);
 
 
   const getMousePos = (canvasEl: HTMLCanvasElement, evt: React.MouseEvent | React.WheelEvent) => {
@@ -402,7 +403,7 @@ export function ImageCanvas({
     if (!engine || !engine.isDrawingLasso) return;
     
     if (activeTool === 'lasso') {
-      if (lassoSettings.useEdgeSnapping) {
+      if (lassoSettings.useAiEnhancement) {
         endLassoAndProcess();
       } else {
         engine.endLasso();

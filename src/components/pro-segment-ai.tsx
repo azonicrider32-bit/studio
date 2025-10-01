@@ -61,7 +61,8 @@ export function ProSegmentAI() {
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
-    useEdgeSnapping: true,
+    useMagicSnapping: true,
+    useAiEnhancement: false,
     snapRadius: 10,
     snapThreshold: 0.3,
     curveStrength: 0.75,

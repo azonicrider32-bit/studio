@@ -31,7 +31,8 @@ export class SelectionEngine {
 
   // Settings
   lassoSettings: LassoSettings = {
-    useEdgeSnapping: true,
+    useMagicSnapping: true,
+    useAiEnhancement: false,
     snapRadius: 10,
     snapThreshold: 0.3,
     curveStrength: 0.75,
@@ -129,7 +130,7 @@ export class SelectionEngine {
     this.cancelLasso();
     this.segments = [];
     this.selectedSegmentIds.clear();
-    const startPoint: [number, number] = this.lassoSettings.useEdgeSnapping ? this.snapToEdge(x, y) : [x, y];
+    const startPoint: [number, number] = this.lassoSettings.useMagicSnapping ? this.snapToEdge(x, y) : [x, y];
     this.lassoNodes = [startPoint];
     this.lassoCurrentPos = startPoint;
     this.isDrawingLasso = true;
@@ -214,7 +215,7 @@ export class SelectionEngine {
   }
   
   findEdgePath(p1: [number, number], p2: [number, number]): [number, number][] {
-    if (!this.lassoSettings.useEdgeSnapping || !this.edgeMap) {
+    if (!this.lassoSettings.useMagicSnapping || !this.edgeMap) {
         return [p2];
     }
 
@@ -325,7 +326,7 @@ export class SelectionEngine {
 
 
   snapToEdge(x: number, y: number): [number, number] {
-    if (!this.edgeMap || !this.lassoSettings.useEdgeSnapping) return [Math.round(x), Math.round(y)];
+    if (!this.edgeMap || !this.lassoSettings.useMagicSnapping) return [Math.round(x), Math.round(y)];
     
     const radius = this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1;
     let maxEdge = -1;

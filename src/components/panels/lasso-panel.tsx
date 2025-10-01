@@ -1,9 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info } from "lucide-react";
+import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2 } from "lucide-react";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -24,7 +25,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     onSettingsChange({ [setting]: !settings[setting] });
   };
 
-  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useEdgeSnapping'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useMagicSnapping' | 'useAiEnhancement'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 20, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
@@ -45,15 +46,33 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <Label htmlFor="useEdgeSnapping">Enable AI Edge Snapping</Label>
+          <Label htmlFor="useMagicSnapping" className="flex items-center gap-2">
+            <Wand2 className="h-4 w-4" />
+            Enable Magic Snapping
+          </Label>
           <Switch
-            id="useEdgeSnapping"
-            checked={settings.useEdgeSnapping}
-            onCheckedChange={(checked) => onSettingsChange({ useEdgeSnapping: checked })}
+            id="useMagicSnapping"
+            checked={settings.useMagicSnapping}
+            onCheckedChange={(checked) => onSettingsChange({ useMagicSnapping: checked })}
           />
         </div>
         <p className="text-xs text-muted-foreground -mt-3">
-          Toggles the AI-powered path snapping on or off.
+          Enables real-time path snapping to detected edges as you draw.
+        </p>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="useAiEnhancement" className="flex items-center gap-2">
+            <Wand2 className="h-4 w-4 text-primary" />
+            Enable AI Enhancement
+          </Label>
+          <Switch
+            id="useAiEnhancement"
+            checked={settings.useAiEnhancement}
+            onCheckedChange={(checked) => onSettingsChange({ useAiEnhancement: checked })}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground -mt-3">
+          When completing the path, uses AI to analyze and enhance the final selection.
         </p>
       </div>
       
@@ -93,7 +112,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           <ul className="list-disc list-inside space-y-1 mt-2">
             <li>Click on the image to start your path and add points.</li>
             <li>Use the sliders and toggles to configure the intelligent pathfinding.</li>
-            <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Enter</kbd> to complete the selection.</li>
+            <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Enter</kbd> or Double-Click to complete the selection.</li>
             <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Esc</kbd> to cancel.</li>
           </ul>
         </AlertDescription>

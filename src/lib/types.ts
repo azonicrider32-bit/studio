@@ -1,10 +1,7 @@
 
-
-
-
-
 export interface LassoSettings {
-    useEdgeSnapping: boolean;
+    useMagicSnapping: boolean;
+    useAiEnhancement: boolean;
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number;
