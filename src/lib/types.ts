@@ -4,6 +4,8 @@ export interface Layer {
     id: string;
     name: string;
     type: 'segmentation' | 'background' | 'adjustment';
+    subType?: 'pixel' | 'mask';
+    parentId?: string | null;
     visible: boolean;
     locked: boolean;
     pixels: Set<number>;
@@ -42,6 +44,7 @@ export interface MagicWandSettings {
     };
     contiguous: boolean;
     useAiAssist: boolean;
+    createAsMask: boolean;
     showAllMasks: boolean;
     ignoreExistingSegments: boolean;
     enabledTolerances: Set<keyof MagicWandSettings['tolerances']>;
@@ -90,5 +93,3 @@ export interface FeatherSettings {
     };
   };
 }
-
-    

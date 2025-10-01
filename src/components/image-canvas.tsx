@@ -106,18 +106,61 @@ export function ImageCanvas({
 
     layersCtx.clearRect(0, 0, layersCanvas.width, layersCanvas.height);
 
-    layers.forEach(layer => {
-        if (layer.visible && layer.imageData && layer.type === 'segmentation') {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = layer.imageData.width;
-            tempCanvas.height = layer.imageData.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            if(tempCtx) {
-                tempCtx.putImageData(layer.imageData, 0, 0);
-                layersCtx.drawImage(tempCanvas, layer.bounds.x, layer.bounds.y);
-            }
-        }
-    });
+    const parentLayers = layers.filter(l => l.subType !== 'mask');
+
+    parentLayers.forEach(layer => {
+      if (!layer.visible || !layer.imageData) return;
+
+      const maskLayers = layers.filter(m => m.parentId === layer.id && m.subType === 'mask' && m.visible);
+
+      if (maskLayers.length > 0) {
+          const tempMaskCanvas = document.createElement('canvas');
+          tempMaskCanvas.width = layer.bounds.width;
+          tempMaskCanvas.height = layer.bounds.height;
+          const tempMaskCtx = tempMaskCanvas.getContext('2d');
+
+          if (tempMaskCtx) {
+              // Draw parent layer image data first
+              tempMaskCtx.putImageData(layer.imageData, 0, 0);
+
+              // Apply masks
+              tempMaskCtx.globalCompositeOperation = 'destination-in';
+              
+              maskLayers.forEach(mask => {
+                  const maskImageData = layersCtx.createImageData(layer.bounds.width, layer.bounds.height);
+                  const layerBounds = layer.bounds;
+
+                  for (let i = 0; i < mask.pixels.size; i++) {
+                      const pixelIndex = Array.from(mask.pixels)[i];
+                      const x = pixelIndex % layersCanvas.width;
+                      const y = Math.floor(pixelIndex / layersCanvas.width);
+
+                      if (x >= layerBounds.x && x < layerBounds.x + layerBounds.width &&
+                          y >= layerBounds.y && y < layerBounds.y + layerBounds.height) {
+                          const relativeX = x - layerBounds.x;
+                          const relativeY = y - layerBounds.y;
+                          const maskDataIndex = (relativeY * layerBounds.width + relativeX) * 4;
+                          maskImageData.data[maskDataIndex + 3] = 255;
+                      }
+                  }
+                  tempMaskCtx.putImageData(maskImageData, 0, 0);
+              });
+
+              layersCtx.drawImage(tempMaskCanvas, layer.bounds.x, layer.bounds.y);
+          }
+      } else if (layer.type === 'segmentation') {
+          // No masks, just draw the layer
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = layer.imageData.width;
+          tempCanvas.height = layer.imageData.height;
+          const tempCtx = tempCanvas.getContext('2d');
+          if (tempCtx) {
+              tempCtx.putImageData(layer.imageData, 0, 0);
+              layersCtx.drawImage(tempCanvas, layer.bounds.x, layer.bounds.y);
+          }
+      }
+  });
+
   }, [layers]);
 
   const drawOverlay = React.useCallback((currentHoverSegment: Segment | null = hoveredSegment) => {
@@ -318,6 +361,7 @@ export function ImageCanvas({
             const segment = engine.magicWand(pos.x, pos.y, true); // this is a Segment object
             if (!segment || segment.pixels.size === 0) {
               toast({ title: "Selection empty", description: "Magic Wand could not find any matching pixels."});
+              setIsProcessing(false);
               return;
             };
 
@@ -351,7 +395,7 @@ export function ImageCanvas({
               }
             } else {
               toast({ title: "Creating new selection..." });
-              const newLayer = engine.createLayerFromPixels(segment.pixels);
+              const newLayer = engine.createLayerFromPixels(segment.pixels, activeLayerId);
               if (newLayer) addLayer(newLayer);
               toast({ title: "New selection created." });
             }

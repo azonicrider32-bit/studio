@@ -3,7 +3,7 @@
 "use client"
 
 import * as React from "react"
-import { Sparkles, BrainCircuit, Info, Palette, EyeOff } from "lucide-react"
+import { Sparkles, BrainCircuit, Info, Palette, EyeOff, MinusSquare, Link } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -205,24 +205,16 @@ export function MagicWandPanel({
                 onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
                 />
             </div>
-            <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                <Label htmlFor="anti-aliasing">Anti-Alias</Label>
+             <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                <Label htmlFor="create-as-mask" className="flex items-center gap-2"><Link className="w-4 h-4" />Create as Mask</Label>
                 <Switch
-                id="anti-aliasing"
-                checked={settings.useAntiAlias}
-                onCheckedChange={(checked) => onSettingsChange({ useAntiAlias: checked })}
+                    id="create-as-mask"
+                    checked={settings.createAsMask}
+                    onCheckedChange={(v) => onSettingsChange({ createAsMask: v })}
                 />
             </div>
              <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                <Label htmlFor="feather-edges">Feather</Label>
-                <Switch
-                id="feather-edges"
-                checked={settings.useFeather}
-                onCheckedChange={(checked) => onSettingsChange({ useFeather: checked })}
-                />
-            </div>
-            <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                <Label htmlFor="show-masks" className="flex items-center gap-2">Show All Masks</Label>
+                <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
                 <Switch
                     id="show-masks"
                     checked={settings.showAllMasks}

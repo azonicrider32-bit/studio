@@ -56,6 +56,7 @@ export class SelectionEngine {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     contiguous: true,
     useAiAssist: false,
+    createAsMask: false,
     showAllMasks: true,
     ignoreExistingSegments: false,
     enabledTolerances: new Set(['h', 's', 'v']),
@@ -67,6 +68,7 @@ export class SelectionEngine {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
     contiguous: true,
     useAiAssist: false,
+    createAsMask: false,
     showAllMasks: true,
     ignoreExistingSegments: false,
     enabledTolerances: new Set(),
@@ -706,13 +708,12 @@ export class SelectionEngine {
     return newImageData;
   }
 
-  createLayerFromPixels(pixels: Set<number>): Layer | null {
+  createLayerFromPixels(pixels: Set<number>, activeLayerId: string | null = null): Layer | null {
     const segment = this.createSegmentFromPixels(pixels);
     if (!segment) return null;
 
-    const newImageData = this.createImageDataForLayer(segment.pixels, segment.bounds);
-    if (!newImageData) return null;
-    
+    const { createAsMask } = this.magicWandSettings;
+
     const newLayer: Layer = {
       id: `segment-${segment.id}`,
       name: `Selection ${Math.floor(segment.id)}`,
@@ -721,8 +722,17 @@ export class SelectionEngine {
       locked: false,
       pixels: segment.pixels,
       bounds: segment.bounds,
-      imageData: newImageData,
     };
+    
+    if (createAsMask && activeLayerId) {
+      newLayer.subType = 'mask';
+      newLayer.parentId = activeLayerId;
+      newLayer.name = `Mask for Layer ${activeLayerId}`;
+    } else {
+      newLayer.subType = 'pixel';
+      newLayer.imageData = this.createImageDataForLayer(segment.pixels, segment.bounds) ?? undefined;
+    }
+
     return newLayer;
   }
 
@@ -800,7 +810,7 @@ export class SelectionEngine {
         let hasMasksToRender = false;
 
         layers.forEach(layer => {
-            if (layer.visible && layer.type === 'segmentation' && layer.maskVisible) {
+            if (layer.visible && (layer.subType === 'pixel' || layer.subType === 'mask') && layer.maskVisible) {
                 hasMasksToRender = true;
                 layer.pixels.forEach(idx => {
                     const i = idx * 4;
