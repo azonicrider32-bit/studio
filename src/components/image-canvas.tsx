@@ -36,6 +36,7 @@ interface ImageCanvasProps {
   getSelectionEngineRef: React.MutableRefObject<SelectionEngine | null>;
   getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
+  isLassoPreviewHovered: boolean;
 }
 
 export function ImageCanvas({
@@ -57,6 +58,7 @@ export function ImageCanvas({
   getSelectionEngineRef,
   getSelectionMaskRef,
   clearSelectionRef,
+  isLassoPreviewHovered,
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -433,6 +435,9 @@ export function ImageCanvas({
 
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    if (isLassoPreviewHovered) {
+        return;
+    }
     e.preventDefault();
     const delta = e.deltaY > 0 ? -1 : 1;
     const engine = selectionEngineRef.current;
@@ -483,10 +488,7 @@ export function ImageCanvas({
     if (activeTool === 'magic-wand') return 'crosshair';
     if (activeTool === 'pipette-minus') return 'copy';
     if (activeTool === 'lasso') {
-        const svg = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
-            <path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="black" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.8"/>
-        </svg>`;
+        const svg = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="white" stroke-width="2"/><path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="black" stroke-width="2" stroke-dasharray="2 2"/></svg>`;
         return `url("data:image/svg+xml;base64,${btoa(svg)}") 16 16, crosshair`;
     }
     return 'default';

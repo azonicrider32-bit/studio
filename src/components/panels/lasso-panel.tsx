@@ -25,10 +25,11 @@ interface LassoPanelProps {
   canvas: HTMLCanvasElement | null;
   mousePos: { x: number; y: number } | null;
   selectionEngine: SelectionEngine | null;
+  onHoverChange: (isHovered: boolean) => void;
 }
 
 
-export function LassoPanel({ settings, onSettingsChange, canvas, mousePos, selectionEngine }: LassoPanelProps) {
+export function LassoPanel({ settings, onSettingsChange, canvas, mousePos, selectionEngine, onHoverChange }: LassoPanelProps) {
     
   const handleToggle = (setting: keyof LassoSettings) => {
     onSettingsChange({ [setting]: !settings[setting] });
@@ -111,9 +112,14 @@ export function LassoPanel({ settings, onSettingsChange, canvas, mousePos, selec
   return (
     <div className="p-4 space-y-6">
        <TooltipProvider>
-        <LassoHoverPreview canvas={canvas} mousePos={mousePos} selectionEngine={selectionEngine} />
+        <LassoHoverPreview 
+            canvas={canvas} 
+            mousePos={mousePos} 
+            selectionEngine={selectionEngine} 
+            onHoverChange={onHoverChange}
+        />
         
-        <div className={cn("space-y-4", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
+        <div className={cn("space-y-4 pt-4", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
           <div className="flex justify-around items-end h-64">
               {SETTINGS_CONFIG.map(config => (
                   <VerticalSettingSlider

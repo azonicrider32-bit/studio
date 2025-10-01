@@ -128,6 +128,7 @@ export function ProSegmentAI() {
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
+  const [isLassoPreviewHovered, setIsLassoPreviewHovered] = React.useState(false);
 
 
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
@@ -223,6 +224,7 @@ export function ProSegmentAI() {
                     canvas={canvasRef.current}
                     mousePos={canvasMousePos}
                     selectionEngine={selectionEngineRef.current}
+                    onHoverChange={setIsLassoPreviewHovered}
                 />
       case "brush":
         return <BrushPanel />
@@ -368,6 +370,7 @@ export function ProSegmentAI() {
               setCanvasMousePos={setCanvasMousePos}
               getCanvasRef={canvasRef}
               getSelectionEngineRef={selectionEngineRef}
+              isLassoPreviewHovered={isLassoPreviewHovered}
             />
         </div>
       </SidebarInset>
