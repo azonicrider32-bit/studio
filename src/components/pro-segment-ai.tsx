@@ -20,6 +20,8 @@ import {
   Link,
   Replace,
   Move,
+  Frame,
+  Contrast,
 } from "lucide-react"
 
 import {
@@ -115,16 +117,16 @@ export function ProSegmentAI() {
     scrollAdjustTolerances: new Set(),
     useAntiAlias: true,
     useFeather: false,
-    highlightColorMode: 'random',
+    highlightColorMode: 'contrast',
     fixedHighlightColor: '#00aaff',
     highlightOpacity: 0.5,
-    highlightTexture: 'solid',
+    highlightTexture: 'lines',
     highlightBorder: {
         enabled: true,
-        thickness: 2,
+        thickness: 1,
         color: '#ffffff',
-        colorMode: 'fixed',
-        pattern: 'solid',
+        colorMode: 'contrast',
+        pattern: 'dashed',
         opacity: 1,
     }
   });
