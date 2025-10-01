@@ -662,23 +662,25 @@ export class SelectionEngine {
 
   createLayerFromPixels(pixels: Set<number>): Layer | null {
     const segment = this.createSegmentFromPixels(pixels);
-    if (!segment) return null;
+    if (!segment || !this.pixelData) return null;
 
     const { x, y, width, height } = segment.bounds;
-    const originalImageData = this.ctx.getImageData(x, y, width, height);
     const newImageData = this.ctx.createImageData(width, height);
     
-    // Iterate through the bounding box of the segment
     for (let j = 0; j < height; j++) {
         for (let i = 0; i < width; i++) {
             const canvasIndex = (y + j) * this.width + (x + i);
+            const dataIndex = (j * width + i) * 4;
+
             if (pixels.has(canvasIndex)) {
-                const sourceIndex = (j * width + i) * 4;
-                const destIndex = sourceIndex;
-                newImageData.data[destIndex] = originalImageData.data[sourceIndex];
-                newImageData.data[destIndex + 1] = originalImageData.data[sourceIndex + 1];
-                newImageData.data[destIndex + 2] = originalImageData.data[sourceIndex + 2];
-                newImageData.data[destIndex + 3] = originalImageData.data[sourceIndex + 3];
+                const sourceIndex = canvasIndex * 4;
+                newImageData.data[dataIndex] = this.pixelData[sourceIndex];
+                newImageData.data[dataIndex + 1] = this.pixelData[sourceIndex + 1];
+                newImageData.data[dataIndex + 2] = this.pixelData[sourceIndex + 2];
+                newImageData.data[dataIndex + 3] = this.pixelData[sourceIndex + 3];
+            } else {
+                // Make pixels outside the selection transparent
+                newImageData.data[dataIndex + 3] = 0;
             }
         }
     }
@@ -841,3 +843,5 @@ export class SelectionEngine {
     }
   }
 }
+
+    

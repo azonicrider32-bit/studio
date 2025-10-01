@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { Eye, EyeOff, Lock, Unlock, GripVertical, Trash2, Palette, MoreHorizontal, Pipette } from "lucide-react"
@@ -64,6 +65,16 @@ export function LayersPanel({
                 )}
                  <span className="text-sm truncate">{layer.name}</span>
               </div>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => {e.stopPropagation(); onToggleMask(layer.id)}} disabled={layer.type === 'background'}>
+                        <Palette className={cn("w-4 h-4", layer.maskVisible ? "text-primary" : "text-muted-foreground")}/>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Toggle Mask Highlight</TooltipContent>
+              </Tooltip>
+
               <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => {e.stopPropagation(); onToggleVisibility(layer.id)}}>
@@ -89,9 +100,7 @@ export function LayersPanel({
                     </PopoverTrigger>
                     <PopoverContent side="left" className="w-auto p-1">
                         <div className="flex flex-col gap-1">
-                            <Button variant="ghost" className="justify-start gap-2 px-2" onClick={() => onToggleMask(layer.id)}>
-                                <Palette className="w-4 h-4"/> Toggle Mask
-                            </Button>
+                            
                              <Button variant="ghost" className="justify-start gap-2 px-2">
                                 <Pipette className="w-4 h-4"/> Change Mask Color
                             </Button>
@@ -116,3 +125,5 @@ export function LayersPanel({
     </div>
   )
 }
+
+    
