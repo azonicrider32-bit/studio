@@ -468,9 +468,8 @@ export function ImageCanvas({
     if (mouseStopTimerRef.current) {
         clearTimeout(mouseStopTimerRef.current);
     }
-    setHoveredSegment(null);
     // Do not set canvasMousePos to null to keep lasso preview alive
-    // setCanvasMousePos(null); 
+    // Do not set hoveredSegment to null to keep magic wand preview alive
     drawOverlay();
   }
 
@@ -614,5 +613,3 @@ export function ImageCanvas({
     </div>
   );
 }
-
-    
