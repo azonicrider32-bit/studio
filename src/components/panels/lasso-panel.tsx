@@ -4,7 +4,6 @@
 
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette, PenTool, GitCommit, Sparkles, Eye, ChevronDown } from "lucide-react";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
@@ -64,17 +63,17 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           snapThresholdEnabled: true,
           curveStrengthEnabled: true,
           directionalStrengthEnabled: true,
-          cursorInfluenceEnabled: false,
+          cursorInfluenceEnabled: true,
           traceInfluenceEnabled: true,
           colorInfluenceEnabled: true,
         };
         break;
-      default: // default
+      default: // default - The user's preferred balanced setting!
         newSettings = {
           snapRadius: 20,
           snapThreshold: 0.3,
           curveStrength: 0.05,
-          directionalStrength: 0.2,
+          directionalStrength: 0,
           cursorInfluence: 0.1,
           traceInfluence: 0.2,
           colorInfluence: 0.25,
@@ -343,6 +342,8 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
 }
 
 
+
+    
 
     
 
