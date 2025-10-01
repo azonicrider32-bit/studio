@@ -637,20 +637,9 @@ export class SelectionEngine {
 
   createSegmentFromPixels(pixels: Set<number>): Segment | null {
     if (pixels.size === 0) return null;
+    const bounds = this.getBoundsForPixels(pixels);
+    if (bounds.width === Infinity) return null;
 
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    pixels.forEach(idx => {
-      const x = idx % this.width;
-      const y = Math.floor(idx / this.width);
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    });
-    
-    if (minX === Infinity) return null;
-
-    const bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
     const segment: Segment = {
       id: Date.now() + Math.random(),
       pixels: pixels,
@@ -659,12 +648,24 @@ export class SelectionEngine {
     
     return segment;
   }
+  
+  getBoundsForPixels(pixels: Set<number>): Layer['bounds'] {
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      pixels.forEach(idx => {
+        const x = idx % this.width;
+        const y = Math.floor(idx / this.width);
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      });
+      if (minX === Infinity) return { x: 0, y: 0, width: 0, height: 0};
+      return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+  }
 
-  createLayerFromPixels(pixels: Set<number>): Layer | null {
-    const segment = this.createSegmentFromPixels(pixels);
-    if (!segment || !this.pixelData) return null;
-
-    const { x, y, width, height } = segment.bounds;
+  createImageDataForLayer(pixels: Set<number>, bounds: Layer['bounds']): ImageData | null {
+    if (!this.pixelData) return null;
+    const { x, y, width, height } = bounds;
     const newImageData = this.ctx.createImageData(width, height);
     
     for (let j = 0; j < height; j++) {
@@ -679,11 +680,19 @@ export class SelectionEngine {
                 newImageData.data[dataIndex + 2] = this.pixelData[sourceIndex + 2];
                 newImageData.data[dataIndex + 3] = this.pixelData[sourceIndex + 3];
             } else {
-                // Make pixels outside the selection transparent
                 newImageData.data[dataIndex + 3] = 0;
             }
         }
     }
+    return newImageData;
+  }
+
+  createLayerFromPixels(pixels: Set<number>): Layer | null {
+    const segment = this.createSegmentFromPixels(pixels);
+    if (!segment) return null;
+
+    const newImageData = this.createImageDataForLayer(segment.pixels, segment.bounds);
+    if (!newImageData) return null;
     
     const newLayer: Layer = {
       id: `segment-${segment.id}`,
