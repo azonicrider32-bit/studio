@@ -34,6 +34,7 @@ export class SelectionEngine {
     drawMode: 'magic',
     useAiEnhancement: false,
     useColorAwareness: false,
+    showMouseTrace: true,
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.05,
@@ -757,6 +758,20 @@ export class SelectionEngine {
     }
 
     if (this.isDrawingLasso) {
+      // Draw mouse trace if enabled
+      if (this.lassoSettings.showMouseTrace && this.lassoMouseTrace.length > 1) {
+          overlayCtx.strokeStyle = 'hsla(var(--foreground), 0.3)';
+          overlayCtx.lineWidth = 1;
+          overlayCtx.setLineDash([2, 3]);
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(this.lassoMouseTrace[0][0], this.lassoMouseTrace[0][1]);
+          for (let i = 1; i < this.lassoMouseTrace.length; i++) {
+              overlayCtx.lineTo(this.lassoMouseTrace[i][0], this.lassoMouseTrace[i][1]);
+          }
+          overlayCtx.stroke();
+          overlayCtx.setLineDash([]); // Reset line dash
+      }
+      
       const mainPath = [...this.lassoNodes, ...this.lassoPreviewPath];
       
       if (mainPath.length > 0) {

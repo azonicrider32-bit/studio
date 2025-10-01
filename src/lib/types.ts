@@ -14,6 +14,7 @@ export interface LassoSettings {
     drawMode: 'magic' | 'polygon' | 'free';
     useAiEnhancement: boolean;
     useColorAwareness: boolean;
+    showMouseTrace: boolean;
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number;

@@ -79,6 +79,7 @@ export function ProSegmentAI() {
     drawMode: 'magic',
     useAiEnhancement: false,
     useColorAwareness: false,
+    showMouseTrace: true,
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.05,

@@ -5,7 +5,7 @@
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette, PenTool, GitCommit, Sparkles } from "lucide-react";
+import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette, PenTool, GitCommit, Sparkles, Eye } from "lucide-react";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -92,7 +92,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
   const currentMode = DRAW_MODES.find(m => m.id === settings.drawMode);
 
 
-  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | 'useColorAwareness' | `${string}Enabled` | 'drawMode'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | 'useColorAwareness' | `${string}Enabled` | 'drawMode' | 'showMouseTrace'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 40, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
@@ -129,7 +129,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
                         </Label>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Use AI to analyze and enhance the final selection path upon completion.</p>
+                        <p>Use AI to enhance the final selection path upon completion.</p>
                     </TooltipContent>
                 </Tooltip>
                  <Popover>
@@ -176,6 +176,37 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
                 id="useColorAwareness"
                 checked={settings.useColorAwareness}
                 onCheckedChange={(checked) => onSettingsChange({ useColorAwareness: checked })}
+                disabled={settings.drawMode !== 'magic'}
+            />
+        </div>
+
+         <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Label htmlFor="showMouseTrace" className="flex items-center gap-2">
+                            <Eye className="h-4 w-4" />
+                            Show Mouse Trace
+                        </Label>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Makes the path of your cursor visible on the canvas as you draw.</p>
+                    </TooltipContent>
+                </Tooltip>
+                 <Popover>
+                    <PopoverTrigger>
+                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    </PopoverTrigger>
+                    <PopoverContent side="top" className="text-sm">
+                        <h4 className="font-semibold mb-2">Show Mouse Trace</h4>
+                        <p>Displays a semi-transparent line that follows your exact mouse movements. This visual guide helps you understand how the 'Trace Influence' setting is pulling the snapped path towards your drawn gesture.</p>
+                    </PopoverContent>
+                </Popover>
+            </div>
+            <Switch
+                id="showMouseTrace"
+                checked={settings.showMouseTrace}
+                onCheckedChange={(checked) => onSettingsChange({ showMouseTrace: checked })}
                 disabled={settings.drawMode !== 'magic'}
             />
         </div>
