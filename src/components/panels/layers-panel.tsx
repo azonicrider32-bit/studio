@@ -1,7 +1,7 @@
 
 "use client"
 
-import { Eye, EyeOff, Lock, Unlock, GripVertical } from "lucide-react"
+import { Eye, EyeOff, Lock, Unlock, GripVertical, Trash2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -15,6 +15,7 @@ interface LayersPanelProps {
     onLayerSelect: (id: string) => void;
     onToggleVisibility: (id: string) => void;
     onToggleLock: (id: string) => void;
+    onDeleteLayer: (id: string) => void;
 }
 
 
@@ -24,6 +25,7 @@ export function LayersPanel({
     onLayerSelect,
     onToggleVisibility,
     onToggleLock,
+    onDeleteLayer,
 }: LayersPanelProps) {
   return (
     <div className="p-4 space-y-4">
@@ -53,6 +55,15 @@ export function LayersPanel({
               </Button>
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => {e.stopPropagation(); onToggleLock(layer.id)}}>
                 {layer.locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 hover:bg-destructive/20 hover:text-destructive"
+                disabled={layer.type === 'background'}
+                onClick={(e) => {e.stopPropagation(); onDeleteLayer(layer.id)}}
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           ))}

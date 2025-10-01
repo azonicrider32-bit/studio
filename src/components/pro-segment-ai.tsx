@@ -141,6 +141,16 @@ export function ProSegmentAI() {
     setLayers(prev => prev.map(l => l.id === layerId ? { ...l, locked: !l.locked } : l));
   };
 
+  const deleteLayer = (layerId: string) => {
+    if (layerId === "background-0") return; // Cannot delete background
+
+    setLayers(prev => prev.filter(l => l.id !== layerId));
+
+    if (activeLayerId === layerId) {
+      setActiveLayerId("background-0");
+    }
+  };
+
 
   const handleLassoSettingsChange = (newSettings: Partial<LassoSettings>) => {
     setLassoSettings(prev => ({ ...prev, ...newSettings }));
@@ -415,6 +425,7 @@ export function ProSegmentAI() {
                 onLayerSelect={setActiveLayerId}
                 onToggleVisibility={toggleLayerVisibility}
                 onToggleLock={toggleLayerLock}
+                onDeleteLayer={deleteLayer}
               />
             </TabsContent>
             <TabsContent value="analysis" className="m-0">
