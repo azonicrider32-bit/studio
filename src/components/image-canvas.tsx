@@ -330,7 +330,7 @@ export function ImageCanvas({
     if (activeTool === 'lasso') {
       if (!engine.isDrawingLasso) {
         engine.startLasso(pos.x, pos.y);
-        toast({ title: 'Lasso started', description: 'Click to add points. Press Enter to complete or Escape to cancel.' });
+        toast({ title: 'Lasso started', description: 'Click to add points. Double-click or Press Enter to complete.' });
       } else {
         engine.addLassoNode(); 
       }
@@ -396,6 +396,22 @@ export function ImageCanvas({
   const handleMouseUp = () => {
     // With the node-based lasso, mouse up doesn't end the drawing.
   };
+
+  const handleDoubleClick = () => {
+    const engine = selectionEngineRef.current;
+    if (!engine || !engine.isDrawingLasso) return;
+    
+    if (activeTool === 'lasso') {
+      if (lassoSettings.useEdgeSnapping) {
+        endLassoAndProcess();
+      } else {
+        engine.endLasso();
+        drawOverlay();
+        toast({ title: 'Lasso path completed.' });
+      }
+    }
+  };
+
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
@@ -505,6 +521,7 @@ export function ImageCanvas({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
+          onDoubleClick={handleDoubleClick}
           className="absolute top-0 left-0 h-full w-full object-contain"
           style={{ cursor: activeTool === 'magic-wand' ? 'crosshair' : activeTool === 'lasso' ? 'crosshair' : activeTool === 'pipette-minus' ? 'copy' : 'default' }}
         />
@@ -520,5 +537,3 @@ export function ImageCanvas({
     </div>
   );
 }
-
-    

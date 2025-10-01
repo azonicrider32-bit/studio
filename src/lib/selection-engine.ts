@@ -49,6 +49,8 @@ export class SelectionEngine {
     useAiAssist: false,
     enabledTolerances: new Set(['h', 's', 'v']),
     scrollAdjustTolerances: new Set(),
+    useAntiAlias: true,
+    useFeather: false,
   };
    negativeMagicWandSettings: MagicWandSettings = {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -57,6 +59,8 @@ export class SelectionEngine {
     enabledTolerances: new Set(),
     scrollAdjustTolerances: new Set(),
     seedColor: undefined,
+    useAntiAlias: true,
+    useFeather: false,
   };
 
 
@@ -201,7 +205,8 @@ export class SelectionEngine {
         const firstNode = path[0];
         const lastNode = path[path.length - 1];
         if (Math.hypot(firstNode[0] - lastNode[0], firstNode[1] - lastNode[1]) > 1) {
-            path.push(firstNode);
+            const closingPath = this.findEdgePath(lastNode, firstNode);
+            path.push(...closingPath);
         }
     }
     
@@ -249,7 +254,7 @@ export class SelectionEngine {
 
         // Linear falloff for cursor influence
         const progress = Math.max(0, 1 - (distToTarget / initialDistToTarget));
-        const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence * progress : 0;
+        const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence : 0;
 
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
@@ -689,10 +694,10 @@ export class SelectionEngine {
       this.lassoNodes.forEach(([x, y], index) => {
         overlayCtx.fillStyle = index === 0 ? 'hsl(var(--accent))' : '#fff';
         overlayCtx.beginPath();
-        overlayCtx.arc(x, y, 4, 0, Math.PI * 2);
+        overlayCtx.arc(x, y, 2, 0, Math.PI * 2);
         overlayCtx.fill();
         overlayCtx.strokeStyle = 'hsl(var(--background))';
-        overlayCtx.lineWidth = 2;
+        overlayCtx.lineWidth = 1;
         overlayCtx.stroke();
       });
     }
