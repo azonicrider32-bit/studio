@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -14,6 +15,7 @@ import {
   Wand2,
   GitCommit,
   PenTool,
+  ChevronDown,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -24,6 +26,7 @@ import { Separator } from "@/components/ui/separator"
 import { MagicWandSettings, LassoSettings } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Button } from "../ui/button"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -42,8 +45,6 @@ export function ToolSettingsPanel({
 }: ToolSettingsPanelProps) {
   
   const isWand = activeTool === 'magic-wand';
-  const settings = isWand ? magicWandSettings : lassoSettings;
-  const onSettingsChange = isWand ? onMagicWandSettingsChange as (s: Partial<MagicWandSettings | LassoSettings>) => void : onLassoSettingsChange as (s: Partial<MagicWandSettings | LassoSettings>) => void;
   
     const DRAW_MODES: { id: LassoSettings['drawMode']; label: string; icon: React.ElementType; description: string}[] = [
         { id: 'magic', label: 'Magic Snap', icon: Sparkles, description: 'Path snaps to detected edges as you draw.' },
@@ -51,6 +52,40 @@ export function ToolSettingsPanel({
         { id: 'free', label: 'Free Draw', icon: PenTool, description: 'Follows your cursor movement exactly.' },
     ];
     const currentMode = DRAW_MODES.find(m => m.id === lassoSettings.drawMode);
+
+  const LassoSliderSetting = ({
+    settingKey,
+    label,
+    max,
+    step,
+  }: {
+    settingKey: keyof LassoSettings;
+    label: string;
+    max: number;
+    step: number;
+  }) => (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label htmlFor={`${settingKey}-slider`} className="text-xs">{label}: {(lassoSettings[settingKey] as number).toFixed(2)}</Label>
+        <Switch
+          id={`${settingKey}-toggle`}
+          size="sm"
+          checked={lassoSettings[`${settingKey}Enabled` as keyof LassoSettings] as boolean}
+          onCheckedChange={(checked) => onLassoSettingsChange({ [`${settingKey}Enabled`]: checked } as Partial<LassoSettings>)}
+        />
+      </div>
+      <Slider
+        id={`${settingKey}-slider`}
+        min={0}
+        max={max}
+        step={step}
+        value={[lassoSettings[settingKey] as number]}
+        onValueChange={(value) => onLassoSettingsChange({ [settingKey]: value[0] } as Partial<LassoSettings>)}
+        disabled={!(lassoSettings[`${settingKey}Enabled` as keyof LassoSettings] as boolean)}
+      />
+    </div>
+  );
+
 
   return (
     <div className="p-2 space-y-4">
@@ -88,8 +123,8 @@ export function ToolSettingsPanel({
                     <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
                     <Switch
                         id="show-masks"
-                        checked={settings.showAllMasks}
-                        onCheckedChange={(v) => onSettingsChange({ showAllMasks: v })}
+                        checked={magicWandSettings.showAllMasks}
+                        onCheckedChange={(v) => onMagicWandSettingsChange({ showAllMasks: v })}
                     />
                 </div>
                 <div className="flex items-center justify-between">
@@ -223,6 +258,45 @@ export function ToolSettingsPanel({
                     <Button variant="outline" size="sm" onClick={() => {}}>Loose</Button>
                 </div>
             </div>
+            
+            {lassoSettings.drawMode === 'magic' && (
+              <Accordion type="single" collapsible>
+                <AccordionItem value="advanced-settings">
+                  <AccordionTrigger>Advanced Magic Snap Settings</AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <LassoSliderSetting settingKey="snapRadius" label="Snap Radius" max={50} step={1} />
+                    <LassoSliderSetting settingKey="snapThreshold" label="Snap Threshold" max={1} step={0.05} />
+                    <LassoSliderSetting settingKey="curveStrength" label="Curve Strength" max={1} step={0.01} />
+                    <LassoSliderSetting settingKey="directionalStrength" label="Directional Strength" max={1} step={0.05} />
+                    <LassoSliderSetting settingKey="cursorInfluence" label="Cursor Influence" max={1} step={0.05} />
+                    <LassoSliderSetting settingKey="traceInfluence" label="Trace Influence" max={1} step={0.05} />
+                    
+                    <div className="space-y-2 pt-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="useColorAwareness" className="flex items-center gap-2">
+                          <Palette className="w-4 h-4"/> Color Awareness
+                        </Label>
+                        <Switch
+                          id="useColorAwareness"
+                          checked={lassoSettings.useColorAwareness}
+                          onCheckedChange={(checked) => onLassoSettingsChange({ useColorAwareness: checked })}
+                        />
+                      </div>
+                      <Slider
+                        id="colorInfluence-slider"
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        value={[lassoSettings.colorInfluence]}
+                        onValueChange={(value) => onLassoSettingsChange({ colorInfluence: value[0] })}
+                        disabled={!lassoSettings.useColorAwareness}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
+
         </div>
       )}
     </div>
