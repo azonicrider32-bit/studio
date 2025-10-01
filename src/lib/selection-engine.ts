@@ -48,6 +48,7 @@ export class SelectionEngine {
     cursorInfluenceEnabled: true,
     traceInfluenceEnabled: true,
     colorInfluenceEnabled: true,
+    useColorAwareness: false,
   };
   magicWandSettings: MagicWandSettings = {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -659,6 +660,25 @@ export class SelectionEngine {
   createLayerFromPixels(pixels: Set<number>): Layer | null {
     const segment = this.createSegmentFromPixels(pixels);
     if (!segment) return null;
+
+    const { x, y, width, height } = segment.bounds;
+    const originalImageData = this.ctx.getImageData(x, y, width, height);
+    const newImageData = this.ctx.createImageData(width, height);
+    
+    // Iterate through the bounding box of the segment
+    for (let j = 0; j < height; j++) {
+        for (let i = 0; i < width; i++) {
+            const canvasIndex = (y + j) * this.width + (x + i);
+            if (pixels.has(canvasIndex)) {
+                const sourceIndex = (j * width + i) * 4;
+                const destIndex = sourceIndex;
+                newImageData.data[destIndex] = originalImageData.data[sourceIndex];
+                newImageData.data[destIndex + 1] = originalImageData.data[sourceIndex + 1];
+                newImageData.data[destIndex + 2] = originalImageData.data[sourceIndex + 2];
+                newImageData.data[destIndex + 3] = originalImageData.data[sourceIndex + 3];
+            }
+        }
+    }
     
     const newLayer: Layer = {
       id: `segment-${segment.id}`,
@@ -668,6 +688,7 @@ export class SelectionEngine {
       locked: false,
       pixels: segment.pixels,
       bounds: segment.bounds,
+      imageData: newImageData,
     };
     return newLayer;
   }
@@ -731,33 +752,31 @@ export class SelectionEngine {
   renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[]) {
     if (!overlayCtx) return;
 
+    // Clear the overlay for selection marching ants and lasso paths
     overlayCtx.clearRect(0, 0, this.width, this.height);
 
-    if (layers.length > 0) {
-      const selectionImageData = overlayCtx.createImageData(this.width, this.height);
-      const data = selectionImageData.data;
+    // Render marching ants for any layers that DO NOT have imageData
+    const selectionImageData = overlayCtx.createImageData(this.width, this.height);
+    const data = selectionImageData.data;
+    let hasMaskOnlySelections = false;
 
-      layers.forEach(layer => {
-        if (layer.visible && layer.type === 'segmentation') {
-          layer.pixels.forEach(idx => {
-            const i = idx * 4;
-            data[i] = 3;
-            data[i + 1] = 169;
-            data[i + 2] = 244;
-            data[i + 3] = 102;
-          });
+    layers.forEach(layer => {
+        if (layer.visible && layer.type === 'segmentation' && !layer.imageData) {
+            hasMaskOnlySelections = true;
+            layer.pixels.forEach(idx => {
+                const i = idx * 4;
+                data[i] = 3; // R
+                data[i + 1] = 169; // G
+                data[i + 2] = 244; // B
+                data[i + 3] = 102; // Alpha
+            });
         }
-      });
-      overlayCtx.putImageData(selectionImageData, 0, 0);
+    });
 
-      layers.forEach(layer => {
-         if (layer.visible && layer.type === 'segmentation') {
-            overlayCtx.strokeStyle = 'hsl(var(--accent))';
-            overlayCtx.lineWidth = 1;
-            overlayCtx.strokeRect(layer.bounds.x, layer.bounds.y, layer.bounds.width, layer.bounds.height);
-        }
-      });
+    if (hasMaskOnlySelections) {
+        overlayCtx.putImageData(selectionImageData, 0, 0);
     }
+
 
     if (this.isDrawingLasso) {
       // Draw mouse trace if enabled

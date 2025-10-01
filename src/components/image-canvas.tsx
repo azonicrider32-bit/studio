@@ -63,6 +63,7 @@ export function ImageCanvas({
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const layersCanvasRef = React.useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = React.useRef<HTMLCanvasElement>(null);
   const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
@@ -90,6 +91,22 @@ export function ImageCanvas({
   }, [getSelectionMaskRef, clearSelectionRef, layers]);
 
 
+  const drawLayers = React.useCallback(() => {
+    const layersCanvas = layersCanvasRef.current;
+    if (!layersCanvas) return;
+
+    const layersCtx = layersCanvas.getContext('2d');
+    if (!layersCtx) return;
+
+    layersCtx.clearRect(0, 0, layersCanvas.width, layersCanvas.height);
+
+    layers.forEach(layer => {
+        if (layer.visible && layer.imageData && layer.type === 'segmentation') {
+            layersCtx.putImageData(layer.imageData, layer.bounds.x, layer.bounds.y);
+        }
+    });
+  }, [layers]);
+
   const drawOverlay = React.useCallback(() => {
     const overlayCanvas = overlayCanvasRef.current;
     const engine = selectionEngineRef.current;
@@ -106,15 +123,17 @@ export function ImageCanvas({
   }, [hoveredSegment, activeTool, magicWandSettings.useAiAssist, layers]);
 
   React.useEffect(() => {
+    drawLayers();
     drawOverlay();
-  }, [layers, drawOverlay]);
+  }, [layers, drawLayers, drawOverlay]);
 
 
   const initEngine = React.useCallback(() => {
     if (!imageRef.current) return;
     const canvas = canvasRef.current;
+    const layersCanvas = layersCanvasRef.current;
     const overlayCanvas = overlayCanvasRef.current;
-    if (!canvas || !overlayCanvas || !image) return;
+    if (!canvas || !overlayCanvas || !image || !layersCanvas) return;
 
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
@@ -125,6 +144,8 @@ export function ImageCanvas({
     canvas.height = img.naturalHeight;
     overlayCanvas.width = img.naturalWidth;
     overlayCanvas.height = img.naturalHeight;
+    layersCanvas.width = img.naturalWidth;
+    layersCanvas.height = img.naturalHeight;
 
     ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
 
@@ -409,7 +430,7 @@ export function ImageCanvas({
         clearTimeout(mouseStopTimerRef.current);
     }
     setHoveredSegment(null);
-    // Do not set canvasMousePos to null to keep the preview active
+    setCanvasMousePos(null);
     drawOverlay();
   }
 
@@ -488,8 +509,8 @@ export function ImageCanvas({
     if (activeTool === 'magic-wand') return 'crosshair';
     if (activeTool === 'pipette-minus') return 'copy';
     if (activeTool === 'lasso') {
-        const svg = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="white" stroke-width="2"/><path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="black" stroke-width="2" stroke-dasharray="2 2"/></svg>`;
-        return `url("data:image/svg+xml;base64,${btoa(svg)}") 16 16, crosshair`;
+        const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3V11M12 13V21M21 12H13M11 12H3" stroke="white" stroke-width="2"/><path d="M12 3V11M12 13V21M21 12H13M11 12H3" stroke="black" stroke-width="2" stroke-dasharray="2 2"/></svg>`;
+        return `url("data:image/svg+xml;base64,${btoa(svg)}") 12 12, crosshair`;
     }
     return 'default';
   }
@@ -522,6 +543,10 @@ export function ImageCanvas({
         <canvas
           ref={canvasRef}
           className="absolute top-0 left-0 h-full w-full object-contain opacity-0 pointer-events-none"
+        />
+        <canvas
+          ref={layersCanvasRef}
+          className="absolute top-0 left-0 h-full w-full object-contain pointer-events-none"
         />
         <canvas
           ref={overlayCanvasRef}

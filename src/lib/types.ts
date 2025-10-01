@@ -8,6 +8,7 @@ export interface Layer {
     locked: boolean;
     pixels: Set<number>;
     bounds: { x: number; y: number; width: number; height: number };
+    imageData?: ImageData;
 }
 
 export interface LassoSettings {
