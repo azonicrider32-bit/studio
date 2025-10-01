@@ -11,6 +11,7 @@ import { Switch } from "../ui/switch";
 import { LassoSettings } from "@/lib/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
 
 
 interface LassoPanelProps {
@@ -25,7 +26,56 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     onSettingsChange({ [setting]: !settings[setting] });
   };
 
-  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useMagicSnapping' | 'useAiEnhancement'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const handlePreset = (preset: 'default' | 'precise' | 'loose') => {
+    let newSettings: Partial<LassoSettings>;
+    switch (preset) {
+      case 'precise':
+        newSettings = {
+          snapRadius: 5,
+          snapThreshold: 0.50,
+          curveStrength: 0.00,
+          directionalStrength: 0.00,
+          cursorInfluence: 0.25,
+          snapRadiusEnabled: true,
+          snapThresholdEnabled: true,
+          curveStrengthEnabled: false,
+          directionalStrengthEnabled: false,
+          cursorInfluenceEnabled: true,
+        };
+        break;
+      case 'loose':
+        newSettings = {
+          snapRadius: 30,
+          snapThreshold: 0.2,
+          curveStrength: 0.4,
+          directionalStrength: 0.5,
+          cursorInfluence: 0.05,
+          snapRadiusEnabled: true,
+          snapThresholdEnabled: true,
+          curveStrengthEnabled: true,
+          directionalStrengthEnabled: true,
+          cursorInfluenceEnabled: false,
+        };
+        break;
+      default: // default
+        newSettings = {
+          snapRadius: 20,
+          snapThreshold: 0.3,
+          curveStrength: 0.05,
+          directionalStrength: 0.2,
+          cursorInfluence: 0.1,
+          snapRadiusEnabled: true,
+          snapThresholdEnabled: true,
+          curveStrengthEnabled: true,
+          directionalStrengthEnabled: false,
+          cursorInfluenceEnabled: true,
+        };
+        break;
+    }
+    onSettingsChange(newSettings);
+  };
+
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useMagicSnapping' | 'useAiEnhancement' | `${string}Enabled`>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 40, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
@@ -97,11 +147,21 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
             />
         </div>
       </div>
+
+      <Separator />
+
+      <div className="space-y-2">
+        <Label>Presets</Label>
+        <div className="grid grid-cols-3 gap-2">
+            <Button variant="outline" size="sm" onClick={() => handlePreset('default')}>Default</Button>
+            <Button variant="outline" size="sm" onClick={() => handlePreset('precise')}>Precise</Button>
+            <Button variant="outline" size="sm" onClick={() => handlePreset('loose')}>Loose</Button>
+        </div>
+      </div>
       
       <Separator />
 
       <div className="space-y-4">
-        <h4 className="text-sm font-semibold">Live Adjustment Settings</h4>
         <div className="flex justify-around items-end h-64">
             {SETTINGS_CONFIG.map(config => (
                 <VerticalSettingSlider
