@@ -2,7 +2,8 @@
 
 "use client"
 
-import { Eye, EyeOff, Lock, Unlock, GripVertical, Trash2, Palette, MoreHorizontal, Plus } from "lucide-react"
+import * as React from "react"
+import { Eye, EyeOff, Lock, Unlock, GripVertical, Trash2, Palette, MoreHorizontal, Plus, Pipette } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -133,5 +134,3 @@ export function LayersPanel({
     </div>
   )
 }
-
-    
