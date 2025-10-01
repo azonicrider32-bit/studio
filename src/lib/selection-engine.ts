@@ -241,6 +241,8 @@ export class SelectionEngine {
     let lastDirection: [number, number] | null = null;
     const falloffDistance = 50; 
 
+    const p1Color = this.getPixelColors(Math.round(p1[1]) * this.width + Math.round(p1[0]));
+
     while (steps < maxSteps) {
         steps++;
         const targetPoint = p2;
@@ -281,6 +283,8 @@ export class SelectionEngine {
         const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence : 0;
         const currentTraceInfluence = this.lassoSettings.traceInfluenceEnabled ? this.lassoSettings.traceInfluence : 0;
 
+        const lastPathPointColor = this.getPixelColors(Math.round(currentPoint[1]) * this.width + Math.round(currentPoint[0]));
+
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
                 const idx = y * this.width + x;
@@ -311,6 +315,10 @@ export class SelectionEngine {
 
                 const cursorCost = (1 - directionSimilarity) * 500 * (withFuturePath ? currentCursorInfluence : 0);
                 const edgeCost = (1 / (edgeStrength + 1)) * 1000;
+
+                const candidateColor = this.getPixelColors(idx);
+                const colorDifference = this.getColorDifference(lastPathPointColor, candidateColor, this.magicWandSettings);
+                const colorCost = (1 - colorDifference) * 500;
                 
                 let curvatureCost = 0;
                 let directionalCost = 0;
@@ -326,7 +334,7 @@ export class SelectionEngine {
                     directionalCost = (1 - dot) * 500 * (this.lassoSettings.directionalStrengthEnabled ? this.lassoSettings.directionalStrength : 0) * falloff;
                 }
 
-                const cost = cursorCost + edgeCost + curvatureCost + directionalCost + traceCost;
+                const cost = cursorCost + edgeCost + curvatureCost + directionalCost + traceCost + colorCost;
 
                 if (cost < minCost) {
                     minCost = cost;
@@ -490,6 +498,40 @@ export class SelectionEngine {
       hsv: rgbToHsv(r, g, b),
       lab: rgbToLab(r, g, b)
     }
+  }
+
+  getColorDifference(color1: any, color2: any, settings: MagicWandSettings): number {
+    const { tolerances, enabledTolerances } = settings;
+    if (!enabledTolerances || enabledTolerances.size === 0) return 0;
+    
+    let maxDiff = 0;
+    let count = 0;
+
+    const checkSpace = (space: 'rgb' | 'hsv' | 'lab') => {
+        for (const key in color1[space]) {
+            const toleranceKey = key === 'b_lab' ? 'b_lab' : (key as keyof typeof tolerances);
+            if (enabledTolerances.has(toleranceKey)) {
+                count++;
+                let diff;
+                if (key === 'h') {
+                    const hDiff = Math.abs(color1[space][key] - color2[space][key]);
+                    diff = Math.min(hDiff, 360 - hDiff);
+                } else {
+                    diff = Math.abs(color1[space][key] - color2[space][key]);
+                }
+                const normalizedDiff = diff / tolerances[toleranceKey];
+                if (normalizedDiff > maxDiff) {
+                    maxDiff = normalizedDiff;
+                }
+            }
+        }
+    };
+    
+    checkSpace('rgb');
+    checkSpace('hsv');
+    checkSpace('lab');
+
+    return count > 0 ? 1 - Math.min(1, maxDiff) : 0;
   }
 
   isInsideTolerance(seedColor: any, neighborColor: any, settings: MagicWandSettings): boolean {
