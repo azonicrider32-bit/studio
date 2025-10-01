@@ -292,19 +292,21 @@ export function ToolSettingsPanel({
                     </div>
                 </div>
             </TabsContent>
-            <TabsContent value="magic-snap" className="m-0">
+            <TabsContent value="magic-snap" className="m-0 space-y-2">
                 <TooltipProvider>
                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
                         <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
                         <VerticalLassoSlider settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="curveStrength" label="Curve" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
+                    </div>
+                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
                         <VerticalLassoSlider settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="colorInfluence" label="Color" max={1} step={0.05} />
                     </div>
                 </TooltipProvider>
-                 <div className="flex items-center justify-between mt-4">
+                 <div className="flex items-center justify-between mt-4 px-2">
                     <Label htmlFor="useColorAwareness" className="flex items-center gap-2 text-sm">Use Color Awareness</Label>
                     <Switch
                         id="useColorAwareness"
