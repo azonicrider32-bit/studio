@@ -228,7 +228,7 @@ export class SelectionEngine {
       return layer;
   }
 
-  endLasso(): Layer | null {
+  endLasso(activeLayerId: string | null): Layer | null {
     if (!this.isDrawingLasso || this.lassoNodes.length < 2) {
       this.cancelLasso();
       return null;
@@ -238,7 +238,7 @@ export class SelectionEngine {
     let newLayer: Layer | null = null;
     if(fullPath.length > 2) {
         const pixels = this.pathToSelection(fullPath);
-        newLayer = this.createLayerFromPixels(pixels);
+        newLayer = this.createLayerFromPixels(pixels, activeLayerId);
     }
     
     this.cancelLasso();
@@ -479,7 +479,7 @@ export class SelectionEngine {
   // #endregion
 
   // #region MAGIC WAND
-  magicWand(x: number, y: number, previewOnly = false): Segment | Layer | null {
+  magicWand(x: number, y: number, previewOnly = false): Segment | null {
       if (!this.pixelData) return null;
       x = Math.floor(x);
       y = Math.floor(y);
@@ -532,7 +532,7 @@ export class SelectionEngine {
       if (previewOnly) {
           return this.createSegmentFromPixels(selected);
       } else {
-          return this.createLayerFromPixels(selected);
+          return null; // Should be handled by createLayerFromPixels now
       }
   }
 
@@ -772,28 +772,38 @@ export class SelectionEngine {
       return tempCanvas.toDataURL();
   }
 
+  renderCheckerboardPattern(ctx: CanvasRenderingContext2D, size = 8) {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = size * 2;
+        tempCanvas.height = size * 2;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (!tempCtx) return null;
+
+        tempCtx.fillStyle = 'rgba(0,0,0,0.2)';
+        tempCtx.fillRect(0, 0, size * 2, size * 2);
+        tempCtx.fillStyle = 'rgba(255,255,255,0.2)';
+        tempCtx.fillRect(0, 0, size, size);
+        tempCtx.fillRect(size, size, size, size);
+
+        return ctx.createPattern(tempCanvas, 'repeat');
+    }
 
   renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment) {
       if (!segment || segment.pixels.size === 0) return;
       
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = this.width;
-      tempCanvas.height = this.height;
-      const tempCtx = tempCanvas.getContext('2d');
-      if (!tempCtx) return;
+      const pattern = this.renderCheckerboardPattern(overlayCtx);
+      if(!pattern) return;
 
-      const segmentImageData = tempCtx.createImageData(this.width, this.height);
-
+      overlayCtx.save();
+      overlayCtx.fillStyle = pattern;
+      
       segment.pixels.forEach((idx: number) => {
-        const i = idx * 4;
-        segmentImageData.data[i] = 3;
-        segmentImageData.data[i + 1] = 169;
-        segmentImageData.data[i + 2] = 244;
-        segmentImageData.data[i + 3] = 102; // ~0.4 alpha
+        const x = idx % this.width;
+        const y = Math.floor(idx / this.width);
+        overlayCtx.fillRect(x,y,1,1);
       });
 
-      tempCtx.putImageData(segmentImageData, 0, 0);
-      overlayCtx.drawImage(tempCanvas, 0, 0);
+      overlayCtx.restore();
   }
 
 
@@ -805,26 +815,25 @@ export class SelectionEngine {
     const showMasks = wandSettings.showAllMasks && lassoSettings.showAllMasks;
 
     if (showMasks) {
-        const selectionImageData = overlayCtx.createImageData(this.width, this.height);
-        const data = selectionImageData.data;
+        const pattern = this.renderCheckerboardPattern(overlayCtx);
+        if(!pattern) return;
+
+        overlayCtx.save();
+        overlayCtx.fillStyle = pattern;
         let hasMasksToRender = false;
 
         layers.forEach(layer => {
             if (layer.visible && (layer.subType === 'pixel' || layer.subType === 'mask') && layer.maskVisible) {
                 hasMasksToRender = true;
                 layer.pixels.forEach(idx => {
-                    const i = idx * 4;
-                    data[i] = 3; // R
-                    data[i + 1] = 169; // G
-                    data[i + 2] = 244; // B
-                    data[i + 3] = 102; // Alpha
+                    const x = idx % this.width;
+                    const y = Math.floor(idx / this.width);
+                    overlayCtx.fillRect(x, y, 1, 1);
                 });
             }
         });
 
-        if (hasMasksToRender) {
-            overlayCtx.putImageData(selectionImageData, 0, 0);
-        }
+        overlayCtx.restore();
     }
     
     if (hoveredSegment && wandSettings.useAiAssist === false) {

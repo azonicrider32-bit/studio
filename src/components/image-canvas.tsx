@@ -110,70 +110,71 @@ const drawLayers = React.useCallback(() => {
     layersCtx.clearRect(0, 0, layersCanvas.width, layersCanvas.height);
 
     const layerTree = layers.reduce((acc, layer) => {
-        if (!layer.parentId) {
-            acc.push({ ...layer, children: [] });
-        } else {
-            const parent = acc.find(p => p.id === layer.parentId);
-            if (parent) {
-                parent.children.push(layer);
+        const parentId = layer.parentId || layer.id;
+        let parentGroup = acc.find(p => p.parent.id === parentId);
+
+        if (layer.parentId) { // It's a child mask
+             if (parentGroup) {
+                parentGroup.children.push(layer);
+            }
+        } else { // It's a parent
+             if (!parentGroup) {
+                acc.push({ parent: layer, children: [] });
             }
         }
         return acc;
-    }, [] as (Layer & { children: Layer[] })[]);
+    }, [] as { parent: Layer; children: Layer[] }[]);
 
 
-    layerTree.forEach(parentLayer => {
+    layerTree.forEach(({ parent: parentLayer, children: childMasks }) => {
         if (!parentLayer.visible) return;
 
-        // Create a temporary canvas for the parent layer and its masks
         const tempParentCanvas = document.createElement('canvas');
         tempParentCanvas.width = layersCanvas.width;
         tempParentCanvas.height = layersCanvas.height;
         const tempParentCtx = tempParentCanvas.getContext('2d');
         if (!tempParentCtx) return;
 
-        // Step 1: Draw the parent's content
         if (parentLayer.type === 'background') {
             tempParentCtx.drawImage(mainImage, 0, 0, layersCanvas.width, layersCanvas.height);
         } else if (parentLayer.imageData) {
-            const tempImageCanvas = document.createElement('canvas');
+             const tempImageCanvas = document.createElement('canvas');
             tempImageCanvas.width = parentLayer.imageData.width;
             tempImageCanvas.height = parentLayer.imageData.height;
             const tempImageCtx = tempImageCanvas.getContext('2d');
-            if (tempImageCtx) {
+            if(tempImageCtx) {
                 tempImageCtx.putImageData(parentLayer.imageData, 0, 0);
-                tempParentCtx.drawImage(tempImageCanvas, parentLayer.bounds.x, parentLayer.bounds.y);
+                tempParentCtx.drawImage(tempImageCanvas, parentLayer.bounds.x, parentLayer.bounds.y, parentLayer.bounds.width, parentLayer.bounds.height);
             }
         }
         
-        // Step 2: Apply masks if any
-        const visibleMasks = parentLayer.children.filter(m => m.subType === 'mask' && m.visible);
+        const visibleMasks = childMasks.filter(m => m.subType === 'mask' && m.visible);
         if (visibleMasks.length > 0) {
             const tempMaskCanvas = document.createElement('canvas');
             tempMaskCanvas.width = layersCanvas.width;
             tempMaskCanvas.height = layersCanvas.height;
             const tempMaskCtx = tempMaskCanvas.getContext('2d');
             if(tempMaskCtx) {
-                tempMaskCtx.fillStyle = 'black'; // Start with a black canvas
+                tempMaskCtx.fillStyle = 'black'; 
                 tempMaskCtx.fillRect(0, 0, tempMaskCanvas.width, tempMaskCanvas.height);
                 
+                tempMaskCtx.globalCompositeOperation = 'destination-out';
                 visibleMasks.forEach(mask => {
                     mask.pixels.forEach(pixelIndex => {
                         const x = pixelIndex % layersCanvas.width;
                         const y = Math.floor(pixelIndex / layersCanvas.width);
-                        tempMaskCtx.fillStyle = 'white'; // Paint the mask shape in white
+                        tempMaskCtx.fillStyle = 'white'; 
                         tempMaskCtx.fillRect(x, y, 1, 1);
                     });
                 });
+                tempMaskCtx.globalCompositeOperation = 'source-over';
                 
-                // Use the mask to punch out the parent content
                 tempParentCtx.globalCompositeOperation = 'destination-in';
                 tempParentCtx.drawImage(tempMaskCanvas, 0, 0);
-                tempParentCtx.globalCompositeOperation = 'source-over'; // Reset
+                tempParentCtx.globalCompositeOperation = 'source-over'; 
             }
         }
         
-        // Step 3: Draw the processed parent layer to the main layer canvas
         layersCtx.drawImage(tempParentCanvas, 0, 0);
     });
 }, [layers]);
@@ -265,7 +266,7 @@ const drawLayers = React.useCallback(() => {
             if (newLayer) addLayer(newLayer);
             toast({ title: 'Lasso path enhanced by AI!' });
         } else {
-            const newLayer = engine.endLasso();
+            const newLayer = engine.endLasso(activeLayerId);
             if (newLayer) addLayer(newLayer);
             toast({ title: 'Lasso path completed.', description: 'AI could not enhance path, used manual path.' });
         }
@@ -275,14 +276,14 @@ const drawLayers = React.useCallback(() => {
             description: 'Using manual path instead.'
         });
         if (engine.isDrawingLasso) {
-            const newLayer = engine.endLasso();
+            const newLayer = engine.endLasso(activeLayerId);
             if (newLayer) addLayer(newLayer);
         }
     } finally {
         setIsProcessing(false);
         drawOverlay();
     }
-  }, [drawOverlay, toast, addLayer]);
+  }, [drawOverlay, toast, addLayer, activeLayerId]);
 
 
   React.useEffect(() => {
@@ -295,7 +296,7 @@ const drawLayers = React.useCallback(() => {
         if (lassoSettings.useAiEnhancement) {
             endLassoAndProcess();
         } else {
-            const newLayer = engine.endLasso();
+            const newLayer = engine.endLasso(activeLayerId);
             if (newLayer) addLayer(newLayer);
             drawOverlay();
             toast({ title: 'Lasso path completed.' });
@@ -312,7 +313,7 @@ const drawLayers = React.useCallback(() => {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useAiEnhancement, addLayer]);
+  }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useAiEnhancement, addLayer, activeLayerId]);
 
 
   const getMousePos = (canvasEl: HTMLCanvasElement, evt: React.MouseEvent | React.WheelEvent) => {
@@ -363,7 +364,9 @@ const drawLayers = React.useCallback(() => {
 
             if (clickedLayer) {
                 onLayerSelect(clickedLayer.id);
-                if (!shiftKey && !ctrlKey) {
+                 if (shiftKey && activeLayerId && activeLayerId === clickedLayer.id) {
+                    // Continue to add to this already selected layer
+                } else if (!shiftKey && !ctrlKey) {
                     toast({ title: `Layer "${clickedLayer.name}" selected.` });
                     setIsProcessing(false);
                     return;
@@ -560,7 +563,7 @@ const drawLayers = React.useCallback(() => {
       if (lassoSettings.useAiEnhancement) {
         endLassoAndProcess();
       } else {
-        const newLayer = engine.endLasso();
+        const newLayer = engine.endLasso(activeLayerId);
         if (newLayer) addLayer(newLayer);
         drawOverlay();
         toast({ title: 'Lasso path completed.' });
@@ -688,3 +691,5 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
+
+    
