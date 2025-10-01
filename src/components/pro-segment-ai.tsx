@@ -63,15 +63,15 @@ export function ProSegmentAI() {
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     useMagicSnapping: true,
     useAiEnhancement: false,
-    snapRadius: 10,
+    snapRadius: 20,
     snapThreshold: 0.3,
-    curveStrength: 0.75,
+    curveStrength: 0.05,
     directionalStrength: 0.2,
-    cursorInfluence: 0.2,
+    cursorInfluence: 0.1,
     snapRadiusEnabled: true,
     snapThresholdEnabled: true,
     curveStrengthEnabled: true,
-    directionalStrengthEnabled: true,
+    directionalStrengthEnabled: false,
     cursorInfluenceEnabled: true,
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
