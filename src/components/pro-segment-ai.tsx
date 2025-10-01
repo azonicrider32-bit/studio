@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -462,7 +461,7 @@ export function ProSegmentAI() {
                   getSelectionMaskRef={getSelectionMaskRef}
                   clearSelectionRef={clearSelectionRef}
                   onLassoSettingChange={handleLassoSettingsChange}
-                  onMagicWandSettingChange={handleMagicWandSettingsChange}
+                  onMagicWandSettingsChange={handleMagicWandSettingsChange}
                   onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
                   canvasMousePos={canvasMousePos}
                   setCanvasMousePos={setCanvasMousePos}
@@ -563,3 +562,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
