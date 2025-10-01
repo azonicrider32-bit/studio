@@ -532,8 +532,6 @@ export function ImageCanvas({
     if (mouseStopTimerRef.current) {
         clearTimeout(mouseStopTimerRef.current);
     }
-    setHoveredSegment(null);
-    drawOverlay(null);
   }
 
   const handleMouseUp = () => {
@@ -676,3 +674,5 @@ export function ImageCanvas({
     </div>
   );
 }
+
+    
