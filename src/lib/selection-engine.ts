@@ -15,6 +15,7 @@ export class SelectionEngine {
   height: number;
   pixelData: Uint8ClampedArray | null = null;
   visited: Uint8Array | null = null;
+  layers: Layer[] = [];
 
   // Lasso State
   lassoNodes: [number, number][] = [];
@@ -56,6 +57,7 @@ export class SelectionEngine {
     contiguous: true,
     useAiAssist: false,
     showAllMasks: true,
+    ignoreExistingSegments: false,
     enabledTolerances: new Set(['h', 's', 'v']),
     scrollAdjustTolerances: new Set(),
     useAntiAlias: true,
@@ -66,6 +68,7 @@ export class SelectionEngine {
     contiguous: true,
     useAiAssist: false,
     showAllMasks: true,
+    ignoreExistingSegments: false,
     enabledTolerances: new Set(),
     scrollAdjustTolerances: new Set(),
     seedColor: undefined,
@@ -74,11 +77,12 @@ export class SelectionEngine {
   };
 
 
-  constructor(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
+  constructor(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, layers: Layer[]) {
     this.canvas = canvas;
     this.ctx = context;
     this.width = canvas.width;
     this.height = canvas.height;
+    this.layers = layers;
   }
 
   initialize() {
@@ -86,6 +90,10 @@ export class SelectionEngine {
     this.pixelData = this.imageData.data;
     this.visited = new Uint8Array(this.width * this.height);
     this.computeEdgeMap();
+  }
+  
+  updateLayers(layers: Layer[]) {
+    this.layers = layers;
   }
   
   updateSettings(
@@ -475,8 +483,18 @@ export class SelectionEngine {
       y = Math.floor(y);
 
       if (x < 0 || x >= this.width || y < 0 || y >= this.height) return null;
-
+      
       const seedIndex = y * this.width + x;
+
+      if (!this.magicWandSettings.ignoreExistingSegments) {
+        for (const layer of this.layers) {
+            if (layer.visible && layer.type === 'segmentation' && layer.pixels.has(seedIndex)) {
+                return null; // Clicked inside an existing segment, do nothing
+            }
+        }
+      }
+
+
       const seedColor = this.getPixelColors(seedIndex);
 
       const selected = new Set<number>();

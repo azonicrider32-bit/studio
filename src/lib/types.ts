@@ -43,6 +43,7 @@ export interface MagicWandSettings {
     contiguous: boolean;
     useAiAssist: boolean;
     showAllMasks: boolean;
+    ignoreExistingSegments: boolean;
     enabledTolerances: Set<keyof MagicWandSettings['tolerances']>;
     scrollAdjustTolerances: Set<keyof MagicWandSettings['tolerances']>;
     seedColor?: { [key: string]: number };
@@ -89,3 +90,5 @@ export interface FeatherSettings {
     };
   };
 }
+
+    

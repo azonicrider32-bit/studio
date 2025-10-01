@@ -3,7 +3,7 @@
 "use client"
 
 import * as React from "react"
-import { Sparkles, BrainCircuit, Info, Palette } from "lucide-react"
+import { Sparkles, BrainCircuit, Info, Palette, EyeOff } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -196,46 +196,46 @@ export function MagicWandPanel({
       <Separator />
 
       {!isExclusionPanel && (
-          <div className="flex justify-around gap-2">
-            <div className="flex flex-col items-center gap-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                 <Label htmlFor="contiguous">Contiguous</Label>
                 <Switch
                 id="contiguous"
-                orientation="vertical"
                 checked={settings.contiguous}
                 onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
                 />
-                 <p className="text-xs text-muted-foreground text-center mt-2">Adjacent pixels only</p>
             </div>
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                 <Label htmlFor="anti-aliasing">Anti-Alias</Label>
                 <Switch
                 id="anti-aliasing"
-                orientation="vertical"
                 checked={settings.useAntiAlias}
                 onCheckedChange={(checked) => onSettingsChange({ useAntiAlias: checked })}
                 />
-                <p className="text-xs text-muted-foreground text-center mt-2">Smooth selection edges</p>
             </div>
-            <div className="flex flex-col items-center gap-2">
+             <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                 <Label htmlFor="feather-edges">Feather</Label>
                 <Switch
                 id="feather-edges"
-                orientation="vertical"
                 checked={settings.useFeather}
                 onCheckedChange={(checked) => onSettingsChange({ useFeather: checked })}
                 />
-                 <p className="text-xs text-muted-foreground text-center mt-2">Soften selection edges</p>
             </div>
-            <div className="flex flex-col items-center gap-2">
-                <Label htmlFor="show-masks" className="flex items-center gap-2 text-center">Show All Masks</Label>
+            <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                <Label htmlFor="show-masks" className="flex items-center gap-2">Show All Masks</Label>
                 <Switch
                     id="show-masks"
-                    orientation="vertical"
                     checked={settings.showAllMasks}
                     onCheckedChange={(v) => onSettingsChange({ showAllMasks: v })}
                 />
-                <p className="text-xs text-muted-foreground text-center mt-2">Toggle all overlays</p>
+            </div>
+             <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
+                <Label htmlFor="ignore-segments" className="flex items-center gap-2"><EyeOff className="w-4 h-4"/>Ignore Segments</Label>
+                <Switch
+                    id="ignore-segments"
+                    checked={settings.ignoreExistingSegments}
+                    onCheckedChange={(v) => onSettingsChange({ ignoreExistingSegments: v })}
+                />
             </div>
           </div>
       )}
@@ -271,13 +271,13 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
         
         // Handle hue's circular nature for visualization
         if (id === 'h') {
-            const lowerBound = (baseValue - tolerance + 360) % 360;
-            const upperBound = (baseValue + tolerance) % 360;
+            const hDiff = Math.abs(pixelValue - tolerance);
+            const lowerBound = (pixelValue - tolerance + 360) % 360;
+            const upperBound = (pixelValue + tolerance) % 360;
             
             // This is a simplification and doesn't show wrapping around the bar.
-            // A more complex visualization would be needed for a perfect circular representation.
-            bottomPercent = (Math.max(0, baseValue - tolerance) / max) * 100;
-            rangeHeight = (Math.min(max, baseValue + tolerance) - Math.max(0, baseValue - tolerance)) / max * 100;
+            bottomPercent = (Math.max(0, pixelValue - tolerance) / max) * 100;
+            rangeHeight = (Math.min(max, pixelValue + tolerance) - Math.max(0, pixelValue - tolerance)) / max * 100;
         } else {
             bottomPercent = (Math.max(0, baseValue - tolerance) / max) * 100;
             const topValue = Math.min(max, baseValue + tolerance);
@@ -356,5 +356,7 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
         </div>
     );
 }
+
+    
 
     

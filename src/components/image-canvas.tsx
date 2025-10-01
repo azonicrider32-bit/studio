@@ -155,12 +155,12 @@ export function ImageCanvas({
 
     ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
 
-    selectionEngineRef.current = new SelectionEngine(canvas, ctx);
+    selectionEngineRef.current = new SelectionEngine(canvas, ctx, layers);
     getSelectionEngineRef.current = selectionEngineRef.current;
     selectionEngineRef.current.initialize();
     getCanvasRef.current = canvas;
     console.log("Selection Engine Initialized");
-  }, [image, getCanvasRef, getSelectionEngineRef]);
+  }, [image, getCanvasRef, getSelectionEngineRef, layers]);
 
   const handleImageLoad = () => {
     initEngine();
@@ -169,8 +169,9 @@ export function ImageCanvas({
   React.useEffect(() => {
     if (selectionEngineRef.current) {
         selectionEngineRef.current.updateSettings(lassoSettings, magicWandSettings, negativeMagicWandSettings);
+        selectionEngineRef.current.updateLayers(layers);
     }
-  }, [lassoSettings, magicWandSettings, negativeMagicWandSettings]);
+  }, [lassoSettings, magicWandSettings, negativeMagicWandSettings, layers]);
 
 
   const endLassoAndProcess = React.useCallback(async () => {
@@ -358,9 +359,9 @@ export function ImageCanvas({
             title: "Magic Wand Failed",
             description: "Could not perform segmentation."
         });
-        drawOverlay();
     } finally {
         setIsProcessing(false);
+        drawOverlay();
     }
   };
 
@@ -468,8 +469,6 @@ export function ImageCanvas({
     if (mouseStopTimerRef.current) {
         clearTimeout(mouseStopTimerRef.current);
     }
-    // Do not set canvasMousePos to null to keep lasso preview alive
-    // Do not set hoveredSegment to null to keep magic wand preview alive
     drawOverlay();
   }
 
@@ -613,3 +612,5 @@ export function ImageCanvas({
     </div>
   );
 }
+
+    
