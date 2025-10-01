@@ -108,25 +108,28 @@ export function ImageCanvas({
 
     layers.forEach(layer => {
         if (layer.visible && layer.imageData && layer.type === 'segmentation') {
-            layersCtx.putImageData(layer.imageData, layer.bounds.x, layer.bounds.y);
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = layer.imageData.width;
+            tempCanvas.height = layer.imageData.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            if(tempCtx) {
+                tempCtx.putImageData(layer.imageData, 0, 0);
+                layersCtx.drawImage(tempCanvas, layer.bounds.x, layer.bounds.y);
+            }
         }
     });
   }, [layers]);
 
-  const drawOverlay = React.useCallback(() => {
+  const drawOverlay = React.useCallback((currentHoverSegment: Segment | null = hoveredSegment) => {
     const overlayCanvas = overlayCanvasRef.current;
     const engine = selectionEngineRef.current;
     if (!overlayCanvas || !engine) return;
 
     const overlayCtx = overlayCanvas.getContext('2d');
     if (overlayCtx) {
-      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-      engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings);
-      if (hoveredSegment && activeTool === 'magic-wand' && !magicWandSettings.useAiAssist) {
-        engine.renderHoverSegment(overlayCtx, hoveredSegment);
-      }
+      engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment);
     }
-  }, [hoveredSegment, activeTool, magicWandSettings, lassoSettings, layers]);
+  }, [magicWandSettings, lassoSettings, layers, hoveredSegment]);
 
   React.useEffect(() => {
     drawLayers();
@@ -426,12 +429,12 @@ export function ImageCanvas({
       const engine = selectionEngineRef.current;
       if (!engine || magicWandSettings.useAiAssist) {
         setHoveredSegment(null);
-        drawOverlay();
+        drawOverlay(null);
         return;
       };
       const segment = engine.magicWand(x, y, true); // Preview only
       setHoveredSegment(segment as Segment | null);
-      drawOverlay();
+      drawOverlay(segment as Segment | null);
   }, [drawOverlay, magicWandSettings.useAiAssist]);
 
   const debouncedWandPreview = React.useCallback(
@@ -469,7 +472,6 @@ export function ImageCanvas({
     if (mouseStopTimerRef.current) {
         clearTimeout(mouseStopTimerRef.current);
     }
-    drawOverlay();
   }
 
   const handleMouseUp = () => {
@@ -612,5 +614,3 @@ export function ImageCanvas({
     </div>
   );
 }
-
-    

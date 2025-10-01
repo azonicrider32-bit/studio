@@ -684,6 +684,7 @@ export class SelectionEngine {
   createImageDataForLayer(pixels: Set<number>, bounds: Layer['bounds']): ImageData | null {
     if (!this.pixelData) return null;
     const { x, y, width, height } = bounds;
+    if (width <= 0 || height <= 0) return null;
     const newImageData = this.ctx.createImageData(width, height);
     
     for (let j = 0; j < height; j++) {
@@ -763,11 +764,15 @@ export class SelectionEngine {
 
 
   renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment) {
-      if (!segment) return;
-      overlayCtx.fillStyle = 'rgba(3, 169, 244, 0.3)';
+      if (!segment || segment.pixels.size === 0) return;
       
-      const originalImageData = this.ctx.getImageData(0,0, this.width, this.height);
-      const segmentImageData = overlayCtx.createImageData(originalImageData);
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = this.width;
+      tempCanvas.height = this.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) return;
+
+      const segmentImageData = tempCtx.createImageData(this.width, this.height);
 
       segment.pixels.forEach((idx: number) => {
         const i = idx * 4;
@@ -777,14 +782,14 @@ export class SelectionEngine {
         segmentImageData.data[i + 3] = 102; // ~0.4 alpha
       });
 
-      overlayCtx.putImageData(segmentImageData, 0, 0);
+      tempCtx.putImageData(segmentImageData, 0, 0);
+      overlayCtx.drawImage(tempCanvas, 0, 0);
   }
 
 
-  renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[], wandSettings: MagicWandSettings, lassoSettings: LassoSettings) {
+  renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[], wandSettings: MagicWandSettings, lassoSettings: LassoSettings, hoveredSegment: Segment | null) {
     if (!overlayCtx) return;
 
-    // Clear the overlay for selection marching ants and lasso paths
     overlayCtx.clearRect(0, 0, this.width, this.height);
     
     const showMasks = wandSettings.showAllMasks && lassoSettings.showAllMasks;
@@ -810,6 +815,10 @@ export class SelectionEngine {
         if (hasMasksToRender) {
             overlayCtx.putImageData(selectionImageData, 0, 0);
         }
+    }
+    
+    if (hoveredSegment && wandSettings.useAiAssist === false) {
+      this.renderHoverSegment(overlayCtx, hoveredSegment);
     }
 
 
@@ -870,5 +879,3 @@ export class SelectionEngine {
     }
   }
 }
-
-    
