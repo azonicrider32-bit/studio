@@ -123,6 +123,7 @@ export function ProSegmentAI() {
         enabled: true,
         thickness: 2,
         color: '#ffffff',
+        colorMode: 'fixed',
         pattern: 'solid',
         opacity: 1,
     }
@@ -147,6 +148,7 @@ export function ProSegmentAI() {
         enabled: false,
         thickness: 1,
         color: '#ffffff',
+        colorMode: 'fixed',
         pattern: 'solid',
         opacity: 1,
     }

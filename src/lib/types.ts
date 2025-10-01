@@ -55,7 +55,7 @@ export interface MagicWandSettings {
     seedColor?: { [key: string]: number };
     useAntiAlias: boolean;
     useFeather: boolean;
-    highlightColorMode: 'fixed' | 'random';
+    highlightColorMode: 'fixed' | 'random' | 'contrast';
     fixedHighlightColor: string;
     highlightOpacity: number;
     highlightTexture: 'solid' | 'checkerboard' | 'lines';
@@ -63,6 +63,7 @@ export interface MagicWandSettings {
         enabled: boolean;
         thickness: number;
         color: string;
+        colorMode: 'fixed' | 'contrast';
         pattern: 'solid' | 'dashed';
         opacity: number;
     };

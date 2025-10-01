@@ -19,6 +19,7 @@ import {
   Minus,
   CaseSensitive,
   Frame,
+  Contrast,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -226,6 +227,14 @@ export function ToolSettingsPanel({
                                     >
                                         Fixed
                                     </Button>
+                                     <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightColorMode === 'contrast' ? 'default': 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({highlightColorMode: 'contrast'})}
+                                        className="flex-1"
+                                    >
+                                        <Contrast className="w-4 h-4"/>
+                                    </Button>
                                     {magicWandSettings.highlightColorMode === 'fixed' && (
                                         <div className="relative h-9 w-9">
                                             <input 
@@ -290,18 +299,50 @@ export function ToolSettingsPanel({
                                         onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, pattern: 'dashed' }})}>
                                         Dashed
                                     </Button>
-                                    <div className="relative h-9 col-span-2">
-                                        <input 
-                                        type="color" 
-                                        value={magicWandSettings.highlightBorder.color}
-                                        onChange={(e) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, color: e.target.value }})}
-                                        className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
-                                        />
-                                        <div 
-                                            className="h-full w-full rounded-md border border-input"
-                                            style={{ backgroundColor: magicWandSettings.highlightBorder.color }}
-                                        />
-                                    </div>
+                                </div>
+                                <div className="flex gap-1 mt-1">
+                                     <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightBorder.colorMode === 'contrast' ? 'default' : 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, colorMode: 'contrast' }})}
+                                        className="flex-1"
+                                    >
+                                        <Contrast className="w-4 h-4" />
+                                    </Button>
+                                    {magicWandSettings.highlightBorder.colorMode === 'fixed' ? (
+                                        <div className="relative h-9 w-9">
+                                            <input 
+                                                type="color" 
+                                                value={magicWandSettings.highlightBorder.color}
+                                                onChange={(e) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, color: e.target.value }})}
+                                                className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
+                                            />
+                                            <Button 
+                                                asChild 
+                                                size="sm" 
+                                                variant="outline" 
+                                                className="h-full w-full rounded-md border border-input p-0"
+                                                onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, colorMode: 'fixed' }})}
+                                            >
+                                                <div 
+                                                    className="h-full w-full"
+                                                    style={{ backgroundColor: magicWandSettings.highlightBorder.color }}
+                                                />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, colorMode: 'fixed' }})}
+                                            className="h-9 w-9"
+                                        >
+                                            <div 
+                                                className="h-5 w-5 rounded-sm"
+                                                style={{ backgroundColor: magicWandSettings.highlightBorder.color }}
+                                            />
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </AccordionContent>
@@ -390,13 +431,13 @@ export function ToolSettingsPanel({
             <TabsContent value="magic-snap" className="m-0 space-y-2 px-2">
                <div className="space-y-2">
                 <TooltipProvider>
-                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
+                    <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
                         <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
                         <VerticalLassoSlider settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="curveStrength" label="Curve" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
                     </div>
-                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md mt-2">
+                    <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md mt-2">
                         <VerticalLassoSlider settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="colorInfluence" label="Color" max={1} step={0.05} />

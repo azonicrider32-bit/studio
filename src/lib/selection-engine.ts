@@ -81,6 +81,7 @@ export class SelectionEngine {
         enabled: true,
         thickness: 2,
         color: '#ffffff',
+        colorMode: 'fixed',
         pattern: 'solid',
         opacity: 1,
     },
@@ -105,6 +106,7 @@ export class SelectionEngine {
         enabled: false,
         thickness: 1,
         color: '#ffffff',
+        colorMode: 'fixed',
         pattern: 'solid',
         opacity: 1,
     },
@@ -750,8 +752,11 @@ export class SelectionEngine {
     if (highlightColorMode === 'random') {
         highlightColor = PRESET_HIGHLIGHT_COLORS[randomColorIndex];
         randomColorIndex = (randomColorIndex + 1) % PRESET_HIGHLIGHT_COLORS.length;
-    } else {
+    } else if (highlightColorMode === 'fixed') {
         highlightColor = fixedHighlightColor;
+    } else if (highlightColorMode === 'contrast') {
+        const avgLuminance = this.getAverageLuminance(pixels);
+        highlightColor = avgLuminance > 0.5 ? '#000000' : '#FFFFFF';
     }
 
 
@@ -879,20 +884,41 @@ export class SelectionEngine {
         return ctx.createPattern(tempCanvas, 'repeat');
     }
 
+  getAverageLuminance(pixels: Set<number>): number {
+      if (!this.pixelData || pixels.size === 0) return 0.5;
+
+      let totalLuminance = 0;
+      pixels.forEach(idx => {
+          const i = idx * 4;
+          const r = this.pixelData![i];
+          const g = this.pixelData![i + 1];
+          const b = this.pixelData![i + 2];
+          // Luminance formula (perceptual brightness)
+          const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          totalLuminance += luminance;
+      });
+
+      return totalLuminance / pixels.size;
+  }
+
   renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment, isMask: boolean, wandSettings: MagicWandSettings) {
       if (!segment || segment.pixels.size === 0) return;
       
-      const { highlightColorMode, fixedHighlightColor, highlightOpacity, highlightTexture, highlightBorder } = wandSettings;
+      const { highlightColorMode, fixedHighlightColor, highlightOpacity, highlightTexture } = wandSettings;
 
       overlayCtx.save();
       
       const texture = isMask ? 'checkerboard' : (highlightTexture || 'solid');
       let color = 'hsl(var(--primary))';
-        if (isMask) {
-            color = 'hsl(0, 0%, 50%)';
-        } else if (highlightColorMode === 'fixed') {
-            color = fixedHighlightColor;
-        }
+
+      if (isMask) {
+          color = 'hsl(0, 0%, 50%)';
+      } else if (highlightColorMode === 'fixed') {
+          color = fixedHighlightColor;
+      } else if (highlightColorMode === 'contrast') {
+          const avgLuminance = this.getAverageLuminance(segment.pixels);
+          color = avgLuminance > 0.5 ? '#000000' : '#FFFFFF';
+      }
 
       const opacity = highlightOpacity || 0.5;
 
@@ -963,8 +989,13 @@ export class SelectionEngine {
                 
                 const isMask = layer.subType === 'mask';
                 const texture = isMask ? 'checkerboard' : (layer.highlightTexture || 'solid');
-                const color = isMask ? 'hsl(0, 0%, 50%)' : (layer.highlightColor || 'hsl(var(--primary))');
+                let color = isMask ? 'hsl(0, 0%, 50%)' : (layer.highlightColor || 'hsl(var(--primary))');
                 const opacity = layer.highlightOpacity || 0.5;
+
+                 if (!isMask && wandSettings.highlightColorMode === 'contrast') {
+                    const avgLuminance = this.getAverageLuminance(layer.pixels);
+                    color = avgLuminance > 0.5 ? '#000000' : '#FFFFFF';
+                }
 
                 const pattern = this.renderPattern(overlayCtx, texture, color, opacity);
                 if(pattern) {
@@ -991,7 +1022,14 @@ export class SelectionEngine {
        
        if (wandSettings.highlightBorder.enabled) {
             overlayCtx.save();
-            overlayCtx.strokeStyle = this.hexToRgba(wandSettings.highlightBorder.color, wandSettings.highlightBorder.opacity);
+            
+            let borderColor = wandSettings.highlightBorder.color;
+            if (wandSettings.highlightBorder.colorMode === 'contrast') {
+                const avgLuminance = this.getAverageLuminance(this.getBorderPixels(hoveredSegment.pixels));
+                borderColor = avgLuminance > 0.5 ? '#000000' : '#FFFFFF';
+            }
+
+            overlayCtx.strokeStyle = this.hexToRgba(borderColor, wandSettings.highlightBorder.opacity);
             overlayCtx.lineWidth = wandSettings.highlightBorder.thickness;
             if (wandSettings.highlightBorder.pattern === 'dashed') {
                 overlayCtx.setLineDash([5, 5]);
