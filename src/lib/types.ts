@@ -1,5 +1,15 @@
 
 
+export interface Layer {
+    id: string;
+    name: string;
+    type: 'segmentation' | 'background' | 'adjustment';
+    visible: boolean;
+    locked: boolean;
+    pixels: Set<number>;
+    bounds: { x: number; y: number; width: number; height: number };
+}
+
 export interface LassoSettings {
     useMagicSnapping: boolean;
     useAiEnhancement: boolean;

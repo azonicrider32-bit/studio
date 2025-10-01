@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SelectionEngine } from "@/lib/selection-engine";
 import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-lasso-assisted-path-snapping";
 import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } from "@/ai/flows/magic-wand-assisted-segmentation";
-import { LassoSettings, MagicWandSettings, Segment } from "@/lib/types";
+import { LassoSettings, MagicWandSettings, Segment, Layer } from "@/lib/types";
 import { debounce } from "@/lib/utils";
 import { handleApiError } from "@/lib/error-handling";
 import { SegmentHoverPreview } from "./segment-hover-preview";
@@ -19,6 +19,8 @@ import { rgbToHsv, rgbToLab } from "@/lib/color-utils";
 
 interface ImageCanvasProps {
   imageUrl: string | undefined;
+  layers: Layer[];
+  addLayer: (layer: Layer) => void;
   segmentationMask: string | null;
   setSegmentationMask: (mask: string | null) => void;
   activeTool: string;
@@ -37,6 +39,8 @@ interface ImageCanvasProps {
 
 export function ImageCanvas({
   imageUrl,
+  layers,
+  addLayer,
   segmentationMask,
   setSegmentationMask,
   activeTool,
@@ -75,7 +79,7 @@ export function ImageCanvas({
     }
     if (clearSelectionRef) {
       clearSelectionRef.current = () => {
-        selectionEngineRef.current?.clearSelection();
+        // This will be replaced by layer state management
         drawOverlay();
       }
     }
@@ -90,12 +94,16 @@ export function ImageCanvas({
     const overlayCtx = overlayCanvas.getContext('2d');
     if (overlayCtx) {
       overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-      engine.renderSelection(overlayCtx);
+      engine.renderSelection(overlayCtx, layers);
       if (hoveredSegment && activeTool === 'magic-wand' && !magicWandSettings.useAiAssist) {
         engine.renderHoverSegment(overlayCtx, hoveredSegment);
       }
     }
-  }, [hoveredSegment, activeTool, magicWandSettings.useAiAssist]);
+  }, [hoveredSegment, activeTool, magicWandSettings.useAiAssist, layers]);
+
+  React.useEffect(() => {
+    drawOverlay();
+  }, [layers, drawOverlay]);
 
 
   const initEngine = React.useCallback(() => {
@@ -158,10 +166,12 @@ export function ImageCanvas({
         });
 
         if (response.enhancedPath && response.enhancedPath.length > 2) {
-            engine.endLassoWithEnhancedPath(response.enhancedPath);
+            const newLayer = engine.endLassoWithEnhancedPath(response.enhancedPath);
+            if (newLayer) addLayer(newLayer);
             toast({ title: 'Lasso path enhanced by AI!' });
         } else {
-            engine.endLasso();
+            const newLayer = engine.endLasso();
+            if (newLayer) addLayer(newLayer);
             toast({ title: 'Lasso path completed.', description: 'AI could not enhance path, used manual path.' });
         }
     } catch (error: any) {
@@ -170,13 +180,14 @@ export function ImageCanvas({
             description: 'Using manual path instead.'
         });
         if (engine.isDrawingLasso) {
-            engine.endLasso();
+            const newLayer = engine.endLasso();
+            if (newLayer) addLayer(newLayer);
         }
     } finally {
         setIsProcessing(false);
         drawOverlay();
     }
-  }, [drawOverlay, toast]);
+  }, [drawOverlay, toast, addLayer]);
 
 
   React.useEffect(() => {
@@ -189,7 +200,8 @@ export function ImageCanvas({
         if (lassoSettings.useAiEnhancement) {
             endLassoAndProcess();
         } else {
-            engine.endLasso();
+            const newLayer = engine.endLasso();
+            if (newLayer) addLayer(newLayer);
             drawOverlay();
             toast({ title: 'Lasso path completed.' });
         }
@@ -205,7 +217,7 @@ export function ImageCanvas({
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useAiEnhancement]);
+  }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useAiEnhancement, addLayer]);
 
 
   const getMousePos = (canvasEl: HTMLCanvasElement, evt: React.MouseEvent | React.WheelEvent) => {
@@ -245,12 +257,12 @@ export function ImageCanvas({
     
     setIsProcessing(true);
     setSegmentationMask(null);
-    engine.clearSelection();
 
     try {
         if (!magicWandSettings.useAiAssist) {
             toast({ title: "Creating selection..." });
-            engine.magicWand(pos.x, pos.y);
+            const newLayer = engine.magicWand(pos.x, pos.y);
+            if (newLayer) addLayer(newLayer);
             drawOverlay();
             toast({ title: "Selection created." });
             setIsProcessing(false);
@@ -281,7 +293,6 @@ export function ImageCanvas({
             title: "Magic Wand Failed",
             description: "Could not perform segmentation."
         });
-        engine.clearSelection();
         drawOverlay();
     } finally {
         setIsProcessing(false);
@@ -406,7 +417,8 @@ export function ImageCanvas({
       if (lassoSettings.useAiEnhancement) {
         endLassoAndProcess();
       } else {
-        engine.endLasso();
+        const newLayer = engine.endLasso();
+        if (newLayer) addLayer(newLayer);
         drawOverlay();
         toast({ title: 'Lasso path completed.' });
       }

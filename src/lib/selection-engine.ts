@@ -1,6 +1,6 @@
 
 
-import { LassoSettings, MagicWandSettings, Segment } from "./types";
+import { LassoSettings, MagicWandSettings, Segment, Layer } from "./types";
 import { rgbToHsv, rgbToLab } from "./color-utils";
 
 
@@ -15,10 +15,7 @@ export class SelectionEngine {
   height: number;
   pixelData: Uint8ClampedArray | null = null;
   visited: Uint8Array | null = null;
-  selectedPixels: Set<number> = new Set();
-  segments: Segment[] = [];
-  selectedSegmentIds: Set<any> = new Set();
-  
+
   // Lasso State
   lassoNodes: [number, number][] = [];
   lassoCurrentPos: [number, number] | null = null;
@@ -130,8 +127,6 @@ export class SelectionEngine {
   // #region LASSO
   startLasso(x: number, y: number) {
     this.cancelLasso();
-    this.segments = [];
-    this.selectedSegmentIds.clear();
     const startPoint: [number, number] = this.lassoSettings.useMagicSnapping ? this.snapToEdge(x, y) : [x, y];
     this.lassoNodes = [startPoint];
     this.lassoCurrentPos = startPoint;
@@ -171,8 +166,8 @@ export class SelectionEngine {
     this.updateLassoPreview(newAnchor[0], newAnchor[1]);
   }
   
-  endLassoWithEnhancedPath(enhancedPath: {x:number, y:number}[]) {
-      if (!this.isDrawingLasso) return;
+  endLassoWithEnhancedPath(enhancedPath: {x:number, y:number}[]): Layer | null {
+      if (!this.isDrawingLasso) return null;
 
       const pathAsTuples: [number, number][] = enhancedPath.map(p => [p.x, p.y]);
       
@@ -184,24 +179,27 @@ export class SelectionEngine {
           }
       }
       
-      this.selectedPixels = this.pathToSelection(pathAsTuples);
-      this.createSegmentFromSelection();
+      const pixels = this.pathToSelection(pathAsTuples);
+      const layer = this.createLayerFromPixels(pixels);
       this.cancelLasso();
+      return layer;
   }
 
-  endLasso() {
+  endLasso(): Layer | null {
     if (!this.isDrawingLasso || this.lassoNodes.length < 2) {
       this.cancelLasso();
-      return;
+      return null;
     }
 
     const fullPath = this.getLassoPath(true);
+    let newLayer: Layer | null = null;
     if(fullPath.length > 2) {
-        this.selectedPixels = this.pathToSelection(fullPath);
-        this.createSegmentFromSelection();
+        const pixels = this.pathToSelection(fullPath);
+        newLayer = this.createLayerFromPixels(pixels);
     }
     
     this.cancelLasso();
+    return newLayer;
   }
 
   getLassoPath(closed = false) {
@@ -376,7 +374,7 @@ export class SelectionEngine {
     return [bestX, bestY];
   }
 
-  pathToSelection(path: [number, number][]) {
+  pathToSelection(path: [number, number][]): Set<number> {
     const selected = new Set<number>();
     if(path.length < 3) return selected;
   
@@ -417,7 +415,7 @@ export class SelectionEngine {
   // #endregion
 
   // #region MAGIC WAND
-  magicWand(x: number, y: number, previewOnly = false): Segment | null {
+  magicWand(x: number, y: number, previewOnly = false): Segment | Layer | null {
       if (!this.pixelData) return null;
       x = Math.floor(x);
       y = Math.floor(y);
@@ -458,11 +456,9 @@ export class SelectionEngine {
       }
       
       if (previewOnly) {
-          return this.createSegmentFromPixels(selected, false);
+          return this.createSegmentFromPixels(selected);
       } else {
-          this.selectedPixels = selected;
-          this.createSegmentFromSelection();
-          return null;
+          return this.createLayerFromPixels(selected);
       }
   }
 
@@ -556,7 +552,7 @@ export class SelectionEngine {
     return tempCanvas.toDataURL();
   }
 
-  createSegmentFromPixels(pixels: Set<number>, addToSegments: boolean = true): Segment | null {
+  createSegmentFromPixels(pixels: Set<number>): Segment | null {
     if (pixels.size === 0) return null;
 
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -577,34 +573,31 @@ export class SelectionEngine {
       pixels: pixels,
       bounds: bounds,
     };
-
-    if (addToSegments) {
-      this.segments.push(segment);
-      this.selectedSegmentIds.add(segment.id);
-    }
     
     return segment;
   }
 
-  createSegmentFromSelection() {
-    this.createSegmentFromPixels(this.selectedPixels, true);
-    this.selectedPixels.clear();
+  createLayerFromPixels(pixels: Set<number>): Layer | null {
+    const segment = this.createSegmentFromPixels(pixels);
+    if (!segment) return null;
+    
+    const newLayer: Layer = {
+      id: `segment-${segment.id}`,
+      name: `Selection ${Math.floor(segment.id)}`,
+      type: 'segmentation',
+      visible: true,
+      locked: false,
+      pixels: segment.pixels,
+      bounds: segment.bounds,
+    };
+    return newLayer;
   }
 
-  clearSelection() {
-    this.selectedPixels.clear();
-    this.selectedSegmentIds.clear();
-    this.segments = [];
-  }
-  
+
   selectionToMaskData(selection?: Segment | null): string | undefined {
+      // This needs to be updated to take layers
       const finalSelection = new Set<number>();
-      this.segments.forEach(seg => {
-        if(this.selectedSegmentIds.has(seg.id)){
-            seg.pixels.forEach(p => finalSelection.add(p));
-        }
-      });
-
+      
       if (finalSelection.size === 0) return undefined;
 
       const tempCanvas = document.createElement('canvas');
@@ -661,18 +654,18 @@ export class SelectionEngine {
   }
 
 
-  renderSelection(overlayCtx: CanvasRenderingContext2D) {
+  renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[]) {
     if (!overlayCtx) return;
 
     overlayCtx.clearRect(0, 0, this.width, this.height);
 
-    if (this.segments.length > 0) {
+    if (layers.length > 0) {
       const selectionImageData = overlayCtx.createImageData(this.width, this.height);
       const data = selectionImageData.data;
 
-      this.segments.forEach(segment => {
-        if (this.selectedSegmentIds.has(segment.id)) {
-          segment.pixels.forEach(idx => {
+      layers.forEach(layer => {
+        if (layer.visible && layer.type === 'segmentation') {
+          layer.pixels.forEach(idx => {
             const i = idx * 4;
             data[i] = 3;     // R
             data[i + 1] = 169; // G
@@ -683,11 +676,11 @@ export class SelectionEngine {
       });
       overlayCtx.putImageData(selectionImageData, 0, 0);
 
-      this.segments.forEach(segment => {
-         if (this.selectedSegmentIds.has(segment.id)) {
+      layers.forEach(layer => {
+         if (layer.visible && layer.type === 'segmentation') {
             overlayCtx.strokeStyle = 'hsl(var(--accent))';
-            overlayCtx.lineWidth = 2;
-            overlayCtx.strokeRect(segment.bounds.x, segment.bounds.y, segment.bounds.width, segment.bounds.height);
+            overlayCtx.lineWidth = 1;
+            overlayCtx.strokeRect(layer.bounds.x, layer.bounds.y, layer.bounds.width, layer.bounds.height);
         }
       });
     }

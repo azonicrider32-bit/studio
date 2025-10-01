@@ -8,7 +8,7 @@ import {
   Brush,
   Eraser,
   Feather as FeatherIcon,
-  Layers,
+  Layers as LayersIcon,
   Pipette,
   Settings2,
   SlidersHorizontal,
@@ -45,7 +45,7 @@ import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import { AiModelsPanel } from "./panels/ai-models-panel"
 import { InpaintingPanel } from "./panels/inpainting-panel"
 import { FeatherPanel } from "./panels/feather-panel"
-import { LassoSettings, MagicWandSettings, FeatherSettings } from "@/lib/types"
+import { LassoSettings, MagicWandSettings, FeatherSettings, Layer } from "@/lib/types"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
@@ -60,6 +60,21 @@ export function ProSegmentAI() {
   const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
+
+  const [layers, setLayers] = React.useState<Layer[]>(() => {
+    const backgroundLayer: Layer = {
+      id: "background-0",
+      name: "Background",
+      type: 'background',
+      visible: true,
+      locked: true,
+      pixels: new Set(),
+      bounds: { x: 0, y: 0, width: 0, height: 0 }
+    };
+    return [backgroundLayer];
+  });
+  const [activeLayerId, setActiveLayerId] = React.useState<string>(layers[0]?.id);
+
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     useMagicSnapping: true,
     useAiEnhancement: false,
@@ -109,6 +124,19 @@ export function ProSegmentAI() {
 
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
   const clearSelectionRef = React.useRef<() => void>();
+
+  const addLayer = (newLayer: Layer) => {
+    setLayers(prev => [...prev, newLayer]);
+    setActiveLayerId(newLayer.id);
+  }
+
+  const toggleLayerVisibility = (layerId: string) => {
+    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l));
+  };
+  
+  const toggleLayerLock = (layerId: string) => {
+    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, locked: !l.locked } : l));
+  };
 
 
   const handleLassoSettingsChange = (newSettings: Partial<LassoSettings>) => {
@@ -302,6 +330,8 @@ export function ProSegmentAI() {
         <div className="flex-1">
             <ImageCanvas 
               imageUrl={imageUrl}
+              layers={layers}
+              addLayer={addLayer}
               segmentationMask={segmentationMask}
               setSegmentationMask={setSegmentationMask}
               activeTool={activeTool}
@@ -345,7 +375,7 @@ export function ProSegmentAI() {
                     </Tooltip>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <TabsTrigger value="layers" className="flex-1"><Layers className="h-5 w-5"/></TabsTrigger>
+                            <TabsTrigger value="layers" className="flex-1"><LayersIcon className="h-5 w-5"/></TabsTrigger>
                         </TooltipTrigger>
                         <TooltipContent>Layers</TooltipContent>
                     </Tooltip>
@@ -376,7 +406,13 @@ export function ProSegmentAI() {
               <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
             </TabsContent>
             <TabsContent value="layers" className="m-0">
-              <LayersPanel />
+              <LayersPanel 
+                layers={layers}
+                activeLayerId={activeLayerId}
+                onLayerSelect={setActiveLayerId}
+                onToggleVisibility={toggleLayerVisibility}
+                onToggleLock={toggleLayerLock}
+              />
             </TabsContent>
             <TabsContent value="analysis" className="m-0">
               <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange} />

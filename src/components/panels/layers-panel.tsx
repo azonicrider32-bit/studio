@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Eye, EyeOff, Lock, Unlock, GripVertical } from "lucide-react"
@@ -5,15 +6,25 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { Layer } from "@/lib/types"
 
-const layers = [
-  { id: 1, name: "Subject Mask", visible: true, locked: false },
-  { id: 2, name: "Background", visible: true, locked: true },
-  { id: 3, name: "Adjustments", visible: false, locked: false },
-  { id: 4, name: "Watermark", visible: true, locked: false },
-]
 
-export function LayersPanel() {
+interface LayersPanelProps {
+    layers: Layer[];
+    activeLayerId: string | null;
+    onLayerSelect: (id: string) => void;
+    onToggleVisibility: (id: string) => void;
+    onToggleLock: (id: string) => void;
+}
+
+
+export function LayersPanel({
+    layers,
+    activeLayerId,
+    onLayerSelect,
+    onToggleVisibility,
+    onToggleLock,
+}: LayersPanelProps) {
   return (
     <div className="p-4 space-y-4">
       <div className="space-y-2">
@@ -25,20 +36,22 @@ export function LayersPanel() {
       <Separator />
       <Card>
         <CardContent className="p-2 space-y-1">
-          {layers.map((layer, index) => (
+          {layers.slice().reverse().map((layer) => (
             <div
               key={layer.id}
+              onClick={() => !layer.locked && onLayerSelect(layer.id)}
               className={cn(
-                "flex items-center gap-2 p-2 rounded-md transition-colors cursor-pointer",
-                index === 0 ? "bg-accent/50" : "hover:bg-accent/30"
+                "flex items-center gap-2 p-2 rounded-md transition-colors",
+                layer.id === activeLayerId ? "bg-accent/50" : "hover:bg-accent/30",
+                layer.locked ? "cursor-not-allowed" : "cursor-pointer"
               )}
             >
               <GripVertical className="h-5 w-5 text-muted-foreground" />
               <span className="flex-1 text-sm truncate">{layer.name}</span>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => {e.stopPropagation(); onToggleVisibility(layer.id)}}>
                 {layer.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => {e.stopPropagation(); onToggleLock(layer.id)}}>
                 {layer.locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4 text-muted-foreground" />}
               </Button>
             </div>
