@@ -8,22 +8,27 @@ import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, W
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
-import { LassoSettings } from "@/lib/types";
+import { LassoSettings, Layer } from "@/lib/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { LassoHoverPreview } from "../lasso-hover-preview";
+import { SelectionEngine } from "@/lib/selection-engine";
 
 
 interface LassoPanelProps {
   settings: LassoSettings;
   onSettingsChange: (settings: Partial<LassoSettings>) => void;
+  canvas: HTMLCanvasElement | null;
+  mousePos: { x: number; y: number } | null;
+  selectionEngine: SelectionEngine | null;
 }
 
 
-export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
+export function LassoPanel({ settings, onSettingsChange, canvas, mousePos, selectionEngine }: LassoPanelProps) {
     
   const handleToggle = (setting: keyof LassoSettings) => {
     onSettingsChange({ [setting]: !settings[setting] });
@@ -41,6 +46,8 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           cursorInfluence: 0.1,
           traceInfluence: 0.05,
           colorInfluence: 0,
+          directionalStrengthEnabled: true,
+          colorInfluenceEnabled: false,
         };
         break;
       case 'loose':
@@ -52,17 +59,21 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           cursorInfluence: 0.8,
           traceInfluence: 0.5,
           colorInfluence: 0.5,
+          directionalStrengthEnabled: true,
+          colorInfluenceEnabled: true,
         };
         break;
       default: // default
         newSettings = {
           snapRadius: 20,
-          snapThreshold: 0.4,
-          curveStrength: 0.5,
-          directionalStrength: 0.5,
-          cursorInfluence: 0.5,
+          snapThreshold: 0.3,
+          curveStrength: 0.05,
+          directionalStrength: 0.2,
+          cursorInfluence: 0.1,
           traceInfluence: 0.2,
-          colorInfluence: 0.1,
+          colorInfluence: 0.25,
+          directionalStrengthEnabled: false,
+          colorInfluenceEnabled: true,
         };
         break;
     }
@@ -100,6 +111,8 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
   return (
     <div className="p-4 space-y-6">
        <TooltipProvider>
+        <LassoHoverPreview canvas={canvas} mousePos={mousePos} selectionEngine={selectionEngine} />
+        
         <div className={cn("space-y-4", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
           <div className="flex justify-around items-end h-64">
               {SETTINGS_CONFIG.map(config => (

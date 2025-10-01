@@ -28,6 +28,7 @@ export interface LassoSettings {
     cursorInfluenceEnabled: boolean;
     traceInfluenceEnabled: boolean;
     colorInfluenceEnabled: boolean;
+    useColorAwareness: boolean;
 }
 
 export interface MagicWandSettings {

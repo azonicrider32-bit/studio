@@ -52,6 +52,7 @@ import { Button } from "./ui/button"
 import Image from "next/image"
 import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { SelectionEngine } from "@/lib/selection-engine"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus"
 
@@ -93,6 +94,7 @@ export function ProSegmentAI() {
     cursorInfluenceEnabled: true,
     traceInfluenceEnabled: true,
     colorInfluenceEnabled: true,
+    useColorAwareness: true,
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -125,6 +127,7 @@ export function ProSegmentAI() {
   });
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
 
 
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
@@ -216,7 +219,10 @@ export function ProSegmentAI() {
       case "lasso":
         return <LassoPanel 
                     settings={lassoSettings} 
-                    onSettingsChange={handleLassoSettingsChange} 
+                    onSettingsChange={handleLassoSettingsChange}
+                    canvas={canvasRef.current}
+                    mousePos={canvasMousePos}
+                    selectionEngine={selectionEngineRef.current}
                 />
       case "brush":
         return <BrushPanel />
@@ -361,6 +367,7 @@ export function ProSegmentAI() {
               canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
               getCanvasRef={canvasRef}
+              getSelectionEngineRef={selectionEngineRef}
             />
         </div>
       </SidebarInset>

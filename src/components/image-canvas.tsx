@@ -33,6 +33,7 @@ interface ImageCanvasProps {
   canvasMousePos: { x: number; y: number } | null;
   setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
   getCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  getSelectionEngineRef: React.MutableRefObject<SelectionEngine | null>;
   getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
 }
@@ -53,6 +54,7 @@ export function ImageCanvas({
   canvasMousePos,
   setCanvasMousePos,
   getCanvasRef,
+  getSelectionEngineRef,
   getSelectionMaskRef,
   clearSelectionRef,
 }: ImageCanvasProps) {
@@ -125,10 +127,11 @@ export function ImageCanvas({
     ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight);
 
     selectionEngineRef.current = new SelectionEngine(canvas, ctx);
+    getSelectionEngineRef.current = selectionEngineRef.current;
     selectionEngineRef.current.initialize();
     getCanvasRef.current = canvas;
     console.log("Selection Engine Initialized");
-  }, [image, getCanvasRef]);
+  }, [image, getCanvasRef, getSelectionEngineRef]);
 
   const handleImageLoad = () => {
     initEngine();
@@ -475,6 +478,21 @@ export function ImageCanvas({
         }
     }
   };
+  
+  const getCursor = () => {
+    if (activeTool === 'magic-wand') return 'crosshair';
+    if (activeTool === 'pipette-minus') return 'copy';
+    if (activeTool === 'lasso') {
+        const svg = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="6" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
+            <path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
+            <circle cx="16" cy="16" r="6" stroke="black" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.8"/>
+            <path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="black" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.8"/>
+        </svg>`;
+        return `url("data:image/svg+xml;base64,${btoa(svg)}") 16 16, crosshair`;
+    }
+    return 'default';
+  }
 
 
   if (!imageUrl) {
@@ -514,7 +532,7 @@ export function ImageCanvas({
           onWheel={handleWheel}
           onDoubleClick={handleDoubleClick}
           className="absolute top-0 left-0 h-full w-full object-contain"
-          style={{ cursor: activeTool === 'magic-wand' ? 'crosshair' : activeTool === 'lasso' ? 'crosshair' : activeTool === 'pipette-minus' ? 'copy' : 'default' }}
+          style={{ cursor: getCursor() }}
         />
         {segmentationMask && (
           <Image
