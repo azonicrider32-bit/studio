@@ -100,7 +100,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
   const currentMode = DRAW_MODES.find(m => m.id === settings.drawMode);
 
 
-  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | `${string}Enabled` | 'drawMode' | 'showMouseTrace'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | `${string}Enabled` | 'drawMode' | 'showMouseTrace' | 'useColorAwareness'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 40, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
@@ -122,6 +122,30 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
   return (
     <div className="p-4 space-y-6">
        <TooltipProvider>
+        <div className={cn("space-y-4", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
+          <div className="flex justify-around items-end h-64">
+              {SETTINGS_CONFIG.map(config => (
+                  <VerticalSettingSlider
+                      key={config.id}
+                      id={config.id}
+                      label={config.label}
+                      icon={config.icon}
+                      value={settings[config.id as keyof typeof settings] as number}
+                      min={config.min}
+                      max={config.max}
+                      step={config.step}
+                      unit={config.unit}
+                      description={config.description}
+                      isEnabled={settings[`${config.id}Enabled` as keyof typeof settings] as boolean}
+                      onToggle={() => onSettingsChange({ [`${config.id}Enabled`]: !settings[`${config.id}Enabled` as keyof typeof settings] } as Partial<LassoSettings>)}
+                      onValueChange={(value) => onSettingsChange({ [config.id]: value } as Partial<LassoSettings>)}
+                  />
+              ))}
+          </div>
+        </div>
+
+        <Separator />
+
         <div className="space-y-4">
              <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -155,108 +179,81 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
                     </SelectContent>
                  </Select>
             </div>
-            <Separator />
         </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Label htmlFor="useAiEnhancement" className="flex items-center gap-2">
-                            <Wand2 className="h-4 w-4 text-primary" />
-                            AI Enhancement
-                        </Label>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Use AI to enhance the final selection path upon completion.</p>
-                    </TooltipContent>
-                </Tooltip>
-                 <Popover>
-                    <PopoverTrigger>
-                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                    </PopoverTrigger>
-                    <PopoverContent side="top" className="text-sm">
-                        <h4 className="font-semibold mb-2">AI Enhancement</h4>
-                        <p>When you complete the selection (by pressing Enter or double-clicking), a powerful GenAI model will analyze the image content within your path and intelligently refine it to create a more accurate and professional final selection.</p>
-                    </PopoverContent>
-                </Popover>
-            </div>
-            <Switch
-                id="useAiEnhancement"
-                checked={settings.useAiEnhancement}
-                onCheckedChange={(checked) => onSettingsChange({ useAiEnhancement: checked })}
-            />
-        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Label htmlFor="useAiEnhancement" className="flex items-center gap-2">
+                              <Wand2 className="h-4 w-4 text-primary" />
+                              AI Enhancement
+                          </Label>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                          <p>Use AI to enhance the final selection path upon completion.</p>
+                      </TooltipContent>
+                  </Tooltip>
+                  <Popover>
+                      <PopoverTrigger>
+                          <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                      </PopoverTrigger>
+                      <PopoverContent side="top" className="text-sm">
+                          <h4 className="font-semibold mb-2">AI Enhancement</h4>
+                          <p>When you complete the selection (by pressing Enter or double-clicking), a powerful GenAI model will analyze the image content within your path and intelligently refine it to create a more accurate and professional final selection.</p>
+                      </PopoverContent>
+                  </Popover>
+              </div>
+              <Switch
+                  id="useAiEnhancement"
+                  checked={settings.useAiEnhancement}
+                  onCheckedChange={(checked) => onSettingsChange({ useAiEnhancement: checked })}
+              />
+          </div>
 
-         <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Label htmlFor="showMouseTrace" className="flex items-center gap-2">
-                            <Eye className="h-4 w-4" />
-                            Show Mouse Trace
-                        </Label>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Makes the path of your cursor visible on the canvas as you draw.</p>
-                    </TooltipContent>
-                </Tooltip>
-                 <Popover>
-                    <PopoverTrigger>
-                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                    </PopoverTrigger>
-                    <PopoverContent side="top" className="text-sm">
-                        <h4 className="font-semibold mb-2">Show Mouse Trace</h4>
-                        <p>Displays a semi-transparent line that follows your exact mouse movements. This visual guide helps you understand how the 'Trace Influence' setting is pulling the snapped path towards your drawn gesture.</p>
-                    </PopoverContent>
-                </Popover>
-            </div>
-            <Switch
-                id="showMouseTrace"
-                checked={settings.showMouseTrace}
-                onCheckedChange={(checked) => onSettingsChange({ showMouseTrace: checked })}
-                disabled={settings.drawMode !== 'magic'}
-            />
+          <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Label htmlFor="showMouseTrace" className="flex items-center gap-2">
+                              <Eye className="h-4 w-4" />
+                              Show Mouse Trace
+                          </Label>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                          <p>Makes the path of your cursor visible on the canvas as you draw.</p>
+                      </TooltipContent>
+                  </Tooltip>
+                  <Popover>
+                      <PopoverTrigger>
+                          <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                      </PopoverTrigger>
+                      <PopoverContent side="top" className="text-sm">
+                          <h4 className="font-semibold mb-2">Show Mouse Trace</h4>
+                          <p>Displays a semi-transparent line that follows your exact mouse movements. This visual guide helps you understand how the 'Trace Influence' setting is pulling the snapped path towards your drawn gesture.</p>
+                      </PopoverContent>
+                  </Popover>
+              </div>
+              <Switch
+                  id="showMouseTrace"
+                  checked={settings.showMouseTrace}
+                  onCheckedChange={(checked) => onSettingsChange({ showMouseTrace: checked })}
+                  disabled={settings.drawMode !== 'magic'}
+              />
+          </div>
         </div>
-      </div>
-
-      <Separator />
-
-      <div className={cn("space-y-2", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
-        <Label>Presets (Magic Snap)</Label>
-        <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" size="sm" onClick={() => handlePreset('default')}>Default</Button>
-            <Button variant="outline" size="sm" onClick={() => handlePreset('precise')}>Precise</Button>
-            <Button variant="outline" size="sm" onClick={() => handlePreset('loose')}>Loose</Button>
-        </div>
-      </div>
       
-      <Separator className={cn(settings.drawMode !== 'magic' && 'opacity-50')} />
-
-      <div className={cn("space-y-4", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
-        <div className="flex justify-around items-end h-64">
-            {SETTINGS_CONFIG.map(config => (
-                <VerticalSettingSlider
-                    key={config.id}
-                    id={config.id}
-                    label={config.label}
-                    icon={config.icon}
-                    value={settings[config.id as keyof typeof settings] as number}
-                    min={config.min}
-                    max={config.max}
-                    step={config.step}
-                    unit={config.unit}
-                    description={config.description}
-                    isEnabled={settings[`${config.id}Enabled` as keyof typeof settings] as boolean}
-                    onToggle={() => onSettingsChange({ [`${config.id}Enabled`]: !settings[`${config.id}Enabled` as keyof typeof settings] } as Partial<LassoSettings>)}
-                    onValueChange={(value) => onSettingsChange({ [config.id]: value } as Partial<LassoSettings>)}
-                />
-            ))}
+        <div className={cn("space-y-2", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
+          <Label>Presets (Magic Snap)</Label>
+          <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" size="sm" onClick={() => handlePreset('default')}>Default</Button>
+              <Button variant="outline" size="sm" onClick={() => handlePreset('precise')}>Precise</Button>
+              <Button variant="outline" size="sm" onClick={() => handlePreset('loose')}>Loose</Button>
+          </div>
         </div>
-      </div>
 
-       <Accordion type="single" collapsible className="w-full border-t border-b-0">
+        <Accordion type="single" collapsible className="w-full border-t pt-4">
           <AccordionItem value="how-to-use" className="border-b-0">
              <Tooltip>
                 <TooltipTrigger asChild>
@@ -346,5 +343,7 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
 }
 
 
+
+    
 
     
