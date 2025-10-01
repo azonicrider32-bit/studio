@@ -75,6 +75,8 @@ export class SelectionEngine {
     useFeather: false,
     highlightColorMode: 'random',
     fixedHighlightColor: '#00aaff',
+    highlightOpacity: 0.5,
+    highlightTexture: 'solid',
   };
    negativeMagicWandSettings: MagicWandSettings = {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -90,6 +92,8 @@ export class SelectionEngine {
     useFeather: false,
     highlightColorMode: 'fixed',
     fixedHighlightColor: '#ff0000',
+    highlightOpacity: 0.5,
+    highlightTexture: 'solid',
   };
 
 
@@ -726,7 +730,7 @@ export class SelectionEngine {
     const segment = this.createSegmentFromPixels(pixels);
     if (!segment) return null;
 
-    const { createAsMask, highlightColorMode, fixedHighlightColor } = this.magicWandSettings;
+    const { createAsMask, highlightColorMode, fixedHighlightColor, highlightOpacity, highlightTexture } = this.magicWandSettings;
 
     let highlightColor = 'hsl(var(--primary))';
     if (highlightColorMode === 'random') {
@@ -745,7 +749,9 @@ export class SelectionEngine {
       locked: false,
       pixels: segment.pixels,
       bounds: segment.bounds,
-      highlightColor: highlightColor,
+      highlightColor,
+      highlightOpacity,
+      highlightTexture,
     };
     
     if (createAsMask && activeLayerId) {
@@ -796,18 +802,40 @@ export class SelectionEngine {
       return tempCanvas.toDataURL();
   }
 
-  renderCheckerboardPattern(ctx: CanvasRenderingContext2D, size = 8) {
+  renderPattern(ctx: CanvasRenderingContext2D, texture: Layer['highlightTexture'], color: string, opacity: number): CanvasPattern | string | null {
         const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = size * 2;
-        tempCanvas.height = size * 2;
         const tempCtx = tempCanvas.getContext('2d');
         if (!tempCtx) return null;
+        
+        const baseColor = color.startsWith('hsl') ? color : `hsl(${color})`;
+        const rgbaColor = (o: number) => baseColor.replace(')', `, ${o})`).replace('hsl', 'hsla');
 
-        tempCtx.fillStyle = 'rgba(0,0,0,0.2)';
-        tempCtx.fillRect(0, 0, size * 2, size * 2);
-        tempCtx.fillStyle = 'rgba(255,255,255,0.2)';
-        tempCtx.fillRect(0, 0, size, size);
-        tempCtx.fillRect(size, size, size, size);
+
+        switch(texture) {
+            case 'checkerboard':
+                tempCanvas.width = 16;
+                tempCanvas.height = 16;
+                tempCtx.fillStyle = rgbaColor(opacity * 0.5);
+                tempCtx.fillRect(0, 0, 16, 16);
+                tempCtx.fillStyle = rgbaColor(opacity);
+                tempCtx.fillRect(0, 0, 8, 8);
+                tempCtx.fillRect(8, 8, 8, 8);
+                break;
+            case 'lines':
+                 tempCanvas.width = 8;
+                tempCanvas.height = 8;
+                tempCtx.strokeStyle = rgbaColor(opacity);
+                tempCtx.lineWidth = 2;
+                tempCtx.beginPath();
+                tempCtx.moveTo(0, 8);
+                tempCtx.lineTo(8, 0);
+                tempCtx.stroke();
+                break;
+            case 'solid':
+            default:
+                return rgbaColor(opacity);
+
+        }
 
         return ctx.createPattern(tempCanvas, 'repeat');
     }
@@ -818,7 +846,7 @@ export class SelectionEngine {
       overlayCtx.save();
       
       if (isMask) {
-        const pattern = this.renderCheckerboardPattern(overlayCtx);
+        const pattern = this.renderPattern(overlayCtx, 'checkerboard', 'hsl(0,0%,50%)', 0.5);
         if(!pattern) {
           overlayCtx.restore();
           return;
@@ -850,14 +878,18 @@ export class SelectionEngine {
         layers.forEach(layer => {
             if (layer.visible && layer.maskVisible && (layer.type === 'segmentation' || layer.subType === 'mask')) {
                 overlayCtx.save();
+                
+                const isMask = layer.subType === 'mask';
+                const texture = isMask ? 'checkerboard' : (layer.highlightTexture || 'solid');
+                const color = isMask ? 'hsl(0, 0%, 50%)' : (layer.highlightColor || 'hsl(var(--primary))');
+                const opacity = layer.highlightOpacity || 0.5;
 
-                if (layer.subType === 'mask') {
-                    const pattern = this.renderCheckerboardPattern(overlayCtx);
-                    if(pattern) overlayCtx.fillStyle = pattern;
+                const pattern = this.renderPattern(overlayCtx, texture, color, opacity);
+                if(pattern) {
+                    overlayCtx.fillStyle = pattern;
                 } else {
-                    const color = layer.highlightColor || 'hsl(var(--primary))';
-                    const tempColor = color.startsWith('hsl') ? color : `hsl(${color})`;
-                    overlayCtx.fillStyle = tempColor.replace(')', ', 0.5)').replace('hsl', 'hsla');
+                    overlayCtx.restore();
+                    return;
                 }
 
                 layer.pixels.forEach(idx => {
@@ -872,8 +904,22 @@ export class SelectionEngine {
     }
     
     if (hoveredSegment && wandSettings.useAiAssist === false) {
-       const color = wandSettings.highlightColorMode === 'fixed' ? wandSettings.fixedHighlightColor : 'hsl(var(--primary))';
-      this.renderHoverSegment(overlayCtx, hoveredSegment, wandSettings.createAsMask, color);
+       const isMask = wandSettings.createAsMask;
+       const texture = isMask ? 'checkerboard' : (wandSettings.highlightTexture || 'solid');
+       const color = isMask ? 'hsl(0, 0%, 50%)' : (wandSettings.highlightColorMode === 'fixed' ? wandSettings.fixedHighlightColor : 'hsl(var(--primary))');
+       const opacity = wandSettings.highlightOpacity || 0.5;
+
+       overlayCtx.save();
+       const pattern = this.renderPattern(overlayCtx, texture, color, opacity);
+       if (pattern) {
+            overlayCtx.fillStyle = pattern;
+            hoveredSegment.pixels.forEach((idx: number) => {
+                const x = idx % this.width;
+                const y = Math.floor(idx / this.width);
+                overlayCtx.fillRect(x,y,1,1);
+            });
+       }
+       overlayCtx.restore();
     }
 
 

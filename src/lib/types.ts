@@ -13,6 +13,8 @@ export interface Layer {
     imageData?: ImageData;
     maskVisible?: boolean;
     highlightColor?: string; // e.g., 'hsl(210, 40%, 96.1%)'
+    highlightOpacity?: number; // 0-1
+    highlightTexture?: 'solid' | 'checkerboard' | 'lines';
 }
 
 export interface LassoSettings {
@@ -55,6 +57,8 @@ export interface MagicWandSettings {
     useFeather: boolean;
     highlightColorMode: 'fixed' | 'random';
     fixedHighlightColor: string;
+    highlightOpacity: number;
+    highlightTexture: 'solid' | 'checkerboard' | 'lines';
 }
 
 

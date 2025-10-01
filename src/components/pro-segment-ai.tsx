@@ -31,6 +31,7 @@ import {
   SidebarTrigger,
   SidebarInset,
   SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
@@ -42,7 +43,6 @@ import { LayerAdjustmentPanel } from "./panels/layer-adjustment-panel"
 import { CannyTuningPanel } from "./panels/canny-tuning-panel"
 import { ImageCanvas } from "./image-canvas"
 import { LayersPanel } from "./panels/layers-panel"
-import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import { AiModelsPanel } from "./panels/ai-models-panel"
 import { InpaintingPanel } from "./panels/inpainting-panel"
 import { FeatherPanel } from "./panels/feather-panel"
@@ -54,6 +54,7 @@ import Image from "next/image"
 import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { SelectionEngine } from "@/lib/selection-engine"
+import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus"
 
@@ -112,6 +113,8 @@ export function ProSegmentAI() {
     useFeather: false,
     highlightColorMode: 'random',
     fixedHighlightColor: '#00aaff',
+    highlightOpacity: 0.5,
+    highlightTexture: 'solid',
   });
   const [negativeMagicWandSettings, setNegativeMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -127,6 +130,8 @@ export function ProSegmentAI() {
     useFeather: false,
     highlightColorMode: 'fixed',
     fixedHighlightColor: '#ff0000',
+    highlightOpacity: 0.5,
+    highlightTexture: 'solid',
   });
   const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
     antiAlias: { enabled: true, method: 'gaussian', quality: 'balanced' },
@@ -247,7 +252,23 @@ export function ProSegmentAI() {
     setIsClient(true)
   }, [])
 
-  const renderToolOptions = (isExclusion = false) => {
+  const renderLeftPanelContent = () => {
+    switch(activeTool) {
+      case 'magic-wand':
+      case 'lasso':
+        return <ToolSettingsPanel 
+                  magicWandSettings={magicWandSettings}
+                  onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                  lassoSettings={lassoSettings}
+                  onLassoSettingsChange={handleLassoSettingsChange}
+                  activeTool={activeTool}
+                />
+      default:
+        return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
+    }
+  }
+
+  const renderRightPanelContent = (isExclusion = false) => {
      if (isExclusion) {
       return <MagicWandPanel 
                 settings={negativeMagicWandSettings} 
@@ -363,6 +384,8 @@ export function ProSegmentAI() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+          <SidebarSeparator />
+          {renderLeftPanelContent()}
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
@@ -429,15 +452,15 @@ export function ProSegmentAI() {
       </SidebarInset>
       
       <Sidebar side="right" className="w-[380px] border-l">
-        <Tabs defaultValue="options" className="flex h-full flex-col">
+        <Tabs defaultValue="analysis" className="flex h-full flex-col">
           <SidebarHeader>
             <TooltipProvider>
-                <TabsList className="grid w-full grid-cols-6">
+                <TabsList className="grid w-full grid-cols-5">
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <TabsTrigger value="options" className="flex-1"><SlidersHorizontal className="h-5 w-5"/></TabsTrigger>
+                            <TabsTrigger value="analysis" className="flex-1"><AreaChart className="h-5 w-5"/></TabsTrigger>
                         </TooltipTrigger>
-                        <TooltipContent>Tool Options</TooltipContent>
+                        <TooltipContent>Color Analysis</TooltipContent>
                     </Tooltip>
                      <Tooltip>
                         <TooltipTrigger asChild>
@@ -459,12 +482,6 @@ export function ProSegmentAI() {
                     </Tooltip>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <TabsTrigger value="analysis" className="flex-1"><AreaChart className="h-5 w-5"/></TabsTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent>Color Analysis</TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
                             <TabsTrigger value="ai" className="flex-1"><BrainCircuit className="h-5 w-5"/></TabsTrigger>
                         </TooltipTrigger>
                         <TooltipContent>AI Tools</TooltipContent>
@@ -474,11 +491,11 @@ export function ProSegmentAI() {
           </SidebarHeader>
           <Separator />
           <SidebarContent className="p-0">
-            <TabsContent value="options" className="m-0 h-full">
-              {renderToolOptions()}
+            <TabsContent value="analysis" className="m-0 h-full">
+              {renderRightPanelContent()}
             </TabsContent>
             <TabsContent value="exclusions" className="m-0 h-full">
-              {renderToolOptions(true)}
+              {renderRightPanelContent(true)}
             </TabsContent>
             <TabsContent value="feather" className="m-0 h-full">
               <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
@@ -493,9 +510,6 @@ export function ProSegmentAI() {
                 onToggleMask={toggleLayerMask}
                 onDeleteLayer={deleteLayer}
               />
-            </TabsContent>
-            <TabsContent value="analysis" className="m-0">
-              <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange} />
             </TabsContent>
             <TabsContent value="ai" className="m-0">
                 <Tabs defaultValue="models" className="flex h-full flex-col">

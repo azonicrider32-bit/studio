@@ -3,25 +3,19 @@
 "use client"
 
 import * as React from "react"
-import { Sparkles, BrainCircuit, Info, Palette, EyeOff, MinusSquare, Link, Paintbrush } from "lucide-react"
+import { Info } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
-import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { suggestSegmentationPresets, SuggestSegmentationPresetsOutput } from "@/ai/flows/suggest-segmentation-presets"
-import { magicWandAssistedSegmentation } from "@/ai/flows/magic-wand-assisted-segmentation"
 import { useToast } from "@/hooks/use-toast"
-import { Badge } from "../ui/badge"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { MagicWandSettings } from "@/lib/types"
-import { handleApiError } from "@/lib/error-handling"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { cn } from "@/lib/utils"
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils"
 import { SegmentHoverPreview } from "../segment-hover-preview"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { Button } from "../ui/button"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
@@ -45,10 +39,7 @@ export function MagicWandPanel({
   isExclusionPanel = false,
 }: MagicWandPanelProps) {
   const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
-  const { toast } = useToast()
-
-  const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")
-
+  
   React.useEffect(() => {
     if (isExclusionPanel && settings.seedColor) {
         setAnalysis({
@@ -155,7 +146,7 @@ export function MagicWandPanel({
 
   return (
     <div className="p-4 space-y-6">
-      {!isExclusionPanel && <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />}
+      <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
       <div className="space-y-4">
         <TooltipProvider>
             <div className="space-y-2">
@@ -193,77 +184,6 @@ export function MagicWandPanel({
             </div>
         </TooltipProvider>
       </div>
-
-      <Separator />
-
-      {!isExclusionPanel && (
-        <>
-          <div className="space-y-2">
-              <Label className="flex items-center gap-2"><Paintbrush className="w-4 h-4"/> Highlight Color</Label>
-              <div className="flex gap-2">
-                  <Select value={settings.highlightColorMode} onValueChange={(v) => onSettingsChange({ highlightColorMode: v as 'fixed' | 'random'})}>
-                      <SelectTrigger className="w-[120px]">
-                          <SelectValue/>
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="random">Random</SelectItem>
-                          <SelectItem value="fixed">Fixed</SelectItem>
-                      </SelectContent>
-                  </Select>
-                  {settings.highlightColorMode === 'fixed' && (
-                      <div className="relative h-10 flex-1">
-                         <input 
-                            type="color" 
-                            value={settings.fixedHighlightColor}
-                            onChange={(e) => onSettingsChange({ fixedHighlightColor: e.target.value })}
-                            className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer"
-                            style={{ opacity: 0 }}
-                          />
-                          <div 
-                              className="h-full w-full rounded-md border border-input px-3 py-2"
-                              style={{ backgroundColor: settings.fixedHighlightColor }}
-                          />
-                      </div>
-                  )}
-              </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                <Label htmlFor="contiguous">Contiguous</Label>
-                <Switch
-                id="contiguous"
-                checked={settings.contiguous}
-                onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
-                />
-            </div>
-             <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                <Label htmlFor="create-as-mask" className="flex items-center gap-2"><Link className="w-4 h-4" />Create as Mask</Label>
-                <Switch
-                    id="create-as-mask"
-                    checked={settings.createAsMask}
-                    onCheckedChange={(v) => onSettingsChange({ createAsMask: v })}
-                />
-            </div>
-             <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
-                <Switch
-                    id="show-masks"
-                    checked={settings.showAllMasks}
-                    onCheckedChange={(v) => onSettingsChange({ showAllMasks: v })}
-                />
-            </div>
-             <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                <Label htmlFor="ignore-segments" className="flex items-center gap-2"><EyeOff className="w-4 h-4"/>Ignore Segments</Label>
-                <Switch
-                    id="ignore-segments"
-                    checked={settings.ignoreExistingSegments}
-                    onCheckedChange={(v) => onSettingsChange({ ignoreExistingSegments: v })}
-                />
-            </div>
-          </div>
-        </>
-      )}
-
     </div>
   )
 }
