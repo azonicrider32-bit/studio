@@ -78,6 +78,7 @@ export function ProSegmentAI() {
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     useMagicSnapping: true,
     useAiEnhancement: false,
+    useColorAwareness: false,
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.05,

@@ -33,6 +33,7 @@ export class SelectionEngine {
   lassoSettings: LassoSettings = {
     useMagicSnapping: true,
     useAiEnhancement: false,
+    useColorAwareness: false,
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.05,
@@ -243,8 +244,6 @@ export class SelectionEngine {
     let lastDirection: [number, number] | null = null;
     const falloffDistance = 50; 
 
-    const p1Color = this.getPixelColors(Math.round(p1[1]) * this.width + Math.round(p1[0]));
-
     while (steps < maxSteps) {
         steps++;
         const targetPoint = p2;
@@ -285,8 +284,6 @@ export class SelectionEngine {
         const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence : 0;
         const currentTraceInfluence = this.lassoSettings.traceInfluenceEnabled ? this.lassoSettings.traceInfluence : 0;
 
-        const lastPathPointColor = this.getPixelColors(Math.round(currentPoint[1]) * this.width + Math.round(currentPoint[0]));
-
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
                 const idx = y * this.width + x;
@@ -318,9 +315,13 @@ export class SelectionEngine {
                 const cursorCost = (1 - directionSimilarity) * 500 * (withFuturePath ? currentCursorInfluence : 0);
                 const edgeCost = (1 / (edgeStrength + 1)) * 1000;
 
-                const candidateColor = this.getPixelColors(idx);
-                const colorDifference = this.getColorDifference(lastPathPointColor, candidateColor, this.magicWandSettings);
-                const colorCost = (1 - colorDifference) * 500;
+                let colorCost = 0;
+                if (this.lassoSettings.useColorAwareness) {
+                    const lastPathPointColor = this.getPixelColors(Math.round(currentPoint[1]) * this.width + Math.round(currentPoint[0]));
+                    const candidateColor = this.getPixelColors(idx);
+                    const colorDifference = this.getColorDifference(lastPathPointColor, candidateColor, this.magicWandSettings);
+                    colorCost = (1 - colorDifference) * 500;
+                }
                 
                 let curvatureCost = 0;
                 let directionalCost = 0;

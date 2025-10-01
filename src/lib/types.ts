@@ -13,18 +13,19 @@ export interface Layer {
 export interface LassoSettings {
     useMagicSnapping: boolean;
     useAiEnhancement: boolean;
+    useColorAwareness: boolean; // New toggle for color search
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number;
     directionalStrength: number;
     cursorInfluence: number;
-    traceInfluence: number; // New setting for mouse trace
+    traceInfluence: number;
     snapRadiusEnabled: boolean;
     snapThresholdEnabled: boolean;
     curveStrengthEnabled: boolean;
     directionalStrengthEnabled: boolean;
     cursorInfluenceEnabled: boolean;
-    traceInfluenceEnabled: boolean; // New toggle
+    traceInfluenceEnabled: boolean;
 }
 
 export interface MagicWandSettings {

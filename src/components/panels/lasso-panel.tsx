@@ -5,7 +5,7 @@
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints } from "lucide-react";
+import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette } from "lucide-react";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -82,7 +82,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     onSettingsChange(newSettings);
   };
 
-  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useMagicSnapping' | 'useAiEnhancement' | `${string}Enabled`>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useMagicSnapping' | 'useAiEnhancement' | 'useColorAwareness' | `${string}Enabled`>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 40, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
@@ -152,6 +152,36 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
                 id="useAiEnhancement"
                 checked={settings.useAiEnhancement}
                 onCheckedChange={(checked) => onSettingsChange({ useAiEnhancement: checked })}
+            />
+        </div>
+
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Label htmlFor="useColorAwareness" className="flex items-center gap-2">
+                            <Palette className="h-4 w-4" />
+                            Color-Aware Edges
+                        </Label>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Use color differences to help find edges.</p>
+                    </TooltipContent>
+                </Tooltip>
+                 <Popover>
+                    <PopoverTrigger>
+                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    </PopoverTrigger>
+                    <PopoverContent side="top" className="text-sm">
+                        <h4 className="font-semibold mb-2">Color-Aware Edges</h4>
+                        <p>Integrates color analysis into the edge-finding algorithm. Instead of only looking for changes in brightness, it will also detect edges between areas of different colors, even if their brightness is similar. This uses the tolerances set in the Magic Wand panel but can be more computationally intensive.</p>
+                    </PopoverContent>
+                </Popover>
+            </div>
+            <Switch
+                id="useColorAwareness"
+                checked={settings.useColorAwareness}
+                onCheckedChange={(checked) => onSettingsChange({ useColorAwareness: checked })}
             />
         </div>
       </div>
