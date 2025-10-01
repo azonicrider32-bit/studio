@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 
 
 interface LassoPanelProps {
@@ -101,6 +102,15 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     { id: 'cursorInfluence', label: 'Cursor Influence', icon: MousePointerClick, min: 0, max: 1, step: 0.05, description: 'How strongly the path is pulled towards the cursor. Higher is stronger.' },
     { id: 'traceInfluence', label: 'Trace Influence', icon: Footprints, min: 0, max: 1, step: 0.05, description: 'How strongly the path follows your exact mouse movement.' },
   ];
+  
+  const HowToUseContent = () => (
+     <ul className="list-disc list-inside space-y-1 mt-2 text-left p-2">
+        <li>Click on the image to start your path and add points.</li>
+        <li>Use the sliders and toggles to configure the intelligent pathfinding.</li>
+        <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Enter</kbd> or Double-Click to complete the selection.</li>
+        <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Esc</kbd> to cancel.</li>
+      </ul>
+  );
 
   return (
     <div className="p-4 space-y-6">
@@ -269,20 +279,30 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
             ))}
         </div>
       </div>
+
+       <Accordion type="single" collapsible className="w-full border-t border-b-0">
+          <AccordionItem value="how-to-use" className="border-b-0">
+             <Tooltip>
+                <TooltipTrigger asChild>
+                    <AccordionTrigger className="py-2 hover:no-underline">
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                            <Terminal className="h-4 w-4" />
+                            How to use
+                        </div>
+                    </AccordionTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="start">
+                    <HowToUseContent />
+                </TooltipContent>
+             </Tooltip>
+            <AccordionContent>
+                <HowToUseContent />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+        
       </TooltipProvider>
 
-       <Alert>
-        <Terminal className="h-4 w-4" />
-        <AlertTitle>How to use</AlertTitle>
-        <AlertDescription>
-          <ul className="list-disc list-inside space-y-1 mt-2">
-            <li>Click on the image to start your path and add points.</li>
-            <li>Use the sliders and toggles to configure the intelligent pathfinding.</li>
-            <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Enter</kbd> or Double-Click to complete the selection.</li>
-            <li>Press <kbd className="px-2 py-1.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">Esc</kbd> to cancel.</li>
-          </ul>
-        </AlertDescription>
-      </Alert>
     </div>
   )
 }
@@ -349,3 +369,6 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
     );
 }
 
+
+
+    
