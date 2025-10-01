@@ -1,5 +1,6 @@
 
 
+
 import { LassoSettings, MagicWandSettings, Segment, Layer } from "./types";
 import { rgbToHsv, rgbToLab } from "./color-utils";
 
@@ -815,25 +816,26 @@ export class SelectionEngine {
     const showMasks = wandSettings.showAllMasks && lassoSettings.showAllMasks;
 
     if (showMasks) {
-        const pattern = this.renderCheckerboardPattern(overlayCtx);
-        if(!pattern) return;
-
-        overlayCtx.save();
-        overlayCtx.fillStyle = pattern;
-        let hasMasksToRender = false;
-
         layers.forEach(layer => {
-            if (layer.visible && (layer.subType === 'pixel' || layer.subType === 'mask') && layer.maskVisible) {
-                hasMasksToRender = true;
+            if (layer.visible && layer.maskVisible) {
+                overlayCtx.save();
+
+                if (layer.subType === 'mask') {
+                    const pattern = this.renderCheckerboardPattern(overlayCtx);
+                    if(pattern) overlayCtx.fillStyle = pattern;
+                } else {
+                    overlayCtx.fillStyle = 'hsla(var(--primary), 0.5)';
+                }
+
                 layer.pixels.forEach(idx => {
                     const x = idx % this.width;
                     const y = Math.floor(idx / this.width);
                     overlayCtx.fillRect(x, y, 1, 1);
                 });
+
+                overlayCtx.restore();
             }
         });
-
-        overlayCtx.restore();
     }
     
     if (hoveredSegment && wandSettings.useAiAssist === false) {
@@ -898,5 +900,3 @@ export class SelectionEngine {
     }
   }
 }
-
-    
