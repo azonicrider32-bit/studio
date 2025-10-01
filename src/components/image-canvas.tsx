@@ -409,7 +409,7 @@ export function ImageCanvas({
         clearTimeout(mouseStopTimerRef.current);
     }
     setHoveredSegment(null);
-    setCanvasMousePos(null);
+    // Do not set canvasMousePos to null to keep the preview active
     drawOverlay();
   }
 

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -30,34 +31,23 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     const previewCanvas = previewCanvasRef.current;
     if (!previewCanvas || !canvas || !selectionEngine || !mousePos) return;
     
-    let sourceX = viewPositionRef.current.x;
-    let sourceY = viewPositionRef.current.y;
     const sourceSize = size / zoom;
+    const deadZoneRadius = sourceSize / 3;
 
-    // Initialize view position on first render with a mouse position
-    if (sourceX === 0 && sourceY === 0) {
-        sourceX = mousePos.x - sourceSize / 2;
-        sourceY = mousePos.y - sourceSize / 2;
-    }
+    // Initialize or update view position based on cursor
+    const dx = mousePos.x - (viewPositionRef.current.x + sourceSize / 2);
+    const dy = mousePos.y - (viewPositionRef.current.y + sourceSize / 2);
+    const distance = Math.hypot(dx, dy);
 
-    // Edge-panning logic
-    const edgeThreshold = sourceSize / 8; // Start panning when cursor is within 1/8th of the edge
-    const rightEdge = sourceX + sourceSize;
-    const bottomEdge = sourceY + sourceSize;
-
-    if (mousePos.x > rightEdge - edgeThreshold) {
-        sourceX = mousePos.x - sourceSize + edgeThreshold;
-    } else if (mousePos.x < sourceX + edgeThreshold) {
-        sourceX = mousePos.x - edgeThreshold;
-    }
-
-    if (mousePos.y > bottomEdge - edgeThreshold) {
-        sourceY = mousePos.y - sourceSize + edgeThreshold;
-    } else if (mousePos.y < sourceY + edgeThreshold) {
-        sourceY = mousePos.y - edgeThreshold;
+    if (distance > deadZoneRadius) {
+        const angle = Math.atan2(dy, dx);
+        viewPositionRef.current.x = mousePos.x - (sourceSize / 2) - (Math.cos(angle) * deadZoneRadius);
+        viewPositionRef.current.y = mousePos.y - (sourceSize / 2) - (Math.sin(angle) * deadZoneRadius);
     }
     
-    viewPositionRef.current = { x: sourceX, y: sourceY };
+    // Clamp view position to be within canvas bounds
+    viewPositionRef.current.x = Math.max(0, Math.min(canvas.width - sourceSize, viewPositionRef.current.x));
+    viewPositionRef.current.y = Math.max(0, Math.min(canvas.height - sourceSize, viewPositionRef.current.y));
 
 
     const previewCtx = previewCanvas.getContext('2d');
@@ -163,10 +153,10 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   
   useEffect(() => {
     // Reset view position when mouse leaves the canvas
-    if (!mousePos) {
+    if (!mousePos && !isHovered) {
       viewPositionRef.current = { x: 0, y: 0 };
     }
-  }, [mousePos]);
+  }, [mousePos, isHovered]);
 
 
   if (!mousePos) return <div className={cn("aspect-square w-full rounded-md bg-muted animate-pulse", className)}></div>;
@@ -183,25 +173,6 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     >
       <canvas ref={previewCanvasRef} width={size} height={size} className="w-full h-full" />
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {/* Crosshair */}
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          width: '1px',
-          height: '100%',
-          backgroundColor: 'rgba(255, 255, 255, 0.5)',
-          transform: 'translateX(-50%)'
-        }}></div>
-         <div style={{
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          width: '100%',
-          height: '1px',
-          backgroundColor: 'rgba(255, 255, 255, 0.5)',
-          transform: 'translateY(-50%)'
-        }}></div>
         {/* Center dot for the actual cursor position relative to the panned view */}
         <div
           className="absolute w-1 h-1 bg-accent rounded-full pointer-events-none"
@@ -209,6 +180,17 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
             left: `${((mousePos.x - viewPositionRef.current.x) / (size/zoom)) * 100}%`,
             top: `${((mousePos.y - viewPositionRef.current.y) / (size/zoom)) * 100}%`,
             transform: 'translate(-50%, -50%)',
+          }}
+        ></div>
+         {/* Circular dead zone indicator */}
+        <div 
+          className="absolute rounded-full border border-dashed border-white/50"
+          style={{
+              width: `${(1/3) * 100 * 2}%`,
+              height: `${(1/3) * 100 * 2}%`,
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)'
           }}
         ></div>
       </div>
