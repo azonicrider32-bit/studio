@@ -150,18 +150,36 @@ export class SelectionEngine {
     this.lassoCurrentPos = [x, y];
     this.lassoMouseTrace = mouseTrace;
 
-    const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
+    const AUTO_ANCHOR_THRESHOLD = 50; // Commit path segments longer than this
+    const AUTO_ANCHOR_KEEP = 30; // Keep this many recent points when committing
+
+    if (this.lassoPreviewPath.length > AUTO_ANCHOR_THRESHOLD) {
+        const pointsToCommit = this.lassoPreviewPath.slice(0, -AUTO_ANCHOR_KEEP);
+        this.lassoNodes.push(...pointsToCommit);
+        this.lassoPreviewPath = this.lassoPreviewPath.slice(-AUTO_ANCHOR_KEEP);
+    }
     
+    const lastAnchor = this.lassoPreviewPath.length > 0
+        ? this.lassoPreviewPath[this.lassoPreviewPath.length - 1]
+        : this.lassoNodes[this.lassoNodes.length - 1];
+
     const { path: previewPath, futurePath } = this.findEdgePath(lastAnchor, [x, y], mouseTrace);
-    this.lassoPreviewPath = previewPath;
+    
+    const combinedPreview = [...this.lassoPreviewPath, ...previewPath];
+    const startIndex = Math.max(0, combinedPreview.length - AUTO_ANCHOR_THRESHOLD * 2);
+    
+    this.lassoPreviewPath = combinedPreview.slice(startIndex);
     this.futureLassoPath = futurePath;
   }
 
 
   addLassoNode(mouseTrace: [number, number][]) {
-    if (!this.isDrawingLasso || !this.lassoCurrentPos || this.lassoPreviewPath.length === 0) return;
+    if (!this.isDrawingLasso || !this.lassoCurrentPos) return;
+
+    // Combine committed nodes and the latest preview path
+    const fullPath = [...this.lassoNodes, ...this.lassoPreviewPath];
     
-    this.lassoNodes.push(...this.lassoPreviewPath);
+    this.lassoNodes = fullPath;
     this.lassoPreviewPath = [];
     this.futureLassoPath = [];
     this.lassoMouseTrace = [];
