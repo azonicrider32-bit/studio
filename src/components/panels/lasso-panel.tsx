@@ -4,7 +4,7 @@
 
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
-import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette, PenTool, GitCommit, Sparkles, Eye, ChevronDown } from "lucide-react";
+import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette, PenTool, GitCommit, Sparkles, Eye } from "lucide-react";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -110,17 +110,18 @@ export function LassoPanel({ settings, onSettingsChange, canvas, mousePos, selec
   );
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-4 flex flex-col h-full">
        <TooltipProvider>
         <LassoHoverPreview 
             canvas={canvas} 
             mousePos={mousePos} 
             selectionEngine={selectionEngine} 
             onHoverChange={onHoverChange}
+            className="flex-shrink-0"
         />
         
-        <div className={cn("space-y-4 pt-4", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
-          <div className="flex justify-around items-end h-64">
+        <div className={cn("space-y-4", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
+          <div className="flex justify-around items-stretch h-full min-h-[200px] flex-grow">
               {SETTINGS_CONFIG.map(config => (
                   <VerticalSettingSlider
                       key={config.id}
@@ -141,144 +142,144 @@ export function LassoPanel({ settings, onSettingsChange, canvas, mousePos, selec
           </div>
         </div>
 
-        <Separator />
-
-        <div className="space-y-4">
-             <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                    <Label htmlFor="draw-mode">Draw Mode</Label>
-                    <Popover>
-                        <PopoverTrigger>
-                            <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                        </PopoverTrigger>
-                        <PopoverContent side="top" className="text-sm">
-                            <h4 className="font-semibold mb-2">Switching Modes</h4>
-                            <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
-                        </PopoverContent>
-                    </Popover>
+        <div className="overflow-y-auto flex-shrink-0 pr-2 space-y-6">
+            <Separator />
+            <div className="space-y-4">
+                 <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="draw-mode">Draw Mode</Label>
+                        <Popover>
+                            <PopoverTrigger>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                            </PopoverTrigger>
+                            <PopoverContent side="top" className="text-sm">
+                                <h4 className="font-semibold mb-2">Switching Modes</h4>
+                                <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                     <Select value={settings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onSettingsChange({ drawMode: value })}>
+                        <SelectTrigger id="draw-mode">
+                             <div className="flex items-center gap-2">
+                                {currentMode && <currentMode.icon className="h-4 w-4" />}
+                                <SelectValue placeholder="Select mode..." />
+                             </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {DRAW_MODES.map(mode => (
+                                <SelectItem key={mode.id} value={mode.id}>
+                                   <div className="flex items-center gap-2">
+                                     <mode.icon className="h-4 w-4" />
+                                     <span>{mode.label}</span>
+                                   </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                     </Select>
                 </div>
-                 <Select value={settings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onSettingsChange({ drawMode: value })}>
-                    <SelectTrigger id="draw-mode">
-                         <div className="flex items-center gap-2">
-                            {currentMode && <currentMode.icon className="h-4 w-4" />}
-                            <SelectValue placeholder="Select mode..." />
-                         </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {DRAW_MODES.map(mode => (
-                            <SelectItem key={mode.id} value={mode.id}>
-                               <div className="flex items-center gap-2">
-                                 <mode.icon className="h-4 w-4" />
-                                 <span>{mode.label}</span>
-                               </div>
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                 </Select>
             </div>
-        </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Label htmlFor="useAiEnhancement" className="flex items-center gap-2">
-                              <Wand2 className="h-4 w-4 text-primary" />
-                              AI Enhancement
-                          </Label>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                          <p>Use AI to enhance the final selection path upon completion.</p>
-                      </TooltipContent>
-                  </Tooltip>
-                  <Popover>
-                      <PopoverTrigger>
-                          <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                      </PopoverTrigger>
-                      <PopoverContent side="top" className="text-sm">
-                          <h4 className="font-semibold mb-2">AI Enhancement</h4>
-                          <p>When you complete the selection (by pressing Enter or double-clicking), a powerful GenAI model will analyze the image content within your path and intelligently refine it to create a more accurate and professional final selection.</p>
-                      </PopoverContent>
-                  </Popover>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Label htmlFor="useAiEnhancement" className="flex items-center gap-2">
+                                  <Wand2 className="h-4 w-4 text-primary" />
+                                  AI Enhancement
+                              </Label>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                              <p>Use AI to enhance the final selection path upon completion.</p>
+                          </TooltipContent>
+                      </Tooltip>
+                      <Popover>
+                          <PopoverTrigger>
+                              <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                          </PopoverTrigger>
+                          <PopoverContent side="top" className="text-sm">
+                              <h4 className="font-semibold mb-2">AI Enhancement</h4>
+                              <p>When you complete the selection (by pressing Enter or double-clicking), a powerful GenAI model will analyze the image content within your path and intelligently refine it to create a more accurate and professional final selection.</p>
+                          </PopoverContent>
+                      </Popover>
+                  </div>
+                  <Switch
+                      id="useAiEnhancement"
+                      checked={settings.useAiEnhancement}
+                      onCheckedChange={(checked) => onSettingsChange({ useAiEnhancement: checked })}
+                  />
               </div>
-              <Switch
-                  id="useAiEnhancement"
-                  checked={settings.useAiEnhancement}
-                  onCheckedChange={(checked) => onSettingsChange({ useAiEnhancement: checked })}
-              />
-          </div>
 
-          <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Label htmlFor="showMouseTrace" className="flex items-center gap-2">
-                              <Eye className="h-4 w-4" />
-                              Show Mouse Trace
-                          </Label>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                          <p>Makes the path of your cursor visible on the canvas as you draw.</p>
-                      </TooltipContent>
-                  </Tooltip>
-                  <Popover>
-                      <PopoverTrigger>
-                          <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                      </PopoverTrigger>
-                      <PopoverContent side="top" className="text-sm">
-                          <h4 className="font-semibold mb-2">Show Mouse Trace</h4>
-                          <p>Displays a semi-transparent line that follows your exact mouse movements. This visual guide helps you understand how the 'Trace Influence' setting is pulling the snapped path towards your drawn gesture.</p>
-                      </PopoverContent>
-                  </Popover>
+              <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Label htmlFor="showMouseTrace" className="flex items-center gap-2">
+                                  <Eye className="h-4 w-4" />
+                                  Show Mouse Trace
+                              </Label>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                              <p>Makes the path of your cursor visible on the canvas as you draw.</p>
+                          </TooltipContent>
+                      </Tooltip>
+                      <Popover>
+                          <PopoverTrigger>
+                              <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                          </PopoverTrigger>
+                          <PopoverContent side="top" className="text-sm">
+                              <h4 className="font-semibold mb-2">Show Mouse Trace</h4>
+                              <p>Displays a semi-transparent line that follows your exact mouse movements. This visual guide helps you understand how the 'Trace Influence' setting is pulling the snapped path towards your drawn gesture.</p>
+                          </PopoverContent>
+                      </Popover>
+                  </div>
+                  <Switch
+                      id="showMouseTrace"
+                      checked={settings.showMouseTrace}
+                      onCheckedChange={(checked) => onSettingsChange({ showMouseTrace: checked })}
+                      disabled={settings.drawMode !== 'magic'}
+                  />
               </div>
-              <Switch
-                  id="showMouseTrace"
-                  checked={settings.showMouseTrace}
-                  onCheckedChange={(checked) => onSettingsChange({ showMouseTrace: checked })}
-                  disabled={settings.drawMode !== 'magic'}
-              />
-          </div>
-           <div className="flex items-center justify-between">
-                <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
-                <Switch
-                    id="show-masks"
-                    checked={settings.showAllMasks}
-                    onCheckedChange={(v) => onSettingsChange({ showAllMasks: v })}
-                />
+               <div className="flex items-center justify-between">
+                    <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
+                    <Switch
+                        id="show-masks"
+                        checked={settings.showAllMasks}
+                        onCheckedChange={(v) => onSettingsChange({ showAllMasks: v })}
+                    />
+                </div>
             </div>
-        </div>
-      
-        <div className={cn("space-y-2", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
-          <Label>Presets (Magic Snap)</Label>
-          <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" size="sm" onClick={() => handlePreset('default')}>Default</Button>
-              <Button variant="outline" size="sm" onClick={() => handlePreset('precise')}>Precise</Button>
-              <Button variant="outline" size="sm" onClick={() => handlePreset('loose')}>Loose</Button>
-          </div>
-        </div>
+          
+            <div className={cn("space-y-2", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
+              <Label>Presets (Magic Snap)</Label>
+              <div className="grid grid-cols-3 gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handlePreset('default')}>Default</Button>
+                  <Button variant="outline" size="sm" onClick={() => handlePreset('precise')}>Precise</Button>
+                  <Button variant="outline" size="sm" onClick={() => handlePreset('loose')}>Loose</Button>
+              </div>
+            </div>
 
-        <Accordion type="single" collapsible className="w-full border-t pt-4">
-          <AccordionItem value="how-to-use" className="border-b-0">
-             <Tooltip>
-                <TooltipTrigger asChild>
-                    <AccordionTrigger className="py-2 hover:no-underline">
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                            <Terminal className="h-4 w-4" />
-                            How to use
-                        </div>
-                    </AccordionTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="top" align="start">
+            <Accordion type="single" collapsible className="w-full border-t pt-4">
+              <AccordionItem value="how-to-use" className="border-b-0">
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <AccordionTrigger className="py-2 hover:no-underline">
+                            <div className="flex items-center gap-2 text-sm font-semibold">
+                                <Terminal className="h-4 w-4" />
+                                How to use
+                            </div>
+                        </AccordionTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="start">
+                        <HowToUseContent />
+                    </TooltipContent>
+                 </Tooltip>
+                <AccordionContent>
                     <HowToUseContent />
-                </TooltipContent>
-             </Tooltip>
-            <AccordionContent>
-                <HowToUseContent />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-        
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+        </div>
       </TooltipProvider>
 
     </div>
@@ -354,3 +355,4 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
     
 
     
+
