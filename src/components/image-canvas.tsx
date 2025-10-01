@@ -59,6 +59,7 @@ export function ImageCanvas({
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
   const [hoveredSegment, setHoveredSegment] = React.useState<Segment | null>(null);
+  const mouseStopTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
 
   const { toast } = useToast();
@@ -341,8 +342,7 @@ export function ImageCanvas({
     }
   };
   
-  const debouncedWandPreview = React.useCallback(
-    debounce((x: number, y: number) => {
+  const triggerWandPreview = React.useCallback((x: number, y: number) => {
       const engine = selectionEngineRef.current;
       if (!engine || magicWandSettings.useAiAssist) {
         setHoveredSegment(null);
@@ -352,8 +352,11 @@ export function ImageCanvas({
       const segment = engine.magicWand(x, y, true); // Preview only
       setHoveredSegment(segment);
       drawOverlay();
-    }, 50),
-    [drawOverlay, magicWandSettings.useAiAssist] 
+  }, [drawOverlay, magicWandSettings.useAiAssist]);
+
+  const debouncedWandPreview = React.useCallback(
+    debounce(triggerWandPreview, 50),
+    [triggerWandPreview] 
   );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -364,6 +367,10 @@ export function ImageCanvas({
     const pos = getMousePos(canvas, e);
     setCanvasMousePos(pos);
 
+    if (mouseStopTimerRef.current) {
+        clearTimeout(mouseStopTimerRef.current);
+    }
+
     if (activeTool === 'lasso') {
       if (engine.isDrawingLasso) {
         engine.updateLassoPreview(pos.x, pos.y);
@@ -371,10 +378,16 @@ export function ImageCanvas({
       }
     } else if (activeTool === 'magic-wand') {
         debouncedWandPreview(pos.x, pos.y);
+        mouseStopTimerRef.current = setTimeout(() => {
+            triggerWandPreview(pos.x, pos.y);
+        }, 200);
     }
   };
   
   const handleMouseLeave = () => {
+    if (mouseStopTimerRef.current) {
+        clearTimeout(mouseStopTimerRef.current);
+    }
     setHoveredSegment(null);
     setCanvasMousePos(null);
     drawOverlay();
