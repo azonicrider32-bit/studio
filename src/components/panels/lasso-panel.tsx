@@ -35,55 +35,34 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
       case 'precise':
         newSettings = {
           snapRadius: 5,
-          snapThreshold: 0.50,
-          curveStrength: 0.00,
-          directionalStrength: 0.00,
-          cursorInfluence: 0.25,
-          traceInfluence: 0.5,
+          snapThreshold: 0.7,
+          curveStrength: 0.1,
+          directionalStrength: 0.8,
+          cursorInfluence: 0.1,
+          traceInfluence: 0.05,
           colorInfluence: 0,
-          snapRadiusEnabled: true,
-          snapThresholdEnabled: true,
-          curveStrengthEnabled: false,
-          directionalStrengthEnabled: false,
-          cursorInfluenceEnabled: true,
-          traceInfluenceEnabled: true,
-          colorInfluenceEnabled: false,
         };
         break;
       case 'loose':
         newSettings = {
-          snapRadius: 30,
+          snapRadius: 40,
           snapThreshold: 0.2,
-          curveStrength: 0.4,
-          directionalStrength: 0.5,
-          cursorInfluence: 0.05,
-          traceInfluence: 0.1,
+          curveStrength: 0.8,
+          directionalStrength: 0.1,
+          cursorInfluence: 0.8,
+          traceInfluence: 0.5,
           colorInfluence: 0.5,
-          snapRadiusEnabled: true,
-          snapThresholdEnabled: true,
-          curveStrengthEnabled: true,
-          directionalStrengthEnabled: true,
-          cursorInfluenceEnabled: true,
-          traceInfluenceEnabled: true,
-          colorInfluenceEnabled: true,
         };
         break;
-      default: // default - The user's preferred balanced setting!
+      default: // default
         newSettings = {
           snapRadius: 20,
-          snapThreshold: 0.3,
-          curveStrength: 0.05,
-          directionalStrength: 0,
-          cursorInfluence: 0.1,
+          snapThreshold: 0.4,
+          curveStrength: 0.5,
+          directionalStrength: 0.5,
+          cursorInfluence: 0.5,
           traceInfluence: 0.2,
-          colorInfluence: 0.25,
-          snapRadiusEnabled: true,
-          snapThresholdEnabled: true,
-          curveStrengthEnabled: true,
-          directionalStrengthEnabled: false,
-          cursorInfluenceEnabled: true,
-          traceInfluenceEnabled: true,
-          colorInfluenceEnabled: true,
+          colorInfluence: 0.1,
         };
         break;
     }
