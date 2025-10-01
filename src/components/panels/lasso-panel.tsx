@@ -35,75 +35,94 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
 
   return (
     <div className="p-4 space-y-6">
-      <div className="space-y-2">
-        <h3 className="font-headline text-lg">Intelligent Lasso</h3>
-        <p className="text-sm text-muted-foreground">
-          Draw a freehand selection with smart edge-snapping.
-        </p>
-      </div>
-
-      <Separator />
-
+       <TooltipProvider>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="useMagicSnapping" className="flex items-center gap-2">
-            <Wand2 className="h-4 w-4" />
-            Enable Magic Snapping
-          </Label>
-          <Switch
-            id="useMagicSnapping"
-            checked={settings.useMagicSnapping}
-            onCheckedChange={(checked) => onSettingsChange({ useMagicSnapping: checked })}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground -mt-3">
-          Enables real-time path snapping to detected edges as you draw.
-        </p>
+          <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Label htmlFor="useMagicSnapping" className="flex items-center gap-2">
+                            <Wand2 className="h-4 w-4" />
+                            Magic Snapping
+                        </Label>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Enable real-time path snapping to detected edges as you draw.</p>
+                    </TooltipContent>
+                </Tooltip>
+                 <Popover>
+                    <PopoverTrigger>
+                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    </PopoverTrigger>
+                    <PopoverContent side="top" className="text-sm">
+                        <h4 className="font-semibold mb-2">Magic Snapping</h4>
+                        <p>Enables the real-time, non-AI pathfinding that automatically snaps the lasso line to the strongest nearby edge as you draw. This provides live feedback and helps guide your selection.</p>
+                    </PopoverContent>
+                </Popover>
+              </div>
+              <Switch
+                id="useMagicSnapping"
+                checked={settings.useMagicSnapping}
+                onCheckedChange={(checked) => onSettingsChange({ useMagicSnapping: checked })}
+              />
+          </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="useAiEnhancement" className="flex items-center gap-2">
-            <Wand2 className="h-4 w-4 text-primary" />
-            Enable AI Enhancement
-          </Label>
-          <Switch
-            id="useAiEnhancement"
-            checked={settings.useAiEnhancement}
-            onCheckedChange={(checked) => onSettingsChange({ useAiEnhancement: checked })}
-          />
+            <div className="flex items-center gap-2">
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Label htmlFor="useAiEnhancement" className="flex items-center gap-2">
+                            <Wand2 className="h-4 w-4 text-primary" />
+                            AI Enhancement
+                        </Label>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Use AI to analyze and enhance the final selection path upon completion.</p>
+                    </TooltipContent>
+                </Tooltip>
+                 <Popover>
+                    <PopoverTrigger>
+                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    </PopoverTrigger>
+                    <PopoverContent side="top" className="text-sm">
+                        <h4 className="font-semibold mb-2">AI Enhancement</h4>
+                        <p>When you complete the selection (by pressing Enter or double-clicking), a powerful GenAI model will analyze the image content within your path and intelligently refine it to create a more accurate and professional final selection.</p>
+                    </PopoverContent>
+                </Popover>
+            </div>
+            <Switch
+                id="useAiEnhancement"
+                checked={settings.useAiEnhancement}
+                onCheckedChange={(checked) => onSettingsChange({ useAiEnhancement: checked })}
+            />
         </div>
-        <p className="text-xs text-muted-foreground -mt-3">
-          When completing the path, uses AI to analyze and enhance the final selection.
-        </p>
       </div>
       
       <Separator />
 
       <div className="space-y-4">
         <h4 className="text-sm font-semibold">Live Adjustment Settings</h4>
-        <p className="text-xs text-muted-foreground -mt-2">Toggle a setting on/off. You can adjust all enabled settings with the mouse wheel while drawing.</p>
-
-        <TooltipProvider>
-            <div className="flex justify-around items-end h-64">
-                {SETTINGS_CONFIG.map(config => (
-                    <VerticalSettingSlider
-                        key={config.id}
-                        id={config.id}
-                        label={config.label}
-                        icon={config.icon}
-                        value={settings[config.id] as number}
-                        min={config.min}
-                        max={config.max}
-                        step={config.step}
-                        unit={config.unit}
-                        description={config.description}
-                        isEnabled={settings[`${config.id}Enabled`]}
-                        onToggle={() => onSettingsChange({ [`${config.id}Enabled`]: !settings[`${config.id}Enabled`] })}
-                        onValueChange={(value) => onSettingsChange({ [config.id]: value })}
-                    />
-                ))}
-            </div>
-        </TooltipProvider>
+        <div className="flex justify-around items-end h-64">
+            {SETTINGS_CONFIG.map(config => (
+                <VerticalSettingSlider
+                    key={config.id}
+                    id={config.id}
+                    label={config.label}
+                    icon={config.icon}
+                    value={settings[config.id] as number}
+                    min={config.min}
+                    max={config.max}
+                    step={config.step}
+                    unit={config.unit}
+                    description={config.description}
+                    isEnabled={settings[`${config.id}Enabled`]}
+                    onToggle={() => onSettingsChange({ [`${config.id}Enabled`]: !settings[`${config.id}Enabled`] })}
+                    onValueChange={(value) => onSettingsChange({ [config.id]: value })}
+                />
+            ))}
+        </div>
       </div>
+      </TooltipProvider>
 
        <Alert>
         <Terminal className="h-4 w-4" />
