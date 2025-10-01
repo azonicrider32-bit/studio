@@ -24,6 +24,7 @@ export class SelectionEngine {
   // New Lasso Path Memory
   lassoPreviewPath: [number, number][] = [];
   futureLassoPath: [number, number][] = [];
+  lassoMouseTrace: [number, number][] = [];
   
   // Edge Detection
   edgeMap: Float32Array | null = null;
@@ -37,11 +38,13 @@ export class SelectionEngine {
     curveStrength: 0.05,
     directionalStrength: 0.2,
     cursorInfluence: 0.1,
+    traceInfluence: 0.2,
     snapRadiusEnabled: true,
     snapThresholdEnabled: true,
     curveStrengthEnabled: true,
     directionalStrengthEnabled: false,
     cursorInfluenceEnabled: true,
+    traceInfluenceEnabled: true,
   };
   magicWandSettings: MagicWandSettings = {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -139,31 +142,32 @@ export class SelectionEngine {
     this.isDrawingLasso = false;
     this.lassoPreviewPath = [];
     this.futureLassoPath = [];
+    this.lassoMouseTrace = [];
   }
 
-  updateLassoPreview(x: number, y: number) {
+  updateLassoPreview(x: number, y: number, mouseTrace: [number, number][]) {
     if (!this.isDrawingLasso || !this.lassoNodes.length) return;
     this.lassoCurrentPos = [x, y];
+    this.lassoMouseTrace = mouseTrace;
 
     const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
     
-    const { path: previewPath, futurePath } = this.findEdgePath(lastAnchor, [x, y]);
+    const { path: previewPath, futurePath } = this.findEdgePath(lastAnchor, [x, y], mouseTrace);
     this.lassoPreviewPath = previewPath;
     this.futureLassoPath = futurePath;
   }
 
 
-  addLassoNode() {
+  addLassoNode(mouseTrace: [number, number][]) {
     if (!this.isDrawingLasso || !this.lassoCurrentPos || this.lassoPreviewPath.length === 0) return;
     
-    // Add the entire preview path to the main nodes list
     this.lassoNodes.push(...this.lassoPreviewPath);
     this.lassoPreviewPath = [];
     this.futureLassoPath = [];
+    this.lassoMouseTrace = [];
     
-    // Set the new anchor point
     const newAnchor = this.lassoNodes[this.lassoNodes.length-1];
-    this.updateLassoPreview(newAnchor[0], newAnchor[1]);
+    this.updateLassoPreview(newAnchor[0], newAnchor[1], []);
   }
   
   endLassoWithEnhancedPath(enhancedPath: {x:number, y:number}[]): Layer | null {
@@ -211,7 +215,7 @@ export class SelectionEngine {
         const firstNode = path[0];
         const lastNode = path[path.length - 1];
         if (Math.hypot(firstNode[0] - lastNode[0], firstNode[1] - lastNode[1]) > 1) {
-            const closingPath = this.findEdgePath(lastNode, firstNode, false).path;
+            const closingPath = this.findEdgePath(lastNode, firstNode, [], false).path;
             path.push(...closingPath);
         }
     }
@@ -219,7 +223,7 @@ export class SelectionEngine {
     return path;
   }
   
-  findEdgePath(p1: [number, number], p2: [number, number], withFuturePath = true): { path: [number, number][], futurePath: [number, number][] } {
+  findEdgePath(p1: [number, number], p2: [number, number], mouseTrace: [number, number][], withFuturePath = true): { path: [number, number][], futurePath: [number, number][] } {
     if (!this.lassoSettings.useMagicSnapping || !this.edgeMap) {
         return { path: [p2], futurePath: [] };
     }
@@ -231,7 +235,7 @@ export class SelectionEngine {
     visitedInPath.add(Math.round(p1[1]) * this.width + Math.round(p1[0]));
 
     const initialDistToTarget = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
-    const maxSteps = initialDistToTarget * 2 + (withFuturePath ? 50 : 0); // Allow more steps for future path
+    const maxSteps = initialDistToTarget * 2 + (withFuturePath ? 50 : 0);
     let steps = 0;
     
     let lastDirection: [number, number] | null = null;
@@ -243,18 +247,17 @@ export class SelectionEngine {
         
         const distToTarget = Math.hypot(targetPoint[0] - currentPoint[0], targetPoint[1] - currentPoint[1]);
         if (withFuturePath && distToTarget < 1) {
-            // We've reached the cursor, now calculate future path
-            withFuturePath = false; // Stop calculating future path after this segment
+            withFuturePath = false; 
             const futureTarget: [number, number] = [
                 targetPoint[0] + (lastDirection ? lastDirection[0] : 0) * 50,
                 targetPoint[1] + (lastDirection ? lastDirection[1] : 0) * 50
             ];
-            const futureResult = this.findEdgePath(targetPoint, futureTarget, false);
+            const futureResult = this.findEdgePath(targetPoint, futureTarget, [], false);
             futurePath.push(...futureResult.path);
-            path.push(p2); // ensure cursor point is in main path
-            break; // Finished
+            path.push(p2);
+            break;
         } else if (!withFuturePath && steps > initialDistToTarget * 2) {
-             break; // Stop future path calculation after a reasonable distance
+             break;
         }
         else if (distToTarget < (this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1)) {
             path.push(p2);
@@ -276,6 +279,7 @@ export class SelectionEngine {
         const dirToTarget = [vectorToTarget[0] / magToTarget, vectorToTarget[1] / magToTarget];
 
         const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence : 0;
+        const currentTraceInfluence = this.lassoSettings.traceInfluenceEnabled ? this.lassoSettings.traceInfluence : 0;
 
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
@@ -289,10 +293,22 @@ export class SelectionEngine {
                 const magToCandidate = Math.hypot(vectorToCandidate[0], vectorToCandidate[1]);
                 const dirToCandidate = [vectorToCandidate[0] / magToCandidate, vectorToCandidate[1] / magToCandidate];
 
-                const directionSimilarity = (dirToCandidate[0] * dirToTarget[0] + dirToCandidate[1] * dirToTarget[1] + 1) / 2; // Range 0-1
+                const directionSimilarity = (dirToCandidate[0] * dirToTarget[0] + dirToCandidate[1] * dirToTarget[1] + 1) / 2;
                 
                 const edgeStrength = (this.edgeMap[idx] || 0) > (this.lassoSettings.snapThresholdEnabled ? this.lassoSettings.snapThreshold : 1) ? this.edgeMap[idx] : 0;
                 
+                let traceCost = 0;
+                if (currentTraceInfluence > 0 && mouseTrace.length > 0) {
+                    let minTraceDistSq = Infinity;
+                    for(const tracePoint of mouseTrace) {
+                        const distSq = (x - tracePoint[0])**2 + (y - tracePoint[1])**2;
+                        if (distSq < minTraceDistSq) {
+                            minTraceDistSq = distSq;
+                        }
+                    }
+                    traceCost = Math.sqrt(minTraceDistSq) * 10 * currentTraceInfluence;
+                }
+
                 const cursorCost = (1 - directionSimilarity) * 500 * (withFuturePath ? currentCursorInfluence : 0);
                 const edgeCost = (1 / (edgeStrength + 1)) * 1000;
                 
@@ -310,7 +326,7 @@ export class SelectionEngine {
                     directionalCost = (1 - dot) * 500 * (this.lassoSettings.directionalStrengthEnabled ? this.lassoSettings.directionalStrength : 0) * falloff;
                 }
 
-                const cost = cursorCost + edgeCost + curvatureCost + directionalCost;
+                const cost = cursorCost + edgeCost + curvatureCost + directionalCost + traceCost;
 
                 if (cost < minCost) {
                     minCost = cost;
@@ -536,11 +552,6 @@ export class SelectionEngine {
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return "";
 
-    // The mask for inpainting should have black where you want to inpaint
-    // and white where you want to preserve the original image.
-    // However, for the magic wand AI assist, we are providing a "hint" of
-    // where to look. Let's make the hint area black and the rest transparent
-    // so the model knows where the important texture is.
     tempCtx.fillStyle = 'white';
     tempCtx.fillRect(0, 0, this.width, this.height);
 
@@ -594,9 +605,13 @@ export class SelectionEngine {
   }
 
 
-  selectionToMaskData(selection?: Segment | null): string | undefined {
-      // This needs to be updated to take layers
+  selectionToMaskData(layers: Layer[]): string | undefined {
       const finalSelection = new Set<number>();
+      layers.forEach(layer => {
+        if (layer.type === 'segmentation' && layer.visible) {
+            layer.pixels.forEach(p => finalSelection.add(p));
+        }
+      });
       
       if (finalSelection.size === 0) return undefined;
 
@@ -606,28 +621,19 @@ export class SelectionEngine {
       const tempCtx = tempCanvas.getContext('2d');
       if (!tempCtx) return undefined;
       
-      // Black background for "inpaint here"
-      tempCtx.fillStyle = 'black';
+      // For inpainting: white is preserved, black is inpainted.
+      tempCtx.fillStyle = 'white';
       tempCtx.fillRect(0, 0, this.width, this.height);
 
-      // White foreground for "keep this"
-      tempCtx.fillStyle = 'white';
       const maskImageData = tempCtx.getImageData(0,0,this.width, this.height);
       const data = maskImageData.data;
-      for(let i = 0; i < data.length; i+=4) {
-          const idx = i / 4;
-          if (!finalSelection.has(idx)) {
-              data[i] = 255;
-              data[i+1] = 255;
-              data[i+2] = 255;
-              data[i+3] = 255;
-          } else {
-              data[i] = 0;
-              data[i+1] = 0;
-              data[i+2] = 0;
-              data[i+3] = 255;
-          }
-      }
+      finalSelection.forEach(idx => {
+          const i = idx * 4;
+          data[i] = 0;   // black
+          data[i+1] = 0;
+          data[i+2] = 0;
+          data[i+3] = 255;
+      });
       tempCtx.putImageData(maskImageData, 0, 0);
 
 
@@ -637,7 +643,7 @@ export class SelectionEngine {
 
   renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment) {
       if (!segment) return;
-      overlayCtx.fillStyle = 'rgba(3, 169, 244, 0.3)'; // Highlight color
+      overlayCtx.fillStyle = 'rgba(3, 169, 244, 0.3)';
       
       const originalImageData = this.ctx.getImageData(0,0, this.width, this.height);
       const segmentImageData = overlayCtx.createImageData(originalImageData);
@@ -667,10 +673,10 @@ export class SelectionEngine {
         if (layer.visible && layer.type === 'segmentation') {
           layer.pixels.forEach(idx => {
             const i = idx * 4;
-            data[i] = 3;     // R
-            data[i + 1] = 169; // G
-            data[i + 2] = 244; // B
-            data[i + 3] = 102; // A (0.4 alpha)
+            data[i] = 3;
+            data[i + 1] = 169;
+            data[i + 2] = 244;
+            data[i + 3] = 102;
           });
         }
       });
@@ -716,11 +722,10 @@ export class SelectionEngine {
       }
 
 
-      // Draw anchor points
       this.lassoNodes.forEach(([x, y], index) => {
-        overlayCtx.fillStyle = index === 0 ? 'hsl(var(--accent))' : '#fff';
         overlayCtx.beginPath();
         overlayCtx.arc(x, y, 2, 0, Math.PI * 2);
+        overlayCtx.fillStyle = index === 0 ? 'hsl(var(--accent))' : '#fff';
         overlayCtx.fill();
         overlayCtx.strokeStyle = 'hsl(var(--background))';
         overlayCtx.lineWidth = 1;

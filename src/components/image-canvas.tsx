@@ -65,6 +65,7 @@ export function ImageCanvas({
   const [isClient, setIsClient] = React.useState(false);
   const [hoveredSegment, setHoveredSegment] = React.useState<Segment | null>(null);
   const mouseStopTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const lassoMouseTraceRef = React.useRef<[number, number][]>([]);
 
 
   const { toast } = useToast();
@@ -75,7 +76,7 @@ export function ImageCanvas({
   
   React.useEffect(() => {
     if (getSelectionMaskRef) {
-      getSelectionMaskRef.current = () => selectionEngineRef.current?.selectionToMaskData();
+      getSelectionMaskRef.current = () => selectionEngineRef.current?.selectionToMaskData(layers);
     }
     if (clearSelectionRef) {
       clearSelectionRef.current = () => {
@@ -83,7 +84,7 @@ export function ImageCanvas({
         drawOverlay();
       }
     }
-  }, [getSelectionMaskRef, clearSelectionRef]);
+  }, [getSelectionMaskRef, clearSelectionRef, layers]);
 
 
   const drawOverlay = React.useCallback(() => {
@@ -342,9 +343,11 @@ export function ImageCanvas({
     if (activeTool === 'lasso') {
       if (!engine.isDrawingLasso) {
         engine.startLasso(pos.x, pos.y);
+        lassoMouseTraceRef.current = [[pos.x, pos.y]];
         toast({ title: 'Lasso started', description: 'Click to add points. Double-click or Press Enter to complete.' });
       } else {
-        engine.addLassoNode(); 
+        engine.addLassoNode(lassoMouseTraceRef.current);
+        lassoMouseTraceRef.current = [];
       }
       drawOverlay();
     } else if (activeTool === 'magic-wand') {
@@ -385,7 +388,8 @@ export function ImageCanvas({
 
     if (activeTool === 'lasso') {
       if (engine.isDrawingLasso) {
-        engine.updateLassoPreview(pos.x, pos.y);
+        lassoMouseTraceRef.current.push([pos.x, pos.y]);
+        engine.updateLassoPreview(pos.x, pos.y, lassoMouseTraceRef.current);
         drawOverlay();
       }
     } else if (activeTool === 'magic-wand') {
@@ -436,7 +440,7 @@ export function ImageCanvas({
         const changes: Partial<LassoSettings> = {};
 
         const activeSettings: (keyof LassoSettings)[] = [
-            'snapRadius', 'snapThreshold', 'curveStrength', 'directionalStrength', 'cursorInfluence'
+            'snapRadius', 'snapThreshold', 'curveStrength', 'directionalStrength', 'cursorInfluence', 'traceInfluence'
         ];
 
         activeSettings.forEach(settingKey => {
@@ -453,6 +457,7 @@ export function ImageCanvas({
                     case 'curveStrength': min = 0; max = 1; break;
                     case 'directionalStrength': min = 0; max = 1; break;
                     case 'cursorInfluence': min = 0; max = 1; break;
+                    case 'traceInfluence': min = 0; max = 1; break;
                 }
                 
                 let newValue = currentValue + delta * currentStep;
@@ -466,7 +471,7 @@ export function ImageCanvas({
         }
 
         const pos = getMousePos(e.currentTarget, e);
-        engine.updateLassoPreview(pos.x, pos.y);
+        engine.updateLassoPreview(pos.x, pos.y, lassoMouseTraceRef.current);
         drawOverlay();
 
     } else if (activeTool === 'magic-wand') {

@@ -1,10 +1,11 @@
 
+
 "use client"
 
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2 } from "lucide-react";
+import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints } from "lucide-react";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -36,11 +37,13 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           curveStrength: 0.00,
           directionalStrength: 0.00,
           cursorInfluence: 0.25,
+          traceInfluence: 0.5,
           snapRadiusEnabled: true,
           snapThresholdEnabled: true,
           curveStrengthEnabled: false,
           directionalStrengthEnabled: false,
           cursorInfluenceEnabled: true,
+          traceInfluenceEnabled: true,
         };
         break;
       case 'loose':
@@ -50,11 +53,13 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           curveStrength: 0.4,
           directionalStrength: 0.5,
           cursorInfluence: 0.05,
+          traceInfluence: 0.1,
           snapRadiusEnabled: true,
           snapThresholdEnabled: true,
           curveStrengthEnabled: true,
           directionalStrengthEnabled: true,
           cursorInfluenceEnabled: false,
+          traceInfluenceEnabled: true,
         };
         break;
       default: // default
@@ -64,11 +69,13 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
           curveStrength: 0.05,
           directionalStrength: 0.2,
           cursorInfluence: 0.1,
+          traceInfluence: 0.2,
           snapRadiusEnabled: true,
           snapThresholdEnabled: true,
           curveStrengthEnabled: true,
           directionalStrengthEnabled: false,
           cursorInfluenceEnabled: true,
+          traceInfluenceEnabled: true,
         };
         break;
     }
@@ -81,6 +88,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
     { id: 'directionalStrength', label: 'Directional Strength', icon: TrendingUp, min: 0, max: 1, step: 0.05, description: 'How strongly the path maintains its direction. Higher values resist deviation.' },
     { id: 'cursorInfluence', label: 'Cursor Influence', icon: MousePointerClick, min: 0, max: 1, step: 0.05, description: 'How strongly the path is pulled towards the cursor. Higher is stronger.' },
+    { id: 'traceInfluence', label: 'Trace Influence', icon: Footprints, min: 0, max: 1, step: 0.05, description: 'How strongly the path follows your exact mouse movement.' },
   ];
 
   return (

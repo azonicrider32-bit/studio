@@ -18,11 +18,13 @@ export interface LassoSettings {
     curveStrength: number;
     directionalStrength: number;
     cursorInfluence: number;
+    traceInfluence: number; // New setting for mouse trace
     snapRadiusEnabled: boolean;
     snapThresholdEnabled: boolean;
     curveStrengthEnabled: boolean;
     directionalStrengthEnabled: boolean;
     cursorInfluenceEnabled: boolean;
+    traceInfluenceEnabled: boolean; // New toggle
 }
 
 export interface MagicWandSettings {
