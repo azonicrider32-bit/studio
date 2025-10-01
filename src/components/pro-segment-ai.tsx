@@ -7,6 +7,7 @@ import {
   Bot,
   Brush,
   Eraser,
+  Feather,
   Layers,
   Pipette,
   Settings2,
@@ -40,7 +41,8 @@ import { LayersPanel } from "./panels/layers-panel"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import { AiModelsPanel } from "./panels/ai-models-panel"
 import { InpaintingPanel } from "./panels/inpainting-panel"
-import { LassoSettings, MagicWandSettings } from "@/lib/types"
+import { FeatherPanel } from "./panels/feather-panel"
+import { LassoSettings, MagicWandSettings, FeatherSettings } from "@/lib/types"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
@@ -82,6 +84,16 @@ export function ProSegmentAI() {
     scrollAdjustTolerances: new Set(),
     seedColor: undefined,
   });
+  const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
+    antiAlias: { enabled: true, method: 'gaussian', quality: 'balanced' },
+    smartFeather: {
+      enabled: true,
+      alphaMatting: { enabled: true, method: 'closed-form', quality: 0.85 },
+      backgroundAdaptation: { enabled: true, sampleRadius: 8, adaptationStrength: 0.6, colorThreshold: 20 },
+      gradientTransparency: { enabled: true, gradientRadius: 6, smoothness: 0.7, edgeAware: true },
+      colorAwareProcessing: { enabled: false, haloPreventionStrength: 0, colorContextRadius: 0 }
+    }
+  });
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
 
@@ -102,6 +114,21 @@ export function ProSegmentAI() {
     setNegativeMagicWandSettings(prev => ({ ...prev, ...newSettings }));
   };
   
+  const handleFeatherSettingsChange = (newSettings: Partial<FeatherSettings>) => {
+    setFeatherSettings(prev => {
+        const updated = { ...prev };
+        if (newSettings.antiAlias) updated.antiAlias = { ...prev.antiAlias, ...newSettings.antiAlias };
+        if (newSettings.smartFeather) {
+            updated.smartFeather = { ...prev.smartFeather, ...newSettings.smartFeather };
+            if (newSettings.smartFeather.alphaMatting) updated.smartFeather.alphaMatting = { ...prev.smartFeather.alphaMatting, ...newSettings.smartFeather.alphaMatting };
+            if (newSettings.smartFeather.backgroundAdaptation) updated.smartFeather.backgroundAdaptation = { ...prev.smartFeather.backgroundAdaptation, ...newSettings.smartFeather.backgroundAdaptation };
+            if (newSettings.smartFeather.gradientTransparency) updated.smartFeather.gradientTransparency = { ...prev.smartFeather.gradientTransparency, ...newSettings.smartFeather.gradientTransparency };
+            if (newSettings.smartFeather.colorAwareProcessing) updated.smartFeather.colorAwareProcessing = { ...prev.smartFeather.colorAwareProcessing, ...newSettings.smartFeather.colorAwareProcessing };
+        }
+        return { ...updated, ...newSettings };
+    });
+  };
+
   const handleImageSelect = (url: string) => {
     setImageUrl(url);
     setSegmentationMask(null);
@@ -287,9 +314,10 @@ export function ProSegmentAI() {
       <Sidebar side="right" className="w-[380px] border-l">
         <Tabs defaultValue="options" className="flex h-full flex-col">
           <SidebarHeader>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="options">Options</TabsTrigger>
               <TabsTrigger value="exclusions">Exclusions</TabsTrigger>
+              <TabsTrigger value="feather">Feather</TabsTrigger>
               <TabsTrigger value="layers">Layers</TabsTrigger>
               <TabsTrigger value="analysis">Analysis</TabsTrigger>
               <TabsTrigger value="ai">AI</TabsTrigger>
@@ -302,6 +330,9 @@ export function ProSegmentAI() {
             </TabsContent>
             <TabsContent value="exclusions" className="m-0 h-full">
               {renderToolOptions(true)}
+            </TabsContent>
+            <TabsContent value="feather" className="m-0 h-full">
+              <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
             </TabsContent>
             <TabsContent value="layers" className="m-0">
               <LayersPanel />

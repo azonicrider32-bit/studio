@@ -1,6 +1,7 @@
 
 
 
+
 export interface LassoSettings {
     useEdgeSnapping: boolean;
     snapRadius: number;
@@ -33,4 +34,37 @@ export interface Segment {
     id: number;
     pixels: Set<number>;
     bounds: { x: number; y: number; width: number; height: number };
+}
+
+export interface FeatherSettings {
+  antiAlias: {
+    enabled: boolean;
+    method: 'smooth' | 'gaussian' | 'bilinear';
+    quality: 'fast' | 'balanced' | 'high';
+  };
+  smartFeather: {
+    enabled: boolean;
+    alphaMatting: {
+      enabled: boolean;
+      method: 'closed-form' | 'knn' | 'learning-based';
+      quality: number; // 0-1
+    };
+    backgroundAdaptation: {
+      enabled: boolean;
+      sampleRadius: number; // pixels
+      adaptationStrength: number; // 0-1
+      colorThreshold: number; // similarity threshold
+    };
+    gradientTransparency: {
+      enabled: boolean;
+      gradientRadius: number; // pixels
+      smoothness: number; // 0-1
+      edgeAware: boolean;
+    };
+    colorAwareProcessing: {
+      enabled: boolean;
+      haloPreventionStrength: number; // 0-1
+      colorContextRadius: number; // pixels
+    };
+  };
 }
