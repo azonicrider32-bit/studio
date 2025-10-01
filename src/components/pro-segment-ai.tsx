@@ -57,6 +57,7 @@ import { Tooltip, TooltipContent, TooltipProvider } from "./ui/tooltip"
 import { SelectionEngine } from "@/lib/selection-engine"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import { TooltipTrigger } from "@radix-ui/react-tooltip"
+import { TelemetryPanel } from "./panels/telemetry-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform"
 
@@ -462,7 +463,7 @@ export function ProSegmentAI() {
                   clearSelectionRef={clearSelectionRef}
                   onLassoSettingChange={handleLassoSettingsChange}
                   onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                  onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+                  onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
                   canvasMousePos={canvasMousePos}
                   setCanvasMousePos={setCanvasMousePos}
                   getCanvasRef={canvasRef}
@@ -475,10 +476,10 @@ export function ProSegmentAI() {
               <Tabs defaultValue="analysis" className="flex h-full flex-col">
                 <SidebarHeader>
                   <TooltipProvider>
-                      <TabsList className="grid w-full grid-cols-5">
+                      <TabsList className="grid w-full grid-cols-6">
                           <Tooltip>
                               <TooltipTrigger asChild>
-                                  <TabsTrigger value="analysis" className="flex-1"><AreaChart className="h-5 w-5"/></TabsTrigger>
+                                  <TabsTrigger value="analysis" className="flex-1"><Palette className="h-5 w-5"/></TabsTrigger>
                               </TooltipTrigger>
                               <TooltipContent>Color Analysis</TooltipContent>
                           </Tooltip>
@@ -505,6 +506,12 @@ export function ProSegmentAI() {
                                   <TabsTrigger value="ai" className="flex-1"><BrainCircuit className="h-5 w-5"/></TabsTrigger>
                               </TooltipTrigger>
                               <TooltipContent>AI Tools</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                                  <TabsTrigger value="telemetry" className="flex-1"><AreaChart className="h-5 w-5"/></TabsTrigger>
+                              </TooltipTrigger>
+                              <TooltipContent>Telemetry</TooltipContent>
                           </Tooltip>
                       </TabsList>
                   </TooltipProvider>
@@ -554,6 +561,9 @@ export function ProSegmentAI() {
                           </TabsContent>
                       </Tabs>
                   </TabsContent>
+                  <TabsContent value="telemetry" className="m-0 h-full">
+                    <TelemetryPanel />
+                  </TabsContent>
                 </SidebarContent>
               </Tabs>
           </div>
@@ -562,5 +572,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
