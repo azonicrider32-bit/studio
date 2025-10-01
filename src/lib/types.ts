@@ -59,6 +59,12 @@ export interface MagicWandSettings {
     fixedHighlightColor: string;
     highlightOpacity: number;
     highlightTexture: 'solid' | 'checkerboard' | 'lines';
+    highlightBorder: {
+        enabled: boolean;
+        thickness: number;
+        color: string;
+        pattern: 'solid' | 'dashed';
+    };
 }
 
 

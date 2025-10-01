@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -17,6 +18,7 @@ import {
   LayoutGrid,
   Minus,
   CaseSensitive,
+  Frame,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -167,86 +169,150 @@ export function ToolSettingsPanel({
                     />
                 </div>
                 <Separator />
-                <div className="space-y-2">
-                    <Label className="flex items-center gap-2 text-sm"><Paintbrush className="w-4 h-4"/> Highlight Style</Label>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="highlight-opacity" className="text-xs">Opacity: {magicWandSettings.highlightOpacity.toFixed(2)}</Label>
-                    <Slider 
-                        id="highlight-opacity"
-                        min={0} max={1} step={0.05}
-                        value={[magicWandSettings.highlightOpacity]}
-                        onValueChange={(v) => onMagicWandSettingsChange({ highlightOpacity: v[0]})}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label className="text-xs">Texture</Label>
-                    <div className="grid grid-cols-3 gap-1">
-                        <Button 
-                            size="sm" 
-                            variant={magicWandSettings.highlightTexture === 'solid' ? 'default': 'outline'}
-                            onClick={() => onMagicWandSettingsChange({highlightTexture: 'solid'})}>
-                            <CaseSensitive className="h-4 w-4"/>
-                        </Button>
-                         <Button 
-                            size="sm" 
-                            variant={magicWandSettings.highlightTexture === 'checkerboard' ? 'default': 'outline'}
-                            onClick={() => onMagicWandSettingsChange({highlightTexture: 'checkerboard'})}>
-                            <LayoutGrid className="h-4 w-4"/>
-                        </Button>
-                         <Button 
-                            size="sm" 
-                            variant={magicWandSettings.highlightTexture === 'lines' ? 'default': 'outline'}
-                            onClick={() => onMagicWandSettingsChange({highlightTexture: 'lines'})}>
-                            <Minus className="h-4 w-4 -rotate-45"/>
-                        </Button>
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <Label className="text-xs">Color</Label>
-                    <div className="flex gap-1">
-                         <Button 
-                            size="sm" 
-                            variant={magicWandSettings.highlightColorMode === 'random' ? 'default': 'outline'}
-                            onClick={() => onMagicWandSettingsChange({highlightColorMode: 'random'})}
-                            className="flex-1"
-                         >
-                            Random
-                        </Button>
-                        <Button 
-                            size="sm" 
-                            variant={magicWandSettings.highlightColorMode === 'fixed' ? 'default': 'outline'}
-                            onClick={() => onMagicWandSettingsChange({highlightColorMode: 'fixed'})}
-                            className="flex-1"
-                         >
-                            Fixed
-                        </Button>
-                        {magicWandSettings.highlightColorMode === 'fixed' && (
-                            <div className="relative h-9 w-9">
-                                <input 
-                                type="color" 
-                                value={magicWandSettings.fixedHighlightColor}
-                                onChange={(e) => onMagicWandSettingsChange({ fixedHighlightColor: e.target.value })}
-                                className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
-                                />
-                                <div 
-                                    className="h-full w-full rounded-md border border-input"
-                                    style={{ backgroundColor: magicWandSettings.fixedHighlightColor }}
+                <Accordion type="multiple" defaultValue={['highlight-style']} className="w-full">
+                    <AccordionItem value="highlight-style" className="border-b-0">
+                        <AccordionTrigger className="text-sm font-semibold flex items-center gap-2 py-2 -my-2 hover:no-underline">
+                            <Paintbrush className="w-4 h-4"/> Highlight Style
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="highlight-opacity" className="text-xs">Opacity: {magicWandSettings.highlightOpacity.toFixed(2)}</Label>
+                                <Slider 
+                                    id="highlight-opacity"
+                                    min={0} max={1} step={0.05}
+                                    value={[magicWandSettings.highlightOpacity]}
+                                    onValueChange={(v) => onMagicWandSettingsChange({ highlightOpacity: v[0]})}
                                 />
                             </div>
-                        )}
-                    </div>
-                </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs">Texture</Label>
+                                <div className="grid grid-cols-3 gap-1">
+                                    <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightTexture === 'solid' ? 'default': 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({highlightTexture: 'solid'})}>
+                                        <CaseSensitive className="h-4 w-4"/>
+                                    </Button>
+                                    <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightTexture === 'checkerboard' ? 'default': 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({highlightTexture: 'checkerboard'})}>
+                                        <LayoutGrid className="h-4 w-4"/>
+                                    </Button>
+                                    <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightTexture === 'lines' ? 'default': 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({highlightTexture: 'lines'})}>
+                                        <Minus className="h-4 w-4 -rotate-45"/>
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs">Color</Label>
+                                <div className="flex gap-1">
+                                    <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightColorMode === 'random' ? 'default': 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({highlightColorMode: 'random'})}
+                                        className="flex-1"
+                                    >
+                                        Random
+                                    </Button>
+                                    <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightColorMode === 'fixed' ? 'default': 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({highlightColorMode: 'fixed'})}
+                                        className="flex-1"
+                                    >
+                                        Fixed
+                                    </Button>
+                                    {magicWandSettings.highlightColorMode === 'fixed' && (
+                                        <div className="relative h-9 w-9">
+                                            <input 
+                                            type="color" 
+                                            value={magicWandSettings.fixedHighlightColor}
+                                            onChange={(e) => onMagicWandSettingsChange({ fixedHighlightColor: e.target.value })}
+                                            className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
+                                            />
+                                            <div 
+                                                className="h-full w-full rounded-md border border-input"
+                                                style={{ backgroundColor: magicWandSettings.fixedHighlightColor }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="highlight-border" className="border-b-0">
+                         <AccordionTrigger className="text-sm font-semibold flex items-center gap-2 py-2 -my-2 hover:no-underline">
+                            <Frame className="w-4 h-4"/> Highlight Border
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 space-y-4">
+                             <div className="flex items-center justify-between">
+                                <Label htmlFor="border-enabled" className="text-xs">Show Border</Label>
+                                <Switch
+                                id="border-enabled"
+                                checked={magicWandSettings.highlightBorder.enabled}
+                                onCheckedChange={(enabled) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, enabled }})}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="border-thickness" className="text-xs">Thickness: {magicWandSettings.highlightBorder.thickness}px</Label>
+                                <Slider 
+                                    id="border-thickness"
+                                    min={1} max={10} step={1}
+                                    value={[magicWandSettings.highlightBorder.thickness]}
+                                    onValueChange={(v) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, thickness: v[0] }})}
+                                />
+                            </div>
+                             <div className="space-y-2">
+                                <Label className="text-xs">Pattern</Label>
+                                <div className="grid grid-cols-2 gap-1">
+                                    <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightBorder.pattern === 'solid' ? 'default': 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, pattern: 'solid' }})}>
+                                        Solid
+                                    </Button>
+                                    <Button 
+                                        size="sm" 
+                                        variant={magicWandSettings.highlightBorder.pattern === 'dashed' ? 'default': 'outline'}
+                                        onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, pattern: 'dashed' }})}>
+                                        Dashed
+                                    </Button>
+                                </div>
+                            </div>
+                             <div className="space-y-2">
+                                <Label className="text-xs">Color</Label>
+                                <div className="relative h-9 w-full">
+                                    <input 
+                                    type="color" 
+                                    value={magicWandSettings.highlightBorder.color}
+                                    onChange={(e) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, color: e.target.value }})}
+                                    className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
+                                    />
+                                    <div 
+                                        className="h-full w-full rounded-md border border-input flex items-center justify-center text-xs"
+                                        style={{ backgroundColor: magicWandSettings.highlightBorder.color }}
+                                    >
+                                      <span style={{ mixBlendMode: 'difference', color: 'white'}}>{magicWandSettings.highlightBorder.color}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             </TabsContent>
         </Tabs>
       ) : (
-        <Tabs defaultValue="general" className="px-2 space-y-4">
+        <Tabs defaultValue="general" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="magic-snap" disabled={lassoSettings.drawMode !== 'magic'}>Magic Snap</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="general" className="m-0 space-y-6">
+            <TabsContent value="general" className="m-0 space-y-6 px-2">
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <Label htmlFor="draw-mode">Draw Mode</Label>
@@ -317,15 +383,16 @@ export function ToolSettingsPanel({
                     </div>
                 </div>
             </TabsContent>
-            <TabsContent value="magic-snap" className="m-0 space-y-2">
+            <TabsContent value="magic-snap" className="m-0 space-y-2 px-2">
+               <div className="space-y-2">
                 <TooltipProvider>
-                    <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
+                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
                          <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
                         <VerticalLassoSlider settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="curveStrength" label="Curve" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
                     </div>
-                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
+                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md mt-2">
                         <VerticalLassoSlider settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="colorInfluence" label="Color" max={1} step={0.05} />
@@ -339,6 +406,7 @@ export function ToolSettingsPanel({
                         onCheckedChange={(checked) => onLassoSettingsChange({ useColorAwareness: checked })}
                     />
                 </div>
+               </div>
             </TabsContent>
 
         </Tabs>
@@ -346,5 +414,3 @@ export function ToolSettingsPanel({
     </div>
   )
 }
-
-    

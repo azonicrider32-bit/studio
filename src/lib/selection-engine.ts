@@ -77,6 +77,12 @@ export class SelectionEngine {
     fixedHighlightColor: '#00aaff',
     highlightOpacity: 0.5,
     highlightTexture: 'solid',
+    highlightBorder: {
+        enabled: true,
+        thickness: 2,
+        color: '#ffffff',
+        pattern: 'solid',
+    },
   };
    negativeMagicWandSettings: MagicWandSettings = {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -94,6 +100,12 @@ export class SelectionEngine {
     fixedHighlightColor: '#ff0000',
     highlightOpacity: 0.5,
     highlightTexture: 'solid',
+    highlightBorder: {
+        enabled: false,
+        thickness: 1,
+        color: '#ffffff',
+        pattern: 'solid',
+    },
   };
 
 
@@ -808,7 +820,7 @@ export class SelectionEngine {
         if (!tempCtx) return null;
         
         let baseColor = color;
-        if (!color.startsWith('hsl') && !color.startsWith('#')) {
+        if (!color.startsWith('hsl') && !color.startsWith('#') && !color.startsWith('rgba')) {
             baseColor = `hsl(${color})`;
         } else if (color.startsWith('#')) {
             // Convert hex to HSL to easily add alpha
@@ -823,55 +835,31 @@ export class SelectionEngine {
                 b = parseInt(color.substring(5, 7), 16);
             }
             baseColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-            const rgbaColor = (o: number) => `rgba(${r}, ${g}, ${b}, ${o})`;
-
-            switch(texture) {
-                case 'checkerboard':
-                    tempCanvas.width = 16;
-                    tempCanvas.height = 16;
-                    tempCtx.fillStyle = rgbaColor(opacity * 0.5);
-                    tempCtx.fillRect(0, 0, 8, 8);
-                    tempCtx.fillRect(8, 8, 8, 8);
-                    tempCtx.fillStyle = rgbaColor(opacity);
-                    tempCtx.fillRect(8, 0, 8, 8);
-                    tempCtx.fillRect(0, 8, 8, 8);
-                    break;
-                case 'lines':
-                    tempCanvas.width = 8;
-                    tempCanvas.height = 8;
-                    tempCtx.strokeStyle = rgbaColor(opacity);
-                    tempCtx.lineWidth = 2;
-                    tempCtx.beginPath();
-                    tempCtx.moveTo(0, 8);
-                    tempCtx.lineTo(8, 0);
-                    tempCtx.stroke();
-                    break;
-                case 'solid':
-                default:
-                    return rgbaColor(opacity);
-            }
-             return ctx.createPattern(tempCanvas, 'repeat');
         }
-
-
-        const rgbaColor = (o: number) => baseColor.replace(')', `, ${o})`).replace('hsl', 'hsla');
+        
+        const rgbaColorWithOpacity = (alpha: number) => {
+            if (baseColor.startsWith('rgba')) {
+                return baseColor.replace(/[\d\.]+\)$/g, `${alpha})`);
+            }
+            return baseColor.replace(')', `, ${alpha})`).replace('hsl', 'hsla');
+        }
 
 
         switch(texture) {
             case 'checkerboard':
                 tempCanvas.width = 16;
                 tempCanvas.height = 16;
-                tempCtx.fillStyle = rgbaColor(opacity * 0.5);
+                tempCtx.fillStyle = rgbaColorWithOpacity(opacity * 0.3);
                 tempCtx.fillRect(0, 0, 8, 8);
                 tempCtx.fillRect(8, 8, 8, 8);
-                tempCtx.fillStyle = rgbaColor(opacity);
+                tempCtx.fillStyle = rgbaColorWithOpacity(opacity);
                 tempCtx.fillRect(8, 0, 8, 8);
                 tempCtx.fillRect(0, 8, 8, 8);
                 break;
             case 'lines':
                  tempCanvas.width = 8;
                 tempCanvas.height = 8;
-                tempCtx.strokeStyle = rgbaColor(opacity);
+                tempCtx.strokeStyle = rgbaColorWithOpacity(opacity);
                 tempCtx.lineWidth = 2;
                 tempCtx.beginPath();
                 tempCtx.moveTo(0, 8);
@@ -880,22 +868,31 @@ export class SelectionEngine {
                 break;
             case 'solid':
             default:
-                return rgbaColor(opacity);
+                return rgbaColorWithOpacity(opacity);
 
         }
 
         return ctx.createPattern(tempCanvas, 'repeat');
     }
 
-  renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment, isMask: boolean, color: string, texture: Layer['highlightTexture'], opacity: number) {
+  renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment, isMask: boolean, wandSettings: MagicWandSettings) {
       if (!segment || segment.pixels.size === 0) return;
       
+      const { highlightColorMode, fixedHighlightColor, highlightOpacity, highlightTexture, highlightBorder } = wandSettings;
+
       overlayCtx.save();
       
-      const hoverColor = isMask ? 'hsl(0, 0%, 50%)' : color;
-      const hoverTexture = isMask ? 'checkerboard' : texture;
+      const texture = isMask ? 'checkerboard' : (highlightTexture || 'solid');
+      let color = 'hsl(var(--primary))';
+        if (isMask) {
+            color = 'hsl(0, 0%, 50%)';
+        } else if (highlightColorMode === 'fixed') {
+            color = fixedHighlightColor;
+        }
 
-      const pattern = this.renderPattern(overlayCtx, hoverTexture, hoverColor, opacity);
+      const opacity = highlightOpacity || 0.5;
+
+      const pattern = this.renderPattern(overlayCtx, texture, color, opacity);
       if(!pattern) {
         overlayCtx.restore();
         return;
@@ -911,7 +908,28 @@ export class SelectionEngine {
       overlayCtx.restore();
   }
 
+    getBorderPixels(pixels: Set<number>): Set<number> {
+        const borderPixels = new Set<number>();
+        pixels.forEach(idx => {
+            const x = idx % this.width;
+            const y = Math.floor(idx / this.width);
 
+            const neighbors = [
+                (y - 1) * this.width + x, // N
+                (y + 1) * this.width + x, // S
+                y * this.width + (x - 1), // W
+                y * this.width + (x + 1), // E
+            ];
+
+            for (const neighborIdx of neighbors) {
+                if (!pixels.has(neighborIdx)) {
+                    borderPixels.add(idx);
+                    break;
+                }
+            }
+        });
+        return borderPixels;
+    }
   renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[], wandSettings: MagicWandSettings, lassoSettings: LassoSettings, hoveredSegment: Segment | null) {
     if (!overlayCtx) return;
 
@@ -950,11 +968,27 @@ export class SelectionEngine {
     
     if (hoveredSegment && wandSettings.useAiAssist === false) {
        const isMask = wandSettings.createAsMask;
-       const texture = wandSettings.highlightTexture || 'solid';
-       const color = wandSettings.highlightColorMode === 'fixed' ? wandSettings.fixedHighlightColor : 'hsl(var(--primary))';
-       const opacity = wandSettings.highlightOpacity || 0.5;
+       this.renderHoverSegment(overlayCtx, hoveredSegment, isMask, wandSettings);
+       
+       if (wandSettings.highlightBorder.enabled) {
+            overlayCtx.save();
+            overlayCtx.strokeStyle = wandSettings.highlightBorder.color;
+            overlayCtx.lineWidth = wandSettings.highlightBorder.thickness;
+            if (wandSettings.highlightBorder.pattern === 'dashed') {
+                overlayCtx.setLineDash([5, 5]);
+            }
 
-       this.renderHoverSegment(overlayCtx, hoveredSegment, isMask, color, texture, opacity);
+            const borderPixels = this.getBorderPixels(hoveredSegment.pixels);
+            
+            overlayCtx.beginPath();
+            borderPixels.forEach(idx => {
+                 const x = idx % this.width;
+                 const y = Math.floor(idx / this.width);
+                 overlayCtx.rect(x, y, 1, 1);
+            });
+            overlayCtx.stroke();
+            overlayCtx.restore();
+        }
     }
 
 
