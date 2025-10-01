@@ -76,7 +76,6 @@ export function ImageCanvas({
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
   const [hoveredSegment, setHoveredSegment] = React.useState<Segment | null>(null);
-  const mouseStopTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const lassoMouseTraceRef = React.useRef<[number, number][]>([]);
 
 
@@ -515,8 +514,8 @@ const drawLayers = React.useCallback(() => {
   }, [drawOverlay, magicWandSettings.useAiAssist]);
 
   const debouncedWandPreview = React.useCallback(
-    debounce(triggerWandPreview, 50),
-    [triggerWandPreview] 
+    debounce(triggerWandPreview, 200),
+    [triggerWandPreview]
   );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -527,10 +526,6 @@ const drawLayers = React.useCallback(() => {
     const pos = getMousePos(canvas, e);
     setCanvasMousePos(pos);
 
-    if (mouseStopTimerRef.current) {
-        clearTimeout(mouseStopTimerRef.current);
-    }
-
     if (activeTool === 'lasso') {
       if (engine.isDrawingLasso) {
         lassoMouseTraceRef.current.push([pos.x, pos.y]);
@@ -539,16 +534,10 @@ const drawLayers = React.useCallback(() => {
       }
     } else if (activeTool === 'magic-wand') {
         debouncedWandPreview(pos.x, pos.y);
-        mouseStopTimerRef.current = setTimeout(() => {
-            triggerWandPreview(pos.x, pos.y);
-        }, 200);
     }
   };
   
   const handleMouseLeave = () => {
-    if (mouseStopTimerRef.current) {
-        clearTimeout(mouseStopTimerRef.current);
-    }
     setHoveredSegment(null);
     drawOverlay(null);
   }
@@ -693,7 +682,3 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
-
-    
-
-    
