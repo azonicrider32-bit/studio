@@ -31,7 +31,7 @@ export class SelectionEngine {
 
   // Settings
   lassoSettings: LassoSettings = {
-    useMagicSnapping: true,
+    drawMode: 'magic',
     useAiEnhancement: false,
     useColorAwareness: false,
     snapRadius: 20,
@@ -131,7 +131,7 @@ export class SelectionEngine {
   // #region LASSO
   startLasso(x: number, y: number) {
     this.cancelLasso();
-    const startPoint: [number, number] = this.lassoSettings.useMagicSnapping ? this.snapToEdge(x, y) : [x, y];
+    const startPoint: [number, number] = this.lassoSettings.drawMode === 'magic' ? this.snapToEdge(x, y) : [x, y];
     this.lassoNodes = [startPoint];
     this.lassoCurrentPos = startPoint;
     this.isDrawingLasso = true;
@@ -152,7 +152,26 @@ export class SelectionEngine {
     this.lassoCurrentPos = [x, y];
     this.lassoMouseTrace = mouseTrace;
     const lastNode = this.lassoNodes[this.lassoNodes.length - 1];
-    const { path: previewPath, futurePath } = this.findEdgePath(lastNode, [x, y], this.lassoMouseTrace);
+    
+    let previewPath: [number, number][];
+    let futurePath: [number, number][] = [];
+
+    switch(this.lassoSettings.drawMode) {
+      case 'magic':
+        const result = this.findEdgePath(lastNode, [x, y], this.lassoMouseTrace);
+        previewPath = result.path;
+        futurePath = result.futurePath;
+        break;
+      case 'polygon':
+        previewPath = [[x, y]];
+        break;
+      case 'free':
+        previewPath = [...mouseTrace];
+        break;
+      default:
+        previewPath = [];
+    }
+    
     this.lassoPreviewPath = previewPath;
     this.futureLassoPath = futurePath;
   }
@@ -161,8 +180,9 @@ export class SelectionEngine {
   addLassoNode(mouseTrace: [number, number][]) {
     if (!this.isDrawingLasso || !this.lassoCurrentPos) return;
 
-    // Combine committed nodes and the latest preview path
-    const fullPath = [...this.lassoNodes, ...this.lassoPreviewPath];
+    const newNodes = this.lassoSettings.drawMode === 'free' ? mouseTrace : this.lassoPreviewPath;
+
+    const fullPath = [...this.lassoNodes, ...newNodes];
     
     this.lassoNodes = fullPath;
     this.lassoPreviewPath = [];
@@ -227,7 +247,7 @@ export class SelectionEngine {
   }
   
   findEdgePath(p1: [number, number], p2: [number, number], mouseTrace: [number, number][], withFuturePath = true): { path: [number, number][], futurePath: [number, number][] } {
-    if (!this.lassoSettings.useMagicSnapping || !this.edgeMap) {
+    if (this.lassoSettings.drawMode !== 'magic' || !this.edgeMap) {
         return { path: [p2], futurePath: [] };
     }
 
@@ -371,7 +391,7 @@ export class SelectionEngine {
 
 
   snapToEdge(x: number, y: number): [number, number] {
-    if (!this.edgeMap || !this.lassoSettings.useMagicSnapping) return [Math.round(x), Math.round(y)];
+    if (!this.edgeMap || this.lassoSettings.drawMode !== 'magic') return [Math.round(x), Math.round(y)];
     
     const radius = this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1;
     let maxEdge = -1;

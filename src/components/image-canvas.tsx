@@ -80,7 +80,6 @@ export function ImageCanvas({
     }
     if (clearSelectionRef) {
       clearSelectionRef.current = () => {
-        // This will be replaced by layer state management
         drawOverlay();
       }
     }
@@ -432,43 +431,17 @@ export function ImageCanvas({
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -1 : 1; // Invert scroll for natural feel (scroll up = increase)
+    const delta = e.deltaY > 0 ? -1 : 1;
     const engine = selectionEngineRef.current;
 
     if (activeTool === 'lasso' && engine && engine.isDrawingLasso) {
-        let step = 0.05;
-        const changes: Partial<LassoSettings> = {};
-
-        const activeSettings: (keyof LassoSettings)[] = [
-            'snapRadius', 'snapThreshold', 'curveStrength', 'directionalStrength', 'cursorInfluence', 'traceInfluence'
-        ];
-
-        activeSettings.forEach(settingKey => {
-            if (lassoSettings[`${settingKey}Enabled`]) {
-                let currentStep = step;
-                 if (settingKey === 'snapRadius') currentStep = 1;
-
-                let currentValue = lassoSettings[settingKey] as number;
-                let min = 0, max = 1;
-
-                switch(settingKey) {
-                    case 'snapRadius': min = 1; max = 40; break;
-                    case 'snapThreshold': min = 0.05; max = 1; break;
-                    case 'curveStrength': min = 0; max = 1; break;
-                    case 'directionalStrength': min = 0; max = 1; break;
-                    case 'cursorInfluence': min = 0; max = 1; break;
-                    case 'traceInfluence': min = 0; max = 1; break;
-                }
-                
-                let newValue = currentValue + delta * currentStep;
-                newValue = Math.max(min, Math.min(max, newValue));
-                (changes as any)[settingKey] = newValue;
-            }
-        });
+        const modes: LassoSettings['drawMode'][] = ['magic', 'polygon', 'free'];
+        const currentIndex = modes.indexOf(lassoSettings.drawMode);
+        let nextIndex = currentIndex + delta;
+        if (nextIndex < 0) nextIndex = modes.length - 1;
+        if (nextIndex >= modes.length) nextIndex = 0;
         
-        if (Object.keys(changes).length > 0) {
-            onLassoSettingChange(changes);
-        }
+        onLassoSettingChange({ drawMode: modes[nextIndex] });
 
         const pos = getMousePos(e.currentTarget, e);
         engine.updateLassoPreview(pos.x, pos.y, lassoMouseTraceRef.current);

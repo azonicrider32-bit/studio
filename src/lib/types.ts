@@ -11,9 +11,9 @@ export interface Layer {
 }
 
 export interface LassoSettings {
-    useMagicSnapping: boolean;
+    drawMode: 'magic' | 'polygon' | 'free';
     useAiEnhancement: boolean;
-    useColorAwareness: boolean; // New toggle for color search
+    useColorAwareness: boolean;
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number;

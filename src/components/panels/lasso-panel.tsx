@@ -5,7 +5,7 @@
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette } from "lucide-react";
+import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette, PenTool, GitCommit, Sparkles } from "lucide-react";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -13,6 +13,7 @@ import { LassoSettings } from "@/lib/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
+import { cn } from "@/lib/utils";
 
 
 interface LassoPanelProps {
@@ -82,7 +83,16 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     onSettingsChange(newSettings);
   };
 
-  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useMagicSnapping' | 'useAiEnhancement' | 'useColorAwareness' | `${string}Enabled`>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const DRAW_MODES: { id: LassoSettings['drawMode']; label: string; icon: React.ElementType; description: string}[] = [
+    { id: 'magic', label: 'Magic Snap', icon: Sparkles, description: 'Path snaps to detected edges as you draw.' },
+    { id: 'polygon', label: 'Polygon', icon: GitCommit, description: 'Create straight lines between clicked points.' },
+    { id: 'free', label: 'Free Draw', icon: PenTool, description: 'Follows your cursor movement exactly.' },
+  ];
+
+  const currentMode = DRAW_MODES.find(m => m.id === settings.drawMode);
+
+
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | 'useColorAwareness' | `${string}Enabled` | 'drawMode'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 40, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
@@ -94,37 +104,21 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
   return (
     <div className="p-4 space-y-6">
        <TooltipProvider>
-      <div className="space-y-4">
-          <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                         <Label htmlFor="useMagicSnapping" className="flex items-center gap-2">
-                            <Wand2 className="h-4 w-4" />
-                            Magic Snapping
-                        </Label>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Enable real-time path snapping to detected edges as you draw.</p>
-                    </TooltipContent>
-                </Tooltip>
-                 <Popover>
-                    <PopoverTrigger>
-                        <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                    </PopoverTrigger>
-                    <PopoverContent side="top" className="text-sm">
-                        <h4 className="font-semibold mb-2">Magic Snapping</h4>
-                        <p>Enables the real-time, non-AI pathfinding that automatically snaps the lasso line to the strongest nearby edge as you draw. This provides live feedback and helps guide your selection.</p>
-                    </PopoverContent>
-                </Popover>
-              </div>
-              <Switch
-                id="useMagicSnapping"
-                checked={settings.useMagicSnapping}
-                onCheckedChange={(checked) => onSettingsChange({ useMagicSnapping: checked })}
-              />
-          </div>
+        <div className="space-y-4">
+             <div className="p-4 rounded-lg bg-muted/50 text-center space-y-2">
+                {currentMode && (
+                    <div className="flex items-center justify-center gap-2">
+                        <currentMode.icon className="h-5 w-5" />
+                        <h3 className="font-headline text-lg">{currentMode.label}</h3>
+                    </div>
+                )}
+                <p className="text-sm text-muted-foreground">{currentMode?.description}</p>
+                <p className="text-xs text-muted-foreground pt-1">(Use mouse wheel to switch modes)</p>
+            </div>
+            <Separator />
+        </div>
 
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
                  <Tooltip>
@@ -165,7 +159,7 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
                         </Label>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Use color differences to help find edges.</p>
+                        <p>Use color differences to help find edges. Only active in Magic Snap mode.</p>
                     </TooltipContent>
                 </Tooltip>
                  <Popover>
@@ -182,14 +176,15 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
                 id="useColorAwareness"
                 checked={settings.useColorAwareness}
                 onCheckedChange={(checked) => onSettingsChange({ useColorAwareness: checked })}
+                disabled={settings.drawMode !== 'magic'}
             />
         </div>
       </div>
 
       <Separator />
 
-      <div className="space-y-2">
-        <Label>Presets</Label>
+      <div className={cn("space-y-2", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
+        <Label>Presets (Magic Snap)</Label>
         <div className="grid grid-cols-3 gap-2">
             <Button variant="outline" size="sm" onClick={() => handlePreset('default')}>Default</Button>
             <Button variant="outline" size="sm" onClick={() => handlePreset('precise')}>Precise</Button>
@@ -197,9 +192,9 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
         </div>
       </div>
       
-      <Separator />
+      <Separator className={cn(settings.drawMode !== 'magic' && 'opacity-50')} />
 
-      <div className="space-y-4">
+      <div className={cn("space-y-4", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>
         <div className="flex justify-around items-end h-64">
             {SETTINGS_CONFIG.map(config => (
                 <VerticalSettingSlider

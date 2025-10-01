@@ -76,7 +76,7 @@ export function ProSegmentAI() {
   const [activeLayerId, setActiveLayerId] = React.useState<string>(layers[0]?.id);
 
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
-    useMagicSnapping: true,
+    drawMode: 'magic',
     useAiEnhancement: false,
     useColorAwareness: false,
     snapRadius: 20,
