@@ -99,71 +99,85 @@ export function ImageCanvas({
   }, [getSelectionMaskRef, clearSelectionRef, layers]);
 
 
-  const drawLayers = React.useCallback(() => {
+const drawLayers = React.useCallback(() => {
     const layersCanvas = layersCanvasRef.current;
-    if (!layersCanvas) return;
+    const mainImage = imageRef.current;
+    if (!layersCanvas || !mainImage) return;
 
     const layersCtx = layersCanvas.getContext('2d');
     if (!layersCtx) return;
 
     layersCtx.clearRect(0, 0, layersCanvas.width, layersCanvas.height);
 
-    const parentLayers = layers.filter(l => l.subType !== 'mask');
+    const layerTree = layers.reduce((acc, layer) => {
+        if (!layer.parentId) {
+            acc.push({ ...layer, children: [] });
+        } else {
+            const parent = acc.find(p => p.id === layer.parentId);
+            if (parent) {
+                parent.children.push(layer);
+            }
+        }
+        return acc;
+    }, [] as (Layer & { children: Layer[] })[]);
 
-    parentLayers.forEach(layer => {
-      if (!layer.visible || !layer.imageData) return;
 
-      const maskLayers = layers.filter(m => m.parentId === layer.id && m.subType === 'mask' && m.visible);
+    layerTree.forEach(parentLayer => {
+        if (!parentLayer.visible) return;
 
-      if (maskLayers.length > 0) {
-          const tempMaskCanvas = document.createElement('canvas');
-          tempMaskCanvas.width = layer.bounds.width;
-          tempMaskCanvas.height = layer.bounds.height;
-          const tempMaskCtx = tempMaskCanvas.getContext('2d');
+        // Create a temporary canvas for the parent layer and its masks
+        const tempParentCanvas = document.createElement('canvas');
+        tempParentCanvas.width = layersCanvas.width;
+        tempParentCanvas.height = layersCanvas.height;
+        const tempParentCtx = tempParentCanvas.getContext('2d');
+        if (!tempParentCtx) return;
 
-          if (tempMaskCtx) {
-              // Draw parent layer image data first
-              tempMaskCtx.putImageData(layer.imageData, 0, 0);
+        // Step 1: Draw the parent's content
+        if (parentLayer.type === 'background') {
+            tempParentCtx.drawImage(mainImage, 0, 0, layersCanvas.width, layersCanvas.height);
+        } else if (parentLayer.imageData) {
+            const tempImageCanvas = document.createElement('canvas');
+            tempImageCanvas.width = parentLayer.imageData.width;
+            tempImageCanvas.height = parentLayer.imageData.height;
+            const tempImageCtx = tempImageCanvas.getContext('2d');
+            if (tempImageCtx) {
+                tempImageCtx.putImageData(parentLayer.imageData, 0, 0);
+                tempParentCtx.drawImage(tempImageCanvas, parentLayer.bounds.x, parentLayer.bounds.y);
+            }
+        }
+        
+        // Step 2: Apply masks if any
+        const visibleMasks = parentLayer.children.filter(m => m.subType === 'mask' && m.visible);
+        if (visibleMasks.length > 0) {
+            const tempMaskCanvas = document.createElement('canvas');
+            tempMaskCanvas.width = layersCanvas.width;
+            tempMaskCanvas.height = layersCanvas.height;
+            const tempMaskCtx = tempMaskCanvas.getContext('2d');
+            if(tempMaskCtx) {
+                tempMaskCtx.fillStyle = 'black'; // Start with a black canvas
+                tempMaskCtx.fillRect(0, 0, tempMaskCanvas.width, tempMaskCanvas.height);
+                
+                visibleMasks.forEach(mask => {
+                    mask.pixels.forEach(pixelIndex => {
+                        const x = pixelIndex % layersCanvas.width;
+                        const y = Math.floor(pixelIndex / layersCanvas.width);
+                        tempMaskCtx.fillStyle = 'white'; // Paint the mask shape in white
+                        tempMaskCtx.fillRect(x, y, 1, 1);
+                    });
+                });
+                
+                // Use the mask to punch out the parent content
+                tempParentCtx.globalCompositeOperation = 'destination-in';
+                tempParentCtx.drawImage(tempMaskCanvas, 0, 0);
+                tempParentCtx.globalCompositeOperation = 'source-over'; // Reset
+            }
+        }
+        
+        // Step 3: Draw the processed parent layer to the main layer canvas
+        layersCtx.drawImage(tempParentCanvas, 0, 0);
+    });
+}, [layers]);
 
-              // Apply masks
-              tempMaskCtx.globalCompositeOperation = 'destination-in';
-              
-              maskLayers.forEach(mask => {
-                  const maskImageData = layersCtx.createImageData(layer.bounds.width, layer.bounds.height);
-                  const layerBounds = layer.bounds;
-
-                  for (let i = 0; i < mask.pixels.size; i++) {
-                      const pixelIndex = Array.from(mask.pixels)[i];
-                      const x = pixelIndex % layersCanvas.width;
-                      const y = Math.floor(pixelIndex / layersCanvas.width);
-
-                      if (x >= layerBounds.x && x < layerBounds.x + layerBounds.width &&
-                          y >= layerBounds.y && y < layerBounds.y + layerBounds.height) {
-                          const relativeX = x - layerBounds.x;
-                          const relativeY = y - layerBounds.y;
-                          const maskDataIndex = (relativeY * layerBounds.width + relativeX) * 4;
-                          maskImageData.data[maskDataIndex + 3] = 255;
-                      }
-                  }
-                  tempMaskCtx.putImageData(maskImageData, 0, 0);
-              });
-
-              layersCtx.drawImage(tempMaskCanvas, layer.bounds.x, layer.bounds.y);
-          }
-      } else if (layer.type === 'segmentation') {
-          // No masks, just draw the layer
-          const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = layer.imageData.width;
-          tempCanvas.height = layer.imageData.height;
-          const tempCtx = tempCanvas.getContext('2d');
-          if (tempCtx) {
-              tempCtx.putImageData(layer.imageData, 0, 0);
-              layersCtx.drawImage(tempCanvas, layer.bounds.x, layer.bounds.y);
-          }
-      }
-  });
-
-  }, [layers]);
 
   const drawOverlay = React.useCallback((currentHoverSegment: Segment | null = hoveredSegment) => {
     const overlayCanvas = overlayCanvasRef.current;
@@ -674,5 +688,3 @@ export function ImageCanvas({
     </div>
   );
 }
-
-    

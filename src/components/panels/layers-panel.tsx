@@ -54,9 +54,9 @@ export function LayersPanel({
         )}
       >
         <GripVertical className="h-5 w-5 text-muted-foreground" />
-        <div className="flex-1 flex items-center gap-2">
+        <div className="flex-1 flex items-center gap-2 overflow-hidden">
           {layerTypeIcon}
-          <span className="text-sm truncate">{layer.name}</span>
+          <span className="text-sm truncate flex-1">{layer.name}</span>
         </div>
 
         <Tooltip>
@@ -159,5 +159,3 @@ export function LayersPanel({
     </div>
   )
 }
-
-    
