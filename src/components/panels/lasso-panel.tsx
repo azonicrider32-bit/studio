@@ -5,7 +5,7 @@
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette, PenTool, GitCommit, Sparkles, Eye } from "lucide-react";
+import { Terminal, Radius, Waves, Spline, TrendingUp, MousePointerClick, Info, Wand2, Footprints, Palette, PenTool, GitCommit, Sparkles, Eye, ChevronDown } from "lucide-react";
 import { Label } from "../ui/label";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 
 interface LassoPanelProps {
@@ -105,15 +106,37 @@ export function LassoPanel({ settings, onSettingsChange }: LassoPanelProps) {
     <div className="p-4 space-y-6">
        <TooltipProvider>
         <div className="space-y-4">
-             <div className="p-4 rounded-lg bg-muted/50 text-center space-y-2">
-                {currentMode && (
-                    <div className="flex items-center justify-center gap-2">
-                        <currentMode.icon className="h-5 w-5" />
-                        <h3 className="font-headline text-lg">{currentMode.label}</h3>
-                    </div>
-                )}
-                <p className="text-sm text-muted-foreground">{currentMode?.description}</p>
-                <p className="text-xs text-muted-foreground pt-1">(Use mouse wheel to switch modes)</p>
+             <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                    <Label htmlFor="draw-mode">Draw Mode</Label>
+                    <Popover>
+                        <PopoverTrigger>
+                            <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                        </PopoverTrigger>
+                        <PopoverContent side="top" className="text-sm">
+                            <h4 className="font-semibold mb-2">Switching Modes</h4>
+                            <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                 <Select value={settings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onSettingsChange({ drawMode: value })}>
+                    <SelectTrigger id="draw-mode">
+                         <div className="flex items-center gap-2">
+                            {currentMode && <currentMode.icon className="h-4 w-4" />}
+                            <SelectValue placeholder="Select mode..." />
+                         </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                        {DRAW_MODES.map(mode => (
+                            <SelectItem key={mode.id} value={mode.id}>
+                               <div className="flex items-center gap-2">
+                                 <mode.icon className="h-4 w-4" />
+                                 <span>{mode.label}</span>
+                               </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                 </Select>
             </div>
             <Separator />
         </div>
@@ -325,3 +348,4 @@ function VerticalSettingSlider({ id, label, icon: Icon, value, min, max, step, u
         </div>
     );
 }
+
