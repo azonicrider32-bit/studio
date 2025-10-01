@@ -8,6 +8,7 @@ import {
   Eraser,
   Feather as FeatherIcon,
   Layers as LayersIcon,
+  Palette,
   Pipette,
   Settings2,
   SlidersHorizontal,
@@ -19,7 +20,6 @@ import {
   Link,
   Replace,
   Move,
-  Palette,
 } from "lucide-react"
 
 import {
@@ -159,7 +159,7 @@ export function ProSegmentAI() {
   const addLayer = (newLayer: Layer) => {
     setLayers(prev => [...prev, { ...newLayer, maskVisible: true }]);
     setActiveLayerId(newLayer.id);
-  }
+  };
 
   const updateLayer = React.useCallback((layerId: string, updatedPixels: Set<number>, newBounds: Layer['bounds']) => {
     setLayers(prev => prev.map(l => {
@@ -524,7 +524,7 @@ export function ProSegmentAI() {
                   </TabsContent>
                   <TabsContent value="exclusions" className="m-0 h-full">
                     {renderRightPanelContent(true)}
-                  </Tabs.Content>
+                  </TabsContent>
                   <TabsContent value="feather" className="m-0 h-full">
                     <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
                   </TabsContent>
