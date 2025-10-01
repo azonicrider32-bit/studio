@@ -436,7 +436,7 @@ export function ImageCanvas({
                 let min = 0, max = 1;
 
                 switch(settingKey) {
-                    case 'snapRadius': min = 1; max = 20; break;
+                    case 'snapRadius': min = 1; max = 40; break;
                     case 'snapThreshold': min = 0.05; max = 1; break;
                     case 'curveStrength': min = 0; max = 1; break;
                     case 'directionalStrength': min = 0; max = 1; break;
