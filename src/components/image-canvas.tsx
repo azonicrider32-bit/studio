@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Image from "next/image";
@@ -550,6 +549,8 @@ const drawLayers = React.useCallback(() => {
     if (mouseStopTimerRef.current) {
         clearTimeout(mouseStopTimerRef.current);
     }
+    setHoveredSegment(null);
+    drawOverlay(null);
   }
 
   const handleMouseUp = () => {
@@ -692,5 +693,7 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
+
+    
 
     
