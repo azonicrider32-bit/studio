@@ -807,7 +807,53 @@ export class SelectionEngine {
         const tempCtx = tempCanvas.getContext('2d');
         if (!tempCtx) return null;
         
-        const baseColor = color.startsWith('hsl') ? color : `hsl(${color})`;
+        let baseColor = color;
+        if (!color.startsWith('hsl') && !color.startsWith('#')) {
+            baseColor = `hsl(${color})`;
+        } else if (color.startsWith('#')) {
+            // Convert hex to HSL to easily add alpha
+            let r = 0, g = 0, b = 0;
+            if (color.length === 4) {
+                r = parseInt(color[1] + color[1], 16);
+                g = parseInt(color[2] + color[2], 16);
+                b = parseInt(color[3] + color[3], 16);
+            } else if (color.length === 7) {
+                r = parseInt(color.substring(1, 3), 16);
+                g = parseInt(color.substring(3, 5), 16);
+                b = parseInt(color.substring(5, 7), 16);
+            }
+            baseColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            const rgbaColor = (o: number) => `rgba(${r}, ${g}, ${b}, ${o})`;
+
+            switch(texture) {
+                case 'checkerboard':
+                    tempCanvas.width = 16;
+                    tempCanvas.height = 16;
+                    tempCtx.fillStyle = rgbaColor(opacity * 0.5);
+                    tempCtx.fillRect(0, 0, 8, 8);
+                    tempCtx.fillRect(8, 8, 8, 8);
+                    tempCtx.fillStyle = rgbaColor(opacity);
+                    tempCtx.fillRect(8, 0, 8, 8);
+                    tempCtx.fillRect(0, 8, 8, 8);
+                    break;
+                case 'lines':
+                    tempCanvas.width = 8;
+                    tempCanvas.height = 8;
+                    tempCtx.strokeStyle = rgbaColor(opacity);
+                    tempCtx.lineWidth = 2;
+                    tempCtx.beginPath();
+                    tempCtx.moveTo(0, 8);
+                    tempCtx.lineTo(8, 0);
+                    tempCtx.stroke();
+                    break;
+                case 'solid':
+                default:
+                    return rgbaColor(opacity);
+            }
+             return ctx.createPattern(tempCanvas, 'repeat');
+        }
+
+
         const rgbaColor = (o: number) => baseColor.replace(')', `, ${o})`).replace('hsl', 'hsla');
 
 
@@ -816,10 +862,11 @@ export class SelectionEngine {
                 tempCanvas.width = 16;
                 tempCanvas.height = 16;
                 tempCtx.fillStyle = rgbaColor(opacity * 0.5);
-                tempCtx.fillRect(0, 0, 16, 16);
-                tempCtx.fillStyle = rgbaColor(opacity);
                 tempCtx.fillRect(0, 0, 8, 8);
                 tempCtx.fillRect(8, 8, 8, 8);
+                tempCtx.fillStyle = rgbaColor(opacity);
+                tempCtx.fillRect(8, 0, 8, 8);
+                tempCtx.fillRect(0, 8, 8, 8);
                 break;
             case 'lines':
                  tempCanvas.width = 8;
@@ -840,22 +887,20 @@ export class SelectionEngine {
         return ctx.createPattern(tempCanvas, 'repeat');
     }
 
-  renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment, isMask: boolean, color: string) {
+  renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment, isMask: boolean, color: string, texture: Layer['highlightTexture'], opacity: number) {
       if (!segment || segment.pixels.size === 0) return;
       
       overlayCtx.save();
       
-      if (isMask) {
-        const pattern = this.renderPattern(overlayCtx, 'checkerboard', 'hsl(0,0%,50%)', 0.5);
-        if(!pattern) {
-          overlayCtx.restore();
-          return;
-        };
-        overlayCtx.fillStyle = pattern;
-      } else {
-        const tempColor = color.startsWith('hsl') ? color : `hsl(${color})`;
-        overlayCtx.fillStyle = tempColor.replace(')', ', 0.5)').replace('hsl', 'hsla');
-      }
+      const hoverColor = isMask ? 'hsl(0, 0%, 50%)' : color;
+      const hoverTexture = isMask ? 'checkerboard' : texture;
+
+      const pattern = this.renderPattern(overlayCtx, hoverTexture, hoverColor, opacity);
+      if(!pattern) {
+        overlayCtx.restore();
+        return;
+      };
+      overlayCtx.fillStyle = pattern;
       
       segment.pixels.forEach((idx: number) => {
         const x = idx % this.width;
@@ -905,21 +950,11 @@ export class SelectionEngine {
     
     if (hoveredSegment && wandSettings.useAiAssist === false) {
        const isMask = wandSettings.createAsMask;
-       const texture = isMask ? 'checkerboard' : (wandSettings.highlightTexture || 'solid');
-       const color = isMask ? 'hsl(0, 0%, 50%)' : (wandSettings.highlightColorMode === 'fixed' ? wandSettings.fixedHighlightColor : 'hsl(var(--primary))');
+       const texture = wandSettings.highlightTexture || 'solid';
+       const color = wandSettings.highlightColorMode === 'fixed' ? wandSettings.fixedHighlightColor : 'hsl(var(--primary))';
        const opacity = wandSettings.highlightOpacity || 0.5;
 
-       overlayCtx.save();
-       const pattern = this.renderPattern(overlayCtx, texture, color, opacity);
-       if (pattern) {
-            overlayCtx.fillStyle = pattern;
-            hoveredSegment.pixels.forEach((idx: number) => {
-                const x = idx % this.width;
-                const y = Math.floor(idx / this.width);
-                overlayCtx.fillRect(x,y,1,1);
-            });
-       }
-       overlayCtx.restore();
+       this.renderHoverSegment(overlayCtx, hoveredSegment, isMask, color, texture, opacity);
     }
 
 

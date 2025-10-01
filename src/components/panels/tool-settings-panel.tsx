@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -15,6 +14,9 @@ import {
   Wand2,
   GitCommit,
   PenTool,
+  LayoutGrid,
+  Minus,
+  CaseSensitive,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -165,7 +167,9 @@ export function ToolSettingsPanel({
                     />
                 </div>
                 <Separator />
-                <Label className="flex items-center gap-2"><Paintbrush className="w-4 h-4"/> Highlight Style</Label>
+                <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm"><Paintbrush className="w-4 h-4"/> Highlight Style</Label>
+                </div>
                 <div className="space-y-2">
                     <Label htmlFor="highlight-opacity" className="text-xs">Opacity: {magicWandSettings.highlightOpacity.toFixed(2)}</Label>
                     <Slider 
@@ -176,41 +180,62 @@ export function ToolSettingsPanel({
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="highlight-texture" className="text-xs">Texture</Label>
-                    <Select value={magicWandSettings.highlightTexture} onValueChange={(v) => onMagicWandSettingsChange({ highlightTexture: v as any })}>
-                        <SelectTrigger id="highlight-texture"><SelectValue/></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="solid">Solid</SelectItem>
-                            <SelectItem value="checkerboard">Checkerboard</SelectItem>
-                            <SelectItem value="lines">Lines</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Label className="text-xs">Texture</Label>
+                    <div className="grid grid-cols-3 gap-1">
+                        <Button 
+                            size="sm" 
+                            variant={magicWandSettings.highlightTexture === 'solid' ? 'default': 'outline'}
+                            onClick={() => onMagicWandSettingsChange({highlightTexture: 'solid'})}>
+                            <CaseSensitive className="h-4 w-4"/>
+                        </Button>
+                         <Button 
+                            size="sm" 
+                            variant={magicWandSettings.highlightTexture === 'checkerboard' ? 'default': 'outline'}
+                            onClick={() => onMagicWandSettingsChange({highlightTexture: 'checkerboard'})}>
+                            <LayoutGrid className="h-4 w-4"/>
+                        </Button>
+                         <Button 
+                            size="sm" 
+                            variant={magicWandSettings.highlightTexture === 'lines' ? 'default': 'outline'}
+                            onClick={() => onMagicWandSettingsChange({highlightTexture: 'lines'})}>
+                            <Minus className="h-4 w-4 -rotate-45"/>
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <Select value={magicWandSettings.highlightColorMode} onValueChange={(v) => onMagicWandSettingsChange({ highlightColorMode: v as 'fixed' | 'random'})}>
-                        <SelectTrigger className="w-[120px]">
-                            <SelectValue/>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="random">Random</SelectItem>
-                            <SelectItem value="fixed">Fixed</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {magicWandSettings.highlightColorMode === 'fixed' && (
-                        <div className="relative h-10 flex-1">
-                            <input 
-                            type="color" 
-                            value={magicWandSettings.fixedHighlightColor}
-                            onChange={(e) => onMagicWandSettingsChange({ fixedHighlightColor: e.target.value })}
-                            className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer"
-                            style={{ opacity: 0 }}
-                            />
-                            <div 
-                                className="h-full w-full rounded-md border border-input px-3 py-2"
-                                style={{ backgroundColor: magicWandSettings.fixedHighlightColor }}
-                            />
-                        </div>
-                    )}
+                <div className="space-y-2">
+                    <Label className="text-xs">Color</Label>
+                    <div className="flex gap-1">
+                         <Button 
+                            size="sm" 
+                            variant={magicWandSettings.highlightColorMode === 'random' ? 'default': 'outline'}
+                            onClick={() => onMagicWandSettingsChange({highlightColorMode: 'random'})}
+                            className="flex-1"
+                         >
+                            Random
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            variant={magicWandSettings.highlightColorMode === 'fixed' ? 'default': 'outline'}
+                            onClick={() => onMagicWandSettingsChange({highlightColorMode: 'fixed'})}
+                            className="flex-1"
+                         >
+                            Fixed
+                        </Button>
+                        {magicWandSettings.highlightColorMode === 'fixed' && (
+                            <div className="relative h-9 w-9">
+                                <input 
+                                type="color" 
+                                value={magicWandSettings.fixedHighlightColor}
+                                onChange={(e) => onMagicWandSettingsChange({ fixedHighlightColor: e.target.value })}
+                                className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
+                                />
+                                <div 
+                                    className="h-full w-full rounded-md border border-input"
+                                    style={{ backgroundColor: magicWandSettings.fixedHighlightColor }}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </TabsContent>
         </Tabs>
@@ -295,7 +320,7 @@ export function ToolSettingsPanel({
             <TabsContent value="magic-snap" className="m-0 space-y-2">
                 <TooltipProvider>
                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
-                        <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
+                         <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
                         <VerticalLassoSlider settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="curveStrength" label="Curve" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
@@ -321,3 +346,5 @@ export function ToolSettingsPanel({
     </div>
   )
 }
+
+    
