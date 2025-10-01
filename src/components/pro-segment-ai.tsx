@@ -344,90 +344,92 @@ export function ProSegmentAI() {
         <div className="flex flex-1 items-start overflow-hidden">
             <Sidebar side="left" collapsible="icon" className="border-r">
               <SidebarContent>
-                <SidebarMenu>
-                  <div className="grid grid-cols-2 gap-1 p-2">
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        tooltip="Magic Wand (W)"
-                        isActive={activeTool === "magic-wand"}
-                        onClick={() => setActiveTool("magic-wand")}
-                        className="h-12 w-full justify-center"
-                      >
-                        <Wand2 />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        tooltip="Intelligent Lasso (L)"
-                        isActive={activeTool === "lasso"}
-                        onClick={() => setActiveTool("lasso")}
-                        className="h-12 w-full justify-center"
-                      >
-                        <LassoIcon />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        tooltip="Brush (B)"
-                        isActive={activeTool === "brush"}
-                        onClick={() => setActiveTool("brush")}
-                        className="h-12 w-full justify-center"
-                      >
-                        <Brush />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        tooltip="Eraser (E)"
-                        isActive={activeTool === "eraser"}
-                        onClick={() => setActiveTool("eraser")}
-                        className="h-12 w-full justify-center"
-                      >
-                        <Eraser />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        tooltip="Clone Stamp (C)"
-                        isActive={activeTool === "clone"}
-                        onClick={() => setActiveTool("clone")}
-                        className="h-12 w-full justify-center"
-                      >
-                        <Replace />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        tooltip="Transform (T)"
-                        isActive={activeTool === "transform"}
-                        onClick={() => setActiveTool("transform")}
-                        className="h-12 w-full justify-center"
-                      >
-                        <Move />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        tooltip="Sample Exclusion Color (I)"
-                        isActive={activeTool === "pipette-minus"}
-                        onClick={() => setActiveTool("pipette-minus")}
-                        className="h-12 w-full justify-center"
-                      >
-                        <PipetteMinusIcon />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        tooltip="Adjustments (A)"
-                        isActive={activeTool === "adjustments"}
-                        onClick={() => setActiveTool("adjustments")}
-                        className="h-12 w-full justify-center"
-                      >
-                        <SlidersHorizontal />
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </div>
-                </SidebarMenu>
+                <SidebarHeader>
+                    <div className="grid grid-cols-2 gap-1 p-2">
+                        <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Magic Wand (W)"
+                            isActive={activeTool === "magic-wand"}
+                            onClick={() => setActiveTool("magic-wand")}
+                            className="h-12 w-full justify-center"
+                        >
+                            <Wand2 />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Intelligent Lasso (L)"
+                            isActive={activeTool === "lasso"}
+                            onClick={() => setActiveTool("lasso")}
+                            className="h-12 w-full justify-center"
+                        >
+                            <LassoIcon />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Brush (B)"
+                            isActive={activeTool === "brush"}
+                            onClick={() => setActiveTool("brush")}
+                            className="h-12 w-full justify-center"
+                        >
+                            <Brush />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Eraser (E)"
+                            isActive={activeTool === "eraser"}
+                            onClick={() => setActiveTool("eraser")}
+                            className="h-12 w-full justify-center"
+                        >
+                            <Eraser />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Clone Stamp (C)"
+                            isActive={activeTool === "clone"}
+                            onClick={() => setActiveTool("clone")}
+                            className="h-12 w-full justify-center"
+                            disabled
+                        >
+                            <Replace />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Transform (T)"
+                            isActive={activeTool === "transform"}
+                            onClick={() => setActiveTool("transform")}
+                            className="h-12 w-full justify-center"
+                            disabled
+                        >
+                            <Move />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Sample Exclusion Color (I)"
+                            isActive={activeTool === "pipette-minus"}
+                            onClick={() => setActiveTool("pipette-minus")}
+                            className="h-12 w-full justify-center"
+                        >
+                            <PipetteMinusIcon />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Adjustments (A)"
+                            isActive={activeTool === "adjustments"}
+                            onClick={() => setActiveTool("adjustments")}
+                            className="h-12 w-full justify-center"
+                        >
+                            <SlidersHorizontal />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </div>
+                </SidebarHeader>
                 <SidebarSeparator />
                 {renderLeftPanelContent()}
               </SidebarContent>
