@@ -24,6 +24,7 @@ interface ImageCanvasProps {
   updateLayer: (layerId: string, updatedPixels: Set<number>, newBounds: Layer['bounds']) => void;
   removePixelsFromLayers: (pixelsToRemove: Set<number>) => void;
   activeLayerId: string | null;
+  onLayerSelect: (id: string) => void;
   segmentationMask: string | null;
   setSegmentationMask: (mask: string | null) => void;
   activeTool: string;
@@ -49,6 +50,7 @@ export function ImageCanvas({
   updateLayer,
   removePixelsFromLayers,
   activeLayerId,
+  onLayerSelect,
   segmentationMask,
   setSegmentationMask,
   activeTool,
@@ -341,6 +343,20 @@ export function ImageCanvas({
     setSegmentationMask(null);
 
     try {
+        if (!magicWandSettings.ignoreExistingSegments) {
+            const clickedPixelIndex = Math.floor(pos.y) * engine.width + Math.floor(pos.x);
+            const clickedLayer = layers.find(l => l.visible && (l.type === 'segmentation' || l.subType === 'mask') && l.pixels.has(clickedPixelIndex));
+
+            if (clickedLayer) {
+                onLayerSelect(clickedLayer.id);
+                if (!shiftKey && !ctrlKey) {
+                    toast({ title: `Layer "${clickedLayer.name}" selected.` });
+                    setIsProcessing(false);
+                    return;
+                }
+            }
+        }
+
         if (magicWandSettings.useAiAssist) {
             toast({ title: "Magic Wand is thinking...", description: "AI is analyzing the pattern." });
             const searchRadius = 15;
@@ -358,7 +374,7 @@ export function ImageCanvas({
                  throw new Error(result.message || "AI failed to produce a mask.");
             }
         } else {
-            const segment = engine.magicWand(pos.x, pos.y, true); // this is a Segment object
+            const segment = engine.magicWand(pos.x, pos.y, true);
             if (!segment || segment.pixels.size === 0) {
               toast({ title: "Selection empty", description: "Magic Wand could not find any matching pixels."});
               setIsProcessing(false);
@@ -516,6 +532,8 @@ export function ImageCanvas({
     if (mouseStopTimerRef.current) {
         clearTimeout(mouseStopTimerRef.current);
     }
+    setHoveredSegment(null);
+    drawOverlay(null);
   }
 
   const handleMouseUp = () => {

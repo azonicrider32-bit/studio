@@ -490,8 +490,8 @@ export class SelectionEngine {
 
       if (!this.magicWandSettings.ignoreExistingSegments) {
         for (const layer of this.layers) {
-            if (layer.visible && layer.type === 'segmentation' && layer.pixels.has(seedIndex)) {
-                return null; // Clicked inside an existing segment, do nothing
+            if (layer.visible && (layer.type === 'segmentation' || layer.subType === 'mask') && layer.pixels.has(seedIndex)) {
+                return null;
             }
         }
       }

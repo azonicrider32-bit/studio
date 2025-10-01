@@ -163,14 +163,14 @@ export function ProSegmentAI() {
   const removePixelsFromLayers = React.useCallback((pixelsToRemove: Set<number>) => {
     setLayers(prevLayers => {
       return prevLayers.map(layer => {
-        if (layer.type === 'segmentation' && layer.visible) {
+        if ((layer.type === 'segmentation' || layer.subType === 'mask') && layer.visible) {
           const newPixels = new Set([...layer.pixels].filter(p => !pixelsToRemove.has(p)));
           if (newPixels.size < layer.pixels.size) {
             const engine = selectionEngineRef.current;
             if (!engine) return layer;
             // Recalculate bounds and update imageData
             const newBounds = engine.getBoundsForPixels(newPixels);
-            const newImageData = engine.createImageDataForLayer(newPixels, newBounds);
+            const newImageData = layer.subType === 'pixel' ? engine.createImageDataForLayer(newPixels, newBounds) : undefined;
             return { ...layer, pixels: newPixels, bounds: newBounds, imageData: newImageData };
           }
         }
@@ -403,6 +403,7 @@ export function ProSegmentAI() {
               updateLayer={updateLayer}
               removePixelsFromLayers={removePixelsFromLayers}
               activeLayerId={activeLayerId}
+              onLayerSelect={setActiveLayerId}
               segmentationMask={segmentationMask}
               setSegmentationMask={setSegmentationMask}
               activeTool={activeTool}
