@@ -36,7 +36,7 @@ export function rgbToHsv(r: number, g: number, b: number): { h: number; s: numbe
   return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) }
 }
 
-export function rgbToLab(r: number, g: number, b: number): { l: number; a: number; b: number } {
+export function rgbToLab(r: number, g: number, b: number): { l: number; a: number; b_lab: number } {
     r /= 255; g /= 255; b /= 255;
     
     const linearToSRGB = (c: number) => (c > 0.0031308) ? 1.055 * Math.pow(c, 1 / 2.4) - 0.055 : 12.92 * c;
@@ -63,5 +63,5 @@ export function rgbToLab(r: number, g: number, b: number): { l: number; a: numbe
     const a = 500 * (x - y);
     const b_ = 200 * (y - z);
     
-    return { l: Math.round(l), a: Math.round(a), b: Math.round(b_) };
+    return { l: Math.round(l), a: Math.round(a), b_lab: Math.round(b_) };
 }

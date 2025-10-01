@@ -352,3 +352,4 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
     
 
 
+

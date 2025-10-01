@@ -469,7 +469,7 @@ export class SelectionEngine {
     for (const space of colorSpaces) {
         const components = Object.keys(seedColor[space]);
         for (const key of components) {
-            const toleranceKey = key as keyof typeof tolerances;
+            const toleranceKey = key === 'b' ? 'b_lab' : (key as keyof typeof tolerances);
             if (enabledTolerances && !enabledTolerances.has(toleranceKey)) continue;
 
             const tolerance = tolerances[toleranceKey];
@@ -503,7 +503,7 @@ export class SelectionEngine {
         const exclusionSeedColor = {
             rgb: { r: this.negativeMagicWandSettings.seedColor.r, g: this.negativeMagicWandSettings.seedColor.g, b: this.negativeMagicWandSettings.seedColor.b },
             hsv: { h: this.negativeMagicWandSettings.seedColor.h, s: this.negativeMagicWandSettings.seedColor.s, v: this.negativeMagicWandSettings.seedColor.v },
-            lab: { l: this.negativeMagicWandSettings.seedColor.l, a: this.negativeMagicWandSettings.seedColor.a, b_lab: this.negativeMagicWandSettings.seedColor.b_lab },
+            lab: { l: this.negativeMagicWandSettings.seedColor.l, a: this.negativeMagicWandSettings.seedColor.a, b: this.negativeMagicWandSettings.seedColor.b_lab },
         }
         const isExcluded = this.isInsideTolerance(exclusionSeedColor, neighborColor, this.negativeMagicWandSettings);
         return !isExcluded;
@@ -646,33 +646,31 @@ export class SelectionEngine {
 
     overlayCtx.clearRect(0, 0, this.width, this.height);
 
-    this.segments.forEach(segment => {
-      const isSelected = this.selectedSegmentIds.has(segment.id);
-      
-      const segmentImageData = overlayCtx.createImageData(segment.bounds.width, segment.bounds.height);
-      
-      segment.pixels.forEach((idx: number) => {
-        const x = idx % this.width;
-        const y = Math.floor(idx / this.width);
-        
-        if (x >= segment.bounds.x && x < segment.bounds.x + segment.bounds.width &&
-            y >= segment.bounds.y && y < segment.bounds.y + segment.bounds.height) {
-              
-            const pixelIndex = ((y - segment.bounds.y) * segment.bounds.width + (x - segment.bounds.x)) * 4;
-            segmentImageData.data[pixelIndex] = 3;
-            segmentImageData.data[pixelIndex + 1] = 169;
-            segmentImageData.data[pixelIndex + 2] = 244;
-            segmentImageData.data[pixelIndex + 3] = 102; // 0.4 alpha
+    if (this.segments.length > 0) {
+      const selectionImageData = overlayCtx.createImageData(this.width, this.height);
+      const data = selectionImageData.data;
+
+      this.segments.forEach(segment => {
+        if (this.selectedSegmentIds.has(segment.id)) {
+          segment.pixels.forEach(idx => {
+            const i = idx * 4;
+            data[i] = 3;     // R
+            data[i + 1] = 169; // G
+            data[i + 2] = 244; // B
+            data[i + 3] = 102; // A (0.4 alpha)
+          });
         }
       });
-      overlayCtx.putImageData(segmentImageData, segment.bounds.x, segment.bounds.y);
-      
-      if (isSelected) {
-        overlayCtx.strokeStyle = 'hsl(var(--accent))';
-        overlayCtx.lineWidth = 2;
-        overlayCtx.strokeRect(segment.bounds.x, segment.bounds.y, segment.bounds.width, segment.bounds.height);
-      }
-    });
+      overlayCtx.putImageData(selectionImageData, 0, 0);
+
+      this.segments.forEach(segment => {
+         if (this.selectedSegmentIds.has(segment.id)) {
+            overlayCtx.strokeStyle = 'hsl(var(--accent))';
+            overlayCtx.lineWidth = 2;
+            overlayCtx.strokeRect(segment.bounds.x, segment.bounds.y, segment.bounds.width, segment.bounds.height);
+        }
+      });
+    }
 
     if (this.isDrawingLasso) {
       const fullPath = this.getLassoPath(false);

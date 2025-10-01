@@ -1,4 +1,5 @@
 
+
 export interface LassoSettings {
     useMagicSnapping: boolean;
     useAiEnhancement: boolean;
