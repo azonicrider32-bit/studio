@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -9,7 +10,6 @@ import {
   Feather as FeatherIcon,
   Layers as LayersIcon,
   Palette,
-  Pipette,
   Settings2,
   SlidersHorizontal,
   Wand2,
@@ -293,8 +293,6 @@ export function ProSegmentAI() {
                />
       case "lasso":
         return <LassoPanel 
-                    settings={lassoSettings} 
-                    onSettingsChange={handleLassoSettingsChange}
                     canvas={canvasRef.current}
                     mousePos={canvasMousePos}
                     selectionEngine={selectionEngineRef.current}
