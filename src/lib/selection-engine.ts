@@ -1,6 +1,5 @@
 
 
-
 import { LassoSettings, MagicWandSettings, Segment, Layer } from "./types";
 import { rgbToHsv, rgbToLab } from "./color-utils";
 
@@ -789,14 +788,21 @@ export class SelectionEngine {
         return ctx.createPattern(tempCanvas, 'repeat');
     }
 
-  renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment) {
+  renderHoverSegment(overlayCtx: CanvasRenderingContext2D, segment: Segment, isMask: boolean) {
       if (!segment || segment.pixels.size === 0) return;
       
-      const pattern = this.renderCheckerboardPattern(overlayCtx);
-      if(!pattern) return;
-
       overlayCtx.save();
-      overlayCtx.fillStyle = pattern;
+      
+      if (isMask) {
+        const pattern = this.renderCheckerboardPattern(overlayCtx);
+        if(!pattern) {
+          overlayCtx.restore();
+          return;
+        };
+        overlayCtx.fillStyle = pattern;
+      } else {
+        overlayCtx.fillStyle = 'hsla(var(--primary), 0.5)';
+      }
       
       segment.pixels.forEach((idx: number) => {
         const x = idx % this.width;
@@ -839,7 +845,7 @@ export class SelectionEngine {
     }
     
     if (hoveredSegment && wandSettings.useAiAssist === false) {
-      this.renderHoverSegment(overlayCtx, hoveredSegment);
+      this.renderHoverSegment(overlayCtx, hoveredSegment, wandSettings.createAsMask);
     }
 
 

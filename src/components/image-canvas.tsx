@@ -369,6 +369,7 @@ const drawLayers = React.useCallback(() => {
                 } else if (!shiftKey && !ctrlKey) {
                     toast({ title: `Layer "${clickedLayer.name}" selected.` });
                     setIsProcessing(false);
+                    drawOverlay(); // Redraw to show selection
                     return;
                 }
             }
