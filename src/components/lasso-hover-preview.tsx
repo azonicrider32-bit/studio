@@ -28,35 +28,37 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   
   useEffect(() => {
     const previewCanvas = previewCanvasRef.current;
-    if (!previewCanvas || !canvas || !selectionEngine) return;
+    if (!previewCanvas || !canvas || !selectionEngine || !mousePos) return;
     
-    if (mousePos) {
-        const sourceSize = size / zoom;
-        let { x: sourceX, y: sourceY } = viewPositionRef.current;
+    let sourceX = viewPositionRef.current.x;
+    let sourceY = viewPositionRef.current.y;
+    const sourceSize = size / zoom;
 
-        // Panning logic
-        const rightEdge = sourceX + sourceSize;
-        const bottomEdge = sourceY + sourceSize;
-        const edgeThreshold = 1;
-
-        if (mousePos.x > rightEdge - edgeThreshold) {
-            sourceX = mousePos.x - sourceSize + edgeThreshold;
-        } else if (mousePos.x < sourceX + edgeThreshold) {
-            sourceX = mousePos.x - edgeThreshold;
-        }
-
-        if (mousePos.y > bottomEdge - edgeThreshold) {
-            sourceY = mousePos.y - sourceSize + edgeThreshold;
-        } else if (mousePos.y < sourceY + edgeThreshold) {
-            sourceY = mousePos.y - edgeThreshold;
-        }
-        
-        viewPositionRef.current = { x: sourceX, y: sourceY };
-
+    // Initialize view position on first render with a mouse position
+    if (sourceX === 0 && sourceY === 0) {
+        sourceX = mousePos.x - sourceSize / 2;
+        sourceY = mousePos.y - sourceSize / 2;
     }
 
-    const { x: sourceX, y: sourceY } = viewPositionRef.current;
-    const sourceSize = size / zoom;
+    // Edge-panning logic
+    const edgeThreshold = sourceSize / 8; // Start panning when cursor is within 1/8th of the edge
+    const rightEdge = sourceX + sourceSize;
+    const bottomEdge = sourceY + sourceSize;
+
+    if (mousePos.x > rightEdge - edgeThreshold) {
+        sourceX = mousePos.x - sourceSize + edgeThreshold;
+    } else if (mousePos.x < sourceX + edgeThreshold) {
+        sourceX = mousePos.x - edgeThreshold;
+    }
+
+    if (mousePos.y > bottomEdge - edgeThreshold) {
+        sourceY = mousePos.y - sourceSize + edgeThreshold;
+    } else if (mousePos.y < sourceY + edgeThreshold) {
+        sourceY = mousePos.y - edgeThreshold;
+    }
+    
+    viewPositionRef.current = { x: sourceX, y: sourceY };
+
 
     const previewCtx = previewCanvas.getContext('2d');
     if (!previewCtx) return;
@@ -76,11 +78,11 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
         }
     }
 
-    // Draw the zoomed-in image content
+    // Draw the zoomed-in image content from the calculated source position
     previewCtx.drawImage(
       canvas,
-      sourceX,
-      sourceY,
+      viewPositionRef.current.x,
+      viewPositionRef.current.y,
       sourceSize,
       sourceSize,
       0,
@@ -93,7 +95,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     if (selectionEngine.isDrawingLasso) {
         previewCtx.save();
         previewCtx.scale(zoom, zoom);
-        previewCtx.translate(-sourceX, -sourceY);
+        previewCtx.translate(-viewPositionRef.current.x, -viewPositionRef.current.y);
 
         const { lassoNodes, lassoPreviewPath, futureLassoPath, lassoMouseTrace, lassoSettings } = selectionEngine;
 
@@ -158,6 +160,14 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   const changeZoom = (amount: number) => {
     setZoom(prev => Math.max(1, Math.min(128, prev + amount)));
   }
+  
+  useEffect(() => {
+    // Reset view position when mouse leaves the canvas
+    if (!mousePos) {
+      viewPositionRef.current = { x: 0, y: 0 };
+    }
+  }, [mousePos]);
+
 
   if (!mousePos) return <div className={cn("aspect-square w-full rounded-md bg-muted animate-pulse", className)}></div>;
 
@@ -173,9 +183,34 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     >
       <canvas ref={previewCanvasRef} width={size} height={size} className="w-full h-full" />
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-px h-full bg-white/50"></div>
-        <div className="h-px w-full bg-white/50 absolute"></div>
-        <div className="w-[calc(100%/16)] h-[calc(100%/16)] border-2 border-accent rounded-sm"></div>
+        {/* Crosshair */}
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          width: '1px',
+          height: '100%',
+          backgroundColor: 'rgba(255, 255, 255, 0.5)',
+          transform: 'translateX(-50%)'
+        }}></div>
+         <div style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          width: '100%',
+          height: '1px',
+          backgroundColor: 'rgba(255, 255, 255, 0.5)',
+          transform: 'translateY(-50%)'
+        }}></div>
+        {/* Center dot for the actual cursor position relative to the panned view */}
+        <div
+          className="absolute w-1 h-1 bg-accent rounded-full pointer-events-none"
+          style={{
+            left: `${((mousePos.x - viewPositionRef.current.x) / (size/zoom)) * 100}%`,
+            top: `${((mousePos.y - viewPositionRef.current.y) / (size/zoom)) * 100}%`,
+            transform: 'translate(-50%, -50%)',
+          }}
+        ></div>
       </div>
        <div className="absolute bottom-2 right-2 flex gap-1">
         <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(-4)}><Minus className="w-4 h-4"/></Button>
