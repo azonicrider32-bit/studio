@@ -43,9 +43,6 @@ export function MagicWandPanel({
   mousePos,
   isExclusionPanel = false,
 }: MagicWandPanelProps) {
-  const [isSuggesting, setIsSuggesting] = React.useState(false)
-  const [isSegmenting, setIsSegmenting] = React.useState(false)
-  const [suggestedPresets, setSuggestedPresets] = React.useState<SuggestSegmentationPresetsOutput | null>(null)
   const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
   const { toast } = useToast()
 
@@ -85,51 +82,7 @@ export function MagicWandPanel({
     }
   }, [canvas, mousePos, isExclusionPanel, settings.seedColor]);
 
-  const handleSuggestPresets = async () => {
-    if (!image) return;
-    setIsSuggesting(true)
-    setSuggestedPresets(null)
-    try {
-      const imageDataUri = image.imageUrl;
-      const result = await suggestSegmentationPresets({ imageDataUri });
-      setSuggestedPresets(result);
-    } catch (error: any) {
-      handleApiError(error, toast, {
-        title: "AI Suggestion Failed",
-        description: "Could not get suggestions from the AI model.",
-      });
-    } finally {
-      setIsSuggesting(false)
-    }
-  }
-
-  const handleMagicWandSegmentation = async (contentType?: string) => {
-    if (!image) return;
-    setIsSegmenting(true);
-    // setSegmentationMask(null); // This should be handled by the parent component
-    try {
-      toast({title: "Performing Magic Wand Segmentation..."});
-      const result = await magicWandAssistedSegmentation({
-        photoDataUri: image.imageUrl,
-        contentType: contentType || 'object',
-        modelId: 'googleai/gemini-2.5-flash-image-preview'
-      });
-      if(result.isSuccessful && result.maskDataUri) {
-        // setSegmentationMask(result.maskDataUri); // Parent handles this
-        toast({title: "Segmentation successful!"});
-      } else {
-        throw new Error(result.message || "Segmentation failed to produce a mask.");
-      }
-    } catch (error: any) {
-        handleApiError(error, toast, {
-            title: "Magic Wand Failed",
-            description: "Could not perform segmentation."
-        });
-    } finally {
-        setIsSegmenting(false);
-    }
-  };
-
+  
   const handleToggleEnabled = (setting: keyof MagicWandSettings['tolerances']) => {
     const newSet = new Set(settings.enabledTolerances);
     if (newSet.has(setting)) {
@@ -259,40 +212,6 @@ export function MagicWandPanel({
             
             <Separator />
           </>
-      )}
-
-      {!isExclusionPanel && (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <Label htmlFor="variance-expansion" className="font-semibold">AI-Assisted Selection</Label>
-                </div>
-            <Switch
-                id="variance-expansion"
-                checked={settings.useAiAssist}
-                onCheckedChange={(checked) => onSettingsChange({ useAiAssist: checked })}
-            />
-            </div>
-            <p className="text-xs text-muted-foreground -mt-3">
-            Uses AI to refine the Magic Wand click for a more accurate selection.
-            </p>
-            
-            <Button onClick={handleSuggestPresets} disabled={isSuggesting || isSegmenting || !settings.useAiAssist} className="w-full">
-                <BrainCircuit className="mr-2 h-4 w-4" />
-                {isSuggesting ? "Analyzing Image..." : "Suggest AI Presets"}
-            </Button>
-            {suggestedPresets && (
-            <div className="space-y-2 pt-2">
-                <h4 className="text-sm font-semibold">Suggested Presets:</h4>
-                <div className="flex flex-wrap gap-2">
-                {suggestedPresets.map((preset, index) => (
-                    <Badge key={index} variant="secondary" className="cursor-pointer hover:bg-accent" onClick={() => handleMagicWandSegmentation(preset.presetName)}>{preset.presetName}</Badge>
-                ))}
-                </div>
-            </div>
-            )}
-        </div>
       )}
 
     </div>
