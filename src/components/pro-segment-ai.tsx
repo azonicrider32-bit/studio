@@ -74,7 +74,7 @@ export function ProSegmentAI() {
     };
     return [backgroundLayer];
   });
-  const [activeLayerId, setActiveLayerId] = React.useState<string>(layers[0]?.id);
+  const [activeLayerId, setActiveLayerId] = React.useState<string | null>(layers[0]?.id);
 
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     drawMode: 'magic',
@@ -142,6 +142,37 @@ export function ProSegmentAI() {
     setActiveLayerId(newLayer.id);
   }
 
+  const updateLayer = React.useCallback((layerId: string, updatedPixels: Set<number>, newBounds: Layer['bounds']) => {
+    setLayers(prev => prev.map(l => {
+      if (l.id === layerId) {
+        const engine = selectionEngineRef.current;
+        if (!engine) return l;
+        const newImageData = engine.createImageDataForLayer(updatedPixels, newBounds);
+        return { ...l, pixels: updatedPixels, bounds: newBounds, imageData: newImageData };
+      }
+      return l;
+    }));
+  }, []);
+
+  const removePixelsFromLayers = React.useCallback((pixelsToRemove: Set<number>) => {
+    setLayers(prevLayers => {
+      return prevLayers.map(layer => {
+        if (layer.type === 'segmentation' && layer.visible) {
+          const newPixels = new Set([...layer.pixels].filter(p => !pixelsToRemove.has(p)));
+          if (newPixels.size < layer.pixels.size) {
+            const engine = selectionEngineRef.current;
+            if (!engine) return layer;
+            // Recalculate bounds and update imageData
+            const newBounds = engine.getBoundsForPixels(newPixels);
+            const newImageData = engine.createImageDataForLayer(newPixels, newBounds);
+            return { ...layer, pixels: newPixels, bounds: newBounds, imageData: newImageData };
+          }
+        }
+        return layer;
+      });
+    });
+  }, []);
+
   const toggleLayerVisibility = (layerId: string) => {
     setLayers(prev => prev.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l));
   };
@@ -152,7 +183,7 @@ export function ProSegmentAI() {
   };
 
   const toggleLayerMask = (layerId: string) => {
-    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, maskVisible: !l.maskVisible } : l));
+    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, maskVisible: !(l.maskVisible ?? true) } : l));
   };
 
   const deleteLayer = (layerId: string) => {
@@ -363,6 +394,9 @@ export function ProSegmentAI() {
               imageUrl={imageUrl}
               layers={layers}
               addLayer={addLayer}
+              updateLayer={updateLayer}
+              removePixelsFromLayers={removePixelsFromLayers}
+              activeLayerId={activeLayerId}
               segmentationMask={segmentationMask}
               setSegmentationMask={setSegmentationMask}
               activeTool={activeTool}
@@ -481,3 +515,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    

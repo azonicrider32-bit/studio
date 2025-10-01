@@ -228,7 +228,7 @@ export function MagicWandPanel({
                  <p className="text-xs text-muted-foreground text-center mt-2">Soften selection edges</p>
             </div>
             <div className="flex flex-col items-center gap-2">
-                <Label htmlFor="show-masks" className="flex items-center gap-2 text-center">Show Masks</Label>
+                <Label htmlFor="show-masks" className="flex items-center gap-2 text-center">Show All Masks</Label>
                 <Switch
                     id="show-masks"
                     orientation="vertical"
@@ -356,7 +356,5 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
         </div>
     );
 }
-
-    
 
     

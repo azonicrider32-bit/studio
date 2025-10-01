@@ -21,6 +21,9 @@ interface ImageCanvasProps {
   imageUrl: string | undefined;
   layers: Layer[];
   addLayer: (layer: Layer) => void;
+  updateLayer: (layerId: string, updatedPixels: Set<number>, newBounds: Layer['bounds']) => void;
+  removePixelsFromLayers: (pixelsToRemove: Set<number>) => void;
+  activeLayerId: string | null;
   segmentationMask: string | null;
   setSegmentationMask: (mask: string | null) => void;
   activeTool: string;
@@ -43,6 +46,9 @@ export function ImageCanvas({
   imageUrl,
   layers,
   addLayer,
+  updateLayer,
+  removePixelsFromLayers,
+  activeLayerId,
   segmentationMask,
   setSegmentationMask,
   activeTool,
@@ -276,43 +282,76 @@ export function ImageCanvas({
     return { x: imageX, y: imageY };
   };
 
-  const handleMagicWandClick = async (pos: { x: number, y: number }) => {
+  const handleMagicWandClick = async (pos: { x: number, y: number }, e: React.MouseEvent<HTMLCanvasElement>) => {
     const engine = selectionEngineRef.current;
     const canvas = canvasRef.current;
     if (!engine || !canvas) return;
+
+    const shiftKey = e.shiftKey;
+    const ctrlKey = e.ctrlKey || e.metaKey;
     
     setIsProcessing(true);
     setSegmentationMask(null);
 
     try {
-        if (!magicWandSettings.useAiAssist) {
-            toast({ title: "Creating selection..." });
-            const newLayer = engine.magicWand(pos.x, pos.y);
-            if (newLayer) addLayer(newLayer);
-            drawOverlay();
-            toast({ title: "Selection created." });
-            setIsProcessing(false);
-            return;
-        }
-
-        toast({ title: "Magic Wand is thinking...", description: "AI is analyzing the pattern." });
-
-        const searchRadius = 15;
-        const initialSelectionMask = engine.createCircularMask(pos.x, pos.y, searchRadius);
-
-        const input: MagicWandAssistedSegmentationInput = {
-            photoDataUri: canvas.toDataURL(),
-            initialSelectionMask: initialSelectionMask,
-            contentType: 'region with similar texture and pattern'
-        };
-        
-        const result = await magicWandAssistedSegmentation(input);
-
-        if (result.isSuccessful && result.maskDataUri) {
-            setSegmentationMask(result.maskDataUri);
-            toast({ title: "AI Segmentation successful!" });
+        if (magicWandSettings.useAiAssist) {
+            toast({ title: "Magic Wand is thinking...", description: "AI is analyzing the pattern." });
+            const searchRadius = 15;
+            const initialSelectionMask = engine.createCircularMask(pos.x, pos.y, searchRadius);
+            const input: MagicWandAssistedSegmentationInput = {
+                photoDataUri: canvas.toDataURL(),
+                initialSelectionMask: initialSelectionMask,
+                contentType: 'region with similar texture and pattern'
+            };
+            const result = await magicWandAssistedSegmentation(input);
+            if (result.isSuccessful && result.maskDataUri) {
+                setSegmentationMask(result.maskDataUri);
+                toast({ title: "AI Segmentation successful!" });
+            } else {
+                 throw new Error(result.message || "AI failed to produce a mask.");
+            }
         } else {
-             throw new Error(result.message || "AI failed to produce a mask.");
+            const segment = engine.magicWand(pos.x, pos.y, true); // this is a Segment object
+            if (!segment || segment.pixels.size === 0) {
+              toast({ title: "Selection empty", description: "Magic Wand could not find any matching pixels."});
+              return;
+            };
+
+            if(ctrlKey) {
+              toast({ title: "Subtracting from selection..." });
+              removePixelsFromLayers(segment.pixels);
+              toast({ title: "Subtraction complete."});
+
+            } else if (shiftKey && activeLayerId && activeLayerId !== 'background-0') {
+              const activeLayer = layers.find(l => l.id === activeLayerId);
+              if (activeLayer) {
+                toast({ title: "Adding to selection..." });
+                const combinedPixels = new Set([...activeLayer.pixels, ...segment.pixels]);
+                
+                let minX = activeLayer.bounds.x, minY = activeLayer.bounds.y;
+                let maxX = activeLayer.bounds.x + activeLayer.bounds.width;
+                let maxY = activeLayer.bounds.y + activeLayer.bounds.height;
+
+                segment.pixels.forEach(p => {
+                    const x = p % engine.width;
+                    const y = Math.floor(p / engine.width);
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                })
+
+                const newBounds = { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+                updateLayer(activeLayerId, combinedPixels, newBounds);
+                toast({ title: "Addition complete." });
+              }
+            } else {
+              toast({ title: "Creating new selection..." });
+              const newLayer = engine.createLayerFromPixels(segment.pixels);
+              if (newLayer) addLayer(newLayer);
+              toast({ title: "New selection created." });
+            }
+            drawOverlay();
         }
     } catch (error: any) {
         handleApiError(error, toast, {
@@ -376,7 +415,7 @@ export function ImageCanvas({
       }
       drawOverlay();
     } else if (activeTool === 'magic-wand') {
-        handleMagicWandClick(pos);
+        handleMagicWandClick(pos, e);
     } else if (activeTool === 'pipette-minus') {
         sampleExclusionColor(pos);
     }
@@ -390,7 +429,7 @@ export function ImageCanvas({
         return;
       };
       const segment = engine.magicWand(x, y, true); // Preview only
-      setHoveredSegment(segment);
+      setHoveredSegment(segment as Segment | null);
       drawOverlay();
   }, [drawOverlay, magicWandSettings.useAiAssist]);
 
@@ -575,3 +614,5 @@ export function ImageCanvas({
     </div>
   );
 }
+
+    
