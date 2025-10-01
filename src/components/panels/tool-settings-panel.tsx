@@ -267,7 +267,16 @@ export function ToolSettingsPanel({
                                 />
                             </div>
                              <div className="space-y-2">
-                                <Label className="text-xs">Pattern</Label>
+                                <Label htmlFor="border-opacity" className="text-xs">Opacity: {magicWandSettings.highlightBorder.opacity.toFixed(2)}</Label>
+                                <Slider 
+                                    id="border-opacity"
+                                    min={0} max={1} step={0.05}
+                                    value={[magicWandSettings.highlightBorder.opacity]}
+                                    onValueChange={(v) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, opacity: v[0] }})}
+                                />
+                            </div>
+                             <div className="space-y-2">
+                                <Label className="text-xs">Pattern & Color</Label>
                                 <div className="grid grid-cols-2 gap-1">
                                     <Button 
                                         size="sm" 
@@ -281,22 +290,17 @@ export function ToolSettingsPanel({
                                         onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, pattern: 'dashed' }})}>
                                         Dashed
                                     </Button>
-                                </div>
-                            </div>
-                             <div className="space-y-2">
-                                <Label className="text-xs">Color</Label>
-                                <div className="relative h-9 w-full">
-                                    <input 
-                                    type="color" 
-                                    value={magicWandSettings.highlightBorder.color}
-                                    onChange={(e) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, color: e.target.value }})}
-                                    className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
-                                    />
-                                    <div 
-                                        className="h-full w-full rounded-md border border-input flex items-center justify-center text-xs"
-                                        style={{ backgroundColor: magicWandSettings.highlightBorder.color }}
-                                    >
-                                      <span style={{ mixBlendMode: 'difference', color: 'white'}}>{magicWandSettings.highlightBorder.color}</span>
+                                    <div className="relative h-9 col-span-2">
+                                        <input 
+                                        type="color" 
+                                        value={magicWandSettings.highlightBorder.color}
+                                        onChange={(e) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, color: e.target.value }})}
+                                        className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
+                                        />
+                                        <div 
+                                            className="h-full w-full rounded-md border border-input"
+                                            style={{ backgroundColor: magicWandSettings.highlightBorder.color }}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -387,7 +391,7 @@ export function ToolSettingsPanel({
                <div className="space-y-2">
                 <TooltipProvider>
                      <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
-                         <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
+                        <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
                         <VerticalLassoSlider settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="curveStrength" label="Curve" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="directionalStrength" label="Direction" max={1} step={0.05} />

@@ -82,6 +82,7 @@ export class SelectionEngine {
         thickness: 2,
         color: '#ffffff',
         pattern: 'solid',
+        opacity: 1,
     },
   };
    negativeMagicWandSettings: MagicWandSettings = {
@@ -105,6 +106,7 @@ export class SelectionEngine {
         thickness: 1,
         color: '#ffffff',
         pattern: 'solid',
+        opacity: 1,
     },
   };
 
@@ -820,11 +822,9 @@ export class SelectionEngine {
         if (!tempCtx) return null;
         
         let baseColor = color;
-        if (!color.startsWith('hsl') && !color.startsWith('#') && !color.startsWith('rgba')) {
-            baseColor = `hsl(${color})`;
-        } else if (color.startsWith('#')) {
-            // Convert hex to HSL to easily add alpha
-            let r = 0, g = 0, b = 0;
+        let r = 0, g = 0, b = 0;
+
+        if (color.startsWith('#')) {
             if (color.length === 4) {
                 r = parseInt(color[1] + color[1], 16);
                 g = parseInt(color[2] + color[2], 16);
@@ -835,13 +835,17 @@ export class SelectionEngine {
                 b = parseInt(color.substring(5, 7), 16);
             }
             baseColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+        } else if (color.startsWith('hsl')) {
+            baseColor = color.replace(')', `, ${opacity})`).replace('hsl', 'hsla');
+        } else {
+             baseColor = `rgba(0, 0, 0, ${opacity})`;
         }
         
         const rgbaColorWithOpacity = (alpha: number) => {
             if (baseColor.startsWith('rgba')) {
                 return baseColor.replace(/[\d\.]+\)$/g, `${alpha})`);
             }
-            return baseColor.replace(')', `, ${alpha})`).replace('hsl', 'hsla');
+            return baseColor;
         }
 
 
@@ -930,6 +934,21 @@ export class SelectionEngine {
         });
         return borderPixels;
     }
+
+    hexToRgba(hex: string, opacity: number): string {
+        let r = 0, g = 0, b = 0;
+        if (hex.length === 4) {
+            r = parseInt(hex[1] + hex[1], 16);
+            g = parseInt(hex[2] + hex[2], 16);
+            b = parseInt(hex[3] + hex[3], 16);
+        } else if (hex.length === 7) {
+            r = parseInt(hex.substring(1, 3), 16);
+            g = parseInt(hex.substring(3, 5), 16);
+            b = parseInt(hex.substring(5, 7), 16);
+        }
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+
   renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[], wandSettings: MagicWandSettings, lassoSettings: LassoSettings, hoveredSegment: Segment | null) {
     if (!overlayCtx) return;
 
@@ -972,7 +991,7 @@ export class SelectionEngine {
        
        if (wandSettings.highlightBorder.enabled) {
             overlayCtx.save();
-            overlayCtx.strokeStyle = wandSettings.highlightBorder.color;
+            overlayCtx.strokeStyle = this.hexToRgba(wandSettings.highlightBorder.color, wandSettings.highlightBorder.opacity);
             overlayCtx.lineWidth = wandSettings.highlightBorder.thickness;
             if (wandSettings.highlightBorder.pattern === 'dashed') {
                 overlayCtx.setLineDash([5, 5]);

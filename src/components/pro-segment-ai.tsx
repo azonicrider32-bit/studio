@@ -124,6 +124,7 @@ export function ProSegmentAI() {
         thickness: 2,
         color: '#ffffff',
         pattern: 'solid',
+        opacity: 1,
     }
   });
   const [negativeMagicWandSettings, setNegativeMagicWandSettings] = React.useState<MagicWandSettings>({
@@ -147,6 +148,7 @@ export function ProSegmentAI() {
         thickness: 1,
         color: '#ffffff',
         pattern: 'solid',
+        opacity: 1,
     }
   });
   const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
@@ -473,8 +475,8 @@ export function ProSegmentAI() {
                   getSelectionMaskRef={getSelectionMaskRef}
                   clearSelectionRef={clearSelectionRef}
                   onLassoSettingChange={handleLassoSettingsChange}
-                  onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                  onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                  onMagicWandSettingChange={handleMagicWandSettingsChange}
+                  onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
                   canvasMousePos={canvasMousePos}
                   setCanvasMousePos={setCanvasMousePos}
                   getCanvasRef={canvasRef}

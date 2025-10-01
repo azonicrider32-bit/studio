@@ -64,6 +64,7 @@ export interface MagicWandSettings {
         thickness: number;
         color: string;
         pattern: 'solid' | 'dashed';
+        opacity: number;
     };
 }
 
