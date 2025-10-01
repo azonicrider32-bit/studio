@@ -28,6 +28,7 @@ import { Button } from "../ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { cn } from "@/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -80,7 +81,7 @@ export function ToolSettingsPanel({
     };
 
     return (
-        <div className="flex flex-col items-center gap-2 flex-1" onWheel={handleWheel}>
+        <div className="flex flex-col items-center gap-2 flex-1 p-1 rounded-md" onWheel={handleWheel}>
             <Tooltip>
                 <TooltipTrigger asChild>
                     <span className="text-xs font-semibold">{label}</span>
@@ -125,8 +126,11 @@ export function ToolSettingsPanel({
       <Separator />
 
       {isWand ? (
-        <>
-            <div className="space-y-4 px-2">
+         <Tabs defaultValue="general" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-1">
+                <TabsTrigger value="general">General</TabsTrigger>
+            </TabsList>
+            <TabsContent value="general" className="m-0 space-y-4 px-2">
                 <div className="flex items-center justify-between">
                     <Label htmlFor="contiguous" className="flex items-center gap-2"><Layers className="w-4 h-4"/>Contiguous</Label>
                     <Switch
@@ -143,9 +147,7 @@ export function ToolSettingsPanel({
                         onCheckedChange={(v) => onMagicWandSettingsChange({ createAsMask: v })}
                     />
                 </div>
-            </div>
-            <Separator />
-            <div className="space-y-4 px-2">
+                <Separator />
                 <div className="flex items-center justify-between">
                     <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
                     <Switch
@@ -162,9 +164,7 @@ export function ToolSettingsPanel({
                         onCheckedChange={(v) => onMagicWandSettingsChange({ ignoreExistingSegments: v })}
                     />
                 </div>
-            </div>
-            <Separator />
-             <div className="space-y-4 px-2">
+                <Separator />
                 <Label className="flex items-center gap-2"><Paintbrush className="w-4 h-4"/> Highlight Style</Label>
                 <div className="space-y-2">
                     <Label htmlFor="highlight-opacity" className="text-xs">Opacity: {magicWandSettings.highlightOpacity.toFixed(2)}</Label>
@@ -212,87 +212,89 @@ export function ToolSettingsPanel({
                         </div>
                     )}
                 </div>
-            </div>
-        </>
+            </TabsContent>
+        </Tabs>
       ) : (
-        <div className="space-y-6 px-2">
-            <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                    <Label htmlFor="draw-mode">Draw Mode</Label>
-                    <Popover>
-                        <PopoverTrigger>
-                            <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                        </PopoverTrigger>
-                        <PopoverContent side="right" className="text-sm">
-                            <h4 className="font-semibold mb-2">Switching Modes</h4>
-                            <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
-                        </PopoverContent>
-                    </Popover>
-                </div>
-                <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
-                    <SelectTrigger id="draw-mode">
-                        <div className="flex items-center gap-2">
-                            {currentMode && <currentMode.icon className="h-4 w-4" />}
-                            <SelectValue placeholder="Select mode..." />
-                        </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {DRAW_MODES.map(mode => (
-                            <SelectItem key={mode.id} value={mode.id}>
-                                <div className="flex items-center gap-2">
-                                    <mode.icon className="h-4 w-4" />
-                                    <span>{mode.label}</span>
-                                </div>
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+        <Tabs defaultValue="general" className="px-2 space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="general">General</TabsTrigger>
+                <TabsTrigger value="magic-snap" disabled={lassoSettings.drawMode !== 'magic'}>Magic Snap</TabsTrigger>
+            </TabsList>
             
-            <div className="space-y-4">
-                 <div className="flex items-center justify-between">
-                    <Label htmlFor="useAiEnhancement" className="flex items-center gap-2"><Wand2 className="w-4 h-4 text-primary" />AI Enhancement</Label>
-                    <Switch
-                        id="useAiEnhancement"
-                        checked={lassoSettings.useAiEnhancement}
-                        onCheckedChange={(checked) => onLassoSettingsChange({ useAiEnhancement: checked })}
-                    />
+            <TabsContent value="general" className="m-0 space-y-6">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="draw-mode">Draw Mode</Label>
+                        <Popover>
+                            <PopoverTrigger>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                            </PopoverTrigger>
+                            <PopoverContent side="right" className="text-sm">
+                                <h4 className="font-semibold mb-2">Switching Modes</h4>
+                                <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
+                        <SelectTrigger id="draw-mode">
+                            <div className="flex items-center gap-2">
+                                {currentMode && <currentMode.icon className="h-4 w-4" />}
+                                <SelectValue placeholder="Select mode..." />
+                            </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {DRAW_MODES.map(mode => (
+                                <SelectItem key={mode.id} value={mode.id}>
+                                    <div className="flex items-center gap-2">
+                                        <mode.icon className="h-4 w-4" />
+                                        <span>{mode.label}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="showMouseTrace" className="flex items-center gap-2"><Paintbrush className="w-4 h-4" />Show Mouse Trace</Label>
-                    <Switch
-                        id="showMouseTrace"
-                        checked={lassoSettings.showMouseTrace}
-                        onCheckedChange={(checked) => onLassoSettingsChange({ showMouseTrace: checked })}
-                        disabled={lassoSettings.drawMode !== 'magic'}
-                    />
+                
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="useAiEnhancement" className="flex items-center gap-2"><Wand2 className="w-4 h-4 text-primary" />AI Enhancement</Label>
+                        <Switch
+                            id="useAiEnhancement"
+                            checked={lassoSettings.useAiEnhancement}
+                            onCheckedChange={(checked) => onLassoSettingsChange({ useAiEnhancement: checked })}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="showMouseTrace" className="flex items-center gap-2"><Paintbrush className="w-4 h-4" />Show Mouse Trace</Label>
+                        <Switch
+                            id="showMouseTrace"
+                            checked={lassoSettings.showMouseTrace}
+                            onCheckedChange={(checked) => onLassoSettingsChange({ showMouseTrace: checked })}
+                            disabled={lassoSettings.drawMode !== 'magic'}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
+                        <Switch
+                            id="show-masks"
+                            checked={lassoSettings.showAllMasks}
+                            onCheckedChange={(v) => onLassoSettingsChange({ showAllMasks: v })}
+                        />
+                    </div>
                 </div>
-                 <div className="flex items-center justify-between">
-                    <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
-                    <Switch
-                        id="show-masks"
-                        checked={lassoSettings.showAllMasks}
-                        onCheckedChange={(v) => onLassoSettingsChange({ showAllMasks: v })}
-                    />
-                </div>
-            </div>
 
-            <div className="space-y-2">
-                <Label>Presets (Magic Snap)</Label>
-                <div className="grid grid-cols-3 gap-2">
-                    <Button variant="outline" size="sm" onClick={() => {}}>Default</Button>
-                    <Button variant="outline" size="sm" onClick={() => {}}>Precise</Button>
-                    <Button variant="outline" size="sm" onClick={() => {}}>Loose</Button>
+                <div className="space-y-2">
+                    <Label>Presets (Magic Snap)</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                        <Button variant="outline" size="sm" onClick={() => {}}>Default</Button>
+                        <Button variant="outline" size="sm" onClick={() => {}}>Precise</Button>
+                        <Button variant="outline" size="sm" onClick={() => {}}>Loose</Button>
+                    </div>
                 </div>
-            </div>
-            
-            {lassoSettings.drawMode === 'magic' && (
-              <Accordion type="single" collapsible defaultValue="advanced-settings">
-                <AccordionItem value="advanced-settings">
-                  <AccordionTrigger>Advanced Magic Snap</AccordionTrigger>
-                  <AccordionContent className="pt-4">
-                    <TooltipProvider>
-                      <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
+            </TabsContent>
+            <TabsContent value="magic-snap" className="m-0">
+                <TooltipProvider>
+                    <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
                         <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
                         <VerticalLassoSlider settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="curveStrength" label="Curve" max={1} step={0.05} />
@@ -300,14 +302,19 @@ export function ToolSettingsPanel({
                         <VerticalLassoSlider settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="colorInfluence" label="Color" max={1} step={0.05} />
-                      </div>
-                    </TooltipProvider>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            )}
+                    </div>
+                </TooltipProvider>
+                 <div className="flex items-center justify-between mt-4">
+                    <Label htmlFor="useColorAwareness" className="flex items-center gap-2 text-sm">Use Color Awareness</Label>
+                    <Switch
+                        id="useColorAwareness"
+                        checked={lassoSettings.useColorAwareness}
+                        onCheckedChange={(checked) => onLassoSettingsChange({ useColorAwareness: checked })}
+                    />
+                </div>
+            </TabsContent>
 
-        </div>
+        </Tabs>
       )}
     </div>
   )
