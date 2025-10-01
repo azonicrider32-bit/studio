@@ -80,6 +80,7 @@ export function ProSegmentAI() {
     drawMode: 'magic',
     useAiEnhancement: false,
     showMouseTrace: true,
+    showAllMasks: true,
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.05,
@@ -100,6 +101,7 @@ export function ProSegmentAI() {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     contiguous: true,
     useAiAssist: false,
+    showAllMasks: true,
     enabledTolerances: new Set(['h', 's', 'v']),
     scrollAdjustTolerances: new Set(),
     useAntiAlias: true,
@@ -109,6 +111,7 @@ export function ProSegmentAI() {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
     contiguous: true,
     useAiAssist: false,
+    showAllMasks: true,
     enabledTolerances: new Set(),
     scrollAdjustTolerances: new Set(),
     seedColor: undefined,
@@ -135,7 +138,7 @@ export function ProSegmentAI() {
   const clearSelectionRef = React.useRef<() => void>();
 
   const addLayer = (newLayer: Layer) => {
-    setLayers(prev => [...prev, newLayer]);
+    setLayers(prev => [...prev, { ...newLayer, maskVisible: true }]);
     setActiveLayerId(newLayer.id);
   }
 
@@ -144,7 +147,12 @@ export function ProSegmentAI() {
   };
   
   const toggleLayerLock = (layerId: string) => {
+     if (layerId === "background-0") return;
     setLayers(prev => prev.map(l => l.id === layerId ? { ...l, locked: !l.locked } : l));
+  };
+
+  const toggleLayerMask = (layerId: string) => {
+    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, maskVisible: !l.maskVisible } : l));
   };
 
   const deleteLayer = (layerId: string) => {
@@ -437,6 +445,7 @@ export function ProSegmentAI() {
                 onLayerSelect={setActiveLayerId}
                 onToggleVisibility={toggleLayerVisibility}
                 onToggleLock={toggleLayerLock}
+                onToggleMask={toggleLayerMask}
                 onDeleteLayer={deleteLayer}
               />
             </TabsContent>

@@ -90,7 +90,7 @@ export function LassoPanel({ settings, onSettingsChange, canvas, mousePos, selec
   const currentMode = DRAW_MODES.find(m => m.id === settings.drawMode);
 
 
-  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | `${string}Enabled` | 'drawMode' | 'showMouseTrace' | 'useColorAwareness'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
+  const SETTINGS_CONFIG: { id: keyof Omit<LassoSettings, 'useAiEnhancement' | `${string}Enabled` | 'drawMode' | 'showMouseTrace' | 'useColorAwareness' | 'showAllMasks'>; label: string; icon: React.ElementType; min: number; max: number; step: number; unit?: string; description: string; }[] = [
     { id: 'snapRadius', label: 'Snap Radius', icon: Radius, min: 1, max: 40, step: 1, unit: 'px', description: 'How far the tool looks for an edge to snap to.' },
     { id: 'snapThreshold', label: 'Edge Sensitivity', icon: Waves, min: 0.05, max: 1, step: 0.05, description: 'How strong an edge must be to be considered. Lower is more sensitive.' },
     { id: 'curveStrength', label: 'Smoothness', icon: Spline, min: 0, max: 1, step: 0.05, description: 'Higher values create smoother, more curved lines.' },
@@ -239,6 +239,14 @@ export function LassoPanel({ settings, onSettingsChange, canvas, mousePos, selec
                   disabled={settings.drawMode !== 'magic'}
               />
           </div>
+           <div className="flex items-center justify-between">
+                <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
+                <Switch
+                    id="show-masks"
+                    checked={settings.showAllMasks}
+                    onCheckedChange={(v) => onSettingsChange({ showAllMasks: v })}
+                />
+            </div>
         </div>
       
         <div className={cn("space-y-2", settings.drawMode !== 'magic' && 'opacity-50 pointer-events-none')}>

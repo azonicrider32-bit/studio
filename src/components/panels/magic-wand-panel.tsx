@@ -3,7 +3,7 @@
 "use client"
 
 import * as React from "react"
-import { Sparkles, BrainCircuit, Info } from "lucide-react"
+import { Sparkles, BrainCircuit, Info, Palette } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -196,7 +196,7 @@ export function MagicWandPanel({
       <Separator />
 
       {!isExclusionPanel && (
-          <div className="flex justify-around gap-4">
+          <div className="flex justify-around gap-2">
             <div className="flex flex-col items-center gap-2">
                 <Label htmlFor="contiguous">Contiguous</Label>
                 <Switch
@@ -226,6 +226,16 @@ export function MagicWandPanel({
                 onCheckedChange={(checked) => onSettingsChange({ useFeather: checked })}
                 />
                  <p className="text-xs text-muted-foreground text-center mt-2">Soften selection edges</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+                <Label htmlFor="show-masks" className="flex items-center gap-2 text-center">Show Masks</Label>
+                <Switch
+                    id="show-masks"
+                    orientation="vertical"
+                    checked={settings.showAllMasks}
+                    onCheckedChange={(v) => onSettingsChange({ showAllMasks: v })}
+                />
+                <p className="text-xs text-muted-foreground text-center mt-2">Toggle all overlays</p>
             </div>
           </div>
       )}
@@ -350,6 +360,3 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
     
 
     
-
-
-

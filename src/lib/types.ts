@@ -9,12 +9,14 @@ export interface Layer {
     pixels: Set<number>;
     bounds: { x: number; y: number; width: number; height: number };
     imageData?: ImageData;
+    maskVisible?: boolean;
 }
 
 export interface LassoSettings {
     drawMode: 'magic' | 'polygon' | 'free';
     useAiEnhancement: boolean;
     showMouseTrace: boolean;
+    showAllMasks: boolean;
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number;
@@ -40,6 +42,7 @@ export interface MagicWandSettings {
     };
     contiguous: boolean;
     useAiAssist: boolean;
+    showAllMasks: boolean;
     enabledTolerances: Set<keyof MagicWandSettings['tolerances']>;
     scrollAdjustTolerances: Set<keyof MagicWandSettings['tolerances']>;
     seedColor?: { [key: string]: number };

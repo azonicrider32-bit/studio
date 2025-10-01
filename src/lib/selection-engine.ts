@@ -34,6 +34,7 @@ export class SelectionEngine {
     drawMode: 'magic',
     useAiEnhancement: false,
     showMouseTrace: true,
+    showAllMasks: true,
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.05,
@@ -54,6 +55,7 @@ export class SelectionEngine {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     contiguous: true,
     useAiAssist: false,
+    showAllMasks: true,
     enabledTolerances: new Set(['h', 's', 'v']),
     scrollAdjustTolerances: new Set(),
     useAntiAlias: true,
@@ -63,6 +65,7 @@ export class SelectionEngine {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
     contiguous: true,
     useAiAssist: false,
+    showAllMasks: true,
     enabledTolerances: new Set(),
     scrollAdjustTolerances: new Set(),
     seedColor: undefined,
@@ -749,32 +752,35 @@ export class SelectionEngine {
   }
 
 
-  renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[]) {
+  renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[], wandSettings: MagicWandSettings, lassoSettings: LassoSettings) {
     if (!overlayCtx) return;
 
     // Clear the overlay for selection marching ants and lasso paths
     overlayCtx.clearRect(0, 0, this.width, this.height);
+    
+    const showMasks = wandSettings.showAllMasks && lassoSettings.showAllMasks;
 
-    // Render marching ants for any layers that DO NOT have imageData
-    const selectionImageData = overlayCtx.createImageData(this.width, this.height);
-    const data = selectionImageData.data;
-    let hasMaskOnlySelections = false;
+    if (showMasks) {
+        const selectionImageData = overlayCtx.createImageData(this.width, this.height);
+        const data = selectionImageData.data;
+        let hasMasksToRender = false;
 
-    layers.forEach(layer => {
-        if (layer.visible && layer.type === 'segmentation' && !layer.imageData) {
-            hasMaskOnlySelections = true;
-            layer.pixels.forEach(idx => {
-                const i = idx * 4;
-                data[i] = 3; // R
-                data[i + 1] = 169; // G
-                data[i + 2] = 244; // B
-                data[i + 3] = 102; // Alpha
-            });
+        layers.forEach(layer => {
+            if (layer.visible && layer.type === 'segmentation' && layer.maskVisible) {
+                hasMasksToRender = true;
+                layer.pixels.forEach(idx => {
+                    const i = idx * 4;
+                    data[i] = 3; // R
+                    data[i + 1] = 169; // G
+                    data[i + 2] = 244; // B
+                    data[i + 3] = 102; // Alpha
+                });
+            }
+        });
+
+        if (hasMasksToRender) {
+            overlayCtx.putImageData(selectionImageData, 0, 0);
         }
-    });
-
-    if (hasMaskOnlySelections) {
-        overlayCtx.putImageData(selectionImageData, 0, 0);
     }
 
 

@@ -115,17 +115,17 @@ export function ImageCanvas({
     const overlayCtx = overlayCanvas.getContext('2d');
     if (overlayCtx) {
       overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-      engine.renderSelection(overlayCtx, layers);
+      engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings);
       if (hoveredSegment && activeTool === 'magic-wand' && !magicWandSettings.useAiAssist) {
         engine.renderHoverSegment(overlayCtx, hoveredSegment);
       }
     }
-  }, [hoveredSegment, activeTool, magicWandSettings.useAiAssist, layers]);
+  }, [hoveredSegment, activeTool, magicWandSettings, lassoSettings, layers]);
 
   React.useEffect(() => {
     drawLayers();
     drawOverlay();
-  }, [layers, drawLayers, drawOverlay]);
+  }, [layers, drawLayers, drawOverlay, magicWandSettings.showAllMasks, lassoSettings.showAllMasks]);
 
 
   const initEngine = React.useCallback(() => {
@@ -430,7 +430,8 @@ export function ImageCanvas({
         clearTimeout(mouseStopTimerRef.current);
     }
     setHoveredSegment(null);
-    setCanvasMousePos(null);
+    // Do not set canvasMousePos to null to keep lasso preview alive
+    // setCanvasMousePos(null); 
     drawOverlay();
   }
 
@@ -514,6 +515,8 @@ export function ImageCanvas({
     }
     return 'default';
   }
+  
+  const isBackgroundVisible = layers.find(l => l.type === 'background')?.visible ?? true;
 
 
   if (!imageUrl) {
@@ -534,6 +537,7 @@ export function ImageCanvas({
                 alt={image?.description || "Workspace image"}
                 fill
                 className="object-contain"
+                style={{ opacity: isBackgroundVisible ? 1 : 0 }}
                 onLoad={handleImageLoad}
                 crossOrigin="anonymous"
                 key={imageUrl} 
