@@ -7,13 +7,16 @@ import {
   Bot,
   Brush,
   Eraser,
-  Feather,
+  Feather as FeatherIcon,
   Layers,
   Pipette,
   Settings2,
   SlidersHorizontal,
   Wand2,
   Image as ImageIcon,
+  MinusCircle,
+  AreaChart,
+  BrainCircuit,
 } from "lucide-react"
 
 import {
@@ -48,6 +51,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import Image from "next/image"
 import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus"
 
@@ -314,14 +318,46 @@ export function ProSegmentAI() {
       <Sidebar side="right" className="w-[380px] border-l">
         <Tabs defaultValue="options" className="flex h-full flex-col">
           <SidebarHeader>
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="options">Options</TabsTrigger>
-              <TabsTrigger value="exclusions">Exclusions</TabsTrigger>
-              <TabsTrigger value="feather">Feather</TabsTrigger>
-              <TabsTrigger value="layers">Layers</TabsTrigger>
-              <TabsTrigger value="analysis">Analysis</TabsTrigger>
-              <TabsTrigger value="ai">AI</TabsTrigger>
-            </TabsList>
+            <TooltipProvider>
+                <TabsList className="grid w-full grid-cols-6">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="options" className="flex-1"><SlidersHorizontal className="h-5 w-5"/></TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>Tool Options</TooltipContent>
+                    </Tooltip>
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="exclusions" className="flex-1"><MinusCircle className="h-5 w-5"/></TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>Exclusion Settings</TooltipContent>
+                    </Tooltip>
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="feather" className="flex-1"><FeatherIcon className="h-5 w-5"/></TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>Feather & Edges</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="layers" className="flex-1"><Layers className="h-5 w-5"/></TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>Layers</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="analysis" className="flex-1"><AreaChart className="h-5 w-5"/></TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>Color Analysis</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <TabsTrigger value="ai" className="flex-1"><BrainCircuit className="h-5 w-5"/></TabsTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>AI Tools</TooltipContent>
+                    </Tooltip>
+                </TabsList>
+            </TooltipProvider>
           </SidebarHeader>
           <Separator />
           <SidebarContent className="p-0">
