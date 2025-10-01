@@ -288,22 +288,14 @@ export function ProSegmentAI() {
     }
   }
 
-  const renderRightPanelContent = (isExclusion = false) => {
-     if (isExclusion) {
-      return <MagicWandPanel 
-                settings={negativeMagicWandSettings} 
-                onSettingsChange={handleNegativeMagicWandSettingsChange}
-                canvas={canvasRef.current}
-                mousePos={canvasMousePos}
-                isExclusionPanel={true}
-             />
-    }
-
+  const renderRightPanelContent = () => {
     switch (activeTool) {
       case "magic-wand":
         return <MagicWandPanel 
                   settings={magicWandSettings} 
                   onSettingsChange={handleMagicWandSettingsChange}
+                  exclusionSettings={negativeMagicWandSettings}
+                  onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
                   canvas={canvasRef.current}
                   mousePos={canvasMousePos}
                />
@@ -491,18 +483,12 @@ export function ProSegmentAI() {
               <Tabs defaultValue="analysis" className="flex h-full flex-col">
                 <SidebarHeader>
                   <TooltipProvider>
-                      <TabsList className="grid w-full grid-cols-6">
+                      <TabsList className="grid w-full grid-cols-5">
                           <Tooltip>
                               <TooltipTrigger asChild>
                                   <TabsTrigger value="analysis" className="flex-1"><Palette className="h-5 w-5"/></TabsTrigger>
                               </TooltipTrigger>
                               <TooltipContent>Color Analysis</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <TabsTrigger value="exclusions" className="flex-1"><MinusCircle className="h-5 w-5"/></TabsTrigger>
-                              </TooltipTrigger>
-                              <TooltipContent>Exclusion Settings</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                               <TooltipTrigger asChild>
@@ -535,9 +521,6 @@ export function ProSegmentAI() {
                 <SidebarContent className="p-0">
                   <TabsContent value="analysis" className="m-0 h-full">
                     {renderRightPanelContent()}
-                  </TabsContent>
-                  <TabsContent value="exclusions" className="m-0 h-full">
-                    {renderRightPanelContent(true)}
                   </TabsContent>
                   <TabsContent value="feather" className="m-0 h-full">
                     <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />

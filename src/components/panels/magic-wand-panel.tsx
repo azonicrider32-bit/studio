@@ -3,7 +3,7 @@
 "use client"
 
 import * as React from "react"
-import { Info } from "lucide-react"
+import { Info, MinusCircle } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
@@ -16,13 +16,15 @@ import { cn } from "@/lib/utils"
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils"
 import { SegmentHoverPreview } from "../segment-hover-preview"
 import { Button } from "../ui/button"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
   onSettingsChange: (settings: Partial<MagicWandSettings>) => void;
+  exclusionSettings: MagicWandSettings;
+  onExclusionSettingsChange: (settings: Partial<MagicWandSettings>) => void;
   canvas: HTMLCanvasElement | null;
   mousePos: { x: number; y: number } | null;
-  isExclusionPanel?: boolean;
 }
 
 interface Analysis {
@@ -34,126 +36,125 @@ interface Analysis {
 export function MagicWandPanel({ 
   settings, 
   onSettingsChange,
+  exclusionSettings,
+  onExclusionSettingsChange,
   canvas,
   mousePos,
-  isExclusionPanel = false,
 }: MagicWandPanelProps) {
-  const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
   
-  React.useEffect(() => {
-    if (isExclusionPanel && settings.seedColor) {
-        setAnalysis({
-            rgb: { r: settings.seedColor.r, g: settings.seedColor.g, b: settings.seedColor.b },
-            hsv: { h: settings.seedColor.h, s: settings.seedColor.s, v: settings.seedColor.v },
-            lab: { l: settings.seedColor.l, a: settings.seedColor.a, b_lab: settings.seedColor.b_lab },
-        });
-
-    } else if (canvas && mousePos) {
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if (ctx) {
-        const x = Math.floor(mousePos.x);
-        const y = Math.floor(mousePos.y);
-        
-        if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
-          const pixel = ctx.getImageData(x, y, 1, 1).data;
-          const r = pixel[0];
-          const g = pixel[1];
-          const b = pixel[2];
-          
+  const ToleranceSection = ({ title, settings, onSettingsChange }: { title: string, settings: MagicWandSettings, onSettingsChange: (s: Partial<MagicWandSettings>) => void}) => {
+    const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
+    
+    React.useEffect(() => {
+      if (title === 'Exclusion' && settings.seedColor) {
           setAnalysis({
-            rgb: { r, g, b },
-            hsv: rgbToHsv(r, g, b),
-            lab: rgbToLab(r, g, b),
+              rgb: { r: settings.seedColor.r, g: settings.seedColor.g, b: settings.seedColor.b },
+              hsv: { h: settings.seedColor.h, s: settings.seedColor.s, v: settings.seedColor.v },
+              lab: { l: settings.seedColor.l, a: settings.seedColor.a, b_lab: settings.seedColor.b_lab },
           });
-        } else {
-          setAnalysis(null);
-        }
-      }
-    } else {
-        setAnalysis(null);
-    }
-  }, [canvas, mousePos, isExclusionPanel, settings.seedColor]);
 
-  
-  const handleToggleEnabled = (setting: keyof MagicWandSettings['tolerances']) => {
-    const newSet = new Set(settings.enabledTolerances);
-    if (newSet.has(setting)) {
-      newSet.delete(setting);
-    } else {
-      newSet.add(setting);
-    }
-    onSettingsChange({ enabledTolerances: newSet });
-  };
-  
-  const handleToggleScrollAdjust = (setting: keyof MagicWandSettings['tolerances']) => {
-     const newSet = new Set(settings.scrollAdjustTolerances);
-    if (newSet.has(setting)) {
-      newSet.delete(setting);
-    } else {
-      newSet.add(setting);
-    }
-    onSettingsChange({ scrollAdjustTolerances: newSet });
-  }
-
-  const handleToleranceChange = (key: keyof MagicWandSettings['tolerances'], value: number) => {
-      onSettingsChange({
-          tolerances: {
-              ...settings.tolerances,
-              [key]: value
+      } else if (title !== 'Exclusion' && canvas && mousePos) {
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        if (ctx) {
+          const x = Math.floor(mousePos.x);
+          const y = Math.floor(mousePos.y);
+          
+          if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const r = pixel[0];
+            const g = pixel[1];
+            const b = pixel[2];
+            
+            setAnalysis({
+              rgb: { r, g, b },
+              hsv: rgbToHsv(r, g, b),
+              lab: rgbToLab(r, g, b),
+            });
+          } else {
+            setAnalysis(null);
           }
-      });
-  }
+        }
+      } else if (title !== 'Exclusion') {
+          setAnalysis(null);
+      }
+    }, [canvas, mousePos, settings.seedColor, title]);
 
-  const handleToggleGroup = (groupKeys: (keyof MagicWandSettings['tolerances'])[]) => {
-    const newEnabledTolerances = new Set(settings.enabledTolerances);
-    const allEnabled = groupKeys.every(key => newEnabledTolerances.has(key));
-
-    if (allEnabled) {
-      groupKeys.forEach(key => newEnabledTolerances.delete(key));
-    } else {
-      groupKeys.forEach(key => newEnabledTolerances.add(key));
+    
+    const handleToggleEnabled = (setting: keyof MagicWandSettings['tolerances']) => {
+      const newSet = new Set(settings.enabledTolerances);
+      if (newSet.has(setting)) {
+        newSet.delete(setting);
+      } else {
+        newSet.add(setting);
+      }
+      onSettingsChange({ enabledTolerances: newSet });
+    };
+    
+    const handleToggleScrollAdjust = (setting: keyof MagicWandSettings['tolerances']) => {
+      const newSet = new Set(settings.scrollAdjustTolerances);
+      if (newSet.has(setting)) {
+        newSet.delete(setting);
+      } else {
+        newSet.add(setting);
+      }
+      onSettingsChange({ scrollAdjustTolerances: newSet });
     }
-    onSettingsChange({ enabledTolerances: newEnabledTolerances });
-  };
-  
-  const ALL_COMPONENTS: {title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, value: number | undefined}[]}[] = [
-    {
-      title: 'RGB',
-      components: [
-        { id: 'r', label: 'R', max: 255, color: "bg-red-500", value: analysis?.rgb.r },
-        { id: 'g', label: 'G', max: 255, color: "bg-green-500", value: analysis?.rgb.g },
-        { id: 'b', label: 'B', max: 255, color: "bg-blue-500", value: analysis?.rgb.b },
-      ]
-    },
-    {
-      title: 'HSV',
-      components: [
-        { id: 'h', label: 'H', max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500", value: analysis?.hsv.h },
-        { id: 's', label: 'S', max: 100, color: "bg-slate-400", value: analysis?.hsv.s },
-        { id: 'v', label: 'V', max: 100, color: "bg-white", value: analysis?.hsv.v },
-      ]
-    },
-    {
-      title: 'LAB',
-      components: [
-        { id: 'l', label: 'L', max: 100, color: "bg-gray-500", value: analysis?.lab.l },
-        { id: 'a', label: 'a', max: 256, color: "bg-gradient-to-t from-green-500 to-red-500", value: (analysis?.lab.a ?? -128) + 128 },
-        { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500", value: (analysis?.lab.b_lab ?? -128) + 128 },
-      ]
+
+    const handleToleranceChange = (key: keyof MagicWandSettings['tolerances'], value: number) => {
+        onSettingsChange({
+            tolerances: {
+                ...settings.tolerances,
+                [key]: value
+            }
+        });
     }
-  ]
 
+    const handleToggleGroup = (groupKeys: (keyof MagicWandSettings['tolerances'])[]) => {
+      const newEnabledTolerances = new Set(settings.enabledTolerances);
+      const allEnabled = groupKeys.every(key => newEnabledTolerances.has(key));
 
-  return (
-    <div className="p-4 space-y-6">
-      <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
-      <div className="space-y-4">
+      if (allEnabled) {
+        groupKeys.forEach(key => newEnabledTolerances.delete(key));
+      } else {
+        groupKeys.forEach(key => newEnabledTolerances.add(key));
+      }
+      onSettingsChange({ enabledTolerances: newEnabledTolerances });
+    };
+    
+    const ALL_COMPONENTS: {title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, value: number | undefined}[]}[] = [
+      {
+        title: 'RGB',
+        components: [
+          { id: 'r', label: 'R', max: 255, color: "bg-red-500", value: analysis?.rgb.r },
+          { id: 'g', label: 'G', max: 255, color: "bg-green-500", value: analysis?.rgb.g },
+          { id: 'b', label: 'B', max: 255, color: "bg-blue-500", value: analysis?.rgb.b },
+        ]
+      },
+      {
+        title: 'HSV',
+        components: [
+          { id: 'h', label: 'H', max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500", value: analysis?.hsv.h },
+          { id: 's', label: 'S', max: 100, color: "bg-slate-400", value: analysis?.hsv.s },
+          { id: 'v', label: 'V', max: 100, color: "bg-white", value: analysis?.hsv.v },
+        ]
+      },
+      {
+        title: 'LAB',
+        components: [
+          { id: 'l', label: 'L', max: 100, color: "bg-gray-500", value: analysis?.lab.l },
+          { id: 'a', label: 'a', max: 256, color: "bg-gradient-to-t from-green-500 to-red-500", value: (analysis?.lab.a ?? -128) + 128 },
+          { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500", value: (analysis?.lab.b_lab ?? -128) + 128 },
+        ]
+      }
+    ]
+
+    return (
         <TooltipProvider>
             <div className="space-y-2">
                 <div className="flex justify-around bg-muted/50 p-4 rounded-md">
                     {ALL_COMPONENTS.map((group, groupIndex) => 
                         <React.Fragment key={group.title}>
-                           <div className="flex flex-col items-center gap-2">
+                          <div className="flex flex-col items-center gap-2">
                               <Button variant="secondary" size="sm" onClick={() => handleToggleGroup(group.components.map(c => c.id))} className="font-semibold text-sm h-auto p-1 w-full">
                                 {group.title}
                               </Button>
@@ -176,13 +177,34 @@ export function MagicWandPanel({
                                     />
                                 ))}
                               </div>
-                           </div>
-                           {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-auto bg-border/50" />}
+                          </div>
+                          {groupIndex < ALL_COMPONENTS.length - 1 && <Separator orientation="vertical" className="h-auto bg-border/50" />}
                         </React.Fragment>
                     )}
                 </div>
             </div>
         </TooltipProvider>
+    )
+  }
+
+  return (
+    <div className="p-4 space-y-6">
+      <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
+      <div className="space-y-4">
+        <ToleranceSection title="Inclusion" settings={settings} onSettingsChange={onSettingsChange} />
+        <Accordion type="single" collapsible>
+            <AccordionItem value="exclusions">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                        <MinusCircle className="w-5 h-5"/>
+                        <h4 className="font-semibold">Exclusion Settings</h4>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 space-y-4">
+                   <ToleranceSection title="Exclusion" settings={exclusionSettings} onSettingsChange={onExclusionSettingsChange} />
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
       </div>
     </div>
   )
@@ -213,13 +235,11 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
     if (pixelValue !== undefined) {
         const baseValue = (id === 'a' || id === 'b_lab') ? pixelValue : pixelValue;
         
-        // Handle hue's circular nature for visualization
         if (id === 'h') {
             const hDiff = Math.abs(pixelValue - tolerance);
             const lowerBound = (pixelValue - tolerance + 360) % 360;
             const upperBound = (pixelValue + tolerance) % 360;
             
-            // This is a simplification and doesn't show wrapping around the bar.
             bottomPercent = (Math.max(0, pixelValue - tolerance) / max) * 100;
             rangeHeight = (Math.min(max, pixelValue + tolerance) - Math.max(0, pixelValue - tolerance)) / max * 100;
         } else {
@@ -300,7 +320,3 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
         </div>
     );
 }
-
-    
-
-    
