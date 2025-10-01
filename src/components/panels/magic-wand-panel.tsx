@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { cn } from "@/lib/utils"
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils"
+import { SegmentHoverPreview } from "../segment-hover-preview"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
@@ -200,21 +201,9 @@ export function MagicWandPanel({
 
   return (
     <div className="p-4 space-y-6">
-      <div className="space-y-2">
-        <h3 className="font-headline text-lg">{isExclusionPanel ? "Exclusion Tolerances" : "Magic Wand"}</h3>
-        <p className="text-sm text-muted-foreground">
-          {isExclusionPanel 
-            ? "Define colors to exclude from the selection."
-            : "Select similar colored areas. Fine-tune tolerances below."
-          }
-        </p>
-      </div>
-
-      <Separator />
-
+      {!isExclusionPanel && <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />}
       <div className="space-y-4">
-        <h4 className="text-sm font-semibold text-center">Color Tolerances</h4>
-        <p className="text-xs text-muted-foreground -mt-2 text-center">Click a slider to select for scroll-wheel adjustment. Use toggles to enable/disable a channel.</p>
+        <p className="text-xs text-muted-foreground text-center">Click a slider to select for scroll-wheel adjustment. Use toggles to enable/disable a channel.</p>
         <TooltipProvider>
             <div className="space-y-2">
                 <div className="flex justify-around bg-muted/50 p-4 rounded-md">
@@ -426,3 +415,4 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
     
 
     
+
