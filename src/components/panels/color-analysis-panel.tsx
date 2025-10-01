@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -25,13 +26,13 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
   const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
 
   const handleToggleTolerance = (key: keyof MagicWandSettings['tolerances']) => {
-    const newActiveTolerances = new Set(magicWandSettings.activeTolerances);
-    if (newActiveTolerances.has(key)) {
-      newActiveTolerances.delete(key);
+    const newEnabledTolerances = new Set(magicWandSettings.enabledTolerances);
+    if (newEnabledTolerances.has(key)) {
+      newEnabledTolerances.delete(key);
     } else {
-      newActiveTolerances.add(key);
+      newEnabledTolerances.add(key);
     }
-    onMagicWandSettingsChange({ activeTolerances: newActiveTolerances });
+    onMagicWandSettingsChange({ enabledTolerances: newEnabledTolerances });
   };
 
 
@@ -100,7 +101,7 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
                     max={data.max} 
                     color={data.color}
                     onLabelClick={() => handleToggleTolerance(data.id)}
-                    isActive={magicWandSettings.activeTolerances.has(data.id)}
+                    isActive={magicWandSettings.enabledTolerances.has(data.id)}
                 />
             ))}
         </div>
