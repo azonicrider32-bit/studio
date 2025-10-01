@@ -221,7 +221,7 @@ export function MagicWandPanel({
                     {ALL_COMPONENTS.map((group, groupIndex) => 
                         <React.Fragment key={group.title}>
                            <div className="flex flex-col items-center gap-2">
-                              <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(group.components.map(c => c.id))} className="font-semibold text-sm h-auto p-1">
+                              <Button variant="secondary" size="sm" onClick={() => handleToggleGroup(group.components.map(c => c.id))} className="font-semibold text-sm h-auto p-1 w-full">
                                 {group.title}
                               </Button>
                               <div className="flex items-end h-64 gap-1">
@@ -375,7 +375,7 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
             </Tooltip>
 
              <div className={cn("w-4 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
-                {pixelValue !== undefined && (
+                {pixelValue !== undefined && isEnabled && (
                   <div 
                       className={cn("w-full absolute bg-primary/75 border-y border-primary-foreground/50")} 
                       style={{ 
