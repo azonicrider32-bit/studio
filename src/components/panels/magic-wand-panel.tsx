@@ -156,7 +156,6 @@ export function MagicWandPanel({
     <div className="p-4 space-y-6">
       {!isExclusionPanel && <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />}
       <div className="space-y-4">
-        <p className="text-xs text-muted-foreground text-center">Click a slider to select for scroll-wheel adjustment. Use toggles to enable/disable a channel.</p>
         <TooltipProvider>
             <div className="space-y-2">
                 <div className="flex justify-around bg-muted/50 p-4 rounded-md">
@@ -197,21 +196,38 @@ export function MagicWandPanel({
       <Separator />
 
       {!isExclusionPanel && (
-          <>
-            <div className="flex items-center justify-between">
+          <div className="flex justify-around gap-4">
+            <div className="flex flex-col items-center gap-2">
                 <Label htmlFor="contiguous">Contiguous</Label>
                 <Switch
                 id="contiguous"
+                orientation="vertical"
                 checked={settings.contiguous}
                 onCheckedChange={(checked) => onSettingsChange({ contiguous: checked })}
                 />
+                 <p className="text-xs text-muted-foreground text-center mt-2">Adjacent pixels only</p>
             </div>
-            <p className="text-xs text-muted-foreground -mt-3">
-                If enabled, selects only adjacent areas using the same colors.
-            </p>
-            
-            <Separator />
-          </>
+            <div className="flex flex-col items-center gap-2">
+                <Label htmlFor="anti-aliasing">Anti-Alias</Label>
+                <Switch
+                id="anti-aliasing"
+                orientation="vertical"
+                checked={settings.useAntiAlias}
+                onCheckedChange={(checked) => onSettingsChange({ useAntiAlias: checked })}
+                />
+                <p className="text-xs text-muted-foreground text-center mt-2">Smooth selection edges</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+                <Label htmlFor="feather-edges">Feather</Label>
+                <Switch
+                id="feather-edges"
+                orientation="vertical"
+                checked={settings.useFeather}
+                onCheckedChange={(checked) => onSettingsChange({ useFeather: checked })}
+                />
+                 <p className="text-xs text-muted-foreground text-center mt-2">Soften selection edges</p>
+            </div>
+          </div>
       )}
 
     </div>
@@ -334,4 +350,5 @@ function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue,
     
 
     
+
 

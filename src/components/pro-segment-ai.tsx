@@ -79,6 +79,8 @@ export function ProSegmentAI() {
     useAiAssist: false,
     enabledTolerances: new Set(['h', 's', 'v']),
     scrollAdjustTolerances: new Set(),
+    useAntiAlias: true,
+    useFeather: false,
   });
   const [negativeMagicWandSettings, setNegativeMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -87,6 +89,8 @@ export function ProSegmentAI() {
     enabledTolerances: new Set(),
     scrollAdjustTolerances: new Set(),
     seedColor: undefined,
+    useAntiAlias: true,
+    useFeather: false,
   });
   const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
     antiAlias: { enabled: true, method: 'gaussian', quality: 'balanced' },

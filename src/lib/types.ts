@@ -2,6 +2,7 @@
 
 
 
+
 export interface LassoSettings {
     useEdgeSnapping: boolean;
     snapRadius: number;
@@ -27,6 +28,8 @@ export interface MagicWandSettings {
     enabledTolerances: Set<keyof MagicWandSettings['tolerances']>;
     scrollAdjustTolerances: Set<keyof MagicWandSettings['tolerances']>;
     seedColor?: { [key: string]: number };
+    useAntiAlias: boolean;
+    useFeather: boolean;
 }
 
 
