@@ -26,6 +26,7 @@ export class SelectionEngine {
   
   // New Lasso Path Memory
   lassoPreviewPath: [number, number][] = [];
+  futureLassoPath: [number, number][] = [];
   
   // Edge Detection
   edgeMap: Float32Array | null = null;
@@ -142,6 +143,7 @@ export class SelectionEngine {
     this.lassoCurrentPos = null;
     this.isDrawingLasso = false;
     this.lassoPreviewPath = [];
+    this.futureLassoPath = [];
   }
 
   updateLassoPreview(x: number, y: number) {
@@ -150,7 +152,9 @@ export class SelectionEngine {
 
     const lastAnchor = this.lassoNodes[this.lassoNodes.length - 1];
     
-    this.lassoPreviewPath = this.findEdgePath(lastAnchor, [x, y]);
+    const { path: previewPath, futurePath } = this.findEdgePath(lastAnchor, [x, y]);
+    this.lassoPreviewPath = previewPath;
+    this.futureLassoPath = futurePath;
   }
 
 
@@ -160,6 +164,7 @@ export class SelectionEngine {
     // Add the entire preview path to the main nodes list
     this.lassoNodes.push(...this.lassoPreviewPath);
     this.lassoPreviewPath = [];
+    this.futureLassoPath = [];
     
     // Set the new anchor point
     const newAnchor = this.lassoNodes[this.lassoNodes.length-1];
@@ -191,22 +196,24 @@ export class SelectionEngine {
     }
 
     const fullPath = this.getLassoPath(true);
-    this.selectedPixels = this.pathToSelection(fullPath);
-    this.createSegmentFromSelection();
+    if(fullPath.length > 2) {
+        this.selectedPixels = this.pathToSelection(fullPath);
+        this.createSegmentFromSelection();
+    }
+    
     this.cancelLasso();
   }
 
   getLassoPath(closed = false) {
     if (!this.isDrawingLasso) return [];
     
-    let path = [...this.lassoNodes];
-    path.push(...this.lassoPreviewPath);
+    let path = [...this.lassoNodes, ...this.lassoPreviewPath];
     
     if (closed && path.length > 1) {
         const firstNode = path[0];
         const lastNode = path[path.length - 1];
         if (Math.hypot(firstNode[0] - lastNode[0], firstNode[1] - lastNode[1]) > 1) {
-            const closingPath = this.findEdgePath(lastNode, firstNode);
+            const closingPath = this.findEdgePath(lastNode, firstNode, false).path;
             path.push(...closingPath);
         }
     }
@@ -214,18 +221,19 @@ export class SelectionEngine {
     return path;
   }
   
-  findEdgePath(p1: [number, number], p2: [number, number]): [number, number][] {
+  findEdgePath(p1: [number, number], p2: [number, number], withFuturePath = true): { path: [number, number][], futurePath: [number, number][] } {
     if (!this.lassoSettings.useMagicSnapping || !this.edgeMap) {
-        return [p2];
+        return { path: [p2], futurePath: [] };
     }
 
     const path: [number, number][] = [];
+    const futurePath: [number, number][] = [];
     let currentPoint = p1;
     const visitedInPath = new Set<number>();
     visitedInPath.add(Math.round(p1[1]) * this.width + Math.round(p1[0]));
 
     const initialDistToTarget = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
-    const maxSteps = initialDistToTarget * 2;
+    const maxSteps = initialDistToTarget * 2 + (withFuturePath ? 50 : 0); // Allow more steps for future path
     let steps = 0;
     
     let lastDirection: [number, number] | null = null;
@@ -233,8 +241,24 @@ export class SelectionEngine {
 
     while (steps < maxSteps) {
         steps++;
-        const distToTarget = Math.hypot(p2[0] - currentPoint[0], p2[1] - currentPoint[1]);
-        if (distToTarget < (this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1)) {
+        const targetPoint = p2;
+        
+        const distToTarget = Math.hypot(targetPoint[0] - currentPoint[0], targetPoint[1] - currentPoint[1]);
+        if (withFuturePath && distToTarget < 1) {
+            // We've reached the cursor, now calculate future path
+            withFuturePath = false; // Stop calculating future path after this segment
+            const futureTarget: [number, number] = [
+                targetPoint[0] + (lastDirection ? lastDirection[0] : 0) * 50,
+                targetPoint[1] + (lastDirection ? lastDirection[1] : 0) * 50
+            ];
+            const futureResult = this.findEdgePath(targetPoint, futureTarget, false);
+            futurePath.push(...futureResult.path);
+            path.push(p2); // ensure cursor point is in main path
+            break; // Finished
+        } else if (!withFuturePath && steps > initialDistToTarget * 2) {
+             break; // Stop future path calculation after a reasonable distance
+        }
+        else if (distToTarget < (this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1)) {
             path.push(p2);
             break;
         }
@@ -242,19 +266,17 @@ export class SelectionEngine {
         let bestNextPoint: [number, number] | null = null;
         let minCost = Infinity;
         
-        const searchRadius = Math.max(1, Math.min((this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1), Math.floor(distToTarget / 4)));
+        const searchRadius = Math.max(1, Math.min((this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1), Math.floor(distToTarget / 4) + 1));
 
         const startY = Math.max(0, Math.round(currentPoint[1]) - searchRadius);
         const endY = Math.min(this.height - 1, Math.round(currentPoint[1]) + searchRadius);
         const startX = Math.max(0, Math.round(currentPoint[0]) - searchRadius);
         const endX = Math.min(this.width - 1, Math.round(currentPoint[0]) + searchRadius);
 
-        const vectorToTarget = [p2[0] - currentPoint[0], p2[1] - currentPoint[1]];
+        const vectorToTarget = [targetPoint[0] - currentPoint[0], targetPoint[1] - currentPoint[1]];
         const magToTarget = Math.hypot(vectorToTarget[0], vectorToTarget[1]);
         const dirToTarget = [vectorToTarget[0] / magToTarget, vectorToTarget[1] / magToTarget];
 
-        // Linear falloff for cursor influence
-        const progress = Math.max(0, 1 - (distToTarget / initialDistToTarget));
         const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence : 0;
 
         for (let y = startY; y <= endY; y++) {
@@ -265,7 +287,6 @@ export class SelectionEngine {
                 const distSq = (x - currentPoint[0])**2 + (y - currentPoint[1])**2;
                 if (distSq === 0 || distSq > searchRadius * searchRadius) continue;
                 
-                // Cost function
                 const vectorToCandidate = [x - currentPoint[0], y - currentPoint[1]];
                 const magToCandidate = Math.hypot(vectorToCandidate[0], vectorToCandidate[1]);
                 const dirToCandidate = [vectorToCandidate[0] / magToCandidate, vectorToCandidate[1] / magToCandidate];
@@ -274,15 +295,15 @@ export class SelectionEngine {
                 
                 const edgeStrength = (this.edgeMap[idx] || 0) > (this.lassoSettings.snapThresholdEnabled ? this.lassoSettings.snapThreshold : 1) ? this.edgeMap[idx] : 0;
                 
-                const cursorCost = (1 - directionSimilarity) * 500 * currentCursorInfluence;
-                const edgeCost = (1 / (edgeStrength + 1)) * 1000 * (1 - currentCursorInfluence);
+                const cursorCost = (1 - directionSimilarity) * 500 * (withFuturePath ? currentCursorInfluence : 0);
+                const edgeCost = (1 / (edgeStrength + 1)) * 1000;
                 
                 let curvatureCost = 0;
                 let directionalCost = 0;
 
                 if (lastDirection) {
                     const dot = dirToCandidate[0] * lastDirection[0] + dirToCandidate[1] * lastDirection[1];
-                    const angleChange = Math.acos(Math.max(-1, Math.min(1, dot))); // 0 to PI
+                    const angleChange = Math.acos(Math.max(-1, Math.min(1, dot)));
                     
                     const stepsFromAnchor = path.length;
                     const falloff = Math.min(1, stepsFromAnchor / falloffDistance);
@@ -311,17 +332,16 @@ export class SelectionEngine {
             currentPoint = bestNextPoint;
             visitedInPath.add(Math.round(bestNextPoint[1]) * this.width + Math.round(bestNextPoint[0]));
         } else {
-            // No good point found, jump forward along the straight line
             const jumpDist = Math.min((this.lassoSettings.snapRadiusEnabled ? this.lassoSettings.snapRadius : 1), distToTarget);
             const nextX = Math.round(currentPoint[0] + dirToTarget[0] * jumpDist);
             const nextY = Math.round(currentPoint[1] + dirToTarget[1] * jumpDist);
             const nextPoint: [number, number] = [nextX, nextY];
             path.push(nextPoint);
             currentPoint = nextPoint;
-            lastDirection = null; // Reset curvature check after a jump
+            lastDirection = null;
         }
     }
-    return path;
+    return { path, futurePath };
 }
 
 
@@ -561,7 +581,6 @@ export class SelectionEngine {
     if (addToSegments) {
       this.segments.push(segment);
       this.selectedSegmentIds.add(segment.id);
-      this.selectedPixels.clear();
     }
     
     return segment;
@@ -569,6 +588,7 @@ export class SelectionEngine {
 
   createSegmentFromSelection() {
     this.createSegmentFromPixels(this.selectedPixels, true);
+    this.selectedPixels.clear();
   }
 
   clearSelection() {
@@ -673,17 +693,31 @@ export class SelectionEngine {
     }
 
     if (this.isDrawingLasso) {
-      const fullPath = this.getLassoPath(false);
+      const mainPath = [...this.lassoNodes, ...this.lassoPreviewPath];
       
-      if (fullPath.length > 0) {
+      if (mainPath.length > 0) {
         overlayCtx.strokeStyle = 'hsl(var(--accent))';
         overlayCtx.lineWidth = 2;
         overlayCtx.lineJoin = 'round';
         overlayCtx.lineCap = 'round';
         overlayCtx.beginPath();
-        overlayCtx.moveTo(fullPath[0][0], fullPath[0][1]);
-        for (let i = 1; i < fullPath.length; i++) {
-            overlayCtx.lineTo(fullPath[i][0], fullPath[i][1]);
+        overlayCtx.moveTo(mainPath[0][0], mainPath[0][1]);
+        for (let i = 1; i < mainPath.length; i++) {
+            overlayCtx.lineTo(mainPath[i][0], mainPath[i][1]);
+        }
+        overlayCtx.stroke();
+      }
+      
+      if (this.futureLassoPath.length > 0) {
+        overlayCtx.strokeStyle = 'hsla(var(--accent), 0.5)';
+        overlayCtx.lineWidth = 2;
+        overlayCtx.lineJoin = 'round';
+        overlayCtx.lineCap = 'round';
+        overlayCtx.beginPath();
+        const lastMainPoint = mainPath[mainPath.length - 1] || this.lassoCurrentPos;
+        if(lastMainPoint) overlayCtx.moveTo(lastMainPoint[0], lastMainPoint[1]);
+        for (let i = 0; i < this.futureLassoPath.length; i++) {
+            overlayCtx.lineTo(this.futureLassoPath[i][0], this.futureLassoPath[i][1]);
         }
         overlayCtx.stroke();
       }
