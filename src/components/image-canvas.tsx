@@ -484,9 +484,7 @@ export function ImageCanvas({
     if (activeTool === 'pipette-minus') return 'copy';
     if (activeTool === 'lasso') {
         const svg = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="16" r="6" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
             <path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="white" stroke-width="1.5" stroke-opacity="0.8"/>
-            <circle cx="16" cy="16" r="6" stroke="black" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.8"/>
             <path d="M16 8V15M16 24V17M24 16H17M8 16H15" stroke="black" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.8"/>
         </svg>`;
         return `url("data:image/svg+xml;base64,${btoa(svg)}") 16 16, crosshair`;
