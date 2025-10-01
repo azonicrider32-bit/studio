@@ -19,6 +19,7 @@ import {
   Link,
   Replace,
   Move,
+  Palette,
 } from "lucide-react"
 
 import {
@@ -523,7 +524,7 @@ export function ProSegmentAI() {
                   </TabsContent>
                   <TabsContent value="exclusions" className="m-0 h-full">
                     {renderRightPanelContent(true)}
-                  </TabsContent>
+                  </Tabs.Content>
                   <TabsContent value="feather" className="m-0 h-full">
                     <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
                   </TabsContent>
