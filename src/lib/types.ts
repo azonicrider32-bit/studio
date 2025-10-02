@@ -24,7 +24,7 @@ export interface LassoSettings {
     showAllMasks: boolean;
     snapRadius: number;
     snapThreshold: number;
-    curveStrength: number;
+    curveStrength: number; // 0-1, for Catmull-Rom tension
     directionalStrength: number;
     cursorInfluence: number;
     traceInfluence: number;

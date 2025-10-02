@@ -48,18 +48,18 @@ export class SelectionEngine {
     showAllMasks: true,
     snapRadius: 20,
     snapThreshold: 0.3,
-    curveStrength: 0.05,
+    curveStrength: 0.5,
     directionalStrength: 0.2,
     cursorInfluence: 0.1,
     traceInfluence: 0.2,
-    colorInfluence: 0.25,
+    colorInfluence: 0.0,
     snapRadiusEnabled: true,
     snapThresholdEnabled: true,
     curveStrengthEnabled: true,
     directionalStrengthEnabled: false,
     cursorInfluenceEnabled: true,
     traceInfluenceEnabled: true,
-    colorInfluenceEnabled: true,
+    colorInfluenceEnabled: false,
     useColorAwareness: false,
   };
   magicWandSettings: MagicWandSettings = {
@@ -285,20 +285,86 @@ export class SelectionEngine {
 
   getLassoPath(closed = false) {
     if (!this.isDrawingLasso) return [];
+
+    let rawPath = [...this.lassoNodes, ...this.lassoPreviewPath];
     
-    let path = [...this.lassoNodes, ...this.lassoPreviewPath];
+    // If not in magic mode, apply spline smoothing
+    if (this.lassoSettings.drawMode !== 'magic' && this.lassoSettings.curveStrength > 0 && this.lassoNodes.length > 1) {
+        let pathForSpline = [...this.lassoNodes];
+        if (this.lassoCurrentPos) {
+            pathForSpline.push(this.lassoCurrentPos);
+        }
+        rawPath = this.generateSplinePath(pathForSpline, closed);
+    }
     
-    if (closed && path.length > 1) {
-        const firstNode = path[0];
-        const lastNode = path[path.length - 1];
+    if (closed && rawPath.length > 1) {
+        const firstNode = rawPath[0];
+        const lastNode = rawPath[rawPath.length - 1];
         if (Math.hypot(firstNode[0] - lastNode[0], firstNode[1] - lastNode[1]) > 1) {
-            const closingPath = this.findEdgePath(lastNode, firstNode, [], false).path;
-            path.push(...closingPath);
+            if (this.lassoSettings.drawMode === 'magic') {
+                const closingPath = this.findEdgePath(lastNode, firstNode, [], false).path;
+                rawPath.push(...closingPath);
+            } else {
+                 rawPath.push(firstNode);
+            }
         }
     }
     
-    return path;
+    return rawPath;
   }
+
+    generateSplinePath(points: [number, number][], closed: boolean): [number, number][] {
+        if (points.length < 2) return points;
+
+        const tension = this.lassoSettings.curveStrength;
+        if (tension === 0) return points; // Straight lines
+
+        const path: [number, number][] = [];
+        const numSegments = 16; // Number of line segments between each control point
+
+        let p = [...points];
+        if (closed) {
+            // Add wrapping points for a closed loop
+            p.unshift(points[points.length - 1]);
+            p.push(points[1]);
+        } else {
+            // Add dummy points for open loop ends
+            p.unshift(points[0]);
+            p.push(points[points.length - 1]);
+        }
+
+        const startI = closed ? 1 : 1;
+        const endI = closed ? p.length - 2 : p.length - 2;
+
+        for (let i = startI; i < endI; i++) {
+            const p0 = p[i - 1];
+            const p1 = p[i];
+            const p2 = p[i + 1];
+            const p3 = (i + 2 < p.length) ? p[i + 2] : p2;
+
+            for (let j = 0; j < numSegments; j++) {
+                const t = j / numSegments;
+                const t2 = t * t;
+                const t3 = t2 * t;
+
+                const c1 = -tension * t3 + 2 * tension * t2 - tension * t;
+                const c2 = (2 - tension) * t3 + (tension - 3) * t2 + 1;
+                const c3 = (tension - 2) * t3 + (3 - 2 * tension) * t2 + tension * t;
+                const c4 = tension * t3 - tension * t2;
+
+                const x = c1 * p0[0] + c2 * p1[0] + c3 * p2[0] + c4 * p3[0];
+                const y = c1 * p0[1] + c2 * p1[1] + c3 * p2[1] + c4 * p3[1];
+                path.push([x, y]);
+            }
+        }
+        if (!closed) {
+            path.push(points[points.length - 1]);
+        } else {
+            path.push(points[0]);
+        }
+        
+        return path;
+    }
   
   findEdgePath(p1: [number, number], p2: [number, number], mouseTrace: [number, number][], withFuturePath = true): { path: [number, number][], futurePath: [number, number][] } {
     if (this.lassoSettings.drawMode !== 'magic' || !this.edgeMap) {
@@ -358,6 +424,7 @@ export class SelectionEngine {
         const currentCursorInfluence = this.lassoSettings.cursorInfluenceEnabled ? this.lassoSettings.cursorInfluence : 0;
         const currentTraceInfluence = this.lassoSettings.traceInfluenceEnabled ? this.lassoSettings.traceInfluence : 0;
         const currentColorInfluence = this.lassoSettings.colorInfluenceEnabled ? this.lassoSettings.colorInfluence : 0;
+        const currentDirectionalStrength = this.lassoSettings.directionalStrengthEnabled ? this.lassoSettings.directionalStrength : 0;
 
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
@@ -407,9 +474,8 @@ export class SelectionEngine {
                     
                     const stepsFromAnchor = path.length;
                     const falloff = Math.min(1, stepsFromAnchor / falloffDistance);
-
-                    curvatureCost = (angleChange / Math.PI) * 1000 * (this.lassoSettings.curveStrengthEnabled ? this.lassoSettings.curveStrength : 0) * falloff;
-                    directionalCost = (1 - dot) * 500 * (this.lassoSettings.directionalStrengthEnabled ? this.lassoSettings.directionalStrength : 0) * falloff;
+                    
+                    directionalCost = (1 - dot) * 500 * currentDirectionalStrength * falloff;
                 }
 
                 const cost = cursorCost + edgeCost + curvatureCost + directionalCost + traceCost + colorCost;
@@ -1130,7 +1196,7 @@ export class SelectionEngine {
           overlayCtx.setLineDash([]); // Reset line dash
       }
       
-      const mainPath = [...this.lassoNodes, ...this.lassoPreviewPath];
+      const mainPath = this.getLassoPath(false);
       
       if (mainPath.length > 0) {
         overlayCtx.strokeStyle = 'hsl(var(--accent))';

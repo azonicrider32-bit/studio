@@ -390,6 +390,17 @@ export function ToolSettingsPanel({
                         </SelectContent>
                     </Select>
                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="curve-strength" className="flex items-center gap-2">Curve Strength: {lassoSettings.curveStrength.toFixed(2)}</Label>
+                    <Slider 
+                        id="curve-strength"
+                        min={0} max={1} step={0.05}
+                        value={[lassoSettings.curveStrength]}
+                        onValueChange={(v) => onLassoSettingsChange({ curveStrength: v[0]})}
+                        disabled={lassoSettings.drawMode === 'magic'}
+                    />
+                    <p className="text-xs text-muted-foreground">Smooths the line between nodes. 0 is straight, 1 is max curve. Only for Polygon & Free Draw.</p>
+                </div>
                 
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -434,7 +445,6 @@ export function ToolSettingsPanel({
                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
                         <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
                         <VerticalLassoSlider settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
-                        <VerticalLassoSlider settingKey="curveStrength" label="Curve" max={1} step={0.05} />
                         <VerticalLassoSlider settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
                     </div>
                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md mt-2">
