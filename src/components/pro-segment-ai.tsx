@@ -66,7 +66,7 @@ import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
 
 export function ProSegmentAI() {
-  const [activeTool, setActiveTool] = React.useState<Tool>("magic-wand")
+  const [activeTool, setActiveTool] = React.useState<Tool>("lasso")
   const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
@@ -506,7 +506,7 @@ export function ProSegmentAI() {
             </SidebarInset>
 
           <div className="w-[380px] border-l flex flex-col">
-              <Tabs defaultValue="tools" className="flex h-full flex-col">
+              <Tabs defaultValue="tools" className="flex-1 flex flex-col">
                 <SidebarHeader>
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-5">
