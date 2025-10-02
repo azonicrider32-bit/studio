@@ -636,7 +636,7 @@ const drawLayers = React.useCallback(() => {
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <Card className="relative aspect-[4/3] w-full max-w-5xl overflow-hidden shadow-2xl">
+      <Card className="relative w-full h-full overflow-hidden shadow-2xl">
         {isClient && (
              <Image
                 ref={imageRef}

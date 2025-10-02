@@ -482,7 +482,7 @@ export function ProSegmentAI() {
             </Sidebar>
 
             <SidebarInset className="flex flex-col">
-              <div className="flex-grow flex items-center justify-center p-4 md:p-8">
+              <div className="flex-grow p-4 md:p-8 flex flex-col">
                 <ImageCanvas 
                     imageUrl={imageUrl}
                     layers={layers}
@@ -551,7 +551,7 @@ export function ProSegmentAI() {
                   </SidebarHeader>
                   <Separator />
                   <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
-                    <TabsContent value="tools" className={cn("m-0", activeTool === 'lasso' ? 'flex flex-col' : '')}>
+                    <TabsContent value="tools" className={cn("m-0 flex-1", activeTool === 'lasso' && 'flex flex-col')}>
                       {renderRightPanelContent()}
                     </TabsContent>
                     <TabsContent value="feather" className="m-0">
