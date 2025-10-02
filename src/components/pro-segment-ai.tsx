@@ -105,8 +105,8 @@ export function ProSegmentAI() {
     directionalStrengthEnabled: false,
     cursorInfluenceEnabled: true,
     traceInfluenceEnabled: true,
-    colorInfluenceEnabled: true,
-    useColorAwareness: true,
+    colorInfluenceEnabled: false,
+    useColorAwareness: false,
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -599,5 +599,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
