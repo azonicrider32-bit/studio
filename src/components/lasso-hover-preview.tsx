@@ -19,7 +19,7 @@ interface LassoHoverPreviewProps {
 export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverChange, className }: LassoHoverPreviewProps) {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const size = 256; 
-  const [zoom, setZoom] = useState(16);
+  const [zoom, setZoom] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
