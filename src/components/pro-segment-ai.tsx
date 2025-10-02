@@ -496,7 +496,7 @@ export function ProSegmentAI() {
                     getSelectionMaskRef={getSelectionMaskRef}
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
-                    onMagicWandSettingChange={handleMagicWandSettingsChange}
+                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
                     onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
@@ -546,8 +546,8 @@ export function ProSegmentAI() {
                     </TooltipProvider>
                   </SidebarHeader>
                   <Separator />
-                  <div className="flex-1 overflow-y-auto">
-                    <TabsContent value="tools" className="m-0">
+                  <div className="flex-1 overflow-y-auto flex flex-col">
+                    <TabsContent value="tools" className="m-0 flex-1 flex flex-col">
                       {renderRightPanelContent()}
                     </TabsContent>
                     <TabsContent value="feather" className="m-0">
@@ -598,3 +598,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
