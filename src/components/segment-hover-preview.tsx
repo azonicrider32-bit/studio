@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -114,7 +115,8 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
         const seedPixel = mainCtx.getImageData(centerX, centerY, 1, 1).data;
         const [seedR, seedG, seedB] = seedPixel;
 
-        previewCtx.fillStyle = 'rgba(0, 255, 0, 0.3)'; // Green highlight for in-range pixels
+        previewCtx.strokeStyle = 'hsl(var(--accent))';
+        previewCtx.lineWidth = 1;
 
         for (let j = 0; j < sourceSize; j++) {
             for (let i = 0; i < sourceSize; i++) {
@@ -126,7 +128,7 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
                     const [r, g, b] = currentPixel;
                     
                     if (isColorSimilar(seedR, seedG, seedB, r, g, b, settings)) {
-                        previewCtx.fillRect(i * zoom, j * zoom, zoom, zoom);
+                        previewCtx.strokeRect(i * zoom, j * zoom, zoom, zoom);
                     }
                 }
             }
