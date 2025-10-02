@@ -308,7 +308,7 @@ export function ProSegmentAI() {
                   mousePos={canvasMousePos}
                />
       case "lasso":
-        return null; // Lasso panel is now rendered separately
+        return null;
       case "brush":
         return <BrushPanel />
       case "eraser":
@@ -542,7 +542,7 @@ export function ProSegmentAI() {
                   </TooltipProvider>
                 </SidebarHeader>
                 <Separator />
-                <div className="min-h-0">
+                <div className="overflow-y-auto">
                   <TabsContent value="tools" className="m-0">
                     {renderRightPanelContent()}
                   </TabsContent>
@@ -589,12 +589,13 @@ export function ProSegmentAI() {
                 </div>
               </Tabs>
               {activeTool === 'lasso' && (
-                <div className="flex flex-col flex-1 min-h-0 border-t">
+                <div className="flex-1 flex flex-col min-h-0 border-t">
                   <LassoPanel
                     canvas={canvasRef.current}
                     mousePos={canvasMousePos}
                     selectionEngine={selectionEngineRef.current}
                     onHoverChange={setIsLassoPreviewHovered}
+                    className="flex-1"
                   />
                 </div>
               )}
