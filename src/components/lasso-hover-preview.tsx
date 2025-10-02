@@ -32,7 +32,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     if (!previewCanvas || !canvas || !selectionEngine || !mousePos) return;
     
     const sourceSize = size / zoom;
-    const deadZoneSize = sourceSize / 3;
+    const deadZoneSize = (sourceSize / 3) * 2; // Increased from 1/3 to 2/3
 
     // Get the current center of the view in source image coordinates
     const viewCenterX = viewPositionRef.current.x + sourceSize / 2;
@@ -128,7 +128,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
             const lastMainPoint = mainPath[mainPath.length - 1];
             if(lastMainPoint) previewCtx.moveTo(lastMainPoint[0], lastMainPoint[1]);
             for (let i = 0; i < futureLassoPath.length; i++) {
-                previewCtx.lineTo(futureLassoPath[i][0], futureLassosnapPath[i][1]);
+                previewCtx.lineTo(futureLassoPath[i][0], futureLassoPath[i][1]);
             }
             previewCtx.stroke();
         }
@@ -191,8 +191,8 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
         <div 
           className="absolute rounded-sm border border-dashed border-white/50"
           style={{
-              width: `${(1/3) * 100}%`,
-              height: `${(1/3) * 100}%`,
+              width: `${(2/3) * 100}%`, // Increased from 1/3 to 2/3
+              height: `${(2/3) * 100}%`, // Increased from 1/3 to 2/3
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)'
