@@ -19,7 +19,7 @@ interface LassoPanelProps {
 export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, className }: LassoPanelProps) {
     
   return (
-    <div className={`p-4 space-y-4 flex flex-col flex-grow ${className}`}>
+    <div className="p-4 space-y-4 flex flex-col flex-grow">
         <div className="flex flex-col flex-grow">
             <LassoHoverPreview 
                 canvas={canvas} 

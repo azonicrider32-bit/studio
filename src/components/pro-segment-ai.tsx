@@ -362,7 +362,7 @@ export function ProSegmentAI() {
             </div>
         </header>
 
-        <div className="flex flex-1 items-start overflow-hidden">
+        <div className="flex flex-1 items-stretch overflow-hidden">
             <Sidebar side="left" collapsible="icon" className="border-r">
               <SidebarContent>
                 <SidebarHeader>
