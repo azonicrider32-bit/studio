@@ -39,6 +39,15 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   useEffect(() => {
     const previewCanvas = previewCanvasRef.current;
     if (!previewCanvas || !canvas || !selectionEngine || !mousePos) return;
+
+    // Recalculate size on each render to handle responsive changes
+    const container = containerRef.current;
+    if (container) {
+        const { width, height } = container.getBoundingClientRect();
+        if (width !== size.width || height !== size.height) {
+            setSize({ width, height });
+        }
+    }
     
     const sourceSizeX = size.width / zoom;
     const sourceSizeY = size.height / zoom;
@@ -184,7 +193,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
       onMouseLeave={() => setIsHovered(false)}
       onWheel={handleWheel}
       className={cn(
-        "relative w-full h-64 overflow-hidden rounded-md border-2 border-border shadow-inner bg-background",
+        "relative w-full h-full overflow-hidden rounded-md border-2 border-border shadow-inner bg-background",
         className
       )}
     >
