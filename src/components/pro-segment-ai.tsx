@@ -551,7 +551,7 @@ export function ProSegmentAI() {
                   </SidebarHeader>
                   <Separator />
                   <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
-                    <TabsContent value="tools" className={cn("m-0", activeTool === 'lasso' && 'flex-1 flex flex-col')}>
+                    <TabsContent value="tools" className={cn("m-0", activeTool === 'lasso' ? 'flex flex-col' : '')}>
                       {renderRightPanelContent()}
                     </TabsContent>
                     <TabsContent value="feather" className="m-0">
