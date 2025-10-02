@@ -71,6 +71,8 @@ export class SelectionEngine {
     ignoreExistingSegments: false,
     enabledTolerances: new Set(['h', 's', 'v']),
     scrollAdjustTolerances: new Set(),
+    searchRadius: 15,
+    sampleMode: 'point',
     useAntiAlias: true,
     useFeather: false,
     highlightColorMode: 'random',
@@ -95,6 +97,8 @@ export class SelectionEngine {
     ignoreExistingSegments: false,
     enabledTolerances: new Set(),
     scrollAdjustTolerances: new Set(),
+    searchRadius: 1,
+    sampleMode: 'point',
     seedColor: undefined,
     useAntiAlias: true,
     useFeather: false,
@@ -452,7 +456,7 @@ export class SelectionEngine {
     const startY = Math.max(0, Math.round(y) - radius);
     const endY = Math.min(this.height - 1, Math.round(y) + radius);
     const startX = Math.max(0, Math.round(x) - radius);
-    const endX = Math.min(this.width - 1, Math.round(x) + radius);
+    const endX = Math.min(this.width - 1, Math.round(x) - radius);
 
     for (let sy = startY; sy <= endY; sy++) {
       for (let sx = startX; sx <= endX; sx++) {
@@ -513,6 +517,69 @@ export class SelectionEngine {
   // #endregion
 
   // #region MAGIC WAND
+    getSeedColor(x: number, y: number) {
+        const { searchRadius, sampleMode } = this.magicWandSettings;
+        if (sampleMode === 'point' || searchRadius <= 1) {
+            return this.getPixelColors(y * this.width + x);
+        }
+
+        const samplePixels: { r: number, g: number, b: number }[] = [];
+        const startY = Math.max(0, y - searchRadius);
+        const endY = Math.min(this.height - 1, y + searchRadius);
+        const startX = Math.max(0, x - searchRadius);
+        const endX = Math.min(this.width - 1, x + searchRadius);
+
+        for (let j = startY; j <= endY; j++) {
+            for (let i = startX; i <= endX; i++) {
+                const distSq = (i - x) ** 2 + (j - y) ** 2;
+                if (distSq <= searchRadius * searchRadius) {
+                    const { rgb } = this.getPixelColors(j * this.width + i);
+                    samplePixels.push(rgb);
+                }
+            }
+        }
+
+        if (samplePixels.length === 0) {
+            return this.getPixelColors(y * this.width + x);
+        }
+
+        let finalR: number, finalG: number, finalB: number;
+
+        if (sampleMode === 'average') {
+            let totalR = 0, totalG = 0, totalB = 0;
+            for (const p of samplePixels) {
+                totalR += p.r; totalG += p.g; totalB += p.b;
+            }
+            finalR = totalR / samplePixels.length;
+            finalG = totalG / samplePixels.length;
+            finalB = totalB / samplePixels.length;
+        } else { // 'dominant'
+            const colorCounts = new Map<string, { count: number, r: number, g: number, b: number }>();
+            for (const p of samplePixels) {
+                const key = `${p.r},${p.g},${p.b}`;
+                const entry = colorCounts.get(key) || { count: 0, r: p.r, g: p.g, b: p.b };
+                entry.count++;
+                colorCounts.set(key, entry);
+            }
+            let maxCount = 0;
+            let dominantColor = samplePixels[0];
+            for (const entry of colorCounts.values()) {
+                if (entry.count > maxCount) {
+                    maxCount = entry.count;
+                    dominantColor = { r: entry.r, g: entry.g, b: entry.b };
+                }
+            }
+            finalR = dominantColor.r;
+            finalG = dominantColor.g;
+            finalB = dominantColor.b;
+        }
+
+        return {
+            rgb: { r: finalR, g: finalG, b: finalB },
+            hsv: rgbToHsv(finalR, finalG, finalB),
+            lab: rgbToLab(finalR, finalG, finalB),
+        };
+    }
   magicWand(x: number, y: number, previewOnly = false): Segment | null {
       if (!this.pixelData) return null;
       x = Math.floor(x);
@@ -530,8 +597,7 @@ export class SelectionEngine {
         }
       }
 
-
-      const seedColor = this.getPixelColors(seedIndex);
+      const seedColor = this.getSeedColor(x, y);
 
       const selected = new Set<number>();
       const queue: number[] = [seedIndex];

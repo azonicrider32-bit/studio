@@ -3,7 +3,7 @@
 "use client"
 
 import * as React from "react"
-import { Info, MinusCircle } from "lucide-react"
+import { Info, MinusCircle, Scan, Sigma, Droplets } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
@@ -17,6 +17,7 @@ import { rgbToHsv, rgbToLab } from "@/lib/color-utils"
 import { SegmentHoverPreview } from "../segment-hover-preview"
 import { Button } from "../ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
+import { Label } from "../ui/label"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
@@ -189,8 +190,59 @@ export function MagicWandPanel({
 
   return (
     <div className="p-4 space-y-6">
-      <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
+      <SegmentHoverPreview canvas={canvas} mousePos={mousePos} settings={settings} />
       <div className="space-y-4">
+
+        <Accordion type="single" collapsible defaultValue="sample-area">
+          <AccordionItem value="sample-area">
+            <AccordionTrigger>
+              <div className="flex items-center gap-2">
+                <Scan className="w-5 h-5"/>
+                <h4 className="font-semibold">Sample Area</h4>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="search-radius">Search Radius: {settings.searchRadius}px</Label>
+                <Slider
+                  id="search-radius"
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={[settings.searchRadius]}
+                  onValueChange={(v) => onSettingsChange({ searchRadius: v[0] })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Sample Mode</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant={settings.sampleMode === 'point' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onSettingsChange({ sampleMode: 'point' })}
+                  >
+                    Point
+                  </Button>
+                  <Button
+                    variant={settings.sampleMode === 'average' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onSettingsChange({ sampleMode: 'average' })}
+                  >
+                    <Sigma className="w-4 h-4 mr-1"/> Average
+                  </Button>
+                  <Button
+                    variant={settings.sampleMode === 'dominant' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onSettingsChange({ sampleMode: 'dominant' })}
+                  >
+                    <Droplets className="w-4 h-4 mr-1"/> Dominant
+                  </Button>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
         <ToleranceSection title="Inclusion" settings={settings} onSettingsChange={onSettingsChange} />
         <Accordion type="single" collapsible>
             <AccordionItem value="exclusions">

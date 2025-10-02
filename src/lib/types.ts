@@ -52,6 +52,8 @@ export interface MagicWandSettings {
     ignoreExistingSegments: boolean;
     enabledTolerances: Set<keyof MagicWandSettings['tolerances']>;
     scrollAdjustTolerances: Set<keyof MagicWandSettings['tolerances']>;
+    searchRadius: number;
+    sampleMode: 'point' | 'average' | 'dominant';
     seedColor?: { [key: string]: number };
     useAntiAlias: boolean;
     useFeather: boolean;
