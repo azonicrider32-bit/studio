@@ -32,7 +32,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     if (!previewCanvas || !canvas || !selectionEngine || !mousePos) return;
     
     const sourceSize = size / zoom;
-    const deadZoneSize = (sourceSize / 3) * 2; // Increased from 1/3 to 2/3
+    const deadZoneSize = sourceSize; // The dead zone is the entire panel
 
     // Get the current center of the view in source image coordinates
     const viewCenterX = viewPositionRef.current.x + sourceSize / 2;
@@ -191,8 +191,8 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
         <div 
           className="absolute rounded-sm border border-dashed border-white/50"
           style={{
-              width: `${(2/3) * 100}%`, // Increased from 1/3 to 2/3
-              height: `${(2/3) * 100}%`, // Increased from 1/3 to 2/3
+              width: `100%`, 
+              height: `100%`,
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)'
