@@ -296,8 +296,7 @@ export function ProSegmentAI() {
   }
 
   const renderRightPanelContent = () => {
-    if (activeTool === 'lasso') return null;
-
+    // Lasso panel is handled separately now
     switch (activeTool) {
       case "magic-wand":
         return <MagicWandPanel 
@@ -502,103 +501,103 @@ export function ProSegmentAI() {
               </div>
             </SidebarInset>
 
-          <div className="w-[380px] border-l flex flex-col">
-              <Tabs defaultValue="tools" className="flex flex-col">
-                <SidebarHeader>
-                  <TooltipProvider>
-                      <TabsList className="grid w-full grid-cols-5">
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <TabsTrigger value="tools" className="flex-1"><Wand2 className="h-5 w-5"/></TabsTrigger>
-                              </TooltipTrigger>
-                              <TooltipContent>Tool Options</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <TabsTrigger value="feather" className="flex-1"><FeatherIcon className="h-5 w-5"/></TabsTrigger>
-                              </TooltipTrigger>
-                              <TooltipContent>Feather & Edges</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <TabsTrigger value="layers" className="flex-1"><LayersIcon className="h-5 w-5"/></TabsTrigger>
-                              </TooltipTrigger>
-                              <TooltipContent>Layers</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <TabsTrigger value="ai" className="flex-1"><BrainCircuit className="h-5 w-5"/></TabsTrigger>
-                              </TooltipTrigger>
-                              <TooltipContent>AI Tools</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <TabsTrigger value="telemetry" className="flex-1"><AreaChart className="h-5 w-5"/></TabsTrigger>
-                              </TooltipTrigger>
-                              <TooltipContent>Telemetry</TooltipContent>
-                          </Tooltip>
-                      </TabsList>
-                  </TooltipProvider>
-                </SidebarHeader>
-                <Separator />
-                <div className={cn("overflow-y-auto", activeTool === 'lasso' ? "h-[300px]" : "h-full")}>
-                  <TabsContent value="tools" className="m-0">
-                    {renderRightPanelContent()}
-                  </TabsContent>
-                  <TabsContent value="feather" className="m-0">
-                    <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
-                  </TabsContent>
-                  <TabsContent value="layers" className="m-0">
-                    <LayersPanel 
-                      layers={layers}
-                      activeLayerId={activeLayerId}
-                      onLayerSelect={setActiveLayerId}
-                      onToggleVisibility={toggleLayerVisibility}
-                      onToggleLock={toggleLayerLock}
-                      onToggleMask={toggleLayerMask}
-                      onDeleteLayer={deleteLayer}
-                    />
-                  </TabsContent>
-                  <TabsContent value="ai" className="m-0">
-                      <Tabs defaultValue="models" className="flex h-full flex-col">
-                          <TabsList className="m-2 grid grid-cols-3">
-                              <TabsTrigger value="models">Models</TabsTrigger>
-                              <TabsTrigger value="canny">Canny</TabsTrigger>
-                              <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
-                          </TabsList>
-                          <TabsContent value="models" className="m-0 flex-1">
-                              <AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} />
-                          </TabsContent>
-                          <TabsContent value="canny" className="m-0 flex-1">
-                              <CannyTuningPanel />
-                          </TabsContent>
-                          <TabsContent value="inpaint" className="m-0 flex-1">
-                              <InpaintingPanel
-                                imageUrl={imageUrl}
-                                getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
-                                onGenerationComplete={(newUrl) => handleImageSelect(newUrl)}
-                                clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
-                              />
-                          </TabsContent>
-                      </Tabs>
-                  </TabsContent>
-                  <TabsContent value="telemetry" className="m-0">
-                    <TelemetryPanel />
-                  </TabsContent>
-                </div>
+            <div className="w-[380px] border-l flex flex-col">
+              <Tabs defaultValue="tools" className="flex flex-col flex-1">
+                  <SidebarHeader>
+                    <TooltipProvider>
+                        <TabsList className="grid w-full grid-cols-5">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <TabsTrigger value="tools" className="flex-1"><Wand2 className="h-5 w-5"/></TabsTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>Tool Options</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <TabsTrigger value="feather" className="flex-1"><FeatherIcon className="h-5 w-5"/></TabsTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>Feather & Edges</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <TabsTrigger value="layers" className="flex-1"><LayersIcon className="h-5 w-5"/></TabsTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>Layers</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <TabsTrigger value="ai" className="flex-1"><BrainCircuit className="h-5 w-5"/></TabsTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>AI Tools</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <TabsTrigger value="telemetry" className="flex-1"><AreaChart className="h-5 w-5"/></TabsTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>Telemetry</TooltipContent>
+                            </Tooltip>
+                        </TabsList>
+                    </TooltipProvider>
+                  </SidebarHeader>
+                  <Separator />
+                  <div className="flex-1 overflow-y-auto">
+                    <TabsContent value="tools" className="m-0">
+                      {activeTool !== 'lasso' && renderRightPanelContent()}
+                    </TabsContent>
+                    <TabsContent value="feather" className="m-0">
+                      <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
+                    </TabsContent>
+                    <TabsContent value="layers" className="m-0">
+                      <LayersPanel 
+                        layers={layers}
+                        activeLayerId={activeLayerId}
+                        onLayerSelect={setActiveLayerId}
+                        onToggleVisibility={toggleLayerVisibility}
+                        onToggleLock={toggleLayerLock}
+                        onToggleMask={toggleLayerMask}
+                        onDeleteLayer={deleteLayer}
+                      />
+                    </TabsContent>
+                    <TabsContent value="ai" className="m-0">
+                        <Tabs defaultValue="models" className="flex h-full flex-col">
+                            <TabsList className="m-2 grid grid-cols-3">
+                                <TabsTrigger value="models">Models</TabsTrigger>
+                                <TabsTrigger value="canny">Canny</TabsTrigger>
+                                <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="models" className="m-0 flex-1">
+                                <AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} />
+                            </TabsContent>
+                            <TabsContent value="canny" className="m-0 flex-1">
+                                <CannyTuningPanel />
+                            </TabsContent>
+                            <TabsContent value="inpaint" className="m-0 flex-1">
+                                <InpaintingPanel
+                                  imageUrl={imageUrl}
+                                  getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
+                                  onGenerationComplete={(newUrl) => handleImageSelect(newUrl)}
+                                  clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
+                                />
+                            </TabsContent>
+                        </Tabs>
+                    </TabsContent>
+                    <TabsContent value="telemetry" className="m-0">
+                      <TelemetryPanel />
+                    </TabsContent>
+                  </div>
+                   {activeTool === 'lasso' && (
+                    <div className="flex-1 flex flex-col min-h-0 border-t">
+                        <LassoPanel
+                            canvas={canvasRef.current}
+                            mousePos={canvasMousePos}
+                            selectionEngine={selectionEngineRef.current}
+                            onHoverChange={setIsLassoPreviewHovered}
+                            className="flex-1"
+                        />
+                    </div>
+                  )}
               </Tabs>
-              {activeTool === 'lasso' && (
-                <div className="flex-1 flex flex-col min-h-0 border-t">
-                  <LassoPanel
-                    canvas={canvasRef.current}
-                    mousePos={canvasMousePos}
-                    selectionEngine={selectionEngineRef.current}
-                    onHoverChange={setIsLassoPreviewHovered}
-                    className="flex-1"
-                  />
-                </div>
-              )}
-          </div>
+            </div>
         </div>
       </div>
     </SidebarProvider>
