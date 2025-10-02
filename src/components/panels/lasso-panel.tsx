@@ -5,6 +5,7 @@
 import * as React from "react"
 import { LassoHoverPreview } from "../lasso-hover-preview";
 import { SelectionEngine } from "@/lib/selection-engine";
+import { cn } from "@/lib/utils";
 
 
 interface LassoPanelProps {
@@ -19,7 +20,7 @@ interface LassoPanelProps {
 export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, className }: LassoPanelProps) {
     
   return (
-    <div className="p-4 space-y-4 h-full flex flex-col">
+    <div className={cn("p-4 space-y-4 h-full flex flex-col", className)}>
       <LassoHoverPreview 
           canvas={canvas} 
           mousePos={mousePos} 

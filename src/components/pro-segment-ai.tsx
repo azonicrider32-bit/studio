@@ -308,12 +308,7 @@ export function ProSegmentAI() {
                   mousePos={canvasMousePos}
                />
       case "lasso":
-        return <LassoPanel 
-                    canvas={canvasRef.current}
-                    mousePos={canvasMousePos}
-                    selectionEngine={selectionEngineRef.current}
-                    onHoverChange={setIsLassoPreviewHovered}
-                />
+        return null; // Lasso panel is now rendered separately
       case "brush":
         return <BrushPanel />
       case "eraser":
@@ -509,7 +504,7 @@ export function ProSegmentAI() {
             </SidebarInset>
 
           <div className="w-[380px] border-l flex flex-col">
-              <Tabs defaultValue="tools" className="flex-1 flex flex-col">
+              <Tabs defaultValue="tools" className="flex flex-col">
                 <SidebarHeader>
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-5">
@@ -547,14 +542,14 @@ export function ProSegmentAI() {
                   </TooltipProvider>
                 </SidebarHeader>
                 <Separator />
-                <div className="flex-1 flex flex-col min-h-0">
-                  <TabsContent value="tools" className={cn("m-0 flex-1", activeTool === 'lasso' && 'flex flex-col')}>
+                <div className="min-h-0">
+                  <TabsContent value="tools" className="m-0">
                     {renderRightPanelContent()}
                   </TabsContent>
-                  <TabsContent value="feather" className="m-0 flex-1 overflow-y-auto">
+                  <TabsContent value="feather" className="m-0 overflow-y-auto">
                     <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
                   </TabsContent>
-                  <TabsContent value="layers" className="m-0 flex-1 overflow-y-auto">
+                  <TabsContent value="layers" className="m-0 overflow-y-auto">
                     <LayersPanel 
                       layers={layers}
                       activeLayerId={activeLayerId}
@@ -565,7 +560,7 @@ export function ProSegmentAI() {
                       onDeleteLayer={deleteLayer}
                     />
                   </TabsContent>
-                  <TabsContent value="ai" className="m-0 flex-1 overflow-y-auto">
+                  <TabsContent value="ai" className="m-0 overflow-y-auto">
                       <Tabs defaultValue="models" className="flex h-full flex-col">
                           <TabsList className="m-2 grid grid-cols-3">
                               <TabsTrigger value="models">Models</TabsTrigger>
@@ -588,11 +583,21 @@ export function ProSegmentAI() {
                           </TabsContent>
                       </Tabs>
                   </TabsContent>
-                  <TabsContent value="telemetry" className="m-0 flex-1 overflow-y-auto">
+                  <TabsContent value="telemetry" className="m-0 overflow-y-auto">
                     <TelemetryPanel />
                   </TabsContent>
                 </div>
               </Tabs>
+              {activeTool === 'lasso' && (
+                <div className="flex flex-col flex-1 min-h-0 border-t">
+                  <LassoPanel
+                    canvas={canvasRef.current}
+                    mousePos={canvasMousePos}
+                    selectionEngine={selectionEngineRef.current}
+                    onHoverChange={setIsLassoPreviewHovered}
+                  />
+                </div>
+              )}
           </div>
         </div>
       </div>
