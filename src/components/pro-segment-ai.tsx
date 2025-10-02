@@ -167,7 +167,7 @@ export function ProSegmentAI() {
       alphaMatting: { enabled: true, method: 'closed-form', quality: 0.85 },
       backgroundAdaptation: { enabled: true, sampleRadius: 8, adaptationStrength: 0.6, colorThreshold: 20 },
       gradientTransparency: { enabled: true, gradientRadius: 6, smoothness: 0.7, edgeAware: true },
-      colorAwareProcessing: { enabled: false, haloPreventionStrength: 0, colorContextRadius: 0 }
+      colorAwareProcessing: { enabled: true, haloPreventionStrength: 0.9, colorContextRadius: 10 }
     }
   });
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
@@ -296,7 +296,6 @@ export function ProSegmentAI() {
   }
 
   const renderRightPanelContent = () => {
-    // Lasso panel is handled separately now
     switch (activeTool) {
       case "magic-wand":
         return <MagicWandPanel 
@@ -307,6 +306,13 @@ export function ProSegmentAI() {
                   canvas={canvasRef.current}
                   mousePos={canvasMousePos}
                />
+      case "lasso":
+        return <LassoPanel
+                  canvas={canvasRef.current}
+                  mousePos={canvasMousePos}
+                  selectionEngine={selectionEngineRef.current}
+                  onHoverChange={setIsLassoPreviewHovered}
+                />
       case "brush":
         return <BrushPanel />
       case "eraser":
@@ -542,7 +548,7 @@ export function ProSegmentAI() {
                   <Separator />
                   <div className="flex-1 overflow-y-auto">
                     <TabsContent value="tools" className="m-0">
-                      {activeTool !== 'lasso' && renderRightPanelContent()}
+                      {renderRightPanelContent()}
                     </TabsContent>
                     <TabsContent value="feather" className="m-0">
                       <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
@@ -585,17 +591,6 @@ export function ProSegmentAI() {
                       <TelemetryPanel />
                     </TabsContent>
                   </div>
-                   {activeTool === 'lasso' && (
-                    <div className="flex-1 flex flex-col min-h-0 border-t">
-                        <LassoPanel
-                            canvas={canvasRef.current}
-                            mousePos={canvasMousePos}
-                            selectionEngine={selectionEngineRef.current}
-                            onHoverChange={setIsLassoPreviewHovered}
-                            className="flex-1"
-                        />
-                    </div>
-                  )}
               </Tabs>
             </div>
         </div>
@@ -603,5 +598,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    

@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -149,8 +150,8 @@ export function FeatherPanel({ settings, onSettingsChange }: FeatherPanelProps) 
         </AccordionItem>
         
         <AccordionItem value="smart-feather">
-            <div className="flex items-center">
-              <AccordionTrigger className="text-base font-semibold flex-1">
+            <div className="flex items-center justify-between">
+              <AccordionTrigger className="text-base font-semibold flex-1 py-2 hover:no-underline">
                   <div className="flex items-center gap-2">
                       <Wind className="w-5 h-5"/> Smart Feather
                   </div>
@@ -162,7 +163,7 @@ export function FeatherPanel({ settings, onSettingsChange }: FeatherPanelProps) 
                     <Accordion type="multiple" defaultValue={['alpha-matting']} className="w-full space-y-2">
                         {/* Alpha Matting */}
                         <AccordionItem value="alpha-matting" className="border-b-0">
-                             <div className="flex items-center bg-muted/50 px-2 rounded-md">
+                             <div className="flex items-center justify-between bg-muted/50 px-2 rounded-md">
                                 <AccordionTrigger className="py-2 text-sm flex-1 hover:no-underline">
                                   <div className="flex items-center gap-2"><Blend className="w-4 h-4"/>Alpha Matting</div>
                                 </AccordionTrigger>
@@ -188,7 +189,7 @@ export function FeatherPanel({ settings, onSettingsChange }: FeatherPanelProps) 
                         </AccordionItem>
                         {/* Background Adaptation */}
                          <AccordionItem value="bg-adapt" className="border-b-0">
-                            <div className="flex items-center bg-muted/50 px-2 rounded-md">
+                            <div className="flex items-center justify-between bg-muted/50 px-2 rounded-md">
                                <AccordionTrigger className="py-2 text-sm flex-1 hover:no-underline">
                                   <div className="flex items-center gap-2"><Droplets className="w-4 h-4"/>Background Adaptation</div>
                                </AccordionTrigger>
