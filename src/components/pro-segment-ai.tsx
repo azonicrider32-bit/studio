@@ -544,8 +544,8 @@ export function ProSegmentAI() {
                   </TooltipProvider>
                 </SidebarHeader>
                 <Separator />
-                <SidebarContent className="p-0">
-                  <TabsContent value="tools" className="m-0 h-full flex flex-col flex-1">
+                <SidebarContent className="p-0 overflow-y-hidden">
+                  <TabsContent value="tools" className="m-0 h-full flex flex-col">
                     {renderRightPanelContent()}
                   </TabsContent>
                   <TabsContent value="feather" className="m-0 h-full">
