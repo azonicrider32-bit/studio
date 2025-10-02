@@ -62,6 +62,7 @@ import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import { TooltipTrigger } from "@radix-ui/react-tooltip"
 import { TelemetryPanel } from "./panels/telemetry-panel"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
+import { cn } from "@/lib/utils"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
 
@@ -462,7 +463,9 @@ export function ProSegmentAI() {
                     </div>
                 </SidebarHeader>
                 <SidebarSeparator />
-                {renderLeftPanelContent()}
+                <SidebarContent>
+                  {renderLeftPanelContent()}
+                </SidebarContent>
               </SidebarContent>
               <SidebarFooter>
                 <SidebarMenu>
@@ -545,7 +548,7 @@ export function ProSegmentAI() {
                 </SidebarHeader>
                 <Separator />
                 <div className="flex-1 flex flex-col min-h-0">
-                  <TabsContent value="tools" className="m-0 h-full flex flex-col">
+                  <TabsContent value="tools" className="m-0 flex-1 flex flex-col">
                     {renderRightPanelContent()}
                   </TabsContent>
                   <TabsContent value="feather" className="m-0 flex-1 overflow-y-auto">
@@ -596,3 +599,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
