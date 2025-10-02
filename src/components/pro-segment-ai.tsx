@@ -550,7 +550,7 @@ export function ProSegmentAI() {
                 <div className="flex-1 flex flex-col min-h-0">
                   <TabsContent value="tools" className={cn(
                     "m-0 flex-1",
-                    activeTool === 'lasso' && 'flex flex-col justify-end'
+                    activeTool === 'lasso' && 'flex flex-col'
                   )}>
                     {renderRightPanelContent()}
                   </TabsContent>
