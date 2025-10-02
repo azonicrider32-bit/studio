@@ -305,29 +305,29 @@ export function ProSegmentAI() {
                   onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
                   canvas={canvasRef.current}
                   mousePos={canvasMousePos}
-               />
+               />;
       case "lasso":
         return <LassoPanel
                   canvas={canvasRef.current}
                   mousePos={canvasMousePos}
                   selectionEngine={selectionEngineRef.current}
                   onHoverChange={setIsLassoPreviewHovered}
-                />
+                />;
       case "brush":
-        return <BrushPanel />
+        return <BrushPanel />;
       case "eraser":
-        return <BrushPanel isEraser />
+        return <BrushPanel isEraser />;
       case "adjustments":
-        return <LayerAdjustmentPanel />
+        return <LayerAdjustmentPanel />;
       case "color-analysis":
         return <ColorAnalysisPanel 
                 canvas={canvasRef.current}
                 mousePos={canvasMousePos}
                 magicWandSettings={magicWandSettings}
                 onMagicWandSettingsChange={handleMagicWandSettingsChange}
-              />
+              />;
       default:
-        return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>
+        return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
     }
   }
 
@@ -547,8 +547,8 @@ export function ProSegmentAI() {
                   </SidebarHeader>
                   <Separator />
                   <div className="flex-1 overflow-y-auto flex flex-col">
-                    <TabsContent value="tools" className={cn("m-0 flex-1", activeTool === 'lasso' && 'flex flex-col')}>
-                      {renderRightPanelContent()}
+                    <TabsContent value="tools" className={cn("m-0", activeTool === 'lasso' ? "flex-1 flex flex-col" : "")}>
+                        {renderRightPanelContent()}
                     </TabsContent>
                     <TabsContent value="feather" className="m-0">
                       <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
@@ -598,3 +598,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    

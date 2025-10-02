@@ -31,3 +31,5 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, c
     </div>
   )
 }
+
+    
