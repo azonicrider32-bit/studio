@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { MagicWandSettings } from '@/lib/types';
 import { rgbToHsv, rgbToLab } from '@/lib/color-utils';
@@ -19,18 +19,12 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
   const zoom = 16;  
 
   const isColorSimilar = (
-    r1: number, g1: number, b1: number,
+    seedColor: { rgb: {r:number, g:number, b:number} },
     r2: number, g2: number, b2: number,
     settings: MagicWandSettings
   ) => {
     const { tolerances, enabledTolerances } = settings;
     if (enabledTolerances.size === 0) return true;
-
-    const seedColor = {
-      rgb: { r: r1, g: g1, b: b1 },
-      hsv: rgbToHsv(r1, g1, b1),
-      lab: rgbToLab(r1, g1, b1),
-    };
 
     const neighborColor = {
       rgb: { r: r2, g: g2, b: b2 },
@@ -71,11 +65,11 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
     if (!previewCanvas || !mousePos || !canvas) return;
 
     const previewCtx = previewCanvas.getContext('2d');
-    if (!previewCtx) return;
+    const mainCtx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!previewCtx || !mainCtx) return;
 
     previewCtx.imageSmoothingEnabled = false;
     
-    // Draw checkerboard background
     previewCtx.fillStyle = '#666';
     previewCtx.fillRect(0, 0, size, size);
     previewCtx.fillStyle = '#999';
@@ -91,7 +85,6 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
     const sourceX = mousePos.x - sourceSize / 2;
     const sourceY = mousePos.y - sourceSize / 2;
 
-    // Draw the zoomed-in portion of the main canvas
     previewCtx.drawImage(
       canvas,
       sourceX,
@@ -104,47 +97,116 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
       size
     );
 
-    // Draw the selection highlight overlay
-    const mainCtx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!mainCtx) return;
-
     const centerX = Math.floor(mousePos.x);
     const centerY = Math.floor(mousePos.y);
 
-    if (centerX >= 0 && centerX < canvas.width && centerY >= 0 && centerY < canvas.height) {
-        const seedPixel = mainCtx.getImageData(centerX, centerY, 1, 1).data;
-        const [seedR, seedG, seedB] = seedPixel;
+    if (centerX < 0 || centerX >= canvas.width || centerY < 0 || centerY >= canvas.height) {
+        return;
+    }
 
-        previewCtx.strokeStyle = 'hsl(var(--accent))';
-        previewCtx.lineWidth = 1;
+    // Determine the seed color based on settings
+    const samplePixels: { r: number, g: number, b: number, x: number, y: number }[] = [];
+    const searchRadius = settings.sampleMode === 'point' ? 0 : settings.searchRadius;
+    let seedColor: { rgb: {r:number, g:number, b:number}, hsv: any, lab: any };
 
-        for (let j = 0; j < sourceSize; j++) {
-            for (let i = 0; i < sourceSize; i++) {
-                const canvasX = Math.floor(sourceX + i);
-                const canvasY = Math.floor(sourceY + j);
+    const startSampleX = Math.max(0, centerX - searchRadius);
+    const endSampleX = Math.min(canvas.width - 1, centerX + searchRadius);
+    const startSampleY = Math.max(0, centerY - searchRadius);
+    const endSampleY = Math.min(canvas.height - 1, centerY + searchRadius);
 
-                if (canvasX >= 0 && canvasX < canvas.width && canvasY >= 0 && canvasY < canvas.height) {
-                    const currentPixel = mainCtx.getImageData(canvasX, canvasY, 1, 1).data;
-                    const [r, g, b] = currentPixel;
-                    
-                    if (isColorSimilar(seedR, seedG, seedB, r, g, b, settings)) {
-                        previewCtx.strokeRect(i * zoom, j * zoom, zoom, zoom);
-                    }
+    for (let j = startSampleY; j <= endSampleY; j++) {
+      for (let i = startSampleX; i <= endSampleX; i++) {
+        const distSq = (i - centerX)**2 + (j - centerY)**2;
+        if (distSq <= searchRadius**2) {
+          const pixelData = mainCtx.getImageData(i, j, 1, 1).data;
+          samplePixels.push({ r: pixelData[0], g: pixelData[1], b: pixelData[2], x: i, y: j });
+        }
+      }
+    }
+
+    if(samplePixels.length === 0) {
+       const pixelData = mainCtx.getImageData(centerX, centerY, 1, 1).data;
+       samplePixels.push({ r: pixelData[0], g: pixelData[1], b: pixelData[2], x: centerX, y: centerY });
+    }
+
+    let dominantColorKey: string | null = null;
+    if (settings.sampleMode === 'average') {
+      let totalR = 0, totalG = 0, totalB = 0;
+      for (const p of samplePixels) { totalR += p.r; totalG += p.g; totalB += p.b; }
+      const avgR = totalR / samplePixels.length;
+      const avgG = totalG / samplePixels.length;
+      const avgB = totalB / samplePixels.length;
+      seedColor = { rgb: {r: avgR, g: avgG, b: avgB}, hsv: rgbToHsv(avgR, avgG, avgB), lab: rgbToLab(avgR, avgG, avgB) };
+    } else if (settings.sampleMode === 'dominant' && samplePixels.length > 0) {
+        const counts = new Map<string, number>();
+        for (const p of samplePixels) {
+            const key = `${p.r},${p.g},${p.b}`;
+            counts.set(key, (counts.get(key) || 0) + 1);
+        }
+        let maxCount = 0;
+        let dominantColor = { r: 0, g: 0, b: 0 };
+        for (const [key, count] of counts.entries()) {
+            if (count > maxCount) {
+                maxCount = count;
+                const [r,g,b] = key.split(',').map(Number);
+                dominantColor = { r,g,b };
+                dominantColorKey = key;
+            }
+        }
+        seedColor = { rgb: dominantColor, hsv: rgbToHsv(dominantColor.r, dominantColor.g, dominantColor.b), lab: rgbToLab(dominantColor.r, dominantColor.g, dominantColor.b) };
+    } else { // point
+      const p = mainCtx.getImageData(centerX, centerY, 1, 1).data;
+      seedColor = { rgb: {r: p[0], g: p[1], b: p[2]}, hsv: rgbToHsv(p[0], p[1], p[2]), lab: rgbToLab(p[0], p[1], p[2]) };
+    }
+
+
+    // Draw overlays
+    previewCtx.save();
+    
+    // 1. Draw thin accent border for all pixels that would be selected
+    previewCtx.strokeStyle = 'hsl(var(--accent))';
+    previewCtx.lineWidth = 1;
+    for (let j = 0; j < sourceSize; j++) {
+        for (let i = 0; i < sourceSize; i++) {
+            const canvasX = Math.floor(sourceX + i);
+            const canvasY = Math.floor(sourceY + j);
+            if (canvasX >= 0 && canvasX < canvas.width && canvasY >= 0 && canvasY < canvas.height) {
+                const pixel = mainCtx.getImageData(canvasX, canvasY, 1, 1).data;
+                if (isColorSimilar(seedColor, pixel[0], pixel[1], pixel[2], settings)) {
+                    previewCtx.strokeRect(i * zoom, j * zoom, zoom, zoom);
                 }
             }
         }
     }
+
+    // 2. Draw thick green border for pixels used in the search
+    previewCtx.strokeStyle = 'rgba(0, 255, 0, 0.9)';
+    previewCtx.lineWidth = 2;
+    for (const p of samplePixels) {
+        const previewX = (p.x - sourceX) * zoom;
+        const previewY = (p.y - sourceY) * zoom;
+        if (previewX >= 0 && previewX < size && previewY >= 0 && previewY < size) {
+           previewCtx.strokeRect(previewX, previewY, zoom, zoom);
+        }
+    }
     
-    // Draw search radius outline
-    if (settings.searchRadius > 1) {
-        const radiusInPreview = settings.searchRadius * zoom;
-        previewCtx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    // 3. If dominant, highlight the dominant pixels even more
+    if (settings.sampleMode === 'dominant' && dominantColorKey) {
+        previewCtx.strokeStyle = 'rgba(0, 255, 255, 1)'; // Bright cyan
         previewCtx.lineWidth = 2;
-        previewCtx.beginPath();
-        previewCtx.arc(size / 2, size / 2, radiusInPreview / 2, 0, 2 * Math.PI);
-        previewCtx.stroke();
+        for (const p of samplePixels) {
+            const key = `${p.r},${p.g},${p.b}`;
+            if (key === dominantColorKey) {
+                 const previewX = (p.x - sourceX) * zoom;
+                 const previewY = (p.y - sourceY) * zoom;
+                 if (previewX >= 0 && previewX < size && previewY >= 0 && previewY < size) {
+                    previewCtx.strokeRect(previewX - 1, previewY - 1, zoom + 2, zoom + 2);
+                 }
+            }
+        }
     }
 
+    previewCtx.restore();
 
   }, [mousePos, canvas, size, zoom, settings]);
 
@@ -159,10 +221,21 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
     >
       <canvas ref={previewCanvasRef} width={size} height={size} className="w-full h-full" />
        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-px h-full bg-white/50"></div>
+        {settings.sampleMode !== 'point' && settings.searchRadius > 0 && (
+          <div
+            className="border-2 border-dashed border-white/70 rounded-full"
+            style={{
+                width: `${settings.searchRadius * 2 * zoom}px`,
+                height: `${settings.searchRadius * 2 * zoom}px`,
+            }}
+          />
+        )}
+        <div className="w-px h-full bg-white/50 absolute"></div>
         <div className="h-px w-full bg-white/50 absolute"></div>
         <div className="w-[calc(100%/16)] h-[calc(100%/16)] border-2 border-accent rounded-sm"></div>
       </div>
     </div>
   );
 }
+
+    
