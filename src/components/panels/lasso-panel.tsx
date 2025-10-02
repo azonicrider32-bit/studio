@@ -20,7 +20,7 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange }:
   return (
     <div className="p-4 space-y-4 flex flex-col flex-grow h-full">
         <div className="flex-grow"></div>
-        <div className="flex-grow flex flex-col">
+        <div className="flex flex-col flex-grow">
             <LassoHoverPreview 
                 canvas={canvas} 
                 mousePos={mousePos} 

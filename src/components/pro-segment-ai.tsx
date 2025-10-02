@@ -545,7 +545,7 @@ export function ProSegmentAI() {
                 </SidebarHeader>
                 <Separator />
                 <SidebarContent className="p-0">
-                  <TabsContent value="tools" className="m-0 h-full flex flex-col">
+                  <TabsContent value="tools" className="m-0 h-full flex flex-col flex-1">
                     {renderRightPanelContent()}
                   </TabsContent>
                   <TabsContent value="feather" className="m-0 h-full">
