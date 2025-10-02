@@ -98,7 +98,7 @@ export function ProSegmentAI() {
     directionalStrength: 0.2,
     cursorInfluence: 0.1,
     traceInfluence: 0.2,
-    colorInfluence: 0.25,
+    colorInfluence: 0,
     snapRadiusEnabled: true,
     snapThresholdEnabled: true,
     curveStrengthEnabled: true,
@@ -548,10 +548,7 @@ export function ProSegmentAI() {
                 </SidebarHeader>
                 <Separator />
                 <div className="flex-1 flex flex-col min-h-0">
-                  <TabsContent value="tools" className={cn(
-                    "m-0 flex-1",
-                    activeTool === 'lasso' && 'flex flex-col'
-                  )}>
+                  <TabsContent value="tools" className={cn("m-0 flex-1", activeTool === 'lasso' && 'flex flex-col')}>
                     {renderRightPanelContent()}
                   </TabsContent>
                   <TabsContent value="feather" className="m-0 flex-1 overflow-y-auto">
@@ -568,20 +565,20 @@ export function ProSegmentAI() {
                       onDeleteLayer={deleteLayer}
                     />
                   </TabsContent>
-                  <TabsContent value="ai" className="m-0 flex-1">
+                  <TabsContent value="ai" className="m-0 flex-1 overflow-y-auto">
                       <Tabs defaultValue="models" className="flex h-full flex-col">
                           <TabsList className="m-2 grid grid-cols-3">
                               <TabsTrigger value="models">Models</TabsTrigger>
                               <TabsTrigger value="canny">Canny</TabsTrigger>
                               <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
                           </TabsList>
-                          <TabsContent value="models" className="m-0 flex-1 overflow-y-auto">
+                          <TabsContent value="models" className="m-0 flex-1">
                               <AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} />
                           </TabsContent>
-                          <TabsContent value="canny" className="m-0 flex-1 overflow-y-auto">
+                          <TabsContent value="canny" className="m-0 flex-1">
                               <CannyTuningPanel />
                           </TabsContent>
-                          <TabsContent value="inpaint" className="m-0 flex-1 overflow-y-auto">
+                          <TabsContent value="inpaint" className="m-0 flex-1">
                               <InpaintingPanel
                                 imageUrl={imageUrl}
                                 getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
