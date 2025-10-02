@@ -32,17 +32,22 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     if (!previewCanvas || !canvas || !selectionEngine || !mousePos) return;
     
     const sourceSize = size / zoom;
-    const deadZoneRadius = sourceSize / 3;
+    const deadZoneSize = sourceSize / 3;
 
-    // Initialize or update view position based on cursor
-    const dx = mousePos.x - (viewPositionRef.current.x + sourceSize / 2);
-    const dy = mousePos.y - (viewPositionRef.current.y + sourceSize / 2);
-    const distance = Math.hypot(dx, dy);
+    // Get the current center of the view in source image coordinates
+    const viewCenterX = viewPositionRef.current.x + sourceSize / 2;
+    const viewCenterY = viewPositionRef.current.y + sourceSize / 2;
 
-    if (distance > deadZoneRadius) {
-        const angle = Math.atan2(dy, dx);
-        viewPositionRef.current.x = mousePos.x - (sourceSize / 2) - (Math.cos(angle) * deadZoneRadius);
-        viewPositionRef.current.y = mousePos.y - (sourceSize / 2) - (Math.sin(angle) * deadZoneRadius);
+    // Calculate distance of mouse from the view center
+    const dx = mousePos.x - viewCenterX;
+    const dy = mousePos.y - viewCenterY;
+
+    // Update view position if mouse is outside the square dead zone
+    if (Math.abs(dx) > deadZoneSize / 2) {
+      viewPositionRef.current.x += dx - (Math.sign(dx) * deadZoneSize / 2);
+    }
+    if (Math.abs(dy) > deadZoneSize / 2) {
+      viewPositionRef.current.y += dy - (Math.sign(dy) * deadZoneSize / 2);
     }
     
     // Clamp view position to be within canvas bounds
@@ -123,7 +128,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
             const lastMainPoint = mainPath[mainPath.length - 1];
             if(lastMainPoint) previewCtx.moveTo(lastMainPoint[0], lastMainPoint[1]);
             for (let i = 0; i < futureLassoPath.length; i++) {
-                previewCtx.lineTo(futureLassoPath[i][0], futureLassoPath[i][1]);
+                previewCtx.lineTo(futureLassoPath[i][0], futureLassosnapPath[i][1]);
             }
             previewCtx.stroke();
         }
@@ -182,12 +187,12 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
             transform: 'translate(-50%, -50%)',
           }}
         ></div>
-         {/* Circular dead zone indicator */}
+         {/* Square dead zone indicator */}
         <div 
-          className="absolute rounded-full border border-dashed border-white/50"
+          className="absolute rounded-sm border border-dashed border-white/50"
           style={{
-              width: `${(1/3) * 100 * 2}%`,
-              height: `${(1/3) * 100 * 2}%`,
+              width: `${(1/3) * 100}%`,
+              height: `${(1/3) * 100}%`,
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)'

@@ -75,18 +75,18 @@ export class SelectionEngine {
     sampleMode: 'point',
     useAntiAlias: true,
     useFeather: false,
-    highlightColorMode: 'random',
+    highlightColorMode: 'contrast',
     fixedHighlightColor: '#00aaff',
     highlightOpacity: 0.5,
-    highlightTexture: 'solid',
+    highlightTexture: 'lines',
     highlightBorder: {
         enabled: true,
-        thickness: 2,
+        thickness: 1,
         color: '#ffffff',
-        colorMode: 'fixed',
-        pattern: 'solid',
+        colorMode: 'contrast',
+        pattern: 'dashed',
         opacity: 1,
-    },
+    }
   };
    negativeMagicWandSettings: MagicWandSettings = {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
