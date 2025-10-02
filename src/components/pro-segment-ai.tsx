@@ -544,14 +544,14 @@ export function ProSegmentAI() {
                   </TooltipProvider>
                 </SidebarHeader>
                 <Separator />
-                <SidebarContent className="p-0 overflow-y-hidden">
+                <div className="flex-1 flex flex-col min-h-0">
                   <TabsContent value="tools" className="m-0 h-full flex flex-col">
                     {renderRightPanelContent()}
                   </TabsContent>
-                  <TabsContent value="feather" className="m-0 h-full">
+                  <TabsContent value="feather" className="m-0 flex-1 overflow-y-auto">
                     <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
                   </TabsContent>
-                  <TabsContent value="layers" className="m-0">
+                  <TabsContent value="layers" className="m-0 flex-1 overflow-y-auto">
                     <LayersPanel 
                       layers={layers}
                       activeLayerId={activeLayerId}
@@ -562,20 +562,20 @@ export function ProSegmentAI() {
                       onDeleteLayer={deleteLayer}
                     />
                   </TabsContent>
-                  <TabsContent value="ai" className="m-0">
+                  <TabsContent value="ai" className="m-0 flex-1">
                       <Tabs defaultValue="models" className="flex h-full flex-col">
                           <TabsList className="m-2 grid grid-cols-3">
                               <TabsTrigger value="models">Models</TabsTrigger>
                               <TabsTrigger value="canny">Canny</TabsTrigger>
                               <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
                           </TabsList>
-                          <TabsContent value="models" className="m-0 flex-1">
+                          <TabsContent value="models" className="m-0 flex-1 overflow-y-auto">
                               <AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} />
                           </TabsContent>
-                          <TabsContent value="canny" className="m-0 flex-1">
+                          <TabsContent value="canny" className="m-0 flex-1 overflow-y-auto">
                               <CannyTuningPanel />
                           </TabsContent>
-                          <TabsContent value="inpaint" className="m-0 flex-1">
+                          <TabsContent value="inpaint" className="m-0 flex-1 overflow-y-auto">
                               <InpaintingPanel
                                 imageUrl={imageUrl}
                                 getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
@@ -585,10 +585,10 @@ export function ProSegmentAI() {
                           </TabsContent>
                       </Tabs>
                   </TabsContent>
-                  <TabsContent value="telemetry" className="m-0 h-full">
+                  <TabsContent value="telemetry" className="m-0 flex-1 overflow-y-auto">
                     <TelemetryPanel />
                   </TabsContent>
-                </SidebarContent>
+                </div>
               </Tabs>
           </div>
         </div>

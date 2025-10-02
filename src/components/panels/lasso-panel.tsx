@@ -12,13 +12,14 @@ interface LassoPanelProps {
   mousePos: { x: number; y: number } | null;
   selectionEngine: SelectionEngine | null;
   onHoverChange: (isHovered: boolean) => void;
+  className?: string;
 }
 
 
-export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange }: LassoPanelProps) {
+export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, className }: LassoPanelProps) {
     
   return (
-    <div className="p-4 space-y-4 flex flex-col flex-grow">
+    <div className={`p-4 space-y-4 flex flex-col flex-grow ${className}`}>
         <div className="flex flex-col flex-grow">
             <LassoHoverPreview 
                 canvas={canvas} 
