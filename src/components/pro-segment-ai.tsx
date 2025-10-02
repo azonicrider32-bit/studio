@@ -296,6 +296,17 @@ export function ProSegmentAI() {
   }
 
   const renderRightPanelContent = () => {
+    if (activeTool === 'lasso') {
+      return (
+        <LassoPanel
+          canvas={canvasRef.current}
+          mousePos={canvasMousePos}
+          selectionEngine={selectionEngineRef.current}
+          onHoverChange={setIsLassoPreviewHovered}
+        />
+      );
+    }
+    
     switch (activeTool) {
       case "magic-wand":
         return <MagicWandPanel 
@@ -306,13 +317,6 @@ export function ProSegmentAI() {
                   canvas={canvasRef.current}
                   mousePos={canvasMousePos}
                />;
-      case "lasso":
-        return <LassoPanel
-                  canvas={canvasRef.current}
-                  mousePos={canvasMousePos}
-                  selectionEngine={selectionEngineRef.current}
-                  onHoverChange={setIsLassoPreviewHovered}
-                />;
       case "brush":
         return <BrushPanel />;
       case "eraser":
@@ -547,7 +551,7 @@ export function ProSegmentAI() {
                   </SidebarHeader>
                   <Separator />
                   <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
-                    <TabsContent value="tools" className="m-0 flex flex-col flex-1">
+                    <TabsContent value="tools" className={cn("m-0", activeTool === 'lasso' && 'flex-1 flex flex-col')}>
                       {renderRightPanelContent()}
                     </TabsContent>
                     <TabsContent value="feather" className="m-0">
