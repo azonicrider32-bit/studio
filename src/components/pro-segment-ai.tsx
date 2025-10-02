@@ -61,8 +61,9 @@ import { SelectionEngine } from "@/lib/selection-engine"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import { TooltipTrigger } from "@radix-ui/react-tooltip"
 import { TelemetryPanel } from "./panels/telemetry-panel"
+import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform"
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
 
 export function ProSegmentAI() {
   const [activeTool, setActiveTool] = React.useState<Tool>("magic-wand")
@@ -115,6 +116,8 @@ export function ProSegmentAI() {
     ignoreExistingSegments: false,
     enabledTolerances: new Set(['h', 's', 'v']),
     scrollAdjustTolerances: new Set(),
+    searchRadius: 15,
+    sampleMode: 'point',
     useAntiAlias: true,
     useFeather: false,
     highlightColorMode: 'contrast',
@@ -139,6 +142,8 @@ export function ProSegmentAI() {
     ignoreExistingSegments: false,
     enabledTolerances: new Set(),
     scrollAdjustTolerances: new Set(),
+    searchRadius: 1,
+    sampleMode: 'point',
     seedColor: undefined,
     useAntiAlias: true,
     useFeather: false,
@@ -153,7 +158,7 @@ export function ProSegmentAI() {
         colorMode: 'fixed',
         pattern: 'solid',
         opacity: 1,
-    }
+    },
   });
   const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
     antiAlias: { enabled: true, method: 'gaussian', quality: 'balanced' },
@@ -314,6 +319,13 @@ export function ProSegmentAI() {
         return <BrushPanel isEraser />
       case "adjustments":
         return <LayerAdjustmentPanel />
+      case "color-analysis":
+        return <ColorAnalysisPanel 
+                canvas={canvasRef.current}
+                mousePos={canvasMousePos}
+                magicWandSettings={magicWandSettings}
+                onMagicWandSettingsChange={handleMagicWandSettingsChange}
+              />
       default:
         return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>
     }
@@ -427,6 +439,16 @@ export function ProSegmentAI() {
                             <PipetteMinusIcon />
                         </SidebarMenuButton>
                         </SidebarMenuItem>
+                         <SidebarMenuItem>
+                        <SidebarMenuButton
+                            tooltip="Color Analysis"
+                            isActive={activeTool === "color-analysis"}
+                            onClick={() => setActiveTool("color-analysis")}
+                            className="h-12 w-full justify-center"
+                        >
+                            <Palette />
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
                         <SidebarMenuItem>
                         <SidebarMenuButton
                             tooltip="Adjustments (A)"
@@ -484,15 +506,15 @@ export function ProSegmentAI() {
             </SidebarInset>
 
           <div className="w-[380px] border-l flex flex-col">
-              <Tabs defaultValue="analysis" className="flex h-full flex-col">
+              <Tabs defaultValue="tools" className="flex h-full flex-col">
                 <SidebarHeader>
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-5">
                           <Tooltip>
                               <TooltipTrigger asChild>
-                                  <TabsTrigger value="analysis" className="flex-1"><Palette className="h-5 w-5"/></TabsTrigger>
+                                  <TabsTrigger value="tools" className="flex-1"><Wand2 className="h-5 w-5"/></TabsTrigger>
                               </TooltipTrigger>
-                              <TooltipContent>Color Analysis</TooltipContent>
+                              <TooltipContent>Tool Options</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                               <TooltipTrigger asChild>
@@ -523,7 +545,7 @@ export function ProSegmentAI() {
                 </SidebarHeader>
                 <Separator />
                 <SidebarContent className="p-0">
-                  <TabsContent value="analysis" className="m-0 h-full">
+                  <TabsContent value="tools" className="m-0 h-full">
                     {renderRightPanelContent()}
                   </TabsContent>
                   <TabsContent value="feather" className="m-0 h-full">
@@ -574,5 +596,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    

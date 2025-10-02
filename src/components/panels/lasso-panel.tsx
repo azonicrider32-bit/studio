@@ -25,10 +25,8 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange }:
             mousePos={mousePos} 
             selectionEngine={selectionEngine} 
             onHoverChange={onHoverChange}
-            className="flex-shrink-0"
+            className="flex-shrink-0 h-[33vh]"
         />
     </div>
   )
 }
-
-    
