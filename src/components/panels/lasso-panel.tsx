@@ -19,6 +19,7 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange }:
     
   return (
     <div className="p-4 space-y-4 flex flex-col h-full">
+        <div className="flex-grow"></div>
         <LassoHoverPreview 
             canvas={canvas} 
             mousePos={mousePos} 
@@ -29,3 +30,5 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange }:
     </div>
   )
 }
+
+    

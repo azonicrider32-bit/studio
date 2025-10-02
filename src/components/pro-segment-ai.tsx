@@ -453,32 +453,34 @@ export function ProSegmentAI() {
               </SidebarFooter>
             </Sidebar>
 
-            <SidebarInset>
-              <ImageCanvas 
-                  imageUrl={imageUrl}
-                  layers={layers}
-                  addLayer={addLayer}
-                  updateLayer={updateLayer}
-                  removePixelsFromLayers={removePixelsFromLayers}
-                  activeLayerId={activeLayerId}
-                  onLayerSelect={setActiveLayerId}
-                  segmentationMask={segmentationMask}
-                  setSegmentationMask={setSegmentationMask}
-                  activeTool={activeTool}
-                  lassoSettings={lassoSettings}
-                  magicWandSettings={magicWandSettings}
-                  negativeMagicWandSettings={negativeMagicWandSettings}
-                  getSelectionMaskRef={getSelectionMaskRef}
-                  clearSelectionRef={clearSelectionRef}
-                  onLassoSettingChange={handleLassoSettingsChange}
-                  onMagicWandSettingChange={handleMagicWandSettingsChange}
-                  onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
-                  canvasMousePos={canvasMousePos}
-                  setCanvasMousePos={setCanvasMousePos}
-                  getCanvasRef={canvasRef}
-                  getSelectionEngineRef={selectionEngineRef}
-                  isLassoPreviewHovered={isLassoPreviewHovered}
-                />
+            <SidebarInset className="flex flex-col">
+              <div className="flex-grow flex items-center justify-center p-4 md:p-8">
+                <ImageCanvas 
+                    imageUrl={imageUrl}
+                    layers={layers}
+                    addLayer={addLayer}
+                    updateLayer={updateLayer}
+                    removePixelsFromLayers={removePixelsFromLayers}
+                    activeLayerId={activeLayerId}
+                    onLayerSelect={setActiveLayerId}
+                    segmentationMask={segmentationMask}
+                    setSegmentationMask={setSegmentationMask}
+                    activeTool={activeTool}
+                    lassoSettings={lassoSettings}
+                    magicWandSettings={magicWandSettings}
+                    negativeMagicWandSettings={negativeMagicWandSettings}
+                    getSelectionMaskRef={getSelectionMaskRef}
+                    clearSelectionRef={clearSelectionRef}
+                    onLassoSettingChange={handleLassoSettingsChange}
+                    onMagicWandSettingChange={handleMagicWandSettingsChange}
+                    onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+                    canvasMousePos={canvasMousePos}
+                    setCanvasMousePos={setCanvasMousePos}
+                    getCanvasRef={canvasRef}
+                    getSelectionEngineRef={selectionEngineRef}
+                    isLassoPreviewHovered={isLassoPreviewHovered}
+                  />
+              </div>
             </SidebarInset>
 
           <div className="w-[380px] border-l flex flex-col">
@@ -572,3 +574,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
