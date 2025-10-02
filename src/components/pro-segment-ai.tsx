@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -297,6 +296,8 @@ export function ProSegmentAI() {
   }
 
   const renderRightPanelContent = () => {
+    if (activeTool === 'lasso') return null;
+
     switch (activeTool) {
       case "magic-wand":
         return <MagicWandPanel 
@@ -307,8 +308,6 @@ export function ProSegmentAI() {
                   canvas={canvasRef.current}
                   mousePos={canvasMousePos}
                />
-      case "lasso":
-        return null;
       case "brush":
         return <BrushPanel />
       case "eraser":
@@ -542,14 +541,14 @@ export function ProSegmentAI() {
                   </TooltipProvider>
                 </SidebarHeader>
                 <Separator />
-                <div className="overflow-y-auto">
+                <div className={cn("overflow-y-auto", activeTool === 'lasso' ? "h-[300px]" : "h-full")}>
                   <TabsContent value="tools" className="m-0">
                     {renderRightPanelContent()}
                   </TabsContent>
-                  <TabsContent value="feather" className="m-0 overflow-y-auto">
+                  <TabsContent value="feather" className="m-0">
                     <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
                   </TabsContent>
-                  <TabsContent value="layers" className="m-0 overflow-y-auto">
+                  <TabsContent value="layers" className="m-0">
                     <LayersPanel 
                       layers={layers}
                       activeLayerId={activeLayerId}
@@ -560,7 +559,7 @@ export function ProSegmentAI() {
                       onDeleteLayer={deleteLayer}
                     />
                   </TabsContent>
-                  <TabsContent value="ai" className="m-0 overflow-y-auto">
+                  <TabsContent value="ai" className="m-0">
                       <Tabs defaultValue="models" className="flex h-full flex-col">
                           <TabsList className="m-2 grid grid-cols-3">
                               <TabsTrigger value="models">Models</TabsTrigger>
@@ -583,7 +582,7 @@ export function ProSegmentAI() {
                           </TabsContent>
                       </Tabs>
                   </TabsContent>
-                  <TabsContent value="telemetry" className="m-0 overflow-y-auto">
+                  <TabsContent value="telemetry" className="m-0">
                     <TelemetryPanel />
                   </TabsContent>
                 </div>
@@ -605,3 +604,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
