@@ -149,21 +149,25 @@ export function FeatherPanel({ settings, onSettingsChange }: FeatherPanelProps) 
         </AccordionItem>
         
         <AccordionItem value="smart-feather">
-            <AccordionTrigger className="text-base font-semibold flex items-center">
-                 <div className="flex items-center gap-2 flex-1">
-                    <Wind className="w-5 h-5"/> Smart Feather
-                 </div>
-                 <Switch checked={settings.smartFeather.enabled} onCheckedChange={createSubChangeHandler('smartFeather', 'enabled')} onClick={(e) => e.stopPropagation()} />
-            </AccordionTrigger>
+            <div className="flex items-center">
+              <AccordionTrigger className="text-base font-semibold flex-1">
+                  <div className="flex items-center gap-2">
+                      <Wind className="w-5 h-5"/> Smart Feather
+                  </div>
+              </AccordionTrigger>
+              <Switch checked={settings.smartFeather.enabled} onCheckedChange={createSubChangeHandler('smartFeather', 'enabled')} />
+            </div>
             <AccordionContent className="space-y-4 pt-4">
                 {settings.smartFeather.enabled && (
                     <Accordion type="multiple" defaultValue={['alpha-matting']} className="w-full space-y-2">
                         {/* Alpha Matting */}
                         <AccordionItem value="alpha-matting" className="border-b-0">
-                             <AccordionTrigger className="py-2 text-sm bg-muted/50 px-2 rounded-md hover:no-underline">
-                                <div className="flex items-center gap-2 flex-1"><Blend className="w-4 h-4"/>Alpha Matting</div>
-                                <Switch size="sm" checked={settings.smartFeather.alphaMatting.enabled} onCheckedChange={createDeepChangeHandler('smartFeather', 'alphaMatting', 'enabled')} onClick={(e) => e.stopPropagation()} />
-                             </AccordionTrigger>
+                             <div className="flex items-center bg-muted/50 px-2 rounded-md">
+                                <AccordionTrigger className="py-2 text-sm flex-1 hover:no-underline">
+                                  <div className="flex items-center gap-2"><Blend className="w-4 h-4"/>Alpha Matting</div>
+                                </AccordionTrigger>
+                                <Switch size="sm" checked={settings.smartFeather.alphaMatting.enabled} onCheckedChange={createDeepChangeHandler('smartFeather', 'alphaMatting', 'enabled')} />
+                             </div>
                              <AccordionContent className="space-y-4 p-4 mt-2 border rounded-md">
                                 <div className="space-y-2">
                                     <Label>Method</Label>
@@ -184,10 +188,12 @@ export function FeatherPanel({ settings, onSettingsChange }: FeatherPanelProps) 
                         </AccordionItem>
                         {/* Background Adaptation */}
                          <AccordionItem value="bg-adapt" className="border-b-0">
-                             <AccordionTrigger className="py-2 text-sm bg-muted/50 px-2 rounded-md hover:no-underline">
-                                <div className="flex items-center gap-2 flex-1"><Droplets className="w-4 h-4"/>Background Adaptation</div>
-                                <Switch size="sm" checked={settings.smartFeather.backgroundAdaptation.enabled} onCheckedChange={createDeepChangeHandler('smartFeather', 'backgroundAdaptation', 'enabled')} onClick={(e) => e.stopPropagation()} />
-                             </AccordionTrigger>
+                            <div className="flex items-center bg-muted/50 px-2 rounded-md">
+                               <AccordionTrigger className="py-2 text-sm flex-1 hover:no-underline">
+                                  <div className="flex items-center gap-2"><Droplets className="w-4 h-4"/>Background Adaptation</div>
+                               </AccordionTrigger>
+                               <Switch size="sm" checked={settings.smartFeather.backgroundAdaptation.enabled} onCheckedChange={createDeepChangeHandler('smartFeather', 'backgroundAdaptation', 'enabled')} />
+                            </div>
                              <AccordionContent className="space-y-4 p-4 mt-2 border rounded-md">
                                 <div className="space-y-2">
                                     <Label>Sample Radius: {settings.smartFeather.backgroundAdaptation.sampleRadius}px</Label>
