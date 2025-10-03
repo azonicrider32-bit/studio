@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -495,7 +496,7 @@ function ProSegmentAIContent() {
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
         {activeTopPanel === "zoom" && <PixelZoomPanel canvas={canvasRef.current} mousePos={canvasMousePos} selectionEngine={selectionEngineRef.current} onHoverChange={setIsLassoPreviewHovered} className="flex-1"/>}
         {activeTopPanel === "feather" && <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />}
-        {activeTopPanel === "layers" && activeWorkspace && <LayersPanel layers={activeWorkspace.layers} activeLayerId={activeWorkspace.activeLayerId} onLayerSelect={(id) => setActiveWorkspaceState(ws => ({...ws, activeLayerId: id}))} onToggleVisibility={toggleLayerVisibility} onToggleLock={toggleLayerLock} onToggleMask={toggleLayerMask} onDeleteLayer={deleteLayer} draggedLayerId={null} setDraggedLayerId={() => {}} dropTargetId={null} setDropTargetId={() => {}} onDrop={(draggedId, targetId) => { const draggedLayer = activeWorkspace.layers.find(l => l.id === draggedId); if (!draggedLayer || draggedId === targetId || draggedLayer.parentId === targetId) return; setActiveWorkspaceState(ws => { const newLayers = ws.layers.map(l => { if (l.id === draggedId) { return { ...l, parentId: targetId, subType: 'mask' as const }; } return l; }).filter(l => l.id !== draggedId); const targetLayerIndex = newLayers.findIndex(l => l.id === targetId); if (targetLayerIndex > -1) { if (newLayers[targetLayerIndex].modifiers?.find(m => m.id === draggedId)) return ws; const draggedLayerWithParent = { ...draggedLayer, parentId: targetId, subType: 'mask' as const }; const targetLayer = newLayers[targetLayerIndex]; const existingModifiers = targetLayer.modifiers || []; newLayers[targetLayerIndex] = { ...targetLayer, modifiers: [...existingModifiers, draggedLayerWithParent] }; const draggedIndexInMain = newLayers.findIndex(l => l.id === draggedId); if (draggedIndexInMain > -1) { newLayers[draggedIndexInMain] = draggedLayerWithParent; } } return { ...ws, layers: newLayers }; }); }} />}
+        {activeTopPanel === "layers" && activeWorkspace && <LayersPanel workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} onWorkspaceSelect={setActiveWorkspaceId} onLayerSelect={(id) => setActiveWorkspaceState(ws => ({...ws, activeLayerId: id}))} onToggleVisibility={toggleLayerVisibility} onToggleLock={toggleLayerLock} onToggleMask={toggleLayerMask} onDeleteLayer={deleteLayer} draggedLayerId={null} setDraggedLayerId={() => {}} dropTargetId={null} setDropTargetId={() => {}} onDrop={(draggedId, targetId) => { const draggedLayer = activeWorkspace.layers.find(l => l.id === draggedId); if (!draggedLayer || draggedId === targetId || draggedLayer.parentId === targetId) return; setActiveWorkspaceState(ws => { const newLayers = ws.layers.map(l => { if (l.id === draggedId) { return { ...l, parentId: targetId, subType: 'mask' as const }; } return l; }).filter(l => l.id !== draggedId); const targetLayerIndex = newLayers.findIndex(l => l.id === targetId); if (targetLayerIndex > -1) { if (newLayers[targetLayerIndex].modifiers?.find(m => m.id === draggedId)) return ws; const draggedLayerWithParent = { ...draggedLayer, parentId: targetId, subType: 'mask' as const }; const targetLayer = newLayers[targetLayerIndex]; const existingModifiers = targetLayer.modifiers || []; newLayers[targetLayerIndex] = { ...targetLayer, modifiers: [...existingModifiers, draggedLayerWithParent] }; const draggedIndexInMain = newLayers.findIndex(l => l.id === draggedId); if (draggedIndexInMain > -1) { newLayers[draggedIndexInMain] = draggedLayerWithParent; } } return { ...ws, layers: newLayers }; }); }} />}
         {activeTopPanel === "ai" && (
           <Tabs defaultValue="models" className="flex h-full flex-col">
             <TabsContent value="models" className="m-0 flex-1"><AiModelsPanel setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))} setImageUrl={handleImageSelect} /></TabsContent>
@@ -551,12 +552,18 @@ function ProSegmentAIContent() {
         setActiveTool={setActiveTool}
         onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
       />
+      <Sidebar>
+        <SidebarContent>
+           {renderLeftPanelContent()}
+        </SidebarContent>
+      </Sidebar>
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-          <header 
-            className="flex h-12 items-center justify-between border-b px-2 z-10 bg-background/80 backdrop-blur-sm"
-            style={{ paddingRight: (activeTopPanel || activeBottomPanel) ? `var(--right-panel-width)` : '0.5rem' }}
-          >
+        <header
+          className="flex h-12 items-center justify-between border-b px-2 z-10 bg-background/80 backdrop-blur-sm"
+          style={{ paddingRight: `var(--right-panel-width)`}}
+        >
+          <div className="flex-1 flex items-center">
             <WorkspaceTabs 
               workspaces={workspaces}
               activeWorkspaceId={activeWorkspaceId}
@@ -564,10 +571,13 @@ function ProSegmentAIContent() {
               onWorkspaceAdd={handleAddNewWorkspace}
               onWorkspaceClose={handleCloseWorkspace}
             />
+          </div>
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => setIsSplitView(p => !p)}>
               <Split className={cn("w-5 h-5", isSplitView && "text-primary")} />
             </Button>
-          </header>
+          </div>
+        </header>
           
           <main className="flex-1 flex overflow-auto bg-muted/30">
             <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
@@ -650,20 +660,21 @@ function ProSegmentAIContent() {
            />
       </div>
 
-      {(activeTopPanel || activeBottomPanel) && (
+      <div 
+        className="absolute top-0 right-0 h-full flex flex-col border-l bg-background/80 backdrop-blur-sm z-20" 
+        style={{ width: rightPanelWidth }}
+      >
         <div 
-          className="absolute top-0 right-0 h-full flex flex-col border-l bg-background/80 backdrop-blur-sm z-20" 
-          style={{ width: rightPanelWidth }}
+          onMouseDown={handleMouseDownResize}
+          className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group", 
+            (!activeTopPanel && !activeBottomPanel) && "hidden"
+          )}
         >
-          <div 
-            onMouseDown={handleMouseDownResize}
-            className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group")}
-          >
-            <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
-          </div>
-            
-          <div className="flex h-12 items-center justify-between border-b px-2">
-            <div className="flex items-center gap-1">
+          <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
+        </div>
+          
+        <div className="flex h-12 items-center justify-between border-b px-2">
+           <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={handleUndo} disabled={activeWorkspace.historyIndex < 0}>
                 <Undo2 className="w-5 h-5"/>
               </Button>
@@ -687,145 +698,124 @@ function ProSegmentAIContent() {
               </DropdownMenu>
             </div>
             
-            <div className="flex items-center gap-2">
-              <TooltipProvider>
+            <TooltipProvider>
+                <div className="flex items-center gap-2">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant={activeZoom === 'A' ? "default" : "ghost"}
+                                size="icon"
+                                className={cn("h-9 w-9 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                onClick={() => setActiveZoom('A')}
+                            >
+                                <ZoomIn className="w-4 h-4"/>
+                                <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Activate Zoom A (1)</TooltipContent>
+                    </Tooltip>
+                      <div 
+                        className="group flex items-center"
+                        onMouseEnter={() => handleHoverZoom('A')}
+                        onMouseLeave={() => handleHoverZoom(null)}
+                    >
+                        <span 
+                            className="text-sm font-medium px-2 py-1 text-center bg-background"
+                            onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                        >
+                            {(zoomA * 100).toFixed(0)}%
+                        </span>
+                        <div className={cn(
+                            "overflow-hidden transition-all duration-300 ease-in-out",
+                            hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
+                        )}>
+                            <Slider 
+                                value={[zoomA]}
+                                onValueChange={(v) => setZoomA(v[0])}
+                                min={0.1} max={10} step={0.1}
+                            />
+                        </div>
+                    </div>
+                </div>
+
                   <div className="flex items-center gap-2">
                       <Tooltip>
-                          <TooltipTrigger asChild>
+                        <TooltipTrigger asChild>
                               <Button
-                                  variant={activeZoom === 'A' ? "default" : "ghost"}
-                                  size="icon"
-                                  className={cn("h-9 w-9 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                                  onClick={() => setActiveZoom('A')}
-                              >
-                                  <ZoomIn className="w-4 h-4"/>
-                                  <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
-                              </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Activate Zoom A (1)</TooltipContent>
-                      </Tooltip>
-                        <div 
-                          className="group flex items-center"
-                          onMouseEnter={() => handleHoverZoom('A')}
-                          onMouseLeave={() => handleHoverZoom(null)}
-                      >
-                          <span 
-                              className="text-sm font-medium px-2 py-1 text-center bg-background"
-                              onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                          >
-                              {(zoomA * 100).toFixed(0)}%
-                          </span>
-                          <div className={cn(
-                              "overflow-hidden transition-all duration-300 ease-in-out",
-                              hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
-                          )}>
-                              <Slider 
-                                  value={[zoomA]}
-                                  onValueChange={(v) => setZoomA(v[0])}
-                                  min={0.1} max={10} step={0.1}
-                              />
-                          </div>
-                      </div>
-                  </div>
-
-                    <div className="flex items-center gap-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                                <Button
-                                  variant={activeZoom === 'B' ? "default" : "ghost"}
-                                  size="icon"
-                                  className={cn("h-9 w-9 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                                  onClick={() => setActiveZoom('B')}
-                              >
-                                  <ZoomIn className="w-4 h-4"/>
-                                  <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
-                              </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Activate Zoom B (2)</TooltipContent>
-                      </Tooltip>
-                      <div 
-                          className="group flex items-center"
-                          onMouseEnter={() => handleHoverZoom('B')}
-                          onMouseLeave={() => handleHoverZoom(null)}
-                      >
-                          <span 
-                              className="text-sm font-medium px-2 py-1 text-center bg-background"
-                              onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                          >
-                              {(zoomB * 100).toFixed(0)}%
-                          </span>
-                          <div className={cn(
-                              "overflow-hidden transition-all duration-300 ease-in-out",
-                              hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
-                          )}>
-                              <Slider 
-                                  value={[zoomB]}
-                                  onValueChange={(v) => setZoomB(v[0])}
-                                  min={0.1} max={10} step={0.1}
-                              />
-                          </div>
-                      </div>
-                  </div>
-              </TooltipProvider>
-            </div>
-             <Tabs value={activeTopPanel || 'none'} className="w-full">
-              <TooltipProvider>
-                  <TabsList className="grid w-full grid-cols-4">
-                      <Tooltip>
-                          <TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span></TabsTrigger></TooltipTrigger>
-                          <TooltipContent>Zoom Panel (Z)</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                          <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span></TabsTrigger></TooltipTrigger>
-                          <TooltipContent>Feather & Edges (F)</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                          <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span></TabsTrigger></TooltipTrigger>
-                          <TooltipContent>Layers (L)</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                          <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span></TabsTrigger></TooltipTrigger>
-                          <TooltipContent>AI Tools (A)</TooltipContent>
-                      </Tooltip>
-                  </TabsList>
-              </TooltipProvider>
-            </Tabs>
-          </div>
-            
-          <div className="flex-1 flex flex-col min-h-0">
+                                variant={activeZoom === 'B' ? "default" : "ghost"}
+                                size="icon"
+                                className={cn("h-9 w-9 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                onClick={() => setActiveZoom('B')}
+                            >
+                                <ZoomIn className="w-4 h-4"/>
+                                <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Activate Zoom B (2)</TooltipContent>
+                    </Tooltip>
+                    <div 
+                        className="group flex items-center"
+                        onMouseEnter={() => handleHoverZoom('B')}
+                        onMouseLeave={() => handleHoverZoom(null)}
+                    >
+                        <span 
+                            className="text-sm font-medium px-2 py-1 text-center bg-background"
+                            onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                        >
+                            {(zoomB * 100).toFixed(0)}%
+                        </span>
+                        <div className={cn(
+                            "overflow-hidden transition-all duration-300 ease-in-out",
+                            hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
+                        )}>
+                            <Slider 
+                                value={[zoomB]}
+                                onValueChange={(v) => setZoomB(v[0])}
+                                min={0.1} max={10} step={0.1}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </TooltipProvider>
+        </div>
+        
+        <div className="flex-1 flex flex-col min-h-0">
+            {(!activeTopPanel && !activeBottomPanel) && (
+              <div className="flex-1 flex items-center justify-center text-center text-muted-foreground p-4">
+                <p>Select a panel to view details.</p>
+              </div>
+            )}
+            <div className="border-b">
+              <Tabs value={activeTopPanel || 'none'} className="w-full">
+                <TooltipProvider>
+                    <TabsList className="grid w-full grid-cols-4">
+                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span></TabsTrigger></TooltipTrigger><TooltipContent>Zoom Panel (Z)</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span></TabsTrigger></TooltipTrigger><TooltipContent>Feather & Edges (F)</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span></TabsTrigger></TooltipTrigger><TooltipContent>Layers (L)</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Tools (A)</TooltipContent></Tooltip>
+                    </TabsList>
+                </TooltipProvider>
+              </Tabs>
               {renderTopPanelContent()}
-            
+            </div>
+          
             {activeTopPanel && activeBottomPanel && <Separator />}
 
+            <div className="border-t">
               {renderBottomPanelContent()}
-          </div>
-
-          <div className="flex h-12 items-center border-t px-2">
-            <Tabs value={activeBottomPanel || 'none'} className="w-full">
-              <TooltipProvider>
-                <TabsList className="grid w-full grid-cols-4">
-                  <Tooltip>
-                    <TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">T</span></TabsTrigger></TooltipTrigger>
-                    <TooltipContent>Telemetry (T)</TooltipContent>
-                  </Tooltip>
-                    <Tooltip>
-                    <TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span></TabsTrigger></TooltipTrigger>
-                    <TooltipContent>Color Analysis (C)</TooltipContent>
-                  </Tooltip>
-                    <Tooltip>
-                    <TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span></TabsTrigger></TooltipTrigger>
-                    <TooltipContent>AI Chat (M)</TooltipContent>
-                  </Tooltip>
-                    <Tooltip>
-                    <TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span></TabsTrigger></TooltipTrigger>
-                    <TooltipContent>Pixel Preview (P)</TooltipContent>
-                  </Tooltip>
-                </TabsList>
-              </TooltipProvider>
-            </Tabs>
-          </div>
+              <Tabs value={activeBottomPanel || 'none'} className="w-full">
+                <TooltipProvider>
+                  <TabsList className="grid w-full grid-cols-4">
+                    <Tooltip><TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">T</span></TabsTrigger></TooltipTrigger><TooltipContent>Telemetry (T)</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span></TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
+                    <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span></TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
+                  </TabsList>
+                </TooltipProvider>
+              </Tabs>
+            </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

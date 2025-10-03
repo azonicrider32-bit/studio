@@ -11,36 +11,39 @@ import { cn } from "@/lib/utils"
 import { Layer } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 
 
 interface LayersPanelProps {
-    layers: Layer[];
-    activeLayerId: string | null;
-    draggedLayerId: string | null;
-    setDraggedLayerId: (id: string | null) => void;
-    dropTargetId: string | null;
-    setDropTargetId: (id: string | null) => void;
+    workspaces: { id: string, name: string, layers: Layer[] }[];
+    activeWorkspaceId: string | null;
+    onWorkspaceSelect: (id: string) => void;
     onLayerSelect: (id: string) => void;
     onToggleVisibility: (id: string) => void;
     onToggleLock: (id: string) => void;
     onToggleMask: (id: string) => void;
     onDeleteLayer: (id: string) => void;
+    draggedLayerId: string | null;
+    setDraggedLayerId: (id: string | null) => void;
+    dropTargetId: string | null;
+    setDropTargetId: (id: string | null) => void;
     onDrop: (draggedId: string, targetId: string) => void;
 }
 
 
 export function LayersPanel({
-    layers,
-    activeLayerId,
-    draggedLayerId,
-    setDraggedLayerId,
-    dropTargetId,
-    setDropTargetId,
+    workspaces,
+    activeWorkspaceId,
+    onWorkspaceSelect,
     onLayerSelect,
     onToggleVisibility,
     onToggleLock,
     onToggleMask,
     onDeleteLayer,
+    draggedLayerId,
+    setDraggedLayerId,
+    dropTargetId,
+    setDropTargetId,
     onDrop,
 }: LayersPanelProps) {
   
@@ -105,7 +108,7 @@ export function LayersPanel({
         onClick={() => !layer.locked && onLayerSelect(layer.id)}
         className={cn(
           "flex items-center gap-2 p-2 rounded-md transition-all",
-          layer.id === activeLayerId ? "bg-accent/50" : "hover:bg-accent/30",
+          workspaces.find(ws => ws.id === activeWorkspaceId)?.activeLayerId === layer.id ? "bg-accent/50" : "hover:bg-accent/30",
           layer.locked ? "cursor-not-allowed opacity-70" : "cursor-pointer",
           isMask && "ml-6",
           draggedLayerId === layer.id && "opacity-50",
@@ -171,46 +174,28 @@ export function LayersPanel({
     );
   };
   
-  const layerTree = React.useMemo(() => {
-    const layerMap = new Map(layers.map(l => [l.id, { ...l, children: [] as Layer[] }]));
-    const tree: { parent: Layer & { children: Layer[] }, children: (Layer & { children: Layer[] })[] }[] = [];
-
-    const topLevelLayers: (Layer & { children: Layer[] })[] = [];
-
-    layers.forEach(layer => {
-        const currentLayer = layerMap.get(layer.id);
-        if (!currentLayer) return;
-
+  const renderWorkspaceLayers = (workspace: {id: string, name: string, layers: Layer[]}) => {
+    const layerTree = workspace.layers.reduce((acc, layer) => {
+        const layerMap = new Map(workspace.layers.map(l => [l.id, { ...l, children: [] as Layer[] }]));
         if (layer.parentId && layerMap.has(layer.parentId)) {
             const parent = layerMap.get(layer.parentId);
             if(parent) {
-                parent.children.push(currentLayer);
+                (parent.children as Layer[]).push(layer as Layer);
             }
         } else {
-            topLevelLayers.push(currentLayer);
+            acc.push({ parent: layer as (Layer & {children: Layer[]}), children: (layerMap.get(layer.id)?.children || []) });
         }
-    });
-
-    return topLevelLayers.map(parent => ({ parent, children: parent.children || [] }));
-}, [layers]);
+        return acc;
+    }, [] as { parent: Layer & {children: Layer[]}, children: Layer[] }[]);
 
 
-  return (
-    <div className="p-4 space-y-4">
-      <div className="space-y-2">
-        <h3 className="font-headline text-lg">Layers</h3>
-        <p className="text-sm text-muted-foreground">
-          Manage and organize your image layers.
-        </p>
-      </div>
-      <Separator />
-      <Card>
+    return (
         <CardContent className="p-2 space-y-1">
          <TooltipProvider>
-          {layerTree.slice().reverse().map(({ parent, children }) => (
+          {workspace.layers.slice().reverse().filter(l => !l.parentId).map((parent) => (
             <React.Fragment key={parent.id}>
               {renderLayer(parent)}
-                {(children.length > 0 || parent.modifiers?.length > 0) && (
+              {(parent.modifiers && parent.modifiers.length > 0) && (
                     <div className="pl-6">
                         <Button
                             variant="ghost"
@@ -242,7 +227,33 @@ export function LayersPanel({
           ))}
           </TooltipProvider>
         </CardContent>
-      </Card>
+    )
+  }
+
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="space-y-2">
+        <h3 className="font-headline text-lg">Layers</h3>
+        <p className="text-sm text-muted-foreground">
+          Manage and organize your image layers.
+        </p>
+      </div>
+      <Separator />
+      <Tabs value={activeWorkspaceId || ""} onValueChange={onWorkspaceSelect} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+            {workspaces.map(ws => (
+                <TabsTrigger key={ws.id} value={ws.id}>{ws.name}</TabsTrigger>
+            ))}
+        </TabsList>
+        {workspaces.map(ws => (
+            <TabsContent key={ws.id} value={ws.id}>
+                <Card>
+                    {renderWorkspaceLayers(ws)}
+                </Card>
+            </TabsContent>
+        ))}
+      </Tabs>
     </div>
   )
 }
