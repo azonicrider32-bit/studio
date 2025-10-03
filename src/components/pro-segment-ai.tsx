@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -85,8 +86,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
+import { GlobalSettingsPanel } from "./panels/global-settings-panel"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan" | "line";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
 type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
 
@@ -451,6 +453,8 @@ function ProSegmentAIContent() {
                   onLassoSettingsChange={handleLassoSettingsChange}
                   activeTool={activeTool}
                 />
+      case 'settings':
+        return <GlobalSettingsPanel />;
       default:
         return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
     }

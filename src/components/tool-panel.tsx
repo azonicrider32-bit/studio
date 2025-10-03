@@ -22,7 +22,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "clone" | "transform" | "pan" | "line";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 
 const tools: { id: Tool; icon: React.ElementType; tooltip: string; shortcut: string; disabled?: boolean }[] = [
     { id: "transform", icon: CustomMove, tooltip: "Transform", shortcut: "V" },
@@ -33,7 +33,7 @@ const tools: { id: Tool; icon: React.ElementType; tooltip: string; shortcut: str
     { id: "eraser", icon: CustomEraser, tooltip: "Eraser", shortcut: "E" },
     { id: "pan", icon: CustomHand, tooltip: "Pan Tool", shortcut: "H" },
     { id: "clone", icon: Replace, tooltip: "Clone Stamp", shortcut: "C", disabled: true },
-    { id: "adjustments", icon: SlidersHorizontal, tooltip: "Adjustments", shortcut: "A" },
+    { id: "settings", icon: SlidersHorizontal, tooltip: "Settings", shortcut: "S" },
 ]
 
 interface ToolPanelProps {
