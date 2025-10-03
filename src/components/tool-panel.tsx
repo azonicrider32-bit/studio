@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import * as React from "react"
@@ -21,6 +19,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
+import { useSidebar } from "./ui/sidebar"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 
@@ -33,7 +32,6 @@ const tools: { id: Tool; icon: React.ElementType; tooltip: string; shortcut: str
     { id: "eraser", icon: CustomEraser, tooltip: "Eraser", shortcut: "E" },
     { id: "pan", icon: CustomHand, tooltip: "Pan Tool", shortcut: "H" },
     { id: "clone", icon: Replace, tooltip: "Clone Stamp", shortcut: "C", disabled: true },
-    { id: "settings", icon: SlidersHorizontal, tooltip: "Settings", shortcut: "S" },
 ]
 
 interface ToolPanelProps {
@@ -43,6 +41,8 @@ interface ToolPanelProps {
 }
 
 export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: ToolPanelProps) {
+  const { toggleSidebar } = useSidebar();
+  
   return (
     <div className="flex h-full flex-col items-center justify-between gap-2 border-r bg-background p-2">
       <div className="flex flex-col items-center gap-2">
@@ -77,6 +77,28 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
       <div className="flex flex-col items-center gap-2">
           <Separator />
           <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button 
+                      variant={activeTool === 'settings' ? "default" : "ghost"}
+                      size="icon" 
+                      onClick={() => {
+                        setActiveTool('settings');
+                        toggleSidebar();
+                      }}
+                      className="h-12 w-12 relative ps-tool-icon-container"
+                      data-variant={activeTool === 'settings' ? "default" : "ghost"}
+                    >
+                      <div className="ps-tool-icon">
+                          <SlidersHorizontal className="h-5 w-5 ps-tool-icon__icon" />
+                      </div>
+                      <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">S</span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                    <p>Settings (S)</p>
+                </TooltipContent>
+            </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" onClick={onToggleAssetDrawer} className="h-12 w-12 relative ps-tool-icon-container">

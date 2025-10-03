@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import * as React from "react"
@@ -32,29 +30,18 @@ import {
   Undo2,
   Redo2,
   ChevronDown,
+  Split,
+  Plus,
+  X as XIcon,
 } from "lucide-react"
 
 import {
   SidebarProvider,
   Sidebar,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarContent,
-  SidebarHeader,
-  SidebarTrigger,
-  SidebarInset,
-  SidebarFooter,
-  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { LassoIcon } from "./icons/lasso-icon"
-import { MagicWandPanel } from "./panels/magic-wand-panel"
-import { BrushPanel } from "./panels/brush-panel"
-import { LayerAdjustmentPanel } from "./panels/layer-adjustment-panel"
-import { CannyTuningPanel } from "./panels/canny-tuning-panel"
 import { ImageCanvas } from "./image-canvas"
 import { LayersPanel } from "./panels/layers-panel"
 import { AiModelsPanel } from "./panels/ai-models-panel"
@@ -64,7 +51,6 @@ import { LassoSettings, MagicWandSettings, FeatherSettings, Layer } from "@/lib/
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
-import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { SelectionEngine } from "@/lib/selection-engine"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
@@ -92,10 +78,44 @@ type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" |
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
 type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
 
+interface WorkspaceState {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  layers: Layer[];
+  history: any[];
+  historyIndex: number;
+  activeLayerId: string | null;
+  segmentationMask: string | null;
+}
+
+const createNewWorkspace = (id: string, name: string, imageUrl?: string): WorkspaceState => {
+  const backgroundLayer: Layer = {
+    id: `background-${id}`,
+    name: "Background",
+    type: 'background',
+    subType: 'pixel',
+    visible: true,
+    locked: true,
+    pixels: new Set(),
+    bounds: { x: 0, y: 0, width: 0, height: 0 },
+    modifiers: [],
+  };
+  return {
+    id,
+    name,
+    imageUrl,
+    layers: [backgroundLayer],
+    history: [],
+    historyIndex: -1,
+    activeLayerId: backgroundLayer.id,
+    segmentationMask: null,
+  };
+};
+
+
 function ProSegmentAIContent() {
   const [activeTool, setActiveTool] = React.useState<Tool>("line")
-  const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
-  const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
   const [isAssetDrawerOpen, setIsAssetDrawerOpen] = React.useState(false);
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
   const isResizingRef = React.useRef(false);
@@ -108,41 +128,37 @@ function ProSegmentAIContent() {
   const [zoomB, setZoomB] = React.useState(4.0);
   const [activeZoom, setActiveZoom] = React.useState<'A' | 'B'>('A');
   const [hoveredZoom, setHoveredZoom] = React.useState<'A' | 'B' | null>(null);
+  const [isSplitView, setIsSplitView] = React.useState(false);
 
   const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
 
   const [pan, setPan] = React.useState({ x: 0, y: 0 });
-  const [history, setHistory] = React.useState<any[]>([]);
-  const [historyIndex, setHistoryIndex] = React.useState(-1);
-  const maxHistorySize = 100;
 
-  const [layers, setLayers] = React.useState<Layer[]>(() => {
-    const backgroundLayer: Layer = {
-      id: "background-0",
-      name: "Background",
-      type: 'background',
-      subType: 'pixel',
-      visible: true,
-      locked: true,
-      pixels: new Set(),
-      bounds: { x: 0, y: 0, width: 0, height: 0 },
-      modifiers: [],
-    };
-    return [backgroundLayer];
-  });
-  const [activeLayerId, setActiveLayerId] = React.useState<string | null>(layers[0]?.id);
+  const [workspaces, setWorkspaces] = React.useState<WorkspaceState[]>([
+    createNewWorkspace("ws-1", "Project 1", PlaceHolderImages[0]?.imageUrl)
+  ]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = React.useState<string>("ws-1");
 
-  const [draggedLayerId, setDraggedLayerId] = React.useState<string | null>(null);
-  const [dropTargetId, setDropTargetId] = React.useState<string | null>(null);
+  const activeWorkspace = workspaces.find(ws => ws.id === activeWorkspaceId);
+  const activeWorkspaceIndex = workspaces.findIndex(ws => ws.id === activeWorkspaceId);
 
+  const setActiveWorkspaceState = (updater: (prevState: WorkspaceState) => WorkspaceState) => {
+    setWorkspaces(prevWorkspaces => 
+      prevWorkspaces.map(ws => 
+        ws.id === activeWorkspaceId ? updater(ws) : ws
+      )
+    );
+  };
+  
   const {
     draggedLayer,
     isDragging,
     handleMouseDown: handleDragMouseDown,
     handleMouseMove: handleDragMouseMove,
     handleMouseUp: handleDragMouseUp,
-  } = useSelectionDrag(layers, setLayers, activeTool, mainCanvasZoom);
+  } = useSelectionDrag(activeWorkspace?.layers || [], (newLayers) => setActiveWorkspaceState(ws => ({...ws, layers: newLayers})), activeTool, mainCanvasZoom);
   
+
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     drawMode: 'magic',
     useAiEnhancement: false,
@@ -237,50 +253,56 @@ function ProSegmentAIContent() {
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
   const clearSelectionRef = React.useRef<() => void>();
 
+  const maxHistorySize = 100;
+
   const addToHistory = React.useCallback((action: any) => {
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
+    setActiveWorkspaceState(ws => {
+      const newHistory = ws.history.slice(0, ws.historyIndex + 1);
       newHistory.push({
         ...action,
         timestamp: Date.now(),
         id: `action_${Date.now()}_${Math.random()}`
       });
-
       if (newHistory.length > maxHistorySize) {
         newHistory.shift();
       }
-
-      setHistoryIndex(newHistory.length - 1);
-      return newHistory;
+      return { ...ws, history: newHistory, historyIndex: newHistory.length - 1 };
     });
-  }, [historyIndex, maxHistorySize]);
+  }, [maxHistorySize, activeWorkspaceId]);
 
   const addLayer = (newLayer: Layer) => {
-    setLayers(prev => [...prev, { ...newLayer, maskVisible: true }]);
-    setActiveLayerId(newLayer.id);
+    setActiveWorkspaceState(ws => ({
+      ...ws,
+      layers: [...ws.layers, { ...newLayer, maskVisible: true }],
+      activeLayerId: newLayer.id,
+    }));
     addToHistory({ type: 'add_layer', layer: newLayer });
   };
 
   const updateLayer = React.useCallback((layerId: string, updatedPixels: Set<number>, newBounds: Layer['bounds']) => {
-    const oldLayer = layers.find(l => l.id === layerId);
-    setLayers(prev => prev.map(l => {
-      if (l.id === layerId) {
-        const engine = selectionEngineRef.current;
-        if (!engine) return l;
-        const newImageData = engine.createImageDataForLayer(updatedPixels, newBounds);
-        return { ...l, pixels: updatedPixels, bounds: newBounds, imageData: newImageData };
-      }
-      return l;
+    const oldLayer = activeWorkspace?.layers.find(l => l.id === layerId);
+    setActiveWorkspaceState(ws => ({
+      ...ws,
+      layers: ws.layers.map(l => {
+        if (l.id === layerId) {
+          const engine = selectionEngineRef.current;
+          if (!engine) return l;
+          const newImageData = engine.createImageDataForLayer(updatedPixels, newBounds);
+          return { ...l, pixels: updatedPixels, bounds: newBounds, imageData: newImageData };
+        }
+        return l;
+      }),
     }));
     if (oldLayer) {
         addToHistory({ type: 'update_layer', layerId, oldPixels: oldLayer.pixels, newPixels: updatedPixels });
     }
-  }, [layers, addToHistory]);
+  }, [activeWorkspace?.layers, addToHistory]);
 
   const removePixelsFromLayers = React.useCallback((pixelsToRemove: Set<number>) => {
     const layersToUpdate: {layerId: string, oldPixels: Set<number>}[] = [];
-    setLayers(prevLayers => {
-      return prevLayers.map(layer => {
+    setActiveWorkspaceState(ws => ({
+      ...ws,
+      layers: ws.layers.map(layer => {
         if ((layer.type === 'segmentation' || layer.subType === 'mask') && layer.visible) {
           const originalSize = layer.pixels.size;
           const newPixels = new Set([...layer.pixels].filter(p => !pixelsToRemove.has(p)));
@@ -294,60 +316,54 @@ function ProSegmentAIContent() {
           }
         }
         return layer;
-      });
-    });
+      })
+    }));
     if (layersToUpdate.length > 0) {
         addToHistory({ type: 'remove_pixels', layers: layersToUpdate, removedPixels: pixelsToRemove });
     }
   }, [addToHistory]);
 
   const toggleLayerVisibility = (layerId: string) => {
-    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l));
+    setActiveWorkspaceState(ws => ({ ...ws, layers: ws.layers.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l) }));
     addToHistory({ type: 'toggle_visibility', layerId });
   };
   
   const toggleLayerLock = (layerId: string) => {
-     if (layerId === "background-0") return;
-    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, locked: !l.locked } : l));
+     if (layerId === `background-${activeWorkspaceId}`) return;
+    setActiveWorkspaceState(ws => ({ ...ws, layers: ws.layers.map(l => l.id === layerId ? { ...l, locked: !l.locked } : l) }));
      addToHistory({ type: 'toggle_lock', layerId });
   };
 
   const toggleLayerMask = (layerId: string) => {
-    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, maskVisible: !(l.maskVisible ?? true) } : l));
+    setActiveWorkspaceState(ws => ({ ...ws, layers: ws.layers.map(l => l.id === layerId ? { ...l, maskVisible: !(l.maskVisible ?? true) } : l) }));
   };
 
   const deleteLayer = (layerId: string) => {
-    if (layerId === "background-0") return; // Cannot delete background
-    const layerToDelete = layers.find(l => l.id === layerId);
+    if (layerId === `background-${activeWorkspaceId}`) return; // Cannot delete background
+    const layerToDelete = activeWorkspace?.layers.find(l => l.id === layerId);
     if (!layerToDelete) return;
-
-    setLayers(prev => prev.filter(l => l.id !== layerId && l.parentId !== layerId));
+    
+    setActiveWorkspaceState(ws => {
+      const newLayers = ws.layers.filter(l => l.id !== layerId && l.parentId !== layerId);
+      const newActiveLayerId = ws.activeLayerId === layerId ? `background-${ws.id}` : ws.activeLayerId;
+      return { ...ws, layers: newLayers, activeLayerId: newActiveLayerId };
+    });
     addToHistory({ type: 'delete_layer', layer: layerToDelete });
-
-    if (activeLayerId === layerId) {
-      setActiveLayerId("background-0");
-    }
   };
 
   const handleUndo = React.useCallback(() => {
-    if (historyIndex < 0) return;
-    const action = history[historyIndex];
-
-    // TODO: Implement state reversal for different actions
+    if (!activeWorkspace || activeWorkspace.historyIndex < 0) return;
+    const action = activeWorkspace.history[activeWorkspace.historyIndex];
     toast({ title: "Undo", description: `Reverted: ${action.type}` });
-
-    setHistoryIndex(prev => prev - 1);
-  }, [history, historyIndex, toast]);
+    setActiveWorkspaceState(ws => ({...ws, historyIndex: ws.historyIndex - 1 }));
+  }, [activeWorkspace, toast]);
 
   const handleRedo = React.useCallback(() => {
-    if (historyIndex >= history.length - 1) return;
-    const action = history[historyIndex + 1];
-
-    // TODO: Implement state re-application for different actions
+    if (!activeWorkspace || activeWorkspace.historyIndex >= activeWorkspace.history.length - 1) return;
+    const action = activeWorkspace.history[activeWorkspace.historyIndex + 1];
     toast({ title: "Redo", description: `Re-applied: ${action.type}` });
-
-    setHistoryIndex(prev => prev + 1);
-  }, [history, historyIndex, toast]);
+    setActiveWorkspaceState(ws => ({...ws, historyIndex: ws.historyIndex + 1 }));
+  }, [activeWorkspace, toast]);
 
 
   const handleLassoSettingsChange = (newSettings: Partial<LassoSettings>) => {
@@ -378,13 +394,10 @@ function ProSegmentAIContent() {
   };
 
   const handleImageSelect = (url: string) => {
-    setImageUrl(url);
-    setSegmentationMask(null);
+    setActiveWorkspaceState(ws => ({...ws, imageUrl: url, segmentationMask: null, history: [], historyIndex: -1 }));
     if(clearSelectionRef.current) {
         clearSelectionRef.current();
     }
-    setHistory([]);
-    setHistoryIndex(-1);
   }
 
   React.useEffect(() => {
@@ -441,6 +454,22 @@ function ProSegmentAIContent() {
 
   const { toggleSidebar, state: sidebarState } = useSidebar();
 
+  const handleAddNewWorkspace = () => {
+    const newId = `ws-${Date.now()}`;
+    const newWorkspace = createNewWorkspace(newId, `Project ${workspaces.length + 1}`);
+    setWorkspaces(prev => [...prev, newWorkspace]);
+    setActiveWorkspaceId(newId);
+  };
+  
+  const handleCloseWorkspace = (workspaceId: string) => {
+    if (workspaces.length === 1) return;
+    setWorkspaces(prev => prev.filter(ws => ws.id !== workspaceId));
+    if (activeWorkspaceId === workspaceId) {
+      setActiveWorkspaceId(workspaces.find(ws => ws.id !== workspaceId)?.id || '');
+    }
+  }
+
+
   const renderLeftPanelContent = () => {
     switch(activeTool) {
       case 'magic-wand':
@@ -466,17 +495,11 @@ function ProSegmentAIContent() {
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
         {activeTopPanel === "zoom" && <PixelZoomPanel canvas={canvasRef.current} mousePos={canvasMousePos} selectionEngine={selectionEngineRef.current} onHoverChange={setIsLassoPreviewHovered} className="flex-1"/>}
         {activeTopPanel === "feather" && <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />}
-        {activeTopPanel === "layers" && <LayersPanel layers={layers} activeLayerId={activeLayerId} onLayerSelect={setActiveLayerId} onToggleVisibility={toggleLayerVisibility} onToggleLock={toggleLayerLock} onToggleMask={toggleLayerMask} onDeleteLayer={deleteLayer} draggedLayerId={draggedLayerId} setDraggedLayerId={setDraggedLayerId} dropTargetId={dropTargetId} setDropTargetId={setDropTargetId} onDrop={(draggedId, targetId) => { const draggedLayer = layers.find(l => l.id === draggedId); if (!draggedLayer || draggedId === targetId || draggedLayer.parentId === targetId) return; setLayers(currentLayers => { const newLayers = currentLayers.map(l => { if (l.id === draggedId) { return { ...l, parentId: targetId, subType: 'mask' as const }; } return l; }).filter(l => l.id !== draggedId); const targetLayerIndex = newLayers.findIndex(l => l.id === targetId); if (targetLayerIndex > -1) { if (newLayers[targetLayerIndex].modifiers?.find(m => m.id === draggedId)) return currentLayers; const draggedLayerWithParent = { ...draggedLayer, parentId: targetId, subType: 'mask' as const }; const targetLayer = newLayers[targetLayerIndex]; const existingModifiers = targetLayer.modifiers || []; newLayers[targetLayerIndex] = { ...targetLayer, modifiers: [...existingModifiers, draggedLayerWithParent] }; const draggedIndexInMain = newLayers.findIndex(l => l.id === draggedId); if (draggedIndexInMain > -1) { newLayers[draggedIndexInMain] = draggedLayerWithParent; } } return newLayers; }); }} />}
+        {activeTopPanel === "layers" && activeWorkspace && <LayersPanel layers={activeWorkspace.layers} activeLayerId={activeWorkspace.activeLayerId} onLayerSelect={(id) => setActiveWorkspaceState(ws => ({...ws, activeLayerId: id}))} onToggleVisibility={toggleLayerVisibility} onToggleLock={toggleLayerLock} onToggleMask={toggleLayerMask} onDeleteLayer={deleteLayer} draggedLayerId={null} setDraggedLayerId={() => {}} dropTargetId={null} setDropTargetId={() => {}} onDrop={(draggedId, targetId) => { const draggedLayer = activeWorkspace.layers.find(l => l.id === draggedId); if (!draggedLayer || draggedId === targetId || draggedLayer.parentId === targetId) return; setActiveWorkspaceState(ws => { const newLayers = ws.layers.map(l => { if (l.id === draggedId) { return { ...l, parentId: targetId, subType: 'mask' as const }; } return l; }).filter(l => l.id !== draggedId); const targetLayerIndex = newLayers.findIndex(l => l.id === targetId); if (targetLayerIndex > -1) { if (newLayers[targetLayerIndex].modifiers?.find(m => m.id === draggedId)) return ws; const draggedLayerWithParent = { ...draggedLayer, parentId: targetId, subType: 'mask' as const }; const targetLayer = newLayers[targetLayerIndex]; const existingModifiers = targetLayer.modifiers || []; newLayers[targetLayerIndex] = { ...targetLayer, modifiers: [...existingModifiers, draggedLayerWithParent] }; const draggedIndexInMain = newLayers.findIndex(l => l.id === draggedId); if (draggedIndexInMain > -1) { newLayers[draggedIndexInMain] = draggedLayerWithParent; } } return { ...ws, layers: newLayers }; }); }} />}
         {activeTopPanel === "ai" && (
           <Tabs defaultValue="models" className="flex h-full flex-col">
-            <TabsList className="m-2 grid grid-cols-3">
-                <TabsTrigger value="models">Models</TabsTrigger>
-                <TabsTrigger value="canny">Canny</TabsTrigger>
-                <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
-            </TabsList>
-            <TabsContent value="models" className="m-0 flex-1"><AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} /></TabsContent>
-            <TabsContent value="canny" className="m-0 flex-1"><CannyTuningPanel /></TabsContent>
-            <TabsContent value="inpaint" className="m-0 flex-1"><InpaintingPanel imageUrl={imageUrl} getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined} onGenerationComplete={(newUrl) => handleImageSelect(newUrl)} clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined} /></TabsContent>
+            <TabsContent value="models" className="m-0 flex-1"><AiModelsPanel setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))} setImageUrl={handleImageSelect} /></TabsContent>
+            <TabsContent value="inpaint" className="m-0 flex-1"><InpaintingPanel imageUrl={activeWorkspace?.imageUrl} getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined} onGenerationComplete={(newUrl) => handleImageSelect(newUrl)} clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined} /></TabsContent>
           </Tabs>
         )}
       </div>
@@ -502,7 +525,7 @@ function ProSegmentAIContent() {
     };
 
     clearTimers();
-    setHoveredZoom(null); // Hide immediately on leave or new enter
+    setHoveredZoom(null); 
 
     if (preset) {
       hoverTimeoutRef.current[preset] = setTimeout(() => {
@@ -510,203 +533,242 @@ function ProSegmentAIContent() {
       }, 200);
     }
   };
+  
+  if (!activeWorkspace) {
+    return <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">No active workspace.</div>
+  }
+  
+  const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
+  const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
   return (
     <div 
       className="flex h-screen w-screen items-stretch overflow-hidden bg-background text-foreground"
       style={{ '--right-panel-width': `${rightPanelWidth}px` } as React.CSSProperties}
     >
-        <Sidebar side="left" collapsible="icon" className="border-r">
-          <SidebarContent>
-            <SidebarHeader>
-              <Button variant="ghost" size="icon" className="h-12 w-12" onClick={toggleSidebar}>
-                <Settings2 />
-              </Button>
-            </SidebarHeader>
-            <SidebarSeparator />
-            <div className="flex-1 overflow-y-auto">
-              {renderLeftPanelContent()}
-            </div>
-          </SidebarContent>
-        </Sidebar>
+      <ToolPanel 
+        activeTool={activeTool} 
+        setActiveTool={setActiveTool}
+        onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+      />
 
-        <ToolPanel 
-          activeTool={activeTool} 
-          setActiveTool={setActiveTool}
-          onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-        />
-
-        <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-            <header 
-              className="flex h-12 items-center border-b px-2 z-10 bg-background/80 backdrop-blur-sm"
-              style={{ paddingRight: `var(--right-panel-width)` }}
-            >
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={handleUndo} disabled={historyIndex < 0}>
-                      <Undo2 className="w-5 h-5"/>
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={handleRedo} disabled={historyIndex >= history.length - 1}>
-                      <Redo2 className="w-5 h-5"/>
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <History className="w-5 h-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuSeparator />
-                        {history.length > 0 ? history.slice().reverse().map((action, index) => (
-                          <DropdownMenuItem key={action.id} onSelect={() => {}}>
-                              <span>{action.type.replace(/_/g, ' ')}</span>
-                          </DropdownMenuItem>
-                        )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <TooltipProvider>
-                      <div className="flex items-center gap-2">
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <Button
-                                      variant={activeZoom === 'A' ? "default" : "ghost"}
-                                      size="icon"
-                                      className={cn("h-9 w-9 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                                      onClick={() => setActiveZoom('A')}
-                                  >
-                                      <ZoomIn className="w-4 h-4"/>
-                                      <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
-                                  </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Activate Zoom A (1)</TooltipContent>
-                          </Tooltip>
-                            <div 
-                              className="group flex items-center"
-                              onMouseEnter={() => handleHoverZoom('A')}
-                              onMouseLeave={() => handleHoverZoom(null)}
-                          >
-                              <span 
-                                  className="text-sm font-medium px-2 py-1 text-center bg-background"
-                                  onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                              >
-                                  {(zoomA * 100).toFixed(0)}%
-                              </span>
-                              <div className={cn(
-                                  "overflow-hidden transition-all duration-300 ease-in-out",
-                                  hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
-                              )}>
-                                  <Slider 
-                                      value={[zoomA]}
-                                      onValueChange={(v) => setZoomA(v[0])}
-                                      min={0.1} max={10} step={0.1}
-                                  />
-                              </div>
-                          </div>
-                      </div>
-
-                        <div className="flex items-center gap-2">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                    <Button
-                                      variant={activeZoom === 'B' ? "default" : "ghost"}
-                                      size="icon"
-                                      className={cn("h-9 w-9 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                                      onClick={() => setActiveZoom('B')}
-                                  >
-                                      <ZoomIn className="w-4 h-4"/>
-                                      <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
-                                  </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Activate Zoom B (2)</TooltipContent>
-                          </Tooltip>
-                          <div 
-                              className="group flex items-center"
-                              onMouseEnter={() => handleHoverZoom('B')}
-                              onMouseLeave={() => handleHoverZoom(null)}
-                          >
-                              <span 
-                                  className="text-sm font-medium px-2 py-1 text-center bg-background"
-                                  onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                              >
-                                  {(zoomB * 100).toFixed(0)}%
-                              </span>
-                              <div className={cn(
-                                  "overflow-hidden transition-all duration-300 ease-in-out",
-                                  hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
-                              )}>
-                                  <Slider 
-                                      value={[zoomB]}
-                                      onValueChange={(v) => setZoomB(v[0])}
-                                      min={0.1} max={10} step={0.1}
-                                  />
-                              </div>
-                          </div>
-                      </div>
-                  </TooltipProvider>
-                </div>
-              </div>
-            </header>
-            <main className="flex-1 overflow-auto bg-muted/30">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
+          <header 
+            className="flex h-12 items-center justify-between border-b px-2 z-10 bg-background/80 backdrop-blur-sm"
+            style={{ paddingRight: (activeTopPanel || activeBottomPanel) ? `var(--right-panel-width)` : '0.5rem' }}
+          >
+            <WorkspaceTabs 
+              workspaces={workspaces}
+              activeWorkspaceId={activeWorkspaceId}
+              onWorkspaceSelect={setActiveWorkspaceId}
+              onWorkspaceAdd={handleAddNewWorkspace}
+              onWorkspaceClose={handleCloseWorkspace}
+            />
+            <Button variant="ghost" size="icon" onClick={() => setIsSplitView(p => !p)}>
+              <Split className={cn("w-5 h-5", isSplitView && "text-primary")} />
+            </Button>
+          </header>
+          
+          <main className="flex-1 flex overflow-auto bg-muted/30">
+            <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
+               <ImageCanvas 
+                  key={activeWorkspace.id}
+                  imageUrl={activeWorkspace.imageUrl}
+                  layers={activeWorkspace.layers}
+                  addLayer={addLayer}
+                  updateLayer={updateLayer}
+                  removePixelsFromLayers={removePixelsFromLayers}
+                  activeLayerId={activeWorkspace.activeLayerId}
+                  onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
+                  segmentationMask={activeWorkspace.segmentationMask}
+                  setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({ ...ws, segmentationMask: mask }))}
+                  activeTool={activeTool}
+                  lassoSettings={lassoSettings}
+                  magicWandSettings={magicWandSettings}
+                  negativeMagicWandSettings={negativeMagicWandSettings}
+                  getSelectionMaskRef={getSelectionMaskRef}
+                  clearSelectionRef={clearSelectionRef}
+                  onLassoSettingChange={handleLassoSettingsChange}
+                  onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                  onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                  canvasMousePos={canvasMousePos}
+                  setCanvasMousePos={setCanvasMousePos}
+                  getCanvasRef={canvasRef}
+                  getSelectionEngineRef={selectionEngineRef}
+                  isLassoPreviewHovered={isLassoPreviewHovered}
+                  mainCanvasZoom={mainCanvasZoom}
+                  pan={pan}
+                  setPan={setPan}
+                  onDragMouseDown={handleDragMouseDown}
+                  onDragMouseMove={handleDragMouseMove}
+                  onDragMouseUp={handleDragMouseUp}
+                  draggedLayer={draggedLayer}
+              />
+              {isSplitView && secondaryWorkspace && (
                  <ImageCanvas 
-                    imageUrl={imageUrl}
-                    layers={layers}
-                    addLayer={addLayer}
-                    updateLayer={updateLayer}
-                    removePixelsFromLayers={removePixelsFromLayers}
-                    activeLayerId={activeLayerId}
-                    onLayerSelect={setActiveLayerId}
-                    segmentationMask={segmentationMask}
-                    setSegmentationMask={setSegmentationMask}
+                    key={secondaryWorkspace.id}
+                    imageUrl={secondaryWorkspace.imageUrl}
+                    layers={secondaryWorkspace.layers}
+                    addLayer={() => {}}
+                    updateLayer={() => {}}
+                    removePixelsFromLayers={() => {}}
+                    activeLayerId={secondaryWorkspace.activeLayerId}
+                    onLayerSelect={() => {}}
+                    segmentationMask={secondaryWorkspace.segmentationMask}
+                    setSegmentationMask={() => {}}
                     activeTool={activeTool}
                     lassoSettings={lassoSettings}
                     magicWandSettings={magicWandSettings}
                     negativeMagicWandSettings={negativeMagicWandSettings}
-                    getSelectionMaskRef={getSelectionMaskRef}
-                    clearSelectionRef={clearSelectionRef}
-                    onLassoSettingChange={handleLassoSettingsChange}
-                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
-                    canvasMousePos={canvasMousePos}
-                    setCanvasMousePos={setCanvasMousePos}
-                    getCanvasRef={canvasRef}
-                    getSelectionEngineRef={selectionEngineRef}
-                    isLassoPreviewHovered={isLassoPreviewHovered}
+                    getSelectionMaskRef={React.useRef()}
+                    clearSelectionRef={React.useRef()}
+                    onLassoSettingChange={() => {}}
+                    onMagicWandSettingsChange={() => {}}
+                    onNegativeMagicWandSettingsChange={() => {}}
+                    canvasMousePos={null}
+                    setCanvasMousePos={() => {}}
+                    getCanvasRef={React.useRef()}
+                    getSelectionEngineRef={React.useRef()}
+                    isLassoPreviewHovered={false}
                     mainCanvasZoom={mainCanvasZoom}
                     pan={pan}
                     setPan={setPan}
-                    onDragMouseDown={handleDragMouseDown}
-                    onDragMouseMove={handleDragMouseMove}
-                    onDragMouseUp={handleDragMouseUp}
-                    draggedLayer={draggedLayer}
+                    onDragMouseDown={() => {}}
+                    onDragMouseMove={() => {}}
+                    onDragMouseUp={() => {}}
+                    draggedLayer={null}
                 />
-            </main>
-             <AssetDrawer
-                isOpen={isAssetDrawerOpen}
-                onToggle={() => setIsAssetDrawerOpen(prev => !prev)}
-                onImageSelect={handleImageSelect}
-                rightPanelWidth={rightPanelWidth}
-             />
-        </div>
+              )}
+            </div>
+          </main>
 
+           <AssetDrawer
+              isOpen={isAssetDrawerOpen}
+              onToggle={() => setIsAssetDrawerOpen(prev => !prev)}
+              onImageSelect={handleImageSelect}
+              rightPanelWidth={rightPanelWidth}
+           />
+      </div>
+
+      {(activeTopPanel || activeBottomPanel) && (
         <div 
           className="absolute top-0 right-0 h-full flex flex-col border-l bg-background/80 backdrop-blur-sm z-20" 
           style={{ width: rightPanelWidth }}
         >
-          { (activeTopPanel || activeBottomPanel) && (
-              <div 
-                onMouseDown={handleMouseDownResize}
-                className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group")}
-              >
-                <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
-              </div>
-            )
-          }
+          <div 
+            onMouseDown={handleMouseDownResize}
+            className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group")}
+          >
+            <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
+          </div>
             
-          <div className="flex h-12 items-center justify-end border-b px-2">
-            <Tabs value={activeTopPanel || 'none'} className="w-full">
+          <div className="flex h-12 items-center justify-between border-b px-2">
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={handleUndo} disabled={activeWorkspace.historyIndex < 0}>
+                <Undo2 className="w-5 h-5"/>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleRedo} disabled={activeWorkspace.historyIndex >= activeWorkspace.history.length - 1}>
+                <Redo2 className="w-5 h-5"/>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <History className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuSeparator />
+                  {activeWorkspace.history.length > 0 ? activeWorkspace.history.slice().reverse().map((action, index) => (
+                    <DropdownMenuItem key={action.id} onSelect={() => {}}>
+                        <span>{action.type.replace(/_/g, ' ')}</span>
+                    </DropdownMenuItem>
+                  )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                  <div className="flex items-center gap-2">
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Button
+                                  variant={activeZoom === 'A' ? "default" : "ghost"}
+                                  size="icon"
+                                  className={cn("h-9 w-9 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                  onClick={() => setActiveZoom('A')}
+                              >
+                                  <ZoomIn className="w-4 h-4"/>
+                                  <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Activate Zoom A (1)</TooltipContent>
+                      </Tooltip>
+                        <div 
+                          className="group flex items-center"
+                          onMouseEnter={() => handleHoverZoom('A')}
+                          onMouseLeave={() => handleHoverZoom(null)}
+                      >
+                          <span 
+                              className="text-sm font-medium px-2 py-1 text-center bg-background"
+                              onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                          >
+                              {(zoomA * 100).toFixed(0)}%
+                          </span>
+                          <div className={cn(
+                              "overflow-hidden transition-all duration-300 ease-in-out",
+                              hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
+                          )}>
+                              <Slider 
+                                  value={[zoomA]}
+                                  onValueChange={(v) => setZoomA(v[0])}
+                                  min={0.1} max={10} step={0.1}
+                              />
+                          </div>
+                      </div>
+                  </div>
+
+                    <div className="flex items-center gap-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                                <Button
+                                  variant={activeZoom === 'B' ? "default" : "ghost"}
+                                  size="icon"
+                                  className={cn("h-9 w-9 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                  onClick={() => setActiveZoom('B')}
+                              >
+                                  <ZoomIn className="w-4 h-4"/>
+                                  <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Activate Zoom B (2)</TooltipContent>
+                      </Tooltip>
+                      <div 
+                          className="group flex items-center"
+                          onMouseEnter={() => handleHoverZoom('B')}
+                          onMouseLeave={() => handleHoverZoom(null)}
+                      >
+                          <span 
+                              className="text-sm font-medium px-2 py-1 text-center bg-background"
+                              onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                          >
+                              {(zoomB * 100).toFixed(0)}%
+                          </span>
+                          <div className={cn(
+                              "overflow-hidden transition-all duration-300 ease-in-out",
+                              hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
+                          )}>
+                              <Slider 
+                                  value={[zoomB]}
+                                  onValueChange={(v) => setZoomB(v[0])}
+                                  min={0.1} max={10} step={0.1}
+                              />
+                          </div>
+                      </div>
+                  </div>
+              </TooltipProvider>
+            </div>
+             <Tabs value={activeTopPanel || 'none'} className="w-full">
               <TooltipProvider>
                   <TabsList className="grid w-full grid-cols-4">
                       <Tooltip>
@@ -730,15 +792,13 @@ function ProSegmentAIContent() {
             </Tabs>
           </div>
             
-          {(activeTopPanel || activeBottomPanel) && (
-            <div className="flex-1 flex flex-col min-h-0">
-                {renderTopPanelContent()}
-              
-              {activeTopPanel && activeBottomPanel && <Separator />}
+          <div className="flex-1 flex flex-col min-h-0">
+              {renderTopPanelContent()}
+            
+            {activeTopPanel && activeBottomPanel && <Separator />}
 
-                {renderBottomPanelContent()}
-            </div>
-          )}
+              {renderBottomPanelContent()}
+          </div>
 
           <div className="flex h-12 items-center border-t px-2">
             <Tabs value={activeBottomPanel || 'none'} className="w-full">
@@ -765,8 +825,49 @@ function ProSegmentAIContent() {
             </Tabs>
           </div>
         </div>
-      </div>
+      )}
+    </div>
   )
+}
+
+function WorkspaceTabs({ 
+  workspaces, 
+  activeWorkspaceId, 
+  onWorkspaceSelect, 
+  onWorkspaceAdd,
+  onWorkspaceClose,
+}: {
+  workspaces: WorkspaceState[];
+  activeWorkspaceId: string;
+  onWorkspaceSelect: (id: string) => void;
+  onWorkspaceAdd: () => void;
+  onWorkspaceClose: (id: string) => void;
+}) {
+  return (
+    <div className="flex-1 flex items-end -mb-px">
+      {workspaces.map(ws => (
+        <div
+          key={ws.id}
+          onClick={() => onWorkspaceSelect(ws.id)}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 border-b-2 cursor-pointer text-sm font-medium transition-colors",
+            "rounded-t-md border",
+            activeWorkspaceId === ws.id 
+              ? "bg-muted border-primary border-b-background text-primary" 
+              : "border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          )}
+        >
+          <span>{ws.name}</span>
+          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); onWorkspaceClose(ws.id) }}>
+            <XIcon className="w-3 h-3" />
+          </Button>
+        </div>
+      ))}
+       <Button variant="ghost" size="icon" className="h-8 w-8 ml-1" onClick={onWorkspaceAdd}>
+        <Plus className="w-4 h-4" />
+      </Button>
+    </div>
+  );
 }
 
 
