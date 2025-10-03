@@ -601,8 +601,7 @@ function ProSegmentAIContent() {
       </Sidebar>
       
       <div className="flex-1 flex flex-col relative">
-        <main className="flex-1 h-full w-full bg-muted/30 overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-20 h-full z-30 bg-background/80 backdrop-blur-sm">
+        <div className="absolute top-0 left-0 h-full z-30 bg-background/80 backdrop-blur-sm">
             <ToolPanel
                 activeTool={activeTool}
                 setActiveTool={setActiveTool}
@@ -610,9 +609,10 @@ function ProSegmentAIContent() {
                 onToggleSidebar={() => {}}
                 showHotkeys={showHotkeyLabels}
             />
-          </div>
+        </div>
 
-          <header className="absolute top-0 left-20 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
+        <main className="flex-1 h-full w-full bg-muted/30 overflow-hidden relative pl-20">
+          <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
             <div className="flex items-center gap-4 flex-1">
             <WorkspaceTabs 
                 workspaces={workspaces}
@@ -737,7 +737,7 @@ function ProSegmentAIContent() {
             </div>
           </header>
 
-          <div className="h-full ml-20">
+          <div className="h-full">
             <div className={cn("h-full w-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
                 <ImageCanvas 
                 key={activeWorkspace.id}
@@ -940,6 +940,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
