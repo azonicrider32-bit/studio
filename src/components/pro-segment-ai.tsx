@@ -467,7 +467,7 @@ export function ProSegmentAI() {
           onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
         />
 
-        <div className="flex flex-1 flex-col h-screen overflow-hidden" style={{ marginRight: rightPanelVisible ? rightPanelWidth : 0 }}>
+        <div className="flex flex-1 flex-col h-screen overflow-hidden">
             <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
@@ -511,66 +511,68 @@ export function ProSegmentAI() {
              />
         </div>
 
-        <div className="relative flex h-screen flex-col border-l" style={{ width: rightPanelWidth }}>
-          <div 
-            onMouseDown={handleMouseDownResize}
-            className="absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group"
-          >
-            <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
-          </div>
-            
-            <Tabs value={activeTopPanel || 'none'}>
-                <SidebarHeader>
-                    <TooltipProvider>
-                        <TabsList className="grid w-full grid-cols-4">
-                            <Tooltip>
-                                <TooltipTrigger asChild><TabsTrigger value="tools" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'tools' ? null : 'tools')}><Wand2 className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                                <TooltipContent>Tool Options</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                                <TooltipContent>Feather & Edges</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                                <TooltipContent>Layers</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                                <TooltipContent>AI Tools</TooltipContent>
-                            </Tooltip>
-                        </TabsList>
-                    </TooltipProvider>
-                </SidebarHeader>
-                <Separator />
-            </Tabs>
-            
-            <div className="flex-1 flex flex-col min-h-0">
-                 <div className={!activeTopPanel ? 'hidden' : (activeBottomPanel ? 'h-1/2 overflow-y-auto' : 'h-full overflow-y-auto')}>
-                    {renderTopPanelContent()}
-                </div>
-                
-                <div className={activeTopPanel && activeBottomPanel ? "h-px bg-border" : "hidden"}></div>
-
-                <div className={!activeBottomPanel ? 'hidden' : (activeTopPanel ? 'h-1/2 overflow-y-auto' : 'h-full overflow-y-auto')}>
-                   {renderBottomPanelContent()}
-                </div>
+        {rightPanelVisible && (
+          <div className="relative flex h-screen flex-col border-l" style={{ width: rightPanelWidth }}>
+            <div 
+              onMouseDown={handleMouseDownResize}
+              className="absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group"
+            >
+              <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
             </div>
+              
+              <Tabs value={activeTopPanel || 'none'}>
+                  <SidebarHeader>
+                      <TooltipProvider>
+                          <TabsList className="grid w-full grid-cols-4">
+                              <Tooltip>
+                                  <TooltipTrigger asChild><TabsTrigger value="tools" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'tools' ? null : 'tools')}><Wand2 className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                                  <TooltipContent>Tool Options</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                  <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                                  <TooltipContent>Feather & Edges</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                  <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                                  <TooltipContent>Layers</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                  <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                                  <TooltipContent>AI Tools</TooltipContent>
+                              </Tooltip>
+                          </TabsList>
+                      </TooltipProvider>
+                  </SidebarHeader>
+                  <Separator />
+              </Tabs>
+              
+              <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex-1 overflow-y-auto">
+                      {renderTopPanelContent()}
+                  </div>
+                  
+                  {activeTopPanel && activeBottomPanel && <Separator />}
 
-            <Tabs value={activeBottomPanel || 'none'}>
-              <Separator />
-              <SidebarHeader>
-                <TooltipProvider>
-                  <TabsList className="grid w-full grid-cols-4">
-                    <Tooltip>
-                      <TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                      <TooltipContent>Telemetry</TooltipContent>
-                    </Tooltip>
-                  </TabsList>
-                </TooltipProvider>
-              </SidebarHeader>
-            </Tabs>
-        </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {renderBottomPanelContent()}
+                  </div>
+              </div>
+
+              <Tabs value={activeBottomPanel || 'none'}>
+                <Separator />
+                <SidebarHeader>
+                  <TooltipProvider>
+                    <TabsList className="grid w-full grid-cols-4">
+                      <Tooltip>
+                        <TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                        <TooltipContent>Telemetry</TooltipContent>
+                      </Tooltip>
+                    </TabsList>
+                  </TooltipProvider>
+                </SidebarHeader>
+              </Tabs>
+          </div>
+        )}
       </div>
     </SidebarProvider>
   )
