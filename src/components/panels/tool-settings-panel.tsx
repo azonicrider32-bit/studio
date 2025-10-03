@@ -406,14 +406,14 @@ export function ToolSettingsPanel({
                <div className="space-y-2">
                 <TooltipProvider>
                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
-                        <VerticalLassoSlider settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
-                        <VerticalLassoSlider settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
-                        <VerticalLassoSlider settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
+                        <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
+                        <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
+                        <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
                     </div>
                     <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md mt-2">
-                        <VerticalLassoSlider settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
-                        <VerticalLassoSlider settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
-                        <VerticalLassoSlider settingKey="colorInfluence" label="Color" max={1} step={0.05} />
+                        <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
+                        <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
+                        <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="colorInfluence" label="Color" max={1} step={0.05} />
                     </div>
                 </TooltipProvider>
                  <div className="flex items-center justify-between mt-4 px-2">
