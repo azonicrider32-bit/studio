@@ -25,6 +25,11 @@ import {
   ZoomIn,
   Plus,
   X as XIcon,
+  FolderOpen,
+  Download,
+  Cpu,
+  User,
+  Keyboard,
 } from "lucide-react"
 
 import {
@@ -136,7 +141,7 @@ function ProSegmentAIContent() {
   const activeWorkspaceIndex = workspaces.findIndex(ws => ws.id === activeWorkspaceId);
   
   const { state: sidebarState, open: isSidebarOpen, setOpen: setIsSidebarOpen } = useSidebar();
-  const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(true);
+  const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(false);
 
 
   const setActiveWorkspaceState = (updater: (prevState: WorkspaceState) => WorkspaceState) => {
@@ -908,6 +913,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
