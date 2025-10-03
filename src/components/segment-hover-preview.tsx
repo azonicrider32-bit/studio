@@ -5,7 +5,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { MagicWandSettings } from '@/lib/types';
 import { Button } from './ui/button';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Settings } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Label } from './ui/label';
+import { Slider } from './ui/slider';
 
 interface SegmentHoverPreviewProps {
   mousePos: { x: number; y: number } | null;
@@ -17,6 +20,8 @@ interface SegmentHoverPreviewProps {
 export function SegmentHoverPreview({ mousePos, canvas, settings, className }: SegmentHoverPreviewProps) {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = useState(16);
+  const [deadZone, setDeadZone] = useState(80);
+  const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const size = 256; 
 
   useEffect(() => {
@@ -28,7 +33,6 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
 
     previewCtx.imageSmoothingEnabled = false;
     
-    // Draw checkerboard background
     previewCtx.fillStyle = '#666';
     previewCtx.fillRect(0, 0, size, size);
     previewCtx.fillStyle = '#999';
@@ -41,14 +45,28 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
     }
 
     const sourceSize = size / zoom;
-    const sourceX = mousePos.x - sourceSize / 2;
-    const sourceY = mousePos.y - sourceSize / 2;
+    const deadZoneSize = sourceSize * (deadZone / 100);
 
-    // Draw the zoomed-in portion of the main canvas
+    const viewCenterX = viewPositionRef.current.x + sourceSize / 2;
+    const viewCenterY = viewPositionRef.current.y + sourceSize / 2;
+    
+    const dx = mousePos.x - viewCenterX;
+    const dy = mousePos.y - viewCenterY;
+
+    if (Math.abs(dx) > deadZoneSize / 2) {
+      viewPositionRef.current.x += dx - (Math.sign(dx) * deadZoneSize / 2);
+    }
+    if (Math.abs(dy) > deadZoneSize / 2) {
+      viewPositionRef.current.y += dy - (Math.sign(dy) * deadZoneSize / 2);
+    }
+    
+    viewPositionRef.current.x = Math.max(0, Math.min(canvas.width - sourceSize, viewPositionRef.current.x));
+    viewPositionRef.current.y = Math.max(0, Math.min(canvas.height - sourceSize, viewPositionRef.current.y));
+
     previewCtx.drawImage(
       canvas,
-      sourceX,
-      sourceY,
+      viewPositionRef.current.x,
+      viewPositionRef.current.y,
       sourceSize,
       sourceSize,
       0,
@@ -57,10 +75,7 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
       size
     );
 
-    // Draw overlays
     previewCtx.save();
-    
-    // Center crosshair
     previewCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     previewCtx.lineWidth = 1;
     previewCtx.beginPath();
@@ -69,10 +84,9 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
     previewCtx.moveTo(0, size / 2);
     previewCtx.lineTo(size, size / 2);
     previewCtx.stroke();
-    
     previewCtx.restore();
 
-  }, [mousePos, canvas, size, zoom, settings]);
+  }, [mousePos, canvas, size, zoom, settings, deadZone]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.stopPropagation();
@@ -108,6 +122,41 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
         <div className="w-px h-full bg-white/50 absolute"></div>
         <div className="h-px w-full bg-white/50 absolute"></div>
         <div className="w-[calc(100%/16)] h-[calc(100%/16)] border-2 border-accent rounded-sm"></div>
+        <div 
+          className="absolute rounded-sm border border-dashed border-white/50"
+          style={{
+              width: `${deadZone}%`, 
+              height: `${deadZone}%`,
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)'
+          }}
+        ></div>
+      </div>
+      <div className="absolute top-2 left-2 flex gap-1">
+         <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="h-6 w-6">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-4" side="bottom" align="start">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="deadzone-slider">Dead Zone Buffer: {deadZone}%</Label>
+                <Slider
+                  id="deadzone-slider"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={[deadZone]}
+                  onValueChange={(value) => setDeadZone(value[0])}
+                />
+                <p className='text-xs text-muted-foreground'>Controls how far the cursor moves before the preview pans.</p>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       <div className="absolute bottom-2 right-2 flex gap-1">
         <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(-4)}><Minus className="w-4 h-4"/></Button>
@@ -119,5 +168,3 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
     </div>
   );
 }
-
-    

@@ -254,4 +254,3 @@ export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChang
     </div>
   );
 }
-
