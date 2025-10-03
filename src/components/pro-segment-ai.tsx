@@ -74,7 +74,6 @@ import { Slider } from "./ui/slider"
 import { Switch } from "./ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { TelemetryPanel } from "./panels/telemetry-panel"
-import { ToolPanel } from "./tool-panel"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { AiChatPanel } from "./panels/ai-chat-panel"
@@ -83,6 +82,7 @@ import { FeatherPanel } from "./panels/feather-panel"
 import { cn } from "@/lib/utils"
 import { useSelectionDrag } from "@/hooks/use-selection-drag"
 import { useToast } from "@/hooks/use-toast"
+import { ToolPanel } from "./tool-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
@@ -599,17 +599,18 @@ function ProSegmentAIContent() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground" style={{'--right-panel-width': `${rightPanelWidth}px`} as React.CSSProperties}>
-      <ToolPanel 
-        activeTool={activeTool} 
-        setActiveTool={setActiveTool}
-        onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-      />
       
       <Sidebar>
         <SidebarContent>
            {renderLeftPanelContent()}
         </SidebarContent>
       </Sidebar>
+
+      <ToolPanel 
+        activeTool={activeTool} 
+        setActiveTool={setActiveTool}
+        onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+      />
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <header className="flex h-12 shrink-0 items-center border-b px-4 z-10 bg-background/80 backdrop-blur-sm">
