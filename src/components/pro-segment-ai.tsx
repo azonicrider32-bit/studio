@@ -602,17 +602,19 @@ function ProSegmentAIContent() {
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen w-screen overflow-hidden bg-background/0 text-foreground">
       <div className="flex">
-        <Sidebar collapsible="icon" className={cn(!isSidebarOpen && "hidden")}>
+        <Sidebar collapsible="icon">
             <SidebarHeader>
+                 <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(prev => !prev)} className="h-12 w-12 text-foreground/50">
+                    <PanelLeft />
+                </Button>
             </SidebarHeader>
             <SidebarContent>
                 {renderLeftPanelContent()}
             </SidebarContent>
         </Sidebar>
-
-        <ToolPanel
+         <ToolPanel
             activeTool={activeTool}
             setActiveTool={setActiveTool}
             onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
@@ -621,7 +623,7 @@ function ProSegmentAIContent() {
       </div>
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="flex h-12 shrink-0 items-center border-b px-4 z-10 bg-background/80 backdrop-blur-sm">
+        <header className="flex h-12 shrink-0 items-center border-b border-border/50 px-4 z-10 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-4 flex-1">
             <WorkspaceTabs 
               workspaces={workspaces}
@@ -821,7 +823,7 @@ function ProSegmentAIContent() {
       </div>
 
       <div 
-        className="relative flex flex-col border-l bg-background/80 backdrop-blur-sm z-20"
+        className="relative flex flex-col border-l border-border/50 bg-background/80 backdrop-blur-sm z-20"
         style={{ width: rightPanelWidth }}
       >
         <div 
@@ -832,7 +834,7 @@ function ProSegmentAIContent() {
         </div>
         
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="border-b">
+          <div className="border-b border-border/50">
             <Tabs value={activeTopPanel || 'none'} className="w-full">
               <TooltipProvider>
                   <TabsList className="grid w-full grid-cols-4">
@@ -850,7 +852,7 @@ function ProSegmentAIContent() {
         <div className="flex flex-col min-h-0 justify-end">
           {activeTopPanel && activeBottomPanel && <Separator />}
           {renderBottomPanelContent()}
-          <div className="border-t">
+          <div className="border-t border-border/50">
             <Tabs value={activeBottomPanel || 'none'} className="w-full">
               <TooltipProvider>
                 <TabsList className="grid w-full grid-cols-3">
@@ -909,15 +911,6 @@ function WorkspaceTabs({
 
 
 export function ProSegmentAI() {
-  const [isClient, setIsClient] = React.useState(false);
-  React.useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  if (!isClient) {
-    return null;
-  }
-  
   return (
     <SidebarProvider>
       <ProSegmentAIContent />
