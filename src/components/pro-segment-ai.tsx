@@ -584,24 +584,23 @@ function ProSegmentAIContent() {
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
   return (
-    <div className="flex h-screen w-screen bg-background text-foreground">
-      <div className="flex">
-        <Sidebar collapsible="icon">
-            <SidebarHeader/>
-            <SidebarContent>
-                {renderLeftPanelContent()}
-            </SidebarContent>
-        </Sidebar>
-        <ToolPanel
-          activeTool={activeTool}
-          setActiveTool={setActiveTool}
-          onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-          onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-          showHotkeys={showHotkeyLabels}
-        />
-      </div>
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
+    <div className="h-screen w-screen grid" style={{ gridTemplateColumns: 'auto 80px 1fr auto' }}>
+      <Sidebar collapsible="icon">
+          <SidebarHeader/>
+          <SidebarContent>
+              {renderLeftPanelContent()}
+          </SidebarContent>
+      </Sidebar>
+      <ToolPanel
+        activeTool={activeTool}
+        setActiveTool={setActiveTool}
+        onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+        showHotkeys={showHotkeyLabels}
+      />
+
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <header className="absolute top-0 left-0 right-0 h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
             <div className="flex items-center gap-4 flex-1">
               <WorkspaceTabs 
                 workspaces={workspaces}
@@ -623,7 +622,7 @@ function ProSegmentAIContent() {
                                   onClick={() => setActiveZoom('A')}
                               >
                                   <ZoomIn className="w-4 h-4"/>
-                                  <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
+                                  {showHotkeyLabels && <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>}
                               </Button>
                           </TooltipTrigger>
                           <TooltipContent>Activate Zoom A (1)</TooltipContent>
@@ -661,7 +660,7 @@ function ProSegmentAIContent() {
                                   onClick={() => setActiveZoom('B')}
                               >
                                   <ZoomIn className="w-4 h-4"/>
-                                  <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
+                                  {showHotkeyLabels && <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>}
                               </Button>
                           </TooltipTrigger>
                           <TooltipContent>Activate Zoom B (2)</TooltipContent>
@@ -718,7 +717,7 @@ function ProSegmentAIContent() {
             </div>
         </header>
 
-        <main className="flex-1 flex bg-muted/30 relative">
+        <main className="flex-1 flex bg-muted/30 pt-12">
           <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
             <ImageCanvas 
               key={activeWorkspace.id}
@@ -814,10 +813,10 @@ function ProSegmentAIContent() {
             <Tabs value={activeTopPanel || 'none'} className="w-full">
               <TooltipProvider>
                   <TabsList className="grid w-full grid-cols-4">
-                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span></TabsTrigger></TooltipTrigger><TooltipContent>Zoom Panel (Z)</TooltipContent></Tooltip>
-                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span></TabsTrigger></TooltipTrigger><TooltipContent>Feather & Edges (F)</TooltipContent></Tooltip>
-                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span></TabsTrigger></TooltipTrigger><TooltipContent>Layers (L)</TooltipContent></Tooltip>
-                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Tools (A)</TooltipContent></Tooltip>
+                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Zoom Panel (Z)</TooltipContent></Tooltip>
+                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Feather & Edges (F)</TooltipContent></Tooltip>
+                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Layers (L)</TooltipContent></Tooltip>
+                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span>}</TabsTrigger></TooltipTrigger><TooltipContent>AI Tools (A)</TooltipContent></Tooltip>
                   </TabsList>
               </TooltipProvider>
             </Tabs>
@@ -832,9 +831,9 @@ function ProSegmentAIContent() {
             <Tabs value={activeBottomPanel || 'none'} className="w-full">
               <TooltipProvider>
                 <TabsList className="grid w-full grid-cols-3">
-                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span></TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
-                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
-                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span></TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
+                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
+                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span>}</TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
+                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
                 </TabsList>
               </TooltipProvider>
             </Tabs>
@@ -909,6 +908,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
