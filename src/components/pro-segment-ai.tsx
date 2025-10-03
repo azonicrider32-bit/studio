@@ -602,7 +602,6 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
-  const toolPanelWidth = 68;
   const sidebarCurrentWidth = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
 
 
@@ -622,11 +621,10 @@ function ProSegmentAIContent() {
       </Sidebar>
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        
-      <header
+        <header
           className="absolute top-0 h-12 shrink-0 items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm flex"
           style={{
-            left: `calc(${sidebarCurrentWidth} + ${toolPanelWidth}px)`,
+            left: `calc(${sidebarCurrentWidth} + 68px)`,
             right: `${rightPanelWidth}px`,
             transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out',
           }}
@@ -747,14 +745,14 @@ function ProSegmentAIContent() {
           </div>
         </header>
 
-        <ToolPanel
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-            onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-            onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-        />
-        
-        <main className="flex-1 flex bg-muted/30 relative">
+        <main 
+          className="flex-1 flex bg-muted/30 relative"
+          style={{ 
+            paddingTop: '3rem',
+            paddingLeft: `calc(${sidebarCurrentWidth} + 68px)`,
+            transition: 'padding-left 0.2s ease-in-out',
+          }}
+        >
             <div className={cn("w-full h-full absolute top-0 left-0", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
                 <ImageCanvas 
                 key={activeWorkspace.id}
@@ -825,6 +823,12 @@ function ProSegmentAIContent() {
                 />
             )}
             </div>
+            <ToolPanel
+                activeTool={activeTool}
+                setActiveTool={setActiveTool}
+                onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+                onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+            />
         </main>
         
 
@@ -934,6 +938,7 @@ export function ProSegmentAI() {
     
 
     
+
 
 
 
