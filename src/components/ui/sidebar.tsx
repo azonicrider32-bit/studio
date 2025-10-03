@@ -22,9 +22,9 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_WIDTH = "20rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
-const SIDEBAR_WIDTH_ICON = "3rem"
+const SIDEBAR_WIDTH_ICON = "0rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 type SidebarContext = {
@@ -230,12 +230,12 @@ const Sidebar = React.forwardRef<
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
               ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
+              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l"
           )}
         />
         <div
           className={cn(
-            "duration-200 fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
+            "duration-200 fixed inset-y-0 z-40 hidden h-svh w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -249,7 +249,7 @@ const Sidebar = React.forwardRef<
         >
           <div
             data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+            className="flex h-full w-full flex-col bg-background/80 backdrop-blur-sm border-r border-border/50 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
           >
             {children}
           </div>
@@ -265,10 +265,27 @@ const SidebarTrigger = React.forwardRef<
   React.ComponentProps<typeof Button> & { asChild?: boolean }
 >(({ className, onClick, children, asChild, ...props }, ref) => {
   const { toggleSidebar } = useSidebar()
-  const Comp = asChild ? Slot : Button
+  const Comp = asChild ? Slot : "button";
+
+  const triggerContent = children || <PanelLeft />;
+
+  if (asChild) {
+      return (
+          <Slot
+              ref={ref as any}
+              onClick={(event) => {
+                  onClick?.(event);
+                  toggleSidebar();
+              }}
+              {...props}
+          >
+              {triggerContent}
+          </Slot>
+      );
+  }
 
   return (
-    <Comp
+    <Button
       ref={ref}
       data-sidebar="trigger"
       variant="ghost"
@@ -280,8 +297,8 @@ const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      {children || <PanelLeft />}
-    </Comp>
+      {triggerContent}
+    </Button>
   )
 })
 SidebarTrigger.displayName = "SidebarTrigger"

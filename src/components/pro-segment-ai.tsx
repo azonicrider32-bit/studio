@@ -155,7 +155,7 @@ function ProSegmentAIContent() {
   const activeWorkspace = workspaces.find(ws => ws.id === activeWorkspaceId);
   const activeWorkspaceIndex = workspaces.findIndex(ws => ws.id === activeWorkspaceId);
   
-  const { state: sidebarState, toggleSidebar, open: isSidebarOpen, setOpen: setIsSidebarOpen } = useSidebar();
+  const { state: sidebarState, open: isSidebarOpen, setOpen: setIsSidebarOpen } = useSidebar();
 
 
   const setActiveWorkspaceState = (updater: (prevState: WorkspaceState) => WorkspaceState) => {
@@ -602,17 +602,17 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
-  const toolPanelWidth = 68; // 4rem + 2*p-2 = 64px + 16px = 80px approx. Let's use a fixed number.
+  const toolPanelWidth = 68;
   const sidebarCurrentWidth = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
 
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background/0 text-foreground">
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <Sidebar collapsible="icon">
           <SidebarHeader>
-             <SidebarTrigger>
+             <SidebarTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-12 w-12 text-foreground/50">
-                    {isSidebarOpen ? <ChevronLeft /> : <ChevronRight />}
+                    <PanelLeft />
                 </Button>
             </SidebarTrigger>
           </SidebarHeader>
@@ -934,6 +934,7 @@ export function ProSegmentAI() {
     
 
     
+
 
 
 

@@ -50,17 +50,16 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onTo
   
   return (
     <div 
-        className="absolute top-0 bottom-0 flex flex-col items-center justify-between gap-2 border-r border-border/50 bg-background/80 backdrop-blur-sm p-2 z-10"
+        className="absolute top-0 bottom-0 flex flex-col items-center justify-between gap-2 border-r border-border/50 bg-background/80 backdrop-blur-sm p-2 z-30"
         style={{
             left: sidebarWidthVar,
-            paddingTop: '3rem', // Align with main content padding
             transition: 'left 0.2s ease-in-out',
         }}
     >
       <div className="flex flex-col items-center gap-2">
         <div className="h-14 w-14 flex items-center justify-center">
             <div className="font-headline font-black text-4xl ps-logo">
-                PS
+                Ps
             </div>
         </div>
         <TooltipProvider>
@@ -95,13 +94,12 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onTo
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="h-12 w-12 relative ps-tool-icon-container">
                         <div className="ps-tool-icon">
-                            <PanelLeft className="h-5 w-5 ps-tool-icon__icon" />
+                            <SlidersHorizontal className="h-5 w-5 ps-tool-icon__icon" />
                         </div>
-                        <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">B</span>
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                    <p>Toggle Settings Panel (B)</p>
+                    <p>Toggle Settings Panel</p>
                 </TooltipContent>
             </Tooltip>
             <Tooltip>
