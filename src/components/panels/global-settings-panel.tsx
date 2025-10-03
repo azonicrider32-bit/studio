@@ -2,13 +2,98 @@
 "use client"
 
 import * as React from "react"
+import {
+  Brush,
+  Palette,
+  User,
+  FolderOpen,
+  Download,
+  Cpu,
+  Keyboard
+} from "lucide-react"
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "../ui/label"
 import { Switch } from "../ui/switch"
 import { TelemetryPanel } from "./telemetry-panel"
+import { Button } from "../ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Input } from "../ui/input"
 
-export function GlobalSettingsPanel() {
-  const [showHotkeys, setShowHotkeys] = React.useState(true)
+const hotkeys = [
+  { tool: 'Transform', key: 'V' },
+  { tool: 'Magic Wand', key: 'W' },
+  { tool: 'Intelligent Lasso', key: 'L' },
+  { tool: 'Line Tool', key: 'P' },
+  { tool: 'Brush', key: 'B' },
+  { tool: 'Eraser', key: 'E' },
+  { tool: 'Pan Tool', key: 'H' },
+  { tool: 'Clone Stamp', key: 'C' },
+  { tool: 'Asset Library', key: 'O' },
+  { tool: 'Undo', key: 'Ctrl+Z' },
+  { tool: 'Redo', key: 'Ctrl+Y' },
+];
+
+function UIAdjusterPanel() {
+  const [primaryColor, setPrimaryColor] = React.useState("#6366f1");
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = e.target.value;
+    setPrimaryColor(newColor);
+    // In a real app, you'd update the CSS variables here
+    // document.documentElement.style.setProperty('--primary', newColor);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="w-5 h-5"/>
+            Theme Customization
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="primary-color">Primary Color</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="primary-color"
+                type="color"
+                value={primaryColor}
+                onChange={handleColorChange}
+                className="w-12 h-10 p-1"
+              />
+              <span className="font-mono">{primaryColor}</span>
+            </div>
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="font-select">Font Family</Label>
+             <select id="font-select" className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <option>Inter</option>
+                <option>Space Grotesk</option>
+                <option>Roboto</option>
+             </select>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+
+export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange }: { showHotkeys: boolean, onShowHotkeysChange: (value: boolean) => void }) {
+  const [activeTab, setActiveTab] = React.useState("hotkeys");
+
+  const settingTabs = [
+    { id: "hotkeys", icon: Keyboard, label: "Hotkeys" },
+    { id: "theme", icon: Palette, label: "Theme" },
+    { id: "performance", icon: Cpu, label: "Performance" },
+    { id: "account", icon: User, label: "Account" },
+    { id: "projects", icon: FolderOpen, label: "Projects" },
+    { id: "export", icon: Download, label: "Export" },
+  ];
 
   return (
     <div className="p-4 h-full flex flex-col">
@@ -19,14 +104,32 @@ export function GlobalSettingsPanel() {
         </p>
       </div>
 
-      <Tabs defaultValue="hotkeys" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="hotkeys">Hotkeys</TabsTrigger>
-          <TabsTrigger value="project">Project</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-        </TabsList>
-        <TabsContent value="hotkeys" className="mt-4 flex-1">
-          <div className="space-y-4">
+      <div className="border-b">
+        <TooltipProvider>
+          <div className="flex items-center justify-around">
+            {settingTabs.map(tab => (
+              <Tooltip key={tab.id}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={activeTab === tab.id ? "secondary" : "ghost"}
+                    size="icon"
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    <tab.icon className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tab.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        </TooltipProvider>
+      </div>
+
+      <div className="mt-4 flex-1 overflow-y-auto">
+        {activeTab === 'hotkeys' && (
+           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
                 <div className="space-y-0.5">
                     <Label>Show Hotkey Labels</Label>
@@ -36,19 +139,40 @@ export function GlobalSettingsPanel() {
                 </div>
                 <Switch
                     checked={showHotkeys}
-                    onCheckedChange={setShowHotkeys}
+                    onCheckedChange={onShowHotkeysChange}
                 />
             </div>
-            {/* More hotkey settings can go here */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Manage Hotkeys</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {hotkeys.map(hotkey => (
+                  <div key={hotkey.tool} className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{hotkey.tool}</span>
+                    <Button variant="outline" size="sm" className="font-mono">{hotkey.key}</Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
           </div>
-        </TabsContent>
-        <TabsContent value="project" className="mt-4">
-          <p className="text-sm text-muted-foreground">Project settings will go here.</p>
-        </TabsContent>
-        <TabsContent value="performance" className="mt-4 flex-1">
+        )}
+        {activeTab === 'theme' && (
+          <UIAdjusterPanel />
+        )}
+        {activeTab === 'performance' && (
             <TelemetryPanel />
-        </TabsContent>
-      </Tabs>
+        )}
+         {activeTab === 'account' && (
+            <div className="text-center p-8 text-muted-foreground">Account settings will be available here.</div>
+        )}
+        {activeTab === 'projects' && (
+            <div className="text-center p-8 text-muted-foreground">Project loading options will be available here.</div>
+        )}
+        {activeTab === 'export' && (
+            <div className="text-center p-8 text-muted-foreground">Export settings will be available here.</div>
+        )}
+      </div>
     </div>
   )
 }

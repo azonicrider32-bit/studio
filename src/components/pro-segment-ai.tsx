@@ -136,6 +136,7 @@ function ProSegmentAIContent() {
   const activeWorkspaceIndex = workspaces.findIndex(ws => ws.id === activeWorkspaceId);
   
   const { state: sidebarState, open: isSidebarOpen, setOpen: setIsSidebarOpen } = useSidebar();
+  const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(true);
 
 
   const setActiveWorkspaceState = (updater: (prevState: WorkspaceState) => WorkspaceState) => {
@@ -478,7 +479,7 @@ function ProSegmentAIContent() {
                   activeTool={activeTool}
                 />
       case 'settings':
-        return <GlobalSettingsPanel />;
+        return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} />;
       default:
         return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
     }
@@ -586,9 +587,7 @@ function ProSegmentAIContent() {
     <div className="flex h-screen w-screen bg-background text-foreground">
       <div className="flex">
         <Sidebar collapsible="icon">
-            <SidebarHeader>
-              
-            </SidebarHeader>
+            <SidebarHeader/>
             <SidebarContent>
                 {renderLeftPanelContent()}
             </SidebarContent>
@@ -598,6 +597,7 @@ function ProSegmentAIContent() {
           setActiveTool={setActiveTool}
           onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
           onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+          showHotkeys={showHotkeyLabels}
         />
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -909,6 +909,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
