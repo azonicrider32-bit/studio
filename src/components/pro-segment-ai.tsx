@@ -61,6 +61,7 @@ import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import { TelemetryPanel } from "./panels/telemetry-panel"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import { AssetDrawer } from "./asset-drawer"
+import { ToolPanel } from "./tool-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
 
@@ -342,105 +343,12 @@ export function ProSegmentAI() {
         <Sidebar side="left" collapsible="icon" className="border-r">
           <SidebarContent>
             <SidebarHeader>
-                <div className="grid grid-cols-2 gap-1 p-2">
-                    <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Magic Wand (W)"
-                        isActive={activeTool === "magic-wand"}
-                        onClick={() => setActiveTool("magic-wand")}
-                        className="h-12 w-full justify-center"
-                    >
-                        <Wand2 />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Intelligent Lasso (L)"
-                        isActive={activeTool === "lasso"}
-                        onClick={() => setActiveTool("lasso")}
-                        className="h-12 w-full justify-center"
-                    >
-                        <LassoIcon />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Brush (B)"
-                        isActive={activeTool === "brush"}
-                        onClick={() => setActiveTool("brush")}
-                        className="h-12 w-full justify-center"
-                    >
-                        <Brush />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Eraser (E)"
-                        isActive={activeTool === "eraser"}
-                        onClick={() => setActiveTool("eraser")}
-                        className="h-12 w-full justify-center"
-                    >
-                        <Eraser />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Clone Stamp (C)"
-                        isActive={activeTool === "clone"}
-                        onClick={() => setActiveTool("clone")}
-                        className="h-12 w-full justify-center"
-                        disabled
-                    >
-                        <Replace />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Transform (T)"
-                        isActive={activeTool === "transform"}
-                        onClick={() => setActiveTool("transform")}
-                        className="h-12 w-full justify-center"
-                        disabled
-                    >
-                        <Move />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Sample Exclusion Color (I)"
-                        isActive={activeTool === "pipette-minus"}
-                        onClick={() => setActiveTool("pipette-minus")}
-                        className="h-12 w-full justify-center"
-                    >
-                        <PipetteMinusIcon />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                      <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Color Analysis"
-                        isActive={activeTool === "color-analysis"}
-                        onClick={() => setActiveTool("color-analysis")}
-                        className="h-12 w-full justify-center"
-                    >
-                        <Palette />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                    <SidebarMenuButton
-                        tooltip="Adjustments (A)"
-                        isActive={activeTool === "adjustments"}
-                        onClick={() => setActiveTool("adjustments")}
-                        className="h-12 w-full justify-center"
-                    >
-                        <SlidersHorizontal />
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </div>
+              {/* This space is intentionally left blank for now */}
             </SidebarHeader>
             <SidebarSeparator />
-            <SidebarContent>
+            <div className="flex-1 overflow-y-auto">
               {renderLeftPanelContent()}
-            </SidebarContent>
+            </div>
           </SidebarContent>
           <SidebarFooter>
             <SidebarMenu>
@@ -452,6 +360,8 @@ export function ProSegmentAI() {
             </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
+
+        <ToolPanel activeTool={activeTool} setActiveTool={setActiveTool} />
 
         <div className="flex flex-1 flex-col h-screen overflow-hidden">
             <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4">
