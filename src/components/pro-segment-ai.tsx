@@ -9,6 +9,8 @@ import {
   BrainCircuit,
   Brush,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Contrast,
   Eraser,
   EyeOff,
@@ -601,29 +603,31 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
+  const sidebarWidthVar = sidebarState === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)';
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background/0 text-foreground">
-      <div className="flex">
-        <Sidebar collapsible="icon">
-            <SidebarHeader>
-                 <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(prev => !prev)} className="h-12 w-12 text-foreground/50">
-                    <PanelLeft />
-                </Button>
-            </SidebarHeader>
-            <SidebarContent>
-                {renderLeftPanelContent()}
-            </SidebarContent>
-        </Sidebar>
-         <ToolPanel
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-            onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-            onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-        />
-      </div>
+      <Sidebar collapsible="icon">
+          <SidebarHeader>
+              <Button variant="ghost" size="icon" onClick={() => toggleSidebar()} className="h-12 w-12 text-foreground/50">
+                  {isSidebarOpen ? <ChevronLeft /> : <ChevronRight />}
+              </Button>
+          </SidebarHeader>
+          <SidebarContent>
+              {renderLeftPanelContent()}
+          </SidebarContent>
+      </Sidebar>
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="flex h-12 shrink-0 items-center border-b border-border/50 px-4 z-10 bg-background/80 backdrop-blur-sm">
+        
+        <header 
+          className="absolute top-0 h-12 shrink-0 items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm flex"
+          style={{
+            left: `calc(${sidebarWidthVar})`,
+            right: `${rightPanelWidth}px`,
+            transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out',
+          }}
+        >
           <div className="flex items-center gap-4 flex-1">
             <WorkspaceTabs 
               workspaces={workspaces}
@@ -740,7 +744,21 @@ function ProSegmentAIContent() {
           </div>
         </header>
 
-        <main className="flex-1 flex overflow-auto bg-muted/30">
+        <ToolPanel
+          activeTool={activeTool}
+          setActiveTool={setActiveTool}
+          onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+          onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+        />
+        
+        <main 
+          className="flex-1 flex overflow-auto bg-muted/30"
+          style={{
+            paddingLeft: `calc(${sidebarWidthVar})`,
+            paddingTop: '3rem', // Height of the header
+            transition: 'padding-left 0.2s ease-in-out',
+          }}
+        >
             <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
                 <ImageCanvas 
                 key={activeWorkspace.id}
@@ -892,7 +910,7 @@ function WorkspaceTabs({
             "flex items-center gap-2 px-4 py-2 border-b-2 cursor-pointer text-sm font-medium transition-colors",
             "rounded-t-md border",
             activeWorkspaceId === ws.id 
-              ? "bg-muted border-primary border-b-background text-primary" 
+              ? "bg-muted border-primary border-b-transparent text-primary" 
               : "border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           )}
         >
@@ -920,3 +938,4 @@ export function ProSegmentAI() {
     
 
     
+

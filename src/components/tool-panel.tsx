@@ -45,12 +45,21 @@ interface ToolPanelProps {
 }
 
 export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onToggleSidebar }: ToolPanelProps) {
+  const { state: sidebarState } = useSidebar();
+  const sidebarWidthVar = sidebarState === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)';
   
   return (
-    <div className="flex h-full flex-col items-center justify-between gap-2 border-r border-border/50 bg-background/80 backdrop-blur-sm p-2">
+    <div 
+        className="absolute top-0 bottom-0 flex flex-col items-center justify-between gap-2 border-r border-border/50 bg-background/80 backdrop-blur-sm p-2 z-10"
+        style={{
+            left: sidebarWidthVar,
+            paddingTop: '3rem', // Align with main content padding
+            transition: 'left 0.2s ease-in-out',
+        }}
+    >
       <div className="flex flex-col items-center gap-2">
         <div className="h-14 w-14 flex items-center justify-center">
-            <div className="font-headline font-black text-4xl text-red-500">
+            <div className="font-headline font-black text-4xl ps-logo">
                 PS
             </div>
         </div>
