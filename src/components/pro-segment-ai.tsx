@@ -29,6 +29,10 @@ import {
   Hand,
   MessageSquare,
   PenTool,
+  History,
+  Undo2,
+  Redo2,
+  ChevronDown,
 } from "lucide-react"
 
 import {
@@ -75,6 +79,14 @@ import { SegmentHoverPreview } from "./segment-hover-preview"
 import { Slider } from "./ui/slider"
 import { AiChatPanel } from "./panels/ai-chat-panel"
 import { useSelectionDrag } from "@/hooks/use-selection-drag"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useToast } from "@/hooks/use-toast"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan" | "line";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
@@ -87,6 +99,7 @@ function ProSegmentAIContent() {
   const [isAssetDrawerOpen, setIsAssetDrawerOpen] = React.useState(false);
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
   const isResizingRef = React.useRef(false);
+  const { toast } = useToast()
   
   const [activeTopPanel, setActiveTopPanel] = React.useState<TopPanel | null>('layers');
   const [activeBottomPanel, setActiveBottomPanel] = React.useState<BottomPanel | null>(null);
@@ -99,6 +112,9 @@ function ProSegmentAIContent() {
   const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
 
   const [pan, setPan] = React.useState({ x: 0, y: 0 });
+  const [history, setHistory] = React.useState<any[]>([]);
+  const [historyIndex, setHistoryIndex] = React.useState(-1);
+  const maxHistorySize = 100;
 
   const [layers, setLayers] = React.useState<Layer[]>(() => {
     const backgroundLayer: Layer = {
@@ -127,7 +143,6 @@ function ProSegmentAIContent() {
     handleMouseUp: handleDragMouseUp,
   } = useSelectionDrag(layers, setLayers, activeTool, mainCanvasZoom);
   
-
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     drawMode: 'magic',
     useAiEnhancement: false,
@@ -222,12 +237,32 @@ function ProSegmentAIContent() {
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
   const clearSelectionRef = React.useRef<() => void>();
 
+  const addToHistory = React.useCallback((action: any) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push({
+        ...action,
+        timestamp: Date.now(),
+        id: `action_${Date.now()}_${Math.random()}`
+      });
+
+      if (newHistory.length > maxHistorySize) {
+        newHistory.shift();
+      }
+
+      setHistoryIndex(newHistory.length - 1);
+      return newHistory;
+    });
+  }, [historyIndex, maxHistorySize]);
+
   const addLayer = (newLayer: Layer) => {
     setLayers(prev => [...prev, { ...newLayer, maskVisible: true }]);
     setActiveLayerId(newLayer.id);
+    addToHistory({ type: 'add_layer', layer: newLayer });
   };
 
   const updateLayer = React.useCallback((layerId: string, updatedPixels: Set<number>, newBounds: Layer['bounds']) => {
+    const oldLayer = layers.find(l => l.id === layerId);
     setLayers(prev => prev.map(l => {
       if (l.id === layerId) {
         const engine = selectionEngineRef.current;
@@ -237,14 +272,20 @@ function ProSegmentAIContent() {
       }
       return l;
     }));
-  }, []);
+    if (oldLayer) {
+        addToHistory({ type: 'update_layer', layerId, oldPixels: oldLayer.pixels, newPixels: updatedPixels });
+    }
+  }, [layers, addToHistory]);
 
   const removePixelsFromLayers = React.useCallback((pixelsToRemove: Set<number>) => {
+    const layersToUpdate: {layerId: string, oldPixels: Set<number>}[] = [];
     setLayers(prevLayers => {
       return prevLayers.map(layer => {
         if ((layer.type === 'segmentation' || layer.subType === 'mask') && layer.visible) {
+          const originalSize = layer.pixels.size;
           const newPixels = new Set([...layer.pixels].filter(p => !pixelsToRemove.has(p)));
-          if (newPixels.size < layer.pixels.size) {
+          if (newPixels.size < originalSize) {
+            layersToUpdate.push({layerId: layer.id, oldPixels: layer.pixels});
             const engine = selectionEngineRef.current;
             if (!engine) return layer;
             const newBounds = engine.getBoundsForPixels(newPixels);
@@ -255,15 +296,20 @@ function ProSegmentAIContent() {
         return layer;
       });
     });
-  }, []);
+    if (layersToUpdate.length > 0) {
+        addToHistory({ type: 'remove_pixels', layers: layersToUpdate, removedPixels: pixelsToRemove });
+    }
+  }, [addToHistory]);
 
   const toggleLayerVisibility = (layerId: string) => {
     setLayers(prev => prev.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l));
+    addToHistory({ type: 'toggle_visibility', layerId });
   };
   
   const toggleLayerLock = (layerId: string) => {
      if (layerId === "background-0") return;
     setLayers(prev => prev.map(l => l.id === layerId ? { ...l, locked: !l.locked } : l));
+     addToHistory({ type: 'toggle_lock', layerId });
   };
 
   const toggleLayerMask = (layerId: string) => {
@@ -272,13 +318,36 @@ function ProSegmentAIContent() {
 
   const deleteLayer = (layerId: string) => {
     if (layerId === "background-0") return; // Cannot delete background
+    const layerToDelete = layers.find(l => l.id === layerId);
+    if (!layerToDelete) return;
 
     setLayers(prev => prev.filter(l => l.id !== layerId && l.parentId !== layerId));
+    addToHistory({ type: 'delete_layer', layer: layerToDelete });
 
     if (activeLayerId === layerId) {
       setActiveLayerId("background-0");
     }
   };
+
+  const handleUndo = React.useCallback(() => {
+    if (historyIndex < 0) return;
+    const action = history[historyIndex];
+
+    // TODO: Implement state reversal for different actions
+    toast({ title: "Undo", description: `Reverted: ${action.type}` });
+
+    setHistoryIndex(prev => prev - 1);
+  }, [history, historyIndex, toast]);
+
+  const handleRedo = React.useCallback(() => {
+    if (historyIndex >= history.length - 1) return;
+    const action = history[historyIndex + 1];
+
+    // TODO: Implement state re-application for different actions
+    toast({ title: "Redo", description: `Re-applied: ${action.type}` });
+
+    setHistoryIndex(prev => prev + 1);
+  }, [history, historyIndex, toast]);
 
 
   const handleLassoSettingsChange = (newSettings: Partial<LassoSettings>) => {
@@ -314,6 +383,8 @@ function ProSegmentAIContent() {
     if(clearSelectionRef.current) {
         clearSelectionRef.current();
     }
+    setHistory([]);
+    setHistoryIndex(-1);
   }
 
   React.useEffect(() => {
@@ -324,10 +395,18 @@ function ProSegmentAIContent() {
         if(e.key.toLowerCase() === 'p') {
             setActiveTool('line');
         }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+            e.preventDefault();
+            handleUndo();
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+            e.preventDefault();
+            handleRedo();
+        }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleUndo, handleRedo]);
   
   const handleMouseDownResize = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -563,7 +642,29 @@ function ProSegmentAIContent() {
             <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
-                    <h2 className="font-headline text-xl font-semibold">Workspace</h2>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" onClick={handleUndo} disabled={historyIndex < 0}>
+                        <Undo2 className="w-5 h-5"/>
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={handleRedo} disabled={historyIndex >= history.length - 1}>
+                        <Redo2 className="w-5 h-5"/>
+                      </Button>
+                       <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <History className="w-5 h-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuSeparator />
+                          {history.length > 0 ? history.slice().reverse().map((action, index) => (
+                            <DropdownMenuItem key={action.id} onSelect={() => {}}>
+                               <span>{action.type.replace(/_/g, ' ')}</span>
+                            </DropdownMenuItem>
+                          )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <TooltipProvider>

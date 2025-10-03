@@ -10,21 +10,10 @@ import { Button } from "../ui/button"
 import { EyeOff, Layers, Link, Palette, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
+import { Label } from "../ui/label"
 
-const VerticalToleranceSlider = ({
-    id,
-    label,
-    tolerance,
-    max,
-    color,
-    pixelValue,
-    description,
-    isEnabled,
-    isSelectedForScroll,
-    onToggleEnabled,
-    onToggleScrollAdjust,
-    onToleranceChange,
-}: {
+interface VerticalToleranceSliderProps {
     id: keyof MagicWandSettings['tolerances'];
     label: string;
     tolerance: number;
@@ -37,7 +26,9 @@ const VerticalToleranceSlider = ({
     onToggleEnabled: () => void;
     onToggleScrollAdjust: () => void;
     onToleranceChange: (value: number) => void;
-}) => {
+}
+
+function VerticalToleranceSlider({ id, label, tolerance, max, color, pixelValue, description, isEnabled, isSelectedForScroll, onToggleEnabled, onToggleScrollAdjust, onToleranceChange }: VerticalToleranceSliderProps) {
     const displayValue = tolerance.toFixed(0);
 
     let bottomPercent = 0;
@@ -48,6 +39,9 @@ const VerticalToleranceSlider = ({
         
         if (id === 'h') {
             const hDiff = Math.abs(pixelValue - tolerance);
+            const lowerBound = (pixelValue - tolerance + 360) % 360;
+            const upperBound = (pixelValue + tolerance) % 360;
+            
             bottomPercent = (Math.max(0, pixelValue - tolerance) / max) * 100;
             rangeHeight = (Math.min(max, pixelValue + tolerance) - Math.max(0, pixelValue - tolerance)) / max * 100;
         } else {
@@ -70,21 +64,21 @@ const VerticalToleranceSlider = ({
     };
     
     return (
-        <div className={cn("flex flex-col items-center justify-end gap-2 h-full cursor-pointer rounded-md", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
+        <div className={cn("flex flex-col items-center justify-end gap-2 h-full cursor-pointer rounded-md p-px", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
             <Tooltip>
                 <TooltipTrigger asChild>
                      <div className="w-full h-full flex flex-col items-center gap-2 justify-end">
-                        <div className={cn("w-4 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
+                        <div className={cn("w-3 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
                             {pixelValue !== undefined && isEnabled && (
-                            <div 
-                                className={cn("w-full absolute bg-primary/75 border-y border-primary-foreground/50")} 
-                                style={{ 
-                                    bottom: `${bottomPercent}%`, 
-                                    height: `${rangeHeight}%`
-                                }}
-                            ></div>
+                              <div 
+                                  className={cn("w-full absolute bg-primary/75 border-y border-primary-foreground/50")} 
+                                  style={{ 
+                                      bottom: `${bottomPercent}%`, 
+                                      height: `${rangeHeight}%`
+                                  }}
+                              ></div>
                             )}
-                            {pixelValue !== undefined && (
+                             {pixelValue !== undefined && (
                                 <div className="w-full h-0.5 bg-accent-foreground absolute" style={{ bottom: `${(pixelValue / max) * 100}%`}}></div>
                             )}
                         </div>
@@ -100,7 +94,6 @@ const VerticalToleranceSlider = ({
                             className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0 cursor-row-resize"
                             disabled={!isEnabled}
                         />
-                        <span className="font-mono text-xs">{displayValue}</span>
                     </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -120,7 +113,7 @@ const VerticalToleranceSlider = ({
             </div>
         </div>
     );
-};
+}
 
 export function MagicWandCompactSettings({ settings, onSettingsChange }: { settings: MagicWandSettings, onSettingsChange: (s: Partial<MagicWandSettings>) => void}) {
 
@@ -219,8 +212,8 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </Tooltip>
         </div>
         
-        <div className="flex flex-col items-center space-y-4">
-            <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center gap-1 my-2">
                 <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
                 <div className="flex items-end h-32">
                   {HSV_COMPONENTS.map(config => (
@@ -243,7 +236,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
                 </div>
             </div>
 
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1 my-2">
                 <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
                 <div className="flex items-end h-32">
                   {RGB_COMPONENTS.map(config => (
@@ -266,7 +259,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
                 </div>
             </div>
 
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1 my-2">
                 <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(LAB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">LAB</Button>
                 <div className="flex items-end h-32">
                   {LAB_COMPONENTS.map(config => (
