@@ -125,7 +125,7 @@ body {
     @apply text-primary;
   }
   
-  .ps-tool-icon-container[data-variant="default"] .ps-tool-icon__icon {
+  .ps-tool-icon-container[data-state="on"] .ps-tool-icon__icon {
     @apply text-primary;
   }
 }

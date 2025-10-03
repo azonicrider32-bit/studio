@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -48,7 +49,7 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
     <div className="flex h-full flex-col items-center justify-between gap-2 border-r bg-background p-2">
       <div className="flex flex-col items-center gap-2">
         <div className="h-14 w-14 flex items-center justify-center">
-            <div className="font-headline font-extrabold text-3xl" style={{ color: '#ff0000' }}>
+            <div className="font-headline font-black text-4xl" style={{ color: 'red' }}>
                 PS
             </div>
         </div>
@@ -57,12 +58,12 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
             <Tooltip key={tool.id}>
                 <TooltipTrigger asChild>
                 <Button
-                    variant={activeTool === tool.id ? "default" : "ghost"}
+                    variant={"ghost"}
                     size="icon"
                     onClick={() => setActiveTool(tool.id)}
                     disabled={tool.disabled}
                     className="h-12 w-12 relative ps-tool-icon-container"
-                    data-variant={activeTool === tool.id ? "default" : "ghost"}
+                    data-state={activeTool === tool.id ? "on" : "off"}
                 >
                     <div className="ps-tool-icon">
                         <tool.icon className="h-6 w-6 ps-tool-icon__icon" />
