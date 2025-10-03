@@ -22,7 +22,7 @@ export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChang
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [zoom, setZoom] = useState(4);
+  const [zoom, setZoom] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const [deadZone, setDeadZone] = useState(80); // Percentage of the preview size

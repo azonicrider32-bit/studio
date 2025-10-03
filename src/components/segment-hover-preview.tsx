@@ -5,6 +5,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { MagicWandSettings } from '@/lib/types';
 import { rgbToHsv, rgbToLab } from '@/lib/color-utils';
+import { Button } from './ui/button';
+import { Minus, Plus } from 'lucide-react';
 
 interface SegmentHoverPreviewProps {
   mousePos: { x: number; y: number } | null;
@@ -15,8 +17,8 @@ interface SegmentHoverPreviewProps {
 
 export function SegmentHoverPreview({ mousePos, canvas, settings, className }: SegmentHoverPreviewProps) {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [zoom, setZoom] = useState(16);
   const size = 256; 
-  const zoom = 16;  
 
   const isColorSimilar = (
     seedColor: { rgb: {r:number, g:number, b:number} },
@@ -210,10 +212,21 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
 
   }, [mousePos, canvas, size, zoom, settings]);
 
+  const handleWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    const newZoom = zoom - e.deltaY / 100;
+    setZoom(Math.max(1, Math.min(128, newZoom)));
+  };
+
+  const changeZoom = (amount: number) => {
+    setZoom(prev => Math.max(1, Math.min(128, prev + amount)));
+  }
+
   if (!mousePos) return <div className={cn("aspect-square w-full rounded-md bg-muted animate-pulse", className)}></div>;
 
   return (
     <div
+      onWheel={handleWheel}
       className={cn(
         "relative w-full aspect-square overflow-hidden rounded-md border-2 border-border shadow-inner bg-background",
         className
@@ -233,6 +246,13 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
         <div className="w-px h-full bg-white/50 absolute"></div>
         <div className="h-px w-full bg-white/50 absolute"></div>
         <div className="w-[calc(100%/16)] h-[calc(100%/16)] border-2 border-accent rounded-sm"></div>
+      </div>
+      <div className="absolute bottom-2 right-2 flex gap-1">
+        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(-4)}><Minus className="w-4 h-4"/></Button>
+        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(4)}><Plus className="w-4 h-4"/></Button>
+      </div>
+      <div className="absolute top-2 right-2 bg-background/50 text-foreground text-xs px-2 py-1 rounded-md">
+        {zoom.toFixed(1)}x
       </div>
     </div>
   );
