@@ -72,6 +72,7 @@ import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
 import { SegmentHoverPreview } from "./segment-hover-preview"
 import { Slider } from "./ui/slider"
 import { AiChatPanel } from "./panels/ai-chat-panel"
+import { useSelectionDrag } from "@/hooks/use-selection-drag"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
@@ -114,6 +115,21 @@ export function ProSegmentAI() {
     return [backgroundLayer];
   });
   const [activeLayerId, setActiveLayerId] = React.useState<string | null>(layers[0]?.id);
+
+  const {
+    draggedLayer,
+    isDragging,
+    handleMouseDown: handleDragMouseDown,
+    handleMouseMove: handleDragMouseMove,
+    handleMouseUp: handleDragMouseUp,
+  } = useSelectionDrag(layers, setLayers, activeTool, mainCanvasZoom);
+
+  React.useEffect(() => {
+    if (draggedLayer) {
+        setLayers(prevLayers => prevLayers.map(l => l.id === draggedLayer.id ? draggedLayer : l));
+    }
+  }, [draggedLayer, setLayers]);
+  
 
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     drawMode: 'magic',
@@ -302,6 +318,15 @@ export function ProSegmentAI() {
     }
   }
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if(e.key.toLowerCase() === 'v') {
+            setActiveTool('transform');
+        }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   React.useEffect(() => {
     setIsClient(true)
@@ -615,6 +640,9 @@ export function ProSegmentAI() {
                     mainCanvasZoom={mainCanvasZoom}
                     pan={pan}
                     setPan={setPan}
+                    onDragMouseDown={handleDragMouseDown}
+                    onDragMouseMove={handleDragMouseMove}
+                    onDragMouseUp={handleDragMouseUp}
                 />
             </main>
              <AssetDrawer

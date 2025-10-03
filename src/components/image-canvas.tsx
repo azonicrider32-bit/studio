@@ -42,6 +42,9 @@ interface ImageCanvasProps {
   mainCanvasZoom: number;
   pan: {x: number, y: number};
   setPan: (pan: {x: number, y: number}) => void;
+  onDragMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
+  onDragMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
+  onDragMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
 }
 
 export function ImageCanvas({
@@ -70,7 +73,10 @@ export function ImageCanvas({
   isLassoPreviewHovered,
   mainCanvasZoom,
   pan,
-  setPan
+  setPan,
+  onDragMouseDown,
+  onDragMouseMove,
+  onDragMouseUp,
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -146,6 +152,8 @@ const drawLayers = React.useCallback(() => {
         tempParentCanvas.height = layersCanvas.height;
         const tempParentCtx = tempParentCanvas.getContext('2d');
         if (!tempParentCtx) return;
+        
+        const { x, y, width, height } = parentLayer.bounds;
 
         if (parentLayer.type === 'background') {
             tempParentCtx.drawImage(mainImage, 0, 0, layersCanvas.width, layersCanvas.height);
@@ -156,7 +164,7 @@ const drawLayers = React.useCallback(() => {
             const tempImageCtx = tempImageCanvas.getContext('2d');
             if(tempImageCtx) {
                 tempImageCtx.putImageData(parentLayer.imageData, 0, 0);
-                tempParentCtx.drawImage(tempImageCanvas, parentLayer.bounds.x, parentLayer.bounds.y, parentLayer.bounds.width, parentLayer.bounds.height);
+                tempParentCtx.drawImage(tempImageCanvas, x, y, width, height);
             }
         }
         
@@ -511,7 +519,9 @@ const drawLayers = React.useCallback(() => {
     }
 
     if (e.button === 0) {
-      if (activeTool === 'lasso') {
+      if (activeTool === 'transform') {
+        onDragMouseDown(e);
+      } else if (activeTool === 'lasso') {
         if (!engine.isDrawingLasso) {
           engine.startLasso(pos.x, pos.y);
           lassoMouseTraceRef.current = [[pos.x, pos.y]];
@@ -581,6 +591,10 @@ const drawLayers = React.useCallback(() => {
         lastPanPointRef.current = { x: e.clientX, y: e.clientY };
         return;
     }
+    
+    if (activeTool === 'transform') {
+        onDragMouseMove(e);
+    }
 
     if (!canvas || !engine || isProcessing) return;
 
@@ -643,6 +657,9 @@ const drawLayers = React.useCallback(() => {
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (activeTool === 'transform') {
+        onDragMouseUp(e);
+    }
     if (e.button === 2 || activeTool === 'pan') {
       setIsPanning(false);
     }
@@ -722,6 +739,7 @@ const drawLayers = React.useCallback(() => {
   const getCursor = () => {
     if (isPanning) return 'grabbing';
     if (activeTool === 'pan') return 'grab';
+    if (activeTool === 'transform') return 'move';
     return cursorStyle;
   }
   
