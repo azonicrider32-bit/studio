@@ -21,6 +21,7 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const [zoom, setZoom] = useState(16);
   const [deadZone, setDeadZone] = useState(80);
+  const [panSpeed, setPanSpeed] = useState(0.1);
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const size = 256; 
 
@@ -54,10 +55,10 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
     const dy = mousePos.y - viewCenterY;
 
     if (Math.abs(dx) > deadZoneSize / 2) {
-      viewPositionRef.current.x += dx - (Math.sign(dx) * deadZoneSize / 2);
+      viewPositionRef.current.x += (dx - (Math.sign(dx) * deadZoneSize / 2)) * panSpeed;
     }
     if (Math.abs(dy) > deadZoneSize / 2) {
-      viewPositionRef.current.y += dy - (Math.sign(dy) * deadZoneSize / 2);
+      viewPositionRef.current.y += (dy - (Math.sign(dy) * deadZoneSize / 2)) * panSpeed;
     }
     
     viewPositionRef.current.x = Math.max(0, Math.min(canvas.width - sourceSize, viewPositionRef.current.x));
@@ -86,7 +87,7 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
     previewCtx.stroke();
     previewCtx.restore();
 
-  }, [mousePos, canvas, size, zoom, settings, deadZone]);
+  }, [mousePos, canvas, size, zoom, settings, deadZone, panSpeed]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.stopPropagation();
@@ -153,6 +154,18 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
                   onValueChange={(value) => setDeadZone(value[0])}
                 />
                 <p className='text-xs text-muted-foreground'>Controls how far the cursor moves before the preview pans.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="panspeed-slider">Pan Speed: {panSpeed.toFixed(2)}</Label>
+                <Slider
+                  id="panspeed-slider"
+                  min={0.01}
+                  max={1.0}
+                  step={0.01}
+                  value={[panSpeed]}
+                  onValueChange={(value) => setPanSpeed(value[0])}
+                />
+                <p className='text-xs text-muted-foreground'>Controls how fast the preview pans to catch up.</p>
               </div>
             </div>
           </PopoverContent>

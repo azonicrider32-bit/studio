@@ -26,7 +26,8 @@ export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChang
   const [isHovered, setIsHovered] = useState(false);
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const [deadZone, setDeadZone] = useState(80); // Percentage of the preview size
-  
+  const [panSpeed, setPanSpeed] = useState(0.1);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -66,10 +67,10 @@ export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChang
     const dy = mousePos.y - viewCenterY;
 
     if (Math.abs(dx) > deadZoneSizeX / 2) {
-      viewPositionRef.current.x += dx - (Math.sign(dx) * deadZoneSizeX / 2);
+      viewPositionRef.current.x += (dx - (Math.sign(dx) * deadZoneSizeX / 2)) * panSpeed;
     }
     if (Math.abs(dy) > deadZoneSizeY / 2) {
-      viewPositionRef.current.y += dy - (Math.sign(dy) * deadZoneSizeY / 2);
+      viewPositionRef.current.y += (dy - (Math.sign(dy) * deadZoneSizeY / 2)) * panSpeed;
     }
     
     viewPositionRef.current.x = Math.max(0, Math.min(canvas.width - sourceSizeX, viewPositionRef.current.x));
@@ -163,7 +164,7 @@ export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChang
     }
 
 
-  }, [mousePos, canvas, selectionEngine, size, zoom, deadZone]);
+  }, [mousePos, canvas, selectionEngine, size, zoom, deadZone, panSpeed]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.stopPropagation();
@@ -243,6 +244,18 @@ export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChang
                   onValueChange={(value) => setDeadZone(value[0])}
                 />
                 <p className='text-xs text-muted-foreground'>Controls how far the cursor moves before the preview pans.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="panspeed-slider">Pan Speed: {panSpeed.toFixed(2)}</Label>
+                <Slider
+                  id="panspeed-slider"
+                  min={0.01}
+                  max={1.0}
+                  step={0.01}
+                  value={[panSpeed]}
+                  onValueChange={(value) => setPanSpeed(value[0])}
+                />
+                <p className='text-xs text-muted-foreground'>Controls how fast the preview pans to catch up.</p>
               </div>
             </div>
           </PopoverContent>
