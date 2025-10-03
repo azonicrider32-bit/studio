@@ -435,11 +435,10 @@ export function ProSegmentAI() {
             );
         case "pixel-preview":
             return (
-                <div className="p-4 flex-1 flex flex-col min-h-0">
+                <div className="flex-1 flex flex-col min-h-0">
                     <SegmentHoverPreview
                         canvas={canvasRef.current}
                         mousePos={canvasMousePos}
-                        settings={magicWandSettings}
                     />
                 </div>
             );
