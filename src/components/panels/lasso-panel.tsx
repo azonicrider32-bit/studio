@@ -21,7 +21,7 @@ interface LassoPanelProps {
 export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, className }: LassoPanelProps) {
     
   return (
-    <div className={cn("p-4 space-y-4 flex flex-col", className)}>
+    <div className={cn("p-4 space-y-4 flex flex-col h-full", className)}>
       <LassoHoverPreview 
           canvas={canvas} 
           mousePos={mousePos} 
@@ -32,3 +32,5 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, c
     </div>
   )
 }
+
+    

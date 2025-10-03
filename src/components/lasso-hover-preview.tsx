@@ -21,7 +21,7 @@ interface LassoHoverPreviewProps {
 export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverChange, className }: LassoHoverPreviewProps) {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ width: 256, height: 256 });
+  const [size, setSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -29,10 +29,20 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   
   useEffect(() => {
     const container = containerRef.current;
-    if (container) {
-      const { width, height } = container.getBoundingClientRect();
-      setSize({ width, height });
-    }
+    if (!container) return;
+
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setSize({ width, height });
+      }
+    });
+
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -41,33 +51,20 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   
   useEffect(() => {
     const previewCanvas = previewCanvasRef.current;
-    if (!previewCanvas || !canvas || !selectionEngine || !mousePos) return;
-
-    // Recalculate size on each render to handle responsive changes
-    const container = containerRef.current;
-    if (container) {
-        const { width, height } = container.getBoundingClientRect();
-        if (width !== size.width || height !== size.height) {
-            setSize({ width, height });
-        }
-    }
+    if (!previewCanvas || !canvas || !selectionEngine || !mousePos || size.width === 0 || size.height === 0) return;
     
     const sourceSizeX = size.width / zoom;
     const sourceSizeY = size.height / zoom;
     
-    // Dead zone calculation based on state
     const deadZoneSizeX = sourceSizeX * (deadZone / 100);
     const deadZoneSizeY = sourceSizeY * (deadZone / 100);
 
-    // Get the current center of the view in source image coordinates
     const viewCenterX = viewPositionRef.current.x + sourceSizeX / 2;
     const viewCenterY = viewPositionRef.current.y + sourceSizeY / 2;
 
-    // Calculate distance of mouse from the view center
     const dx = mousePos.x - viewCenterX;
     const dy = mousePos.y - viewCenterY;
 
-    // Update view position if mouse is outside the dead zone
     if (Math.abs(dx) > deadZoneSizeX / 2) {
       viewPositionRef.current.x += dx - (Math.sign(dx) * deadZoneSizeX / 2);
     }
@@ -75,7 +72,6 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
       viewPositionRef.current.y += dy - (Math.sign(dy) * deadZoneSizeY / 2);
     }
     
-    // Clamp view position to be within canvas bounds
     viewPositionRef.current.x = Math.max(0, Math.min(canvas.width - sourceSizeX, viewPositionRef.current.x));
     viewPositionRef.current.y = Math.max(0, Math.min(canvas.height - sourceSizeY, viewPositionRef.current.y));
 
@@ -98,7 +94,6 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
         }
     }
 
-    // Draw the zoomed-in image content from the calculated source position
     previewCtx.drawImage(
       canvas,
       viewPositionRef.current.x,
@@ -111,7 +106,6 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
       size.height
     );
 
-    // Draw the lasso path on top
     if (selectionEngine.isDrawingLasso) {
         previewCtx.save();
         previewCtx.scale(zoom, zoom);
@@ -182,14 +176,10 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   }
   
   useEffect(() => {
-    // Reset view position when mouse leaves the canvas
     if (!mousePos && !isHovered) {
       viewPositionRef.current = { x: 0, y: 0 };
     }
   }, [mousePos, isHovered]);
-
-
-  if (!mousePos) return <div className={cn("h-64 w-full rounded-md bg-muted animate-pulse", className)}></div>;
 
   return (
     <div
@@ -204,16 +194,16 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     >
       <canvas ref={previewCanvasRef} width={size.width} height={size.height} className="w-full h-full" />
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {/* Center dot for the actual cursor position relative to the panned view */}
-        <div
-          className="absolute w-1 h-1 bg-accent rounded-full pointer-events-none"
-          style={{
-            left: `${((mousePos.x - viewPositionRef.current.x) / (size.width / zoom)) * 100}%`,
-            top: `${((mousePos.y - viewPositionRef.current.y) / (size.height / zoom)) * 100}%`,
-            transform: 'translate(-50%, -50%)',
-          }}
-        ></div>
-         {/* Square dead zone indicator */}
+        {mousePos && (
+          <div
+            className="absolute w-1 h-1 bg-accent rounded-full pointer-events-none"
+            style={{
+              left: `${((mousePos.x - viewPositionRef.current.x) / (size.width / zoom)) * 100}%`,
+              top: `${((mousePos.y - viewPositionRef.current.y) / (size.height / zoom)) * 100}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          ></div>
+        )}
         <div 
           className="absolute rounded-sm border border-dashed border-white/50"
           style={{
@@ -260,3 +250,5 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     </div>
   );
 }
+
+    

@@ -342,7 +342,7 @@ export function ProSegmentAI() {
     if (!activeTopPanel) return null;
     return (
       <Tabs value={activeTopPanel} className="flex-1 flex flex-col min-h-0">
-        <TabsContent value="tools" className="m-0 flex-1 overflow-y-auto flex flex-col">
+        <TabsContent value="tools" className="m-0 flex-1 flex flex-col">
           {(() => {
             switch (activeTool) {
               case "lasso":
@@ -351,7 +351,7 @@ export function ProSegmentAI() {
                   mousePos={canvasMousePos}
                   selectionEngine={selectionEngineRef.current}
                   onHoverChange={setIsLassoPreviewHovered}
-                  className="h-full"
+                  className="flex-1"
                 />;
               case "magic-wand":
                 return <MagicWandPanel 
@@ -548,13 +548,13 @@ export function ProSegmentAI() {
               </Tabs>
               
               <div className="flex-1 flex flex-col min-h-0">
-                  <div className={cn("overflow-y-auto flex-1", !activeBottomPanel && 'h-full')}>
+                  <div className={cn("overflow-y-auto", !activeTopPanel && 'hidden', activeBottomPanel ? 'h-1/2' : 'h-full')}>
                       {renderTopPanelContent()}
                   </div>
                   
                   {activeTopPanel && activeBottomPanel && <Separator />}
 
-                  <div className={cn("overflow-y-auto flex-1", !activeTopPanel && 'h-full')}>
+                  <div className={cn("overflow-y-auto", !activeBottomPanel && 'hidden', activeTopPanel ? 'h-1/2' : 'h-full')}>
                     {renderBottomPanelContent()}
                   </div>
               </div>
@@ -578,3 +578,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
