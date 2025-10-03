@@ -22,6 +22,7 @@ import {
   Move,
   Frame,
   Contrast,
+  GripVertical,
 } from "lucide-react"
 
 import {
@@ -71,6 +72,8 @@ export function ProSegmentAI() {
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
   const [isAssetDrawerOpen, setIsAssetDrawerOpen] = React.useState(false);
+  const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
+  const isResizingRef = React.useRef(false);
 
   const [layers, setLayers] = React.useState<Layer[]>(() => {
     const backgroundLayer: Layer = {
@@ -279,6 +282,37 @@ export function ProSegmentAI() {
   React.useEffect(() => {
     setIsClient(true)
   }, [])
+  
+  const handleMouseDownResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingRef.current = true;
+    document.body.style.cursor = 'ew-resize';
+  };
+
+  const handleMouseMoveResize = React.useCallback((e: MouseEvent) => {
+    if (!isResizingRef.current) return;
+    setRightPanelWidth(prevWidth => {
+      const newWidth = prevWidth - e.movementX;
+      if (newWidth > 280 && newWidth < 600) {
+        return newWidth;
+      }
+      return prevWidth;
+    });
+  }, []);
+
+  const handleMouseUpResize = React.useCallback(() => {
+    isResizingRef.current = false;
+    document.body.style.cursor = 'default';
+  }, []);
+
+  React.useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMoveResize);
+    window.addEventListener('mouseup', handleMouseUpResize);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMoveResize);
+      window.removeEventListener('mouseup', handleMouseUpResize);
+    };
+  }, [handleMouseMoveResize, handleMouseUpResize]);
 
   const renderLeftPanelContent = () => {
     switch(activeTool) {
@@ -410,8 +444,14 @@ export function ProSegmentAI() {
              />
         </div>
 
-        <div className="w-[380px] border-l flex flex-col h-screen">
-          <Tabs defaultValue="tools" className="flex flex-col flex-1">
+        <div className="relative flex h-screen flex-col border-l" style={{ width: rightPanelWidth }}>
+          <div 
+            onMouseDown={handleMouseDownResize}
+            className="absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group"
+          >
+            <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
+          </div>
+          <Tabs defaultValue="tools" className="flex flex-1 flex-col">
               <SidebarHeader>
                 <TooltipProvider>
                     <TabsList className="grid w-full grid-cols-5">

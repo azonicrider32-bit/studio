@@ -22,10 +22,10 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 256, height: 256 });
-  const [zoom, setZoom] = useState(4);
+  const [zoom, setZoom] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [deadZone, setDeadZone] = useState(50); // Percentage of the preview size
+  const [deadZone, setDeadZone] = useState(80); // Percentage of the preview size
   
   useEffect(() => {
     const container = containerRef.current;
