@@ -55,13 +55,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import Image from "next/image"
 import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
-import { Tooltip, TooltipContent, TooltipProvider } from "./ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { SelectionEngine } from "@/lib/selection-engine"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
-import { TooltipTrigger } from "@radix-ui/react-tooltip"
 import { TelemetryPanel } from "./panels/telemetry-panel"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
-import { cn } from "@/lib/utils"
+import { AssetDrawer } from "./asset-drawer"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
 
@@ -70,6 +69,7 @@ export function ProSegmentAI() {
   const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
+  const [isAssetDrawerOpen, setIsAssetDrawerOpen] = React.useState(false);
 
   const [layers, setLayers] = React.useState<Layer[]>(() => {
     const backgroundLayer: Layer = {
@@ -453,57 +453,51 @@ export function ProSegmentAI() {
           </SidebarFooter>
         </Sidebar>
 
-        <div className="flex flex-1 flex-col">
-          <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4">
-              <div className="flex items-center gap-2">
-                <SidebarTrigger className="md:hidden" />
-                <h2 className="font-headline text-xl font-semibold">Workspace</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm">
+        <div className="flex flex-1 flex-col h-screen overflow-hidden">
+            <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4">
+                <div className="flex items-center gap-2">
+                    <SidebarTrigger className="md:hidden" />
+                    <h2 className="font-headline text-xl font-semibold">Workspace</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setIsAssetDrawerOpen(true)}>
                         <ImageIcon className="mr-2 h-4 w-4" />
                         Load Image
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="grid grid-cols-2 gap-2 w-[400px]">
-                      {PlaceHolderImages.map(img => (
-                          <button key={img.id} onClick={() => handleImageSelect(img.imageUrl)} className="block relative aspect-video w-full rounded-md overflow-hidden hover:opacity-80 transition-opacity">
-                                <Image src={img.imageUrl} alt={img.description} fill className="object-cover" />
-                          </button>
-                      ))}
-                    </PopoverContent>
-                  </Popover>
-              </div>
-          </header>
-          <main className="flex-1 overflow-auto">
-            <ImageCanvas 
-                imageUrl={imageUrl}
-                layers={layers}
-                addLayer={addLayer}
-                updateLayer={updateLayer}
-                removePixelsFromLayers={removePixelsFromLayers}
-                activeLayerId={activeLayerId}
-                onLayerSelect={setActiveLayerId}
-                segmentationMask={segmentationMask}
-                setSegmentationMask={setSegmentationMask}
-                activeTool={activeTool}
-                lassoSettings={lassoSettings}
-                magicWandSettings={magicWandSettings}
-                negativeMagicWandSettings={negativeMagicWandSettings}
-                getSelectionMaskRef={getSelectionMaskRef}
-                clearSelectionRef={clearSelectionRef}
-                onLassoSettingChange={handleLassoSettingsChange}
-                onMagicWandSettingChange={handleMagicWandSettingsChange}
-                onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
-                canvasMousePos={canvasMousePos}
-                setCanvasMousePos={setCanvasMousePos}
-                getCanvasRef={canvasRef}
-                getSelectionEngineRef={selectionEngineRef}
-                isLassoPreviewHovered={isLassoPreviewHovered}
-              />
-          </main>
+                    </Button>
+                </div>
+            </header>
+            <main className="flex-1 overflow-auto bg-muted/30 flex flex-col">
+                 <ImageCanvas 
+                    imageUrl={imageUrl}
+                    layers={layers}
+                    addLayer={addLayer}
+                    updateLayer={updateLayer}
+                    removePixelsFromLayers={removePixelsFromLayers}
+                    activeLayerId={activeLayerId}
+                    onLayerSelect={setActiveLayerId}
+                    segmentationMask={segmentationMask}
+                    setSegmentationMask={setSegmentationMask}
+                    activeTool={activeTool}
+                    lassoSettings={lassoSettings}
+                    magicWandSettings={magicWandSettings}
+                    negativeMagicWandSettings={negativeMagicWandSettings}
+                    getSelectionMaskRef={getSelectionMaskRef}
+                    clearSelectionRef={clearSelectionRef}
+                    onLassoSettingChange={handleLassoSettingsChange}
+                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                    canvasMousePos={canvasMousePos}
+                    setCanvasMousePos={setCanvasMousePos}
+                    getCanvasRef={canvasRef}
+                    getSelectionEngineRef={selectionEngineRef}
+                    isLassoPreviewHovered={isLassoPreviewHovered}
+                />
+            </main>
+             <AssetDrawer
+                isOpen={isAssetDrawerOpen}
+                onToggle={() => setIsAssetDrawerOpen(prev => !prev)}
+                onImageSelect={handleImageSelect}
+             />
         </div>
 
         <div className="w-[380px] border-l flex flex-col h-screen">
