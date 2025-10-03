@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 
 
 interface LayersPanelProps {
-    workspaces: { id: string, name: string, layers: Layer[] }[];
+    workspaces: { id: string, name: string, layers: Layer[], activeLayerId: string | null }[];
     activeWorkspaceId: string | null;
     onWorkspaceSelect: (id: string) => void;
     onLayerSelect: (id: string) => void;
@@ -29,6 +29,51 @@ interface LayersPanelProps {
     setDropTargetId: (id: string | null) => void;
     onDrop: (draggedId: string, targetId: string) => void;
 }
+
+const LayerThumbnail: React.FC<{ layer: Layer }> = ({ layer }) => {
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+
+    React.useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas || !layer.imageData) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const thumbnailWidth = 40;
+        const thumbnailHeight = 28;
+
+        canvas.width = thumbnailWidth;
+        canvas.height = thumbnailHeight;
+
+        const imgWidth = layer.imageData.width;
+        const imgHeight = layer.imageData.height;
+
+        const scale = thumbnailWidth / imgWidth;
+        const scaledHeight = imgHeight * scale;
+        const yOffset = (thumbnailHeight - scaledHeight) / 2;
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = imgWidth;
+        tempCanvas.height = imgHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        if(tempCtx) {
+          tempCtx.putImageData(layer.imageData, 0, 0);
+          ctx.clearRect(0, 0, thumbnailWidth, thumbnailHeight);
+          ctx.drawImage(tempCanvas, 0, yOffset, thumbnailWidth, scaledHeight);
+        }
+    }, [layer.imageData]);
+
+    if (layer.subType === 'mask') {
+        return <div className="w-10 h-7 rounded-sm border bg-card flex items-center justify-center"><Link className="w-4 h-4"/></div>;
+    }
+    
+    if (layer.type === 'background' || !layer.imageData) {
+       return <div className="w-10 h-7 bg-muted rounded-sm border"></div>
+    }
+
+    return <canvas ref={canvasRef} className="w-10 h-7 rounded-sm border bg-card" />;
+};
 
 
 export function LayersPanel({
@@ -62,13 +107,7 @@ export function LayersPanel({
   };
 
   const renderLayer = (layer: Layer, isMask = false) => {
-    const layerTypeIcon = layer.subType === 'mask' 
-      ? <div className="w-10 h-7 rounded-sm border bg-card flex items-center justify-center"><Link className="w-4 h-4"/></div>
-      : (layer.type === 'background'
-          ? <div className="w-10 h-7 bg-muted rounded-sm"></div>
-          : <div className="w-10 h-7 rounded-sm border bg-card flex items-center justify-center"><div className="w-full h-full bg-black/5" /></div>
-      );
-
+    const activeWorkspace = workspaces.find(ws => ws.id === activeWorkspaceId);
     const isDropTarget = dropTargetId === layer.id && draggedLayerId !== layer.id;
 
     return (
@@ -108,7 +147,7 @@ export function LayersPanel({
         onClick={() => !layer.locked && onLayerSelect(layer.id)}
         className={cn(
           "flex items-center gap-2 p-2 rounded-md transition-all",
-          workspaces.find(ws => ws.id === activeWorkspaceId)?.activeLayerId === layer.id ? "bg-accent/50" : "hover:bg-accent/30",
+          activeWorkspace?.activeLayerId === layer.id ? "bg-accent/50" : "hover:bg-accent/30",
           layer.locked ? "cursor-not-allowed opacity-70" : "cursor-pointer",
           isMask && "ml-6",
           draggedLayerId === layer.id && "opacity-50",
@@ -117,7 +156,7 @@ export function LayersPanel({
       >
         <GripVertical className="h-5 w-5 text-muted-foreground" />
         <div className="flex-1 flex items-center gap-2 overflow-hidden">
-          {layerTypeIcon}
+          <LayerThumbnail layer={layer} />
           <span className="text-sm truncate flex-1">{layer.name}</span>
         </div>
 
@@ -233,12 +272,6 @@ export function LayersPanel({
 
   return (
     <div className="p-4 space-y-4">
-      <div className="space-y-2">
-        <h3 className="font-headline text-lg">Layers</h3>
-        <p className="text-sm text-muted-foreground">
-          Manage and organize your image layers.
-        </p>
-      </div>
       <Separator />
       <Tabs value={activeWorkspaceId || ""} onValueChange={onWorkspaceSelect} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
