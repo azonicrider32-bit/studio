@@ -218,11 +218,11 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </Tooltip>
         </div>
         
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-4">
             <div className="flex flex-col items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
                 <div className="flex items-end h-32 gap-px">
-                  {HSV_COMPONENTS.map(config => (
+                  {RGB_COMPONENTS.map(config => (
                       <VerticalToleranceSlider
                           key={config.id}
                           id={config.id}
@@ -241,11 +241,11 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
                   ))}
                 </div>
             </div>
-            
+
             <div className="flex flex-col items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
                 <div className="flex items-end h-32 gap-px">
-                  {RGB_COMPONENTS.map(config => (
+                  {HSV_COMPONENTS.map(config => (
                       <VerticalToleranceSlider
                           key={config.id}
                           id={config.id}
