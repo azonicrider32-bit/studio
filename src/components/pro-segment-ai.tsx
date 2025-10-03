@@ -815,52 +815,41 @@ function ProSegmentAIContent() {
       >
         <div 
           onMouseDown={handleMouseDownResize}
-          className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group", 
-            (!activeTopPanel && !activeBottomPanel) && "hidden"
-          )}
+          className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group")}
         >
           <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
         </div>
-          
-        <div className="flex h-12 items-center justify-between border-b px-2">
-            {/* Intentionally empty for now, controls were moved */}
-        </div>
         
         <div className="flex-1 flex flex-col min-h-0">
-            {(!activeTopPanel && !activeBottomPanel) && (
-              <div className="flex-1 flex items-center justify-center text-center text-muted-foreground p-4">
-                <p>Select a panel to view details.</p>
-              </div>
-            )}
-            <div className="border-b">
-              <Tabs value={activeTopPanel || 'none'} className="w-full">
-                <TooltipProvider>
-                    <TabsList className="grid w-full grid-cols-4">
-                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span></TabsTrigger></TooltipTrigger><TooltipContent>Zoom Panel (Z)</TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span></TabsTrigger></TooltipTrigger><TooltipContent>Feather & Edges (F)</TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span></TabsTrigger></TooltipTrigger><TooltipContent>Layers (L)</TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Tools (A)</TooltipContent></Tooltip>
-                    </TabsList>
-                </TooltipProvider>
-              </Tabs>
-              {renderTopPanelContent()}
-            </div>
-          
-            {activeTopPanel && activeBottomPanel && <Separator />}
-
-            <div className="border-t">
-              {renderBottomPanelContent()}
-              <Tabs value={activeBottomPanel || 'none'} className="w-full">
-                <TooltipProvider>
+          <div className="border-b">
+            <Tabs value={activeTopPanel || 'none'} className="w-full">
+              <TooltipProvider>
                   <TabsList className="grid w-full grid-cols-4">
-                    <Tooltip><TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">T</span></TabsTrigger></TooltipTrigger><TooltipContent>Telemetry (T)</TooltipContent></Tooltip>
-                    <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span></TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
-                    <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
-                    <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span></TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
+                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span></TabsTrigger></TooltipTrigger><TooltipContent>Zoom Panel (Z)</TooltipContent></Tooltip>
+                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span></TabsTrigger></TooltipTrigger><TooltipContent>Feather & Edges (F)</TooltipContent></Tooltip>
+                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span></TabsTrigger></TooltipTrigger><TooltipContent>Layers (L)</TooltipContent></Tooltip>
+                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Tools (A)</TooltipContent></Tooltip>
                   </TabsList>
-                </TooltipProvider>
-              </Tabs>
-            </div>
+              </TooltipProvider>
+            </Tabs>
+            {renderTopPanelContent()}
+          </div>
+        
+          {activeTopPanel && activeBottomPanel && <Separator />}
+
+          <div className="border-t">
+            {renderBottomPanelContent()}
+            <Tabs value={activeBottomPanel || 'none'} className="w-full">
+              <TooltipProvider>
+                <TabsList className="grid w-full grid-cols-4">
+                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">T</span></TabsTrigger></TooltipTrigger><TooltipContent>Telemetry (T)</TooltipContent></Tooltip>
+                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span></TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
+                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
+                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span></TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
+                </TabsList>
+              </TooltipProvider>
+            </Tabs>
+          </div>
         </div>
       </div>
     </div>
@@ -924,4 +913,6 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+    
+
     
