@@ -42,6 +42,7 @@ import {
   SidebarInset,
   SidebarFooter,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
@@ -78,10 +79,8 @@ type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipet
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
 type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
 
-
-export function ProSegmentAI() {
+function ProSegmentAIContent() {
   const [activeTool, setActiveTool] = React.useState<Tool>("lasso")
-  const [isClient, setIsClient] = React.useState(false)
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
   const [isAssetDrawerOpen, setIsAssetDrawerOpen] = React.useState(false);
@@ -325,10 +324,6 @@ export function ProSegmentAI() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  React.useEffect(() => {
-    setIsClient(true)
-  }, [])
   
   const handleMouseDownResize = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -508,14 +503,11 @@ export function ProSegmentAI() {
     }
   };
 
+  const { toggleSidebar } = useSidebar();
 
-  if (!isClient) {
-    return null;
-  }
 
   return (
-    <SidebarProvider defaultOpen>
-      <div className="flex h-screen w-screen items-stretch overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen w-screen items-stretch overflow-hidden bg-background text-foreground">
         <Sidebar side="left" collapsible="icon" className="border-r">
           <SidebarContent>
             <SidebarHeader>
@@ -529,7 +521,7 @@ export function ProSegmentAI() {
           <SidebarFooter>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings" className="justify-center">
+                <SidebarMenuButton tooltip="Settings" className="justify-center" onClick={toggleSidebar}>
                   <Settings2 />
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -650,7 +642,7 @@ export function ProSegmentAI() {
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
                     onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                    onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
                     getCanvasRef={canvasRef}
@@ -742,6 +734,23 @@ export function ProSegmentAI() {
           </div>
         )}
       </div>
+  )
+}
+
+
+export function ProSegmentAI() {
+  const [isClient, setIsClient] = React.useState(false);
+  React.useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) {
+    return null;
+  }
+  
+  return (
+    <SidebarProvider>
+      <ProSegmentAIContent />
     </SidebarProvider>
   )
 }
