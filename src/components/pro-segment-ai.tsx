@@ -3,69 +3,52 @@
 
 import * as React from "react"
 import {
+  AreaChart,
   Bot,
+  BrainCircuit,
   Brush,
+  ChevronDown,
+  Contrast,
   Eraser,
+  EyeOff,
   Feather as FeatherIcon,
+  Frame,
+  GitCommit,
+  GripVertical,
+  Hand,
+  History,
+  Image as ImageIcon,
   Layers as LayersIcon,
+  Link,
+  MessageSquare,
+  Minus,
+  Move,
   Palette,
+  PenTool,
+  Plus,
+  Redo2,
+  Replace,
+  Scan,
   Settings2,
   SlidersHorizontal,
-  Wand2,
-  Image as ImageIcon,
-  MinusCircle,
-  AreaChart,
-  BrainCircuit,
-  Link,
-  Replace,
-  Move,
-  Frame,
-  Contrast,
-  GripVertical,
-  Scan,
-  ZoomIn,
-  Hand,
-  MessageSquare,
-  PenTool,
-  History,
-  Undo2,
-  Redo2,
-  ChevronDown,
+  Sparkles,
   Split,
-  Plus,
+  Undo2,
+  Wand2,
   X as XIcon,
+  ZoomIn,
 } from "lucide-react"
 
 import {
-  SidebarProvider,
   Sidebar,
   SidebarContent,
+  SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
-import { ImageCanvas } from "./image-canvas"
-import { LayersPanel } from "./panels/layers-panel"
-import { AiModelsPanel } from "./panels/ai-models-panel"
-import { InpaintingPanel } from "./panels/inpainting-panel"
-import { FeatherPanel } from "./panels/feather-panel"
-import { LassoSettings, MagicWandSettings, FeatherSettings, Layer } from "@/lib/types"
-import { PlaceHolderImages } from "@/lib/placeholder-images"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { Button } from "./ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
-import { SelectionEngine } from "@/lib/selection-engine"
-import { ToolSettingsPanel } from "./panels/tool-settings-panel"
-import { TelemetryPanel } from "./panels/telemetry-panel"
-import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion"
 import { AssetDrawer } from "./asset-drawer"
-import { ToolPanel } from "./tool-panel"
-import { cn } from "@/lib/utils"
-import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
-import { SegmentHoverPreview } from "./segment-hover-preview"
-import { Slider } from "./ui/slider"
-import { AiChatPanel } from "./panels/ai-chat-panel"
-import { useSelectionDrag } from "@/hooks/use-selection-drag"
+import { Button } from "./ui/button"
+import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,12 +56,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useToast } from "@/hooks/use-toast"
 import { GlobalSettingsPanel } from "./panels/global-settings-panel"
+import { ImageCanvas } from "./image-canvas"
+import { InpaintingPanel } from "./panels/inpainting-panel"
+import { Label } from "./ui/label"
+import { LassoSettings, Layer, MagicWandSettings, FeatherSettings } from "@/lib/types"
+import { LayersPanel } from "./panels/layers-panel"
+import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
+import { PlaceHolderImages } from "@/lib/placeholder-images"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { SegmentHoverPreview } from "./segment-hover-preview"
+import { SelectionEngine } from "@/lib/selection-engine"
+import { Separator } from "./ui/separator"
+import { Slider } from "./ui/slider"
+import { Switch } from "./ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
+import { TelemetryPanel } from "./panels/telemetry-panel"
+import { ToolPanel } from "./tool-panel"
+import { ToolSettingsPanel } from "./panels/tool-settings-panel"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { AiChatPanel } from "./panels/ai-chat-panel"
+import { AiModelsPanel } from "./panels/ai-models-panel"
+import { FeatherPanel } from "./panels/feather-panel"
+import { cn } from "@/lib/utils"
+import { useSelectionDrag } from "@/hooks/use-selection-drag"
+import { useToast } from "@/hooks/use-toast"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
-type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
+type BottomPanel = 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
 
 interface WorkspaceState {
   id: string;
@@ -559,7 +565,6 @@ function ProSegmentAIContent() {
     if (!activeBottomPanel) return null;
     return (
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-          {activeBottomPanel === "telemetry" && <TelemetryPanel />}
           {activeBottomPanel === "chat" && <AiChatPanel />}
           {activeBottomPanel === "color-analysis" && <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>}
           {activeBottomPanel === "pixel-preview" && <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>}
@@ -608,211 +613,211 @@ function ProSegmentAIContent() {
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <header className="flex h-12 items-center border-b px-4 z-10 bg-background/80 backdrop-blur-sm" style={{ paddingRight: `calc(var(--right-panel-width) + 1rem)` }}>
-            <div className="flex items-center gap-4">
-              <WorkspaceTabs 
-                workspaces={workspaces}
-                activeWorkspaceId={activeWorkspaceId}
-                onWorkspaceSelect={setActiveWorkspaceId}
-                onWorkspaceAdd={handleAddNewWorkspace}
-                onWorkspaceClose={handleCloseWorkspace}
-              />
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={handleUndo} disabled={activeWorkspace.historyIndex < 0}>
-                  <Undo2 className="w-5 h-5"/>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={handleRedo} disabled={activeWorkspace.historyIndex >= activeWorkspace.history.length - 1}>
-                  <Redo2 className="w-5 h-5"/>
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <History className="w-5 h-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuSeparator />
-                    {activeWorkspace.history.length > 0 ? activeWorkspace.history.slice().reverse().map((action, index) => (
-                      <DropdownMenuItem key={action.id} onSelect={() => {}}>
-                          <span>{action.type.replace(/_/g, ' ')}</span>
-                      </DropdownMenuItem>
-                    )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <div className="flex items-center gap-2">
-                  <TooltipProvider>
-                      <div className="flex items-center gap-2">
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <Button
-                                      variant={activeZoom === 'A' ? "default" : "ghost"}
-                                      size="icon"
-                                      className={cn("h-8 w-8 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                                      onClick={() => setActiveZoom('A')}
-                                  >
-                                      <ZoomIn className="w-4 h-4"/>
-                                      <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
-                                  </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Activate Zoom A (1)</TooltipContent>
-                          </Tooltip>
-                          <div 
-                              className="group flex items-center"
-                              onMouseEnter={() => handleHoverZoom('A')}
-                              onMouseLeave={() => handleHoverZoom(null)}
-                          >
-                              <span 
-                                  className="text-sm font-medium px-2 py-1 text-center bg-background"
-                                  onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                              >
-                                  {(zoomA * 100).toFixed(0)}%
-                              </span>
-                              <div className={cn(
-                                  "overflow-hidden transition-all duration-300 ease-in-out",
-                                  hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
-                              )}>
-                                  <Slider 
-                                      value={[zoomA]}
-                                      onValueChange={(v) => setZoomA(v[0])}
-                                      min={0.1} max={10} step={0.1}
-                                  />
-                              </div>
-                          </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                          <Tooltip>
-                              <TooltipTrigger asChild>
-                                  <Button
-                                      variant={activeZoom === 'B' ? "default" : "ghost"}
-                                      size="icon"
-                                      className={cn("h-8 w-8 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                                      onClick={() => setActiveZoom('B')}
-                                  >
-                                      <ZoomIn className="w-4 h-4"/>
-                                      <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
-                                  </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Activate Zoom B (2)</TooltipContent>
-                          </Tooltip>
-                          <div 
-                              className="group flex items-center"
-                              onMouseEnter={() => handleHoverZoom('B')}
-                              onMouseLeave={() => handleHoverZoom(null)}
-                          >
-                              <span 
-                                  className="text-sm font-medium px-2 py-1 text-center bg-background"
-                                  onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                              >
-                                  {(zoomB * 100).toFixed(0)}%
-                              </span>
-                              <div className={cn(
-                                  "overflow-hidden transition-all duration-300 ease-in-out",
-                                  hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
-                              )}>
-                                  <Slider 
-                                      value={[zoomB]}
-                                      onValueChange={(v) => setZoomB(v[0])}
-                                      min={0.1} max={10} step={0.1}
-                                  />
-                              </div>
-                          </div>
-                      </div>
-                  </TooltipProvider>
-                <Button variant="ghost" size="icon" onClick={() => setIsSplitView(p => !p)}>
-                  <Split className={cn("w-5 h-5", isSplitView && "text-primary")} />
-                </Button>
-              </div>
+          <div className="flex items-center gap-4">
+            <WorkspaceTabs 
+              workspaces={workspaces}
+              activeWorkspaceId={activeWorkspaceId}
+              onWorkspaceSelect={setActiveWorkspaceId}
+              onWorkspaceAdd={handleAddNewWorkspace}
+              onWorkspaceClose={handleCloseWorkspace}
+            />
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={handleUndo} disabled={activeWorkspace.historyIndex < 0}>
+                <Undo2 className="w-5 h-5"/>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleRedo} disabled={activeWorkspace.historyIndex >= activeWorkspace.history.length - 1}>
+                <Redo2 className="w-5 h-5"/>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <History className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuSeparator />
+                  {activeWorkspace.history.length > 0 ? activeWorkspace.history.slice().reverse().map((action, index) => (
+                    <DropdownMenuItem key={action.id} onSelect={() => {}}>
+                        <span>{action.type.replace(/_/g, ' ')}</span>
+                    </DropdownMenuItem>
+                  )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </header>
-          
-          <main className="flex-1 flex overflow-auto bg-muted/30">
-            <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
+            <div className="flex items-center gap-2">
+                <TooltipProvider>
+                    <div className="flex items-center gap-2">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant={activeZoom === 'A' ? "default" : "ghost"}
+                                    size="icon"
+                                    className={cn("h-8 w-8 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                    onClick={() => setActiveZoom('A')}
+                                >
+                                    <ZoomIn className="w-4 h-4"/>
+                                    <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Activate Zoom A (1)</TooltipContent>
+                        </Tooltip>
+                        <div 
+                            className="group flex items-center"
+                            onMouseEnter={() => handleHoverZoom('A')}
+                            onMouseLeave={() => handleHoverZoom(null)}
+                        >
+                            <span 
+                                className="text-sm font-medium px-2 py-1 text-center bg-background"
+                                onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                            >
+                                {(zoomA * 100).toFixed(0)}%
+                            </span>
+                            <div className={cn(
+                                "overflow-hidden transition-all duration-300 ease-in-out",
+                                hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
+                            )}>
+                                <Slider 
+                                    value={[zoomA]}
+                                    onValueChange={(v) => setZoomA(v[0])}
+                                    min={0.1} max={10} step={0.1}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant={activeZoom === 'B' ? "default" : "ghost"}
+                                    size="icon"
+                                    className={cn("h-8 w-8 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                    onClick={() => setActiveZoom('B')}
+                                >
+                                    <ZoomIn className="w-4 h-4"/>
+                                    <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Activate Zoom B (2)</TooltipContent>
+                        </Tooltip>
+                        <div 
+                            className="group flex items-center"
+                            onMouseEnter={() => handleHoverZoom('B')}
+                            onMouseLeave={() => handleHoverZoom(null)}
+                        >
+                            <span 
+                                className="text-sm font-medium px-2 py-1 text-center bg-background"
+                                onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                            >
+                                {(zoomB * 100).toFixed(0)}%
+                            </span>
+                            <div className={cn(
+                                "overflow-hidden transition-all duration-300 ease-in-out",
+                                hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
+                            )}>
+                                <Slider 
+                                    value={[zoomB]}
+                                    onValueChange={(v) => setZoomB(v[0])}
+                                    min={0.1} max={10} step={0.1}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </TooltipProvider>
+              <Button variant="ghost" size="icon" onClick={() => setIsSplitView(p => !p)}>
+                <Split className={cn("w-5 h-5", isSplitView && "text-primary")} />
+              </Button>
+            </div>
+          </div>
+        </header>
+        
+        <main className="flex-1 flex overflow-auto bg-muted/30">
+          <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
+             <ImageCanvas 
+                key={activeWorkspace.id}
+                imageUrl={activeWorkspace.imageUrl}
+                layers={activeWorkspace.layers}
+                addLayer={addLayer}
+                updateLayer={updateLayer}
+                removePixelsFromLayers={removePixelsFromLayers}
+                activeLayerId={activeWorkspace.activeLayerId}
+                onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
+                segmentationMask={activeWorkspace.segmentationMask}
+                setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({ ...ws, segmentationMask: mask }))}
+                activeTool={activeTool}
+                lassoSettings={lassoSettings}
+                magicWandSettings={magicWandSettings}
+                negativeMagicWandSettings={negativeMagicWandSettings}
+                getSelectionMaskRef={getSelectionMaskRef}
+                clearSelectionRef={clearSelectionRef}
+                onLassoSettingChange={handleLassoSettingsChange}
+                onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                canvasMousePos={canvasMousePos}
+                setCanvasMousePos={setCanvasMousePos}
+                getCanvasRef={canvasRef}
+                getSelectionEngineRef={selectionEngineRef}
+                isLassoPreviewHovered={isLassoPreviewHovered}
+                mainCanvasZoom={mainCanvasZoom}
+                pan={pan}
+                setPan={setPan}
+                onDragMouseDown={handleDragMouseDown}
+                onDragMouseMove={handleDragMouseMove}
+                onDragMouseUp={handleDragMouseUp}
+                draggedLayer={draggedLayer}
+            />
+            {isSplitView && secondaryWorkspace && (
                <ImageCanvas 
-                  key={activeWorkspace.id}
-                  imageUrl={activeWorkspace.imageUrl}
-                  layers={activeWorkspace.layers}
-                  addLayer={addLayer}
-                  updateLayer={updateLayer}
-                  removePixelsFromLayers={removePixelsFromLayers}
-                  activeLayerId={activeWorkspace.activeLayerId}
-                  onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
-                  segmentationMask={activeWorkspace.segmentationMask}
-                  setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({ ...ws, segmentationMask: mask }))}
+                  key={secondaryWorkspace.id}
+                  imageUrl={secondaryWorkspace.imageUrl}
+                  layers={secondaryWorkspace.layers}
+                  addLayer={() => {}}
+                  updateLayer={() => {}}
+                  removePixelsFromLayers={() => {}}
+                  activeLayerId={secondaryWorkspace.activeLayerId}
+                  onLayerSelect={() => {}}
+                  segmentationMask={secondaryWorkspace.segmentationMask}
+                  setSegmentationMask={() => {}}
                   activeTool={activeTool}
                   lassoSettings={lassoSettings}
                   magicWandSettings={magicWandSettings}
                   negativeMagicWandSettings={negativeMagicWandSettings}
-                  getSelectionMaskRef={getSelectionMaskRef}
-                  clearSelectionRef={clearSelectionRef}
-                  onLassoSettingChange={handleLassoSettingsChange}
-                  onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                  onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
-                  canvasMousePos={canvasMousePos}
-                  setCanvasMousePos={setCanvasMousePos}
-                  getCanvasRef={canvasRef}
-                  getSelectionEngineRef={selectionEngineRef}
-                  isLassoPreviewHovered={isLassoPreviewHovered}
+                  getSelectionMaskRef={React.useRef()}
+                  clearSelectionRef={React.useRef()}
+                  onLassoSettingChange={() => {}}
+                  onMagicWandSettingsChange={() => {}}
+                  onNegativeMagicWandSettingsChange={() => {}}
+                  canvasMousePos={null}
+                  setCanvasMousePos={() => {}}
+                  getCanvasRef={React.useRef()}
+                  getSelectionEngineRef={React.useRef()}
+                  isLassoPreviewHovered={false}
                   mainCanvasZoom={mainCanvasZoom}
                   pan={pan}
                   setPan={setPan}
-                  onDragMouseDown={handleDragMouseDown}
-                  onDragMouseMove={handleDragMouseMove}
-                  onDragMouseUp={handleDragMouseUp}
-                  draggedLayer={draggedLayer}
+                  onDragMouseDown={() => {}}
+                  onDragMouseMove={() => {}}
+                  onDragMouseUp={() => {}}
+                  draggedLayer={null}
               />
-              {isSplitView && secondaryWorkspace && (
-                 <ImageCanvas 
-                    key={secondaryWorkspace.id}
-                    imageUrl={secondaryWorkspace.imageUrl}
-                    layers={secondaryWorkspace.layers}
-                    addLayer={() => {}}
-                    updateLayer={() => {}}
-                    removePixelsFromLayers={() => {}}
-                    activeLayerId={secondaryWorkspace.activeLayerId}
-                    onLayerSelect={() => {}}
-                    segmentationMask={secondaryWorkspace.segmentationMask}
-                    setSegmentationMask={() => {}}
-                    activeTool={activeTool}
-                    lassoSettings={lassoSettings}
-                    magicWandSettings={magicWandSettings}
-                    negativeMagicWandSettings={negativeMagicWandSettings}
-                    getSelectionMaskRef={React.useRef()}
-                    clearSelectionRef={React.useRef()}
-                    onLassoSettingChange={() => {}}
-                    onMagicWandSettingsChange={() => {}}
-                    onNegativeMagicWandSettingsChange={() => {}}
-                    canvasMousePos={null}
-                    setCanvasMousePos={() => {}}
-                    getCanvasRef={React.useRef()}
-                    getSelectionEngineRef={React.useRef()}
-                    isLassoPreviewHovered={false}
-                    mainCanvasZoom={mainCanvasZoom}
-                    pan={pan}
-                    setPan={setPan}
-                    onDragMouseDown={() => {}}
-                    onDragMouseMove={() => {}}
-                    onDragMouseUp={() => {}}
-                    draggedLayer={null}
-                />
-              )}
-            </div>
-          </main>
+            )}
+          </div>
+        </main>
 
-           <AssetDrawer
-              isOpen={isAssetDrawerOpen}
-              onToggle={() => setIsAssetDrawerOpen(prev => !prev)}
-              onImageSelect={handleImageSelect}
-              rightPanelWidth={rightPanelWidth}
-           />
+         <AssetDrawer
+            isOpen={isAssetDrawerOpen}
+            onToggle={() => setIsAssetDrawerOpen(prev => !prev)}
+            onImageSelect={handleImageSelect}
+            rightPanelWidth={rightPanelWidth}
+         />
       </div>
 
       <div 
-        className="absolute top-0 right-0 h-full flex flex-col border-l bg-background/80 backdrop-blur-sm z-20" 
+        className="relative flex flex-col border-l bg-background/80 backdrop-blur-sm z-20" 
         style={{ width: rightPanelWidth }}
       >
         <div 
           onMouseDown={handleMouseDownResize}
-          className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group")}
+          className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50")}
         >
           <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
         </div>
@@ -833,15 +838,13 @@ function ProSegmentAIContent() {
           {renderTopPanelContent()}
         </div>
         
-        <div className="flex-1 flex flex-col min-h-0 justify-end">
+        <div className="flex flex-col min-h-0 justify-end">
           {activeTopPanel && activeBottomPanel && <Separator />}
-
+          {renderBottomPanelContent()}
           <div className="border-t">
-            {renderBottomPanelContent()}
             <Tabs value={activeBottomPanel || 'none'} className="w-full">
               <TooltipProvider>
                 <TabsList className="grid w-full grid-cols-4">
-                  <Tooltip><TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">T</span></TabsTrigger></TooltipTrigger><TooltipContent>Telemetry (T)</TooltipContent></Tooltip>
                   <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span></TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
                   <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span></TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
                   <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span></TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
@@ -912,6 +915,4 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-    
-
     

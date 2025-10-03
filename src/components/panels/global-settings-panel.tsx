@@ -1,9 +1,11 @@
+
 "use client"
 
 import * as React from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "../ui/label"
 import { Switch } from "../ui/switch"
+import { TelemetryPanel } from "./telemetry-panel"
 
 export function GlobalSettingsPanel() {
   const [showHotkeys, setShowHotkeys] = React.useState(true)
@@ -21,7 +23,7 @@ export function GlobalSettingsPanel() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="hotkeys">Hotkeys</TabsTrigger>
           <TabsTrigger value="project">Project</TabsTrigger>
-          <TabsTrigger value="cursor">Cursor</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
         <TabsContent value="hotkeys" className="mt-4 flex-1">
@@ -44,8 +46,8 @@ export function GlobalSettingsPanel() {
         <TabsContent value="project" className="mt-4">
           <p className="text-sm text-muted-foreground">Project settings will go here.</p>
         </TabsContent>
-        <TabsContent value="cursor" className="mt-4">
-          <p className="text-sm text-muted-foreground">Cursor style settings will go here.</p>
+        <TabsContent value="performance" className="mt-4 flex-1">
+            <TelemetryPanel />
         </TabsContent>
         <TabsContent value="account" className="mt-4">
           <p className="text-sm text-muted-foreground">Account management settings will go here.</p>
