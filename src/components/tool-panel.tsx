@@ -7,6 +7,7 @@ import {
   SlidersHorizontal,
   Replace,
   Image as ImageIcon,
+  PanelLeft,
 } from "lucide-react"
 
 import {
@@ -40,16 +41,16 @@ interface ToolPanelProps {
   activeTool: Tool;
   setActiveTool: (tool: Tool) => void;
   onToggleAssetDrawer: () => void;
+  onToggleSidebar: () => void;
 }
 
-export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: ToolPanelProps) {
-  const { toggleSidebar } = useSidebar();
+export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onToggleSidebar }: ToolPanelProps) {
   
   return (
     <div className="flex h-full flex-col items-center justify-between gap-2 border-r bg-background p-2">
       <div className="flex flex-col items-center gap-2">
         <div className="h-14 w-14 flex items-center justify-center">
-            <div className="font-headline font-black text-4xl" style={{ color: 'red' }}>
+            <div className="font-headline font-black text-4xl text-red-500">
                 PS
             </div>
         </div>
@@ -81,6 +82,19 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
       <div className="flex flex-col items-center gap-2">
           <Separator />
           <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="h-12 w-12 relative ps-tool-icon-container">
+                        <div className="ps-tool-icon">
+                            <PanelLeft className="h-5 w-5 ps-tool-icon__icon" />
+                        </div>
+                        <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">B</span>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                    <p>Toggle Settings Panel (B)</p>
+                </TooltipContent>
+            </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" onClick={onToggleAssetDrawer} className="h-12 w-12 relative ps-tool-icon-container">
