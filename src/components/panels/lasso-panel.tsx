@@ -1,11 +1,12 @@
 
-
-"use client"
+"use client";
 
 import * as React from "react"
 import { LassoHoverPreview } from "../lasso-hover-preview";
 import { SelectionEngine } from "@/lib/selection-engine";
 import { cn } from "@/lib/utils";
+import { Separator } from "../ui/separator";
+import { Lasso } from "lucide-react";
 
 
 interface LassoPanelProps {
@@ -20,7 +21,17 @@ interface LassoPanelProps {
 export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, className }: LassoPanelProps) {
     
   return (
-    <div className={cn("p-4 space-y-4 h-full flex flex-col flex-1", className)}>
+    <div className={cn("p-4 space-y-4 h-full flex flex-col", className)}>
+        <div className="space-y-2">
+            <h3 className="font-headline text-lg flex items-center gap-2">
+                <Lasso className="w-5 h-5"/>
+                Lasso Zoom Preview
+            </h3>
+            <p className="text-sm text-muted-foreground">
+            A zoomed-in view for precise path creation with the lasso tool.
+            </p>
+        </div>
+        <Separator />
       <LassoHoverPreview 
           canvas={canvas} 
           mousePos={mousePos} 
@@ -31,5 +42,3 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, c
     </div>
   )
 }
-
-    

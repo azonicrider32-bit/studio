@@ -1,12 +1,14 @@
 
-
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { SelectionEngine } from '@/lib/selection-engine';
 import { Button } from './ui/button';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Settings } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Slider } from './ui/slider';
+import { Label } from './ui/label';
 
 interface LassoHoverPreviewProps {
   mousePos: { x: number; y: number } | null;
@@ -20,9 +22,10 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 256, height: 256 });
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(4);
   const [isHovered, setIsHovered] = useState(false);
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [deadZone, setDeadZone] = useState(50); // Percentage of the preview size
   
   useEffect(() => {
     const container = containerRef.current;
@@ -51,8 +54,10 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     
     const sourceSizeX = size.width / zoom;
     const sourceSizeY = size.height / zoom;
-    const deadZoneSizeX = sourceSizeX;
-    const deadZoneSizeY = sourceSizeY;
+    
+    // Dead zone calculation based on state
+    const deadZoneSizeX = sourceSizeX * (deadZone / 100);
+    const deadZoneSizeY = sourceSizeY * (deadZone / 100);
 
     // Get the current center of the view in source image coordinates
     const viewCenterX = viewPositionRef.current.x + sourceSizeX / 2;
@@ -62,7 +67,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     const dx = mousePos.x - viewCenterX;
     const dy = mousePos.y - viewCenterY;
 
-    // Update view position if mouse is outside the square dead zone
+    // Update view position if mouse is outside the dead zone
     if (Math.abs(dx) > deadZoneSizeX / 2) {
       viewPositionRef.current.x += dx - (Math.sign(dx) * deadZoneSizeX / 2);
     }
@@ -164,7 +169,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     }
 
 
-  }, [mousePos, canvas, selectionEngine, size, zoom]);
+  }, [mousePos, canvas, selectionEngine, size, zoom, deadZone]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.stopPropagation();
@@ -212,8 +217,8 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
         <div 
           className="absolute rounded-sm border border-dashed border-white/50"
           style={{
-              width: `100%`, 
-              height: `100%`,
+              width: `${deadZone}%`, 
+              height: `${deadZone}%`,
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)'
@@ -223,6 +228,31 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
        <div className="absolute bottom-2 right-2 flex gap-1">
         <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(-4)}><Minus className="w-4 h-4"/></Button>
         <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(4)}><Plus className="w-4 h-4"/></Button>
+      </div>
+      <div className="absolute top-2 left-2 flex gap-1">
+         <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="h-6 w-6">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-4" side="bottom" align="start">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="deadzone-slider">Dead Zone Buffer: {deadZone}%</Label>
+                <Slider
+                  id="deadzone-slider"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={[deadZone]}
+                  onValueChange={(value) => setDeadZone(value[0])}
+                />
+                <p className='text-xs text-muted-foreground'>Controls how far the cursor moves before the preview pans.</p>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       <div className="absolute top-2 right-2 bg-background/50 text-foreground text-xs px-2 py-1 rounded-md">
         {zoom.toFixed(1)}x
