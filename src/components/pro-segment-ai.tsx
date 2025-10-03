@@ -546,13 +546,13 @@ export function ProSegmentAI() {
             </Tabs>
             
             <div className="flex-1 flex flex-col min-h-0">
-                <div className={activeTopPanel && activeBottomPanel ? "flex-1 min-h-0 overflow-y-auto" : (activeTopPanel ? "flex-1 min-h-0 overflow-y-auto" : "hidden")}>
+                 <div className={!activeTopPanel ? 'hidden' : (activeBottomPanel ? 'h-1/2 overflow-y-auto' : 'h-full overflow-y-auto')}>
                     {renderTopPanelContent()}
                 </div>
                 
                 <div className={activeTopPanel && activeBottomPanel ? "h-px bg-border" : "hidden"}></div>
 
-                <div className={activeTopPanel && activeBottomPanel ? "flex-1 min-h-0 overflow-y-auto" : (activeBottomPanel ? "flex-1 min-h-0 overflow-y-auto" : "hidden")}>
+                <div className={!activeBottomPanel ? 'hidden' : (activeTopPanel ? 'h-1/2 overflow-y-auto' : 'h-full overflow-y-auto')}>
                    {renderBottomPanelContent()}
                 </div>
             </div>
