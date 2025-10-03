@@ -518,45 +518,46 @@ export function ProSegmentAI() {
           >
             <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
           </div>
-
-          {/* Top Panel Section */}
-          <div className={`flex flex-col ${activeTopPanel && activeBottomPanel ? 'h-1/2' : 'flex-1'}`}>
+            
             <Tabs value={activeTopPanel || 'none'}>
-              <SidebarHeader>
-                <TooltipProvider>
-                    <TabsList className="grid w-full grid-cols-4">
-                        <Tooltip>
-                            <TooltipTrigger asChild><TabsTrigger value="tools" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'tools' ? null : 'tools')}><Wand2 className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                            <TooltipContent>Tool Options</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                            <TooltipContent>Feather & Edges</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                            <TooltipContent>Layers</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                            <TooltipContent>AI Tools</TooltipContent>
-                        </Tooltip>
-                    </TabsList>
-                </TooltipProvider>
-              </SidebarHeader>
-              <Separator />
-              <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
-                {renderTopPanelContent()}
-              </div>
+                <SidebarHeader>
+                    <TooltipProvider>
+                        <TabsList className="grid w-full grid-cols-4">
+                            <Tooltip>
+                                <TooltipTrigger asChild><TabsTrigger value="tools" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'tools' ? null : 'tools')}><Wand2 className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                                <TooltipContent>Tool Options</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                                <TooltipContent>Feather & Edges</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                                <TooltipContent>Layers</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                                <TooltipContent>AI Tools</TooltipContent>
+                            </Tooltip>
+                        </TabsList>
+                    </TooltipProvider>
+                </SidebarHeader>
+                <Separator />
             </Tabs>
-          </div>
+            
+            <div className="flex-1 flex flex-col min-h-0">
+                <div className={activeTopPanel && activeBottomPanel ? "flex-1 min-h-0 overflow-y-auto" : (activeTopPanel ? "flex-1 min-h-0 overflow-y-auto" : "hidden")}>
+                    {renderTopPanelContent()}
+                </div>
+                
+                <div className={activeTopPanel && activeBottomPanel ? "h-px bg-border" : "hidden"}></div>
 
-          {/* Bottom Panel Section */}
-          <div className={`flex flex-col border-t ${activeTopPanel && activeBottomPanel ? 'h-1/2' : 'flex-1'}`}>
+                <div className={activeTopPanel && activeBottomPanel ? "flex-1 min-h-0 overflow-y-auto" : (activeBottomPanel ? "flex-1 min-h-0 overflow-y-auto" : "hidden")}>
+                   {renderBottomPanelContent()}
+                </div>
+            </div>
+
             <Tabs value={activeBottomPanel || 'none'}>
-              <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
-                {renderBottomPanelContent()}
-              </div>
               <Separator />
               <SidebarHeader>
                 <TooltipProvider>
@@ -569,7 +570,6 @@ export function ProSegmentAI() {
                 </TooltipProvider>
               </SidebarHeader>
             </Tabs>
-          </div>
         </div>
       </div>
     </SidebarProvider>
