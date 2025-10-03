@@ -852,7 +852,7 @@ function ProSegmentAIContent() {
         </div>
         
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="border-b border-border/50">
+          <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
             <Tabs value={activeTopPanel || 'none'} className="w-full">
               <TooltipProvider>
                   <TabsList className="grid w-full grid-cols-4">
@@ -870,7 +870,7 @@ function ProSegmentAIContent() {
         <div className="flex flex-col min-h-0 justify-end">
           {activeTopPanel && activeBottomPanel && <Separator />}
           {renderBottomPanelContent()}
-          <div className="border-t border-border/50">
+          <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
             <Tabs value={activeBottomPanel || 'none'} className="w-full">
               <TooltipProvider>
                 <TabsList className="grid w-full grid-cols-3">
