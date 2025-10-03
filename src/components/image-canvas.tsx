@@ -90,6 +90,7 @@ export function ImageCanvas({
   const lastPreviewTimeRef = React.useRef(0);
   const wandPreviewTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const lastMousePosRef = React.useRef<{x: number, y: number} | null>(null);
+  const [cursorStyle, setCursorStyle] = React.useState('default');
 
 
   const { toast } = useToast();
@@ -300,9 +301,8 @@ const drawLayers = React.useCallback(() => {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const engine = selectionEngineRef.current;
-      if (!engine || !engine.isDrawingLasso) return;
       
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && engine && engine.isDrawingLasso) {
         e.preventDefault();
         if (lassoSettings.useAiEnhancement) {
             endLassoAndProcess();
@@ -314,14 +314,14 @@ const drawLayers = React.useCallback(() => {
         }
       }
       
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && engine && engine.isDrawingLasso) {
         e.preventDefault();
         engine.cancelLasso();
         drawOverlay();
         toast({ title: 'Lasso cancelled.' });
       }
 
-      if (e.key === 'Backspace') {
+      if (e.key === 'Backspace' && engine && engine.isDrawingLasso) {
         e.preventDefault();
         engine.removeLastLassoNode();
         drawOverlay();
@@ -503,7 +503,7 @@ const drawLayers = React.useCallback(() => {
 
     const pos = getMousePos(canvas, e);
     
-    if (e.button === 2 || (e.button === 0 && activeTool === 'pan')) {
+    if (e.button === 2 || (activeTool === 'pan' && e.button === 0) || (activeTool === 'transform' && e.button === 2)) {
         setIsPanning(true);
         lastPanPointRef.current = { x: e.clientX, y: e.clientY };
         e.preventDefault();
@@ -587,6 +587,37 @@ const drawLayers = React.useCallback(() => {
     const pos = getMousePos(canvas, e);
     setCanvasMousePos(pos);
 
+    // Dynamic cursor update
+    const mainCanvas = canvasRef.current;
+    const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
+    if(mainCtx) {
+        const R = 8; // cursor radius
+        const imageData = mainCtx.getImageData(pos.x - R, pos.y - R, 2 * R, 2 * R);
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            r += imageData.data[i];
+            g += imageData.data[i + 1];
+            b += imageData.data[i + 2];
+            count++;
+        }
+        const avgR = r / count;
+        const avgG = g / count;
+        const avgB = b / count;
+        const luminance = (0.299 * avgR + 0.587 * avgG + 0.114 * avgB) / 255;
+        const contrastColor = luminance > 0.5 ? 'black' : 'white';
+        
+        const circleRadius = 8;
+        const dotRadius = 1;
+        const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="${circleRadius}" stroke="${contrastColor}" stroke-width="2" stroke-opacity="0.5" fill="none" />
+            <circle cx="12" cy="${12 - circleRadius/2}" r="${dotRadius}" fill="${contrastColor}" />
+            <circle cx="12" cy="${12 + circleRadius/2}" r="${dotRadius}" fill="${contrastColor}" />
+            <circle cx="${12 - circleRadius/2}" cy="12" r="${dotRadius}" fill="${contrastColor}" />
+            <circle cx="${12 + circleRadius/2}" cy="12" r="${dotRadius}" fill="${contrastColor}" />
+        </svg>`;
+        setCursorStyle(`url("data:image/svg+xml;base64,${btoa(svg)}") 12 12, crosshair`);
+    }
+
     if (activeTool === 'lasso') {
       if (engine.isDrawingLasso) {
         lassoMouseTraceRef.current.push([pos.x, pos.y]);
@@ -605,7 +636,7 @@ const drawLayers = React.useCallback(() => {
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (e.button === 2) {
+    if (e.button === 2 || activeTool === 'pan') {
       setIsPanning(false);
     }
   };
@@ -684,17 +715,7 @@ const drawLayers = React.useCallback(() => {
   const getCursor = () => {
     if (isPanning) return 'grabbing';
     if (activeTool === 'pan') return 'grab';
-    const circleRadius = 8;
-    const dotRadius = 1;
-    const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="${circleRadius}" stroke="white" stroke-width="1.5" fill="none" />
-        <circle cx="12" cy="12" r="${circleRadius}" stroke="black" stroke-width="1.5" fill="none" stroke-dasharray="2 2" />
-        <circle cx="12" cy="${12 - circleRadius/2}" r="${dotRadius}" fill="white" stroke="black" stroke-width="0.5" />
-        <circle cx="12" cy="${12 + circleRadius/2}" r="${dotRadius}" fill="white" stroke="black" stroke-width="0.5" />
-        <circle cx="${12 - circleRadius/2}" cy="12" r="${dotRadius}" fill="white" stroke="black" stroke-width="0.5" />
-        <circle cx="${12 + circleRadius/2}" cy="12" r="${dotRadius}" fill="white" stroke="black" stroke-width="0.5" />
-    </svg>`;
-    return `url("data:image/svg+xml;base64,${btoa(svg)}") 12 12, crosshair`;
+    return cursorStyle;
   }
   
   const isBackgroundVisible = layers.find(l => l.type === 'background')?.visible ?? true;
