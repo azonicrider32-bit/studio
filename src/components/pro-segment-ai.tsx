@@ -602,14 +602,15 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
+  const sidebarWidth = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
+  const toolPanelWidth = '68px'; // from your ToolPanel component's container
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <Sidebar collapsible="icon">
           <SidebarHeader>
-            <SidebarTrigger asChild>
-                <Button variant="ghost" size="icon">
-                    <PanelLeft />
-                </Button>
+            <SidebarTrigger>
+                <PanelLeft />
             </SidebarTrigger>
           </SidebarHeader>
           <SidebarContent>
@@ -628,9 +629,9 @@ function ProSegmentAIContent() {
         <header 
             className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm absolute top-0"
             style={{
-                left: `calc(${sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)'} + 68px)`,
+                left: `calc(${sidebarWidth} + ${toolPanelWidth})`,
                 right: `${rightPanelWidth}px`,
-                transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out',
+                transition: 'left 0.2s ease-in-out',
             }}
         >
           <div className="flex items-center gap-4 flex-1">
@@ -752,7 +753,7 @@ function ProSegmentAIContent() {
         <main 
             className="flex-1 flex bg-muted/30 relative"
             style={{
-                paddingLeft: `calc(${sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)'} + 68px)`,
+                paddingLeft: `calc(${sidebarWidth} + ${toolPanelWidth})`,
                 paddingTop: '3rem',
                 transition: 'padding-left 0.2s ease-in-out',
             }}
@@ -938,6 +939,7 @@ export function ProSegmentAI() {
     
 
     
+
 
 
 
