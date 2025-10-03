@@ -98,10 +98,10 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect }: AssetDrawerProp
              <Button 
                 variant="outline"
                 onClick={onToggle}
-                className="fixed bottom-0 left-1/2 -translate-x-1/2 h-8 w-32 rounded-t-lg rounded-b-none z-40 border-b-0"
+                className="fixed bottom-0 h-8 w-12 rounded-t-lg rounded-b-none z-40 border-b-0"
+                style={{ left: `calc(${leftPosition} + 16.66% - 24px)` }}
              >
-                <ChevronUp className="h-4 w-4 mr-2"/>
-                Assets
+                <ChevronUp className="h-4 w-4"/>
             </Button>
         )}
     </>
