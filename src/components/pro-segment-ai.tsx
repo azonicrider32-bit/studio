@@ -92,6 +92,7 @@ export function ProSegmentAI() {
   const [zoomB, setZoomB] = React.useState(4.0);
   const [activeZoom, setActiveZoom] = React.useState<'A' | 'B'>('A');
   const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
+  const lastSliderValueRef = React.useRef({ A: zoomA, B: zoomB });
 
 
   const [layers, setLayers] = React.useState<Layer[]>(() => {
@@ -424,7 +425,7 @@ export function ProSegmentAI() {
             );
         case "pixel-preview":
             return (
-                <div className="flex-1 flex flex-col min-h-0 p-4">
+                <div className="flex-1 flex flex-col min-h-0">
                     <SegmentHoverPreview
                         canvas={canvasRef.current}
                         mousePos={canvasMousePos}
@@ -447,9 +448,17 @@ export function ProSegmentAI() {
       setter(prev => Math.max(0.1, Math.min(10, prev + delta)));
   }
   
-  const handleZoomPresetDrag = (value: number[], preset: 'A' | 'B') => {
+  const handleZoomPresetDrag = (newValue: number, preset: 'A' | 'B') => {
       const setter = preset === 'A' ? setZoomA : setZoomB;
-      setter(value[0]);
+      const lastValue = lastSliderValueRef.current[preset];
+      const delta = newValue - lastValue;
+
+      setter(prev => {
+        const newZoom = prev + (delta / 2);
+        return Math.max(0.1, Math.min(10, newZoom));
+      });
+
+      lastSliderValueRef.current[preset] = newValue;
   }
 
 
@@ -498,7 +507,7 @@ export function ProSegmentAI() {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div 
-                                    className={cn("flex items-center gap-2 rounded-md p-1 pr-2 border cursor-pointer", activeZoom === 'A' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
+                                    className={cn("group flex items-center gap-2 rounded-md p-1 pr-2 border cursor-pointer", activeZoom === 'A' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
                                     onClick={() => setActiveZoom('A')}
                                     onWheel={(e) => handleZoomPresetWheel(e, 'A')}
                                 >
@@ -506,9 +515,9 @@ export function ProSegmentAI() {
                                     <span className="text-sm font-medium w-12 text-center">{(zoomA * 100).toFixed(0)}%</span>
                                     <Slider 
                                         value={[zoomA]}
-                                        onValueChange={(v) => handleZoomPresetDrag(v, 'A')}
+                                        onValueChange={(v) => handleZoomPresetDrag(v[0], 'A')}
                                         min={0.1} max={10} step={0.1}
-                                        className="w-20"
+                                        className="w-20 opacity-0 group-hover:opacity-100 transition-opacity"
                                     />
                                 </div>
                             </TooltipTrigger>
@@ -517,7 +526,7 @@ export function ProSegmentAI() {
                          <Tooltip>
                             <TooltipTrigger asChild>
                                 <div 
-                                    className={cn("flex items-center gap-2 rounded-md p-1 pr-2 border cursor-pointer", activeZoom === 'B' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
+                                    className={cn("group flex items-center gap-2 rounded-md p-1 pr-2 border cursor-pointer", activeZoom === 'B' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
                                     onClick={() => setActiveZoom('B')}
                                     onWheel={(e) => handleZoomPresetWheel(e, 'B')}
                                 >
@@ -525,9 +534,9 @@ export function ProSegmentAI() {
                                     <span className="text-sm font-medium w-12 text-center">{(zoomB * 100).toFixed(0)}%</span>
                                     <Slider 
                                         value={[zoomB]}
-                                        onValueChange={(v) => handleZoomPresetDrag(v, 'B')}
+                                        onValueChange={(v) => handleZoomPresetDrag(v[0], 'B')}
                                         min={0.1} max={10} step={0.1}
-                                        className="w-20"
+                                        className="w-20 opacity-0 group-hover:opacity-100 transition-opacity"
                                     />
                                 </div>
                             </TooltipTrigger>
@@ -586,7 +595,7 @@ export function ProSegmentAI() {
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-4">
                           <Tooltip>
-                              <TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><Wand2 className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                              <TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
                               <TooltipContent>Zoom</TooltipContent>
                           </Tooltip>
                           <Tooltip>
@@ -640,5 +649,7 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
 
     
