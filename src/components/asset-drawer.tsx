@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp } from 'lucide-react';
+import { ImageIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import AdvancedAssetPanel from './panels/AdvancedAssetsPanel';
 import { cn } from '@/lib/utils';
@@ -62,7 +62,7 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect }: AssetDrawerProp
     onToggle();
   }
 
-  const leftPosition = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
+  const leftPosition = sidebarState === 'expanded' ? 'calc(var(--sidebar-width) + 3rem)' : 'calc(var(--sidebar-width-icon) + 3rem)';
 
   return (
     <>
@@ -99,9 +99,9 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect }: AssetDrawerProp
                 variant="outline"
                 onClick={onToggle}
                 className="fixed bottom-0 h-8 w-12 rounded-t-lg rounded-b-none z-40 border-b-0"
-                style={{ left: `calc(${leftPosition} + 16.66% - 24px)` }}
+                style={{ left: `calc((${leftPosition} + (100% - ${leftPosition} - ${rightPanelWidth}px)) / 6)` }}
              >
-                <ChevronUp className="h-4 w-4"/>
+                <ImageIcon className="h-4 w-4"/>
             </Button>
         )}
     </>
