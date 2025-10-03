@@ -68,9 +68,10 @@ import { ToolPanel } from "./tool-panel"
 import { cn } from "@/lib/utils"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
 import { SegmentHoverPreview } from "./segment-hover-preview"
+import { Slider } from "./ui/slider"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform";
-type TopPanel = 'tools' | 'feather' | 'layers' | 'ai';
+type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
 type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview';
 
 
@@ -83,7 +84,7 @@ export function ProSegmentAI() {
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
   const isResizingRef = React.useRef(false);
   
-  const [activeTopPanel, setActiveTopPanel] = React.useState<TopPanel | null>('tools');
+  const [activeTopPanel, setActiveTopPanel] = React.useState<TopPanel | null>('zoom');
   const [activeBottomPanel, setActiveBottomPanel] = React.useState<BottomPanel | null>(null);
   
   // New Zoom State
@@ -353,34 +354,14 @@ export function ProSegmentAI() {
 
     const content = () => {
       switch (activeTopPanel) {
-        case "tools":
-          switch (activeTool) {
-            case "lasso":
-              return <PixelZoomPanel
-                canvas={canvasRef.current}
-                mousePos={canvasMousePos}
-                selectionEngine={selectionEngineRef.current}
-                onHoverChange={setIsLassoPreviewHovered}
-                className="flex-1"
-              />;
-            case "magic-wand":
-              return <MagicWandPanel 
-                        settings={magicWandSettings} 
-                        onSettingsChange={handleMagicWandSettingsChange}
-                        exclusionSettings={negativeMagicWandSettings}
-                        onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
-                        canvas={canvasRef.current}
-                        mousePos={canvasMousePos}
-                     />;
-            case "brush":
-              return <BrushPanel />;
-            case "eraser":
-              return <BrushPanel isEraser />;
-            case "adjustments":
-              return <LayerAdjustmentPanel />;
-            default:
-              return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
-          }
+        case "zoom":
+          return <PixelZoomPanel
+            canvas={canvasRef.current}
+            mousePos={canvasMousePos}
+            selectionEngine={selectionEngineRef.current}
+            onHoverChange={setIsLassoPreviewHovered}
+            className="flex-1"
+          />;
         case "feather":
           return <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />;
         case "layers":
@@ -443,7 +424,7 @@ export function ProSegmentAI() {
             );
         case "pixel-preview":
             return (
-                <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 flex flex-col min-h-0 p-4">
                     <SegmentHoverPreview
                         canvas={canvasRef.current}
                         mousePos={canvasMousePos}
@@ -464,6 +445,11 @@ export function ProSegmentAI() {
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
       const setter = preset === 'A' ? setZoomA : setZoomB;
       setter(prev => Math.max(0.1, Math.min(10, prev + delta)));
+  }
+  
+  const handleZoomPresetDrag = (value: number[], preset: 'A' | 'B') => {
+      const setter = preset === 'A' ? setZoomA : setZoomB;
+      setter(value[0]);
   }
 
 
@@ -507,35 +493,45 @@ export function ProSegmentAI() {
                     <SidebarTrigger className="md:hidden" />
                     <h2 className="font-headline text-xl font-semibold">Workspace</h2>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button
-                                    variant={activeZoom === 'A' ? 'default' : 'outline'}
-                                    size="sm"
+                                <div 
+                                    className={cn("flex items-center gap-2 rounded-md p-1 pr-2 border cursor-pointer", activeZoom === 'A' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
                                     onClick={() => setActiveZoom('A')}
                                     onWheel={(e) => handleZoomPresetWheel(e, 'A')}
-                                    className="w-24"
                                 >
-                                    <ZoomIn className="w-4 h-4 mr-1"/> {(zoomA * 100).toFixed(0)}%
-                                </Button>
+                                    <ZoomIn className="w-4 h-4"/>
+                                    <span className="text-sm font-medium w-12 text-center">{(zoomA * 100).toFixed(0)}%</span>
+                                    <Slider 
+                                        value={[zoomA]}
+                                        onValueChange={(v) => handleZoomPresetDrag(v, 'A')}
+                                        min={0.1} max={10} step={0.1}
+                                        className="w-20"
+                                    />
+                                </div>
                             </TooltipTrigger>
-                            <TooltipContent>Zoom Preset A (Scroll to adjust)</TooltipContent>
+                            <TooltipContent>Zoom Preset A (Click to activate, Scroll or Drag to adjust)</TooltipContent>
                         </Tooltip>
-                        <Tooltip>
+                         <Tooltip>
                             <TooltipTrigger asChild>
-                                 <Button
-                                    variant={activeZoom === 'B' ? 'default' : 'outline'}
-                                    size="sm"
+                                <div 
+                                    className={cn("flex items-center gap-2 rounded-md p-1 pr-2 border cursor-pointer", activeZoom === 'B' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
                                     onClick={() => setActiveZoom('B')}
                                     onWheel={(e) => handleZoomPresetWheel(e, 'B')}
-                                    className="w-24"
                                 >
-                                    <ZoomIn className="w-4 h-4 mr-1"/> {(zoomB * 100).toFixed(0)}%
-                                </Button>
+                                    <ZoomIn className="w-4 h-4"/>
+                                    <span className="text-sm font-medium w-12 text-center">{(zoomB * 100).toFixed(0)}%</span>
+                                    <Slider 
+                                        value={[zoomB]}
+                                        onValueChange={(v) => handleZoomPresetDrag(v, 'B')}
+                                        min={0.1} max={10} step={0.1}
+                                        className="w-20"
+                                    />
+                                </div>
                             </TooltipTrigger>
-                            <TooltipContent>Zoom Preset B (Scroll to adjust)</TooltipContent>
+                            <TooltipContent>Zoom Preset B (Click to activate, Scroll or Drag to adjust)</TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 </div>
@@ -590,7 +586,7 @@ export function ProSegmentAI() {
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-4">
                           <Tooltip>
-                              <TooltipTrigger asChild><TabsTrigger value="tools" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'tools' ? null : 'tools')}><Wand2 className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                              <TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><Wand2 className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
                               <TooltipContent>Zoom</TooltipContent>
                           </Tooltip>
                           <Tooltip>
@@ -644,3 +640,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
