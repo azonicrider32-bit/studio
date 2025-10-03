@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -602,8 +603,8 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
-  const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   const toolPanelWidth = '68px';
+  const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   const mainContentLeftOffset = `calc(${sidebarWidthVar} + ${toolPanelWidth})`;
 
   return (
@@ -780,7 +781,7 @@ function ProSegmentAIContent() {
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
                     onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                    onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
                     getCanvasRef={canvasRef}
@@ -814,7 +815,7 @@ function ProSegmentAIContent() {
                         clearSelectionRef={React.useRef()}
                         onLassoSettingChange={() => {}}
                         onMagicWandSettingsChange={() => {}}
-                        onNegativeMagicWandSettingChange={() => {}}
+                        onNegativeMagicWandSettingsChange={() => {}}
                         canvasMousePos={null}
                         setCanvasMousePos={() => {}}
                         getCanvasRef={React.useRef()}
@@ -940,6 +941,7 @@ export function ProSegmentAI() {
     
 
     
+
 
 
 
