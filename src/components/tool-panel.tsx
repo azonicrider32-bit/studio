@@ -8,6 +8,7 @@ import {
   Replace,
   Image as ImageIcon,
   PanelLeft,
+  Settings2,
 } from "lucide-react"
 
 import {
@@ -46,7 +47,6 @@ interface ToolPanelProps {
 
 export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onToggleSidebar }: ToolPanelProps) {
   const { state: sidebarState } = useSidebar();
-  const sidebarWidthVar = sidebarState === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)';
   
   return (
     <div className="flex-shrink-0 w-20 flex flex-col items-center justify-between gap-2 border-r border-border/50 bg-background/80 backdrop-blur-sm p-2 z-30">
@@ -88,12 +88,36 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onTo
                 <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="h-12 w-12 relative ps-tool-icon-container">
                         <div className="ps-tool-icon">
-                            <SlidersHorizontal className="h-5 w-5 ps-tool-icon__icon" />
+                            <PanelLeft className="h-5 w-5 ps-tool-icon__icon" />
                         </div>
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                     <p>Toggle Settings Panel</p>
+                </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => setActiveTool('settings')} className="h-12 w-12 relative ps-tool-icon-container">
+                        <div className="ps-tool-icon">
+                            <SlidersHorizontal className="h-5 w-5 ps-tool-icon__icon" />
+                        </div>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                    <p>Tool Settings</p>
+                </TooltipContent>
+            </Tooltip>
+             <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => setActiveTool('settings')} className="h-12 w-12 relative ps-tool-icon-container">
+                        <div className="ps-tool-icon">
+                            <Settings2 className="h-5 w-5 ps-tool-icon__icon" />
+                        </div>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                    <p>Global Settings</p>
                 </TooltipContent>
             </Tooltip>
             <Tooltip>
