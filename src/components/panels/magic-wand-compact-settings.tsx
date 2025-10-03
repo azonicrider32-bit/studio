@@ -73,47 +73,48 @@ const VerticalToleranceSlider = ({
         <div className={cn("flex flex-col items-center justify-end gap-2 h-full cursor-pointer rounded-md", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                     <span className="text-xs font-semibold">{label}</span>
+                     <div className="w-full h-full flex flex-col items-center gap-2 justify-end">
+                        <div className={cn("w-4 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
+                            {pixelValue !== undefined && isEnabled && (
+                            <div 
+                                className={cn("w-full absolute bg-primary/75 border-y border-primary-foreground/50")} 
+                                style={{ 
+                                    bottom: `${bottomPercent}%`, 
+                                    height: `${rangeHeight}%`
+                                }}
+                            ></div>
+                            )}
+                            {pixelValue !== undefined && (
+                                <div className="w-full h-0.5 bg-accent-foreground absolute" style={{ bottom: `${(pixelValue / max) * 100}%`}}></div>
+                            )}
+                        </div>
+                        
+                        <Slider
+                            id={id}
+                            min={0}
+                            max={max}
+                            step={1}
+                            value={[tolerance]}
+                            onValueChange={(v) => onToleranceChange(v[0])}
+                            orientation="vertical"
+                            className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0 cursor-row-resize"
+                            disabled={!isEnabled}
+                        />
+                        <span className="font-mono text-xs">{displayValue}</span>
+                    </div>
                 </TooltipTrigger>
                 <TooltipContent>
                     <p>{label} Tolerance</p>
                 </TooltipContent>
             </Tooltip>
 
-             <div className={cn("w-4 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
-                {pixelValue !== undefined && isEnabled && (
-                  <div 
-                      className={cn("w-full absolute bg-primary/75 border-y border-primary-foreground/50")} 
-                      style={{ 
-                          bottom: `${bottomPercent}%`, 
-                          height: `${rangeHeight}%`
-                      }}
-                  ></div>
-                )}
-                 {pixelValue !== undefined && (
-                    <div className="w-full h-0.5 bg-accent-foreground absolute" style={{ bottom: `${(pixelValue / max) * 100}%`}}></div>
-                )}
-            </div>
-            
-            <Slider
-                id={id}
-                min={0}
-                max={max}
-                step={1}
-                value={[tolerance]}
-                onValueChange={(v) => onToleranceChange(v[0])}
-                orientation="vertical"
-                className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0 cursor-row-resize"
-                disabled={!isEnabled}
-            />
-            <span className="font-mono text-xs">{displayValue}</span>
              <div className="flex flex-col items-center gap-2">
                 <Switch
                     id={`${id}-toggle`}
+                    size="sm"
                     checked={isEnabled}
                     onCheckedChange={onToggleEnabled}
                     orientation="vertical"
-                    size="sm"
                     onClick={(e) => e.stopPropagation()}
                 />
             </div>
@@ -218,8 +219,8 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </Tooltip>
         </div>
         
-        <div className="flex flex-col items-center">
-            <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center space-y-4">
+            <div className="flex flex-col items-center gap-1">
                 <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
                 <div className="flex items-end h-32">
                   {HSV_COMPONENTS.map(config => (
@@ -242,7 +243,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
                 </div>
             </div>
 
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
                 <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
                 <div className="flex items-end h-32">
                   {RGB_COMPONENTS.map(config => (
@@ -265,7 +266,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
                 </div>
             </div>
 
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
                 <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(LAB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">LAB</Button>
                 <div className="flex items-end h-32">
                   {LAB_COMPONENTS.map(config => (
