@@ -14,7 +14,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { cn } from "@/lib/utils"
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils"
-import { SegmentHoverPreview } from "../segment-hover-preview"
 import { Button } from "../ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Label } from "../ui/label"
@@ -190,7 +189,6 @@ export function MagicWandPanel({
 
   return (
     <div className="p-4 space-y-6">
-      <SegmentHoverPreview canvas={canvas} mousePos={mousePos} settings={settings} />
       <div className="space-y-4">
 
         <Accordion type="single" collapsible defaultValue="sample-area">

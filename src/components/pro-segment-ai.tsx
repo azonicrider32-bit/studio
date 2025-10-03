@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -439,6 +440,7 @@ export function ProSegmentAI() {
                     <SegmentHoverPreview
                         canvas={canvasRef.current}
                         mousePos={canvasMousePos}
+                        settings={magicWandSettings}
                     />
                 </div>
             );
