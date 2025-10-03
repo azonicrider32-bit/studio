@@ -80,7 +80,7 @@ const VerticalToleranceSlider = ({
                 </TooltipContent>
             </Tooltip>
 
-             <div className={cn("w-2 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
+             <div className={cn("w-4 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
                 {pixelValue !== undefined && isEnabled && (
                   <div 
                       className={cn("w-full absolute bg-primary/75 border-y border-primary-foreground/50")} 
@@ -181,7 +181,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
     ]
 
   return (
-    <div className="flex flex-col h-full items-center justify-start py-2 px-2 gap-4">
+    <div className="flex flex-col h-full items-center justify-start py-2 px-1 gap-4">
       <TooltipProvider>
         <div className="flex flex-col items-center gap-2">
             <Tooltip>
@@ -218,72 +218,74 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </Tooltip>
         </div>
         
-        <div className="flex flex-col items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
-            <div className="flex items-end h-32 gap-px">
-              {HSV_COMPONENTS.map(config => (
-                  <VerticalToleranceSlider
-                      key={config.id}
-                      id={config.id}
-                      label={config.label}
-                      tolerance={settings.tolerances[config.id]}
-                      max={config.max}
-                      color={config.color}
-                      pixelValue={undefined}
-                      description={config.description}
-                      isEnabled={settings.enabledTolerances.has(config.id)}
-                      isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
-                      onToggleEnabled={() => handleToggleEnabled(config.id)}
-                      onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
-                      onToleranceChange={(value) => handleToleranceChange(config.id, value)}
-                  />
-              ))}
+        <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
+                <div className="flex items-end h-32 gap-px">
+                  {HSV_COMPONENTS.map(config => (
+                      <VerticalToleranceSlider
+                          key={config.id}
+                          id={config.id}
+                          label={config.label}
+                          tolerance={settings.tolerances[config.id]}
+                          max={config.max}
+                          color={config.color}
+                          pixelValue={undefined}
+                          description={config.description}
+                          isEnabled={settings.enabledTolerances.has(config.id)}
+                          isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
+                          onToggleEnabled={() => handleToggleEnabled(config.id)}
+                          onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
+                          onToleranceChange={(value) => handleToleranceChange(config.id, value)}
+                      />
+                  ))}
+                </div>
             </div>
-        </div>
-        
-        <div className="flex flex-col items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
-            <div className="flex items-end h-32 gap-px">
-              {RGB_COMPONENTS.map(config => (
-                  <VerticalToleranceSlider
-                      key={config.id}
-                      id={config.id}
-                      label={config.label}
-                      tolerance={settings.tolerances[config.id]}
-                      max={config.max}
-                      color={config.color}
-                      pixelValue={undefined}
-                      description={config.description}
-                      isEnabled={settings.enabledTolerances.has(config.id)}
-                      isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
-                      onToggleEnabled={() => handleToggleEnabled(config.id)}
-                      onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
-                      onToleranceChange={(value) => handleToleranceChange(config.id, value)}
-                  />
-              ))}
+            
+            <div className="flex flex-col items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
+                <div className="flex items-end h-32 gap-px">
+                  {RGB_COMPONENTS.map(config => (
+                      <VerticalToleranceSlider
+                          key={config.id}
+                          id={config.id}
+                          label={config.label}
+                          tolerance={settings.tolerances[config.id]}
+                          max={config.max}
+                          color={config.color}
+                          pixelValue={undefined}
+                          description={config.description}
+                          isEnabled={settings.enabledTolerances.has(config.id)}
+                          isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
+                          onToggleEnabled={() => handleToggleEnabled(config.id)}
+                          onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
+                          onToleranceChange={(value) => handleToleranceChange(config.id, value)}
+                      />
+                  ))}
+                </div>
             </div>
-        </div>
 
-        <div className="flex flex-col items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(LAB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">LAB</Button>
-            <div className="flex items-end h-32 gap-px">
-              {LAB_COMPONENTS.map(config => (
-                  <VerticalToleranceSlider
-                      key={config.id}
-                      id={config.id}
-                      label={config.label}
-                      tolerance={settings.tolerances[config.id]}
-                      max={config.max}
-                      color={config.color}
-                      pixelValue={undefined}
-                      description={config.description}
-                      isEnabled={settings.enabledTolerances.has(config.id)}
-                      isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
-                      onToggleEnabled={() => handleToggleEnabled(config.id)}
-                      onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
-                      onToleranceChange={(value) => handleToleranceChange(config.id, value)}
-                  />
-              ))}
+            <div className="flex flex-col items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(LAB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">LAB</Button>
+                <div className="flex items-end h-32 gap-px">
+                  {LAB_COMPONENTS.map(config => (
+                      <VerticalToleranceSlider
+                          key={config.id}
+                          id={config.id}
+                          label={config.label}
+                          tolerance={settings.tolerances[config.id]}
+                          max={config.max}
+                          color={config.color}
+                          pixelValue={undefined}
+                          description={config.description}
+                          isEnabled={settings.enabledTolerances.has(config.id)}
+                          isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
+                          onToggleEnabled={() => handleToggleEnabled(config.id)}
+                          onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
+                          onToleranceChange={(value) => handleToleranceChange(config.id, value)}
+                      />
+                  ))}
+                </div>
             </div>
         </div>
       </TooltipProvider>
