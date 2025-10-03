@@ -2,7 +2,6 @@
 "use client"
 
 import * as React from "react"
-import Image from 'next/image';
 import {
   SlidersHorizontal,
   Replace,
@@ -49,7 +48,9 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
     <div className="flex h-full flex-col items-center justify-between gap-2 border-r bg-background p-2">
       <div className="flex flex-col items-center gap-2">
         <div className="h-14 w-14 flex items-center justify-center">
-            <Image src="/logo.png" alt="logo" width={40} height={40} />
+            <div className="font-headline font-extrabold text-3xl" style={{ color: '#ff0000' }}>
+                PS
+            </div>
         </div>
         <TooltipProvider>
             {tools.map((tool) => (
