@@ -92,7 +92,9 @@ export function ProSegmentAI() {
   const [zoomB, setZoomB] = React.useState(4.0);
   const [activeZoom, setActiveZoom] = React.useState<'A' | 'B'>('A');
   const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
-  const lastSliderValueRef = React.useRef({ A: zoomA, B: zoomB });
+  const [hoveredZoom, setHoveredZoom] = React.useState<'A' | 'B' | null>(null);
+  const hoverTimeoutRef = React.useRef<{ A: NodeJS.Timeout | null, B: NodeJS.Timeout | null }>({ A: null, B: null });
+
 
   const [pan, setPan] = React.useState({ x: 0, y: 0 });
 
@@ -447,19 +449,19 @@ export function ProSegmentAI() {
       const setter = preset === 'A' ? setZoomA : setZoomB;
       setter(prev => Math.max(0.1, Math.min(10, prev + delta)));
   }
-  
-  const handleZoomPresetDrag = (newValue: number, preset: 'A' | 'B') => {
-      const setter = preset === 'A' ? setZoomA : setZoomB;
-      const lastValue = lastSliderValueRef.current[preset];
-      const delta = newValue - lastValue;
 
-      setter(prev => {
-        const newZoom = prev + (delta / 2);
-        return Math.max(0.1, Math.min(10, newZoom));
-      });
-
-      lastSliderValueRef.current[preset] = newValue;
-  }
+    const handleHoverZoom = (preset: 'A' | 'B' | null) => {
+        if (preset === null) {
+            if (hoverTimeoutRef.current.A) clearTimeout(hoverTimeoutRef.current.A);
+            if (hoverTimeoutRef.current.B) clearTimeout(hoverTimeoutRef.current.B);
+            setHoveredZoom(null);
+        } else {
+            if(hoverTimeoutRef.current[preset]) clearTimeout(hoverTimeoutRef.current[preset]);
+            hoverTimeoutRef.current[preset] = setTimeout(() => {
+                setHoveredZoom(preset);
+            }, 200);
+        }
+    };
 
 
   if (!isClient) {
@@ -510,7 +512,7 @@ export function ProSegmentAI() {
                                     <Button
                                         variant={activeZoom === 'A' ? "default" : "ghost"}
                                         size="icon"
-                                        className={cn("h-9 w-9", activeZoom === 'A' ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : 'border border-input')}
+                                        className={cn("h-9 w-9 border border-input", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
                                         onClick={() => setActiveZoom('A')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
@@ -518,14 +520,22 @@ export function ProSegmentAI() {
                                 </TooltipTrigger>
                                 <TooltipContent>Activate Zoom A</TooltipContent>
                             </Tooltip>
-                            <div className="group flex items-center" onWheel={(e) => handleZoomPresetWheel(e, 'A')}>
+                            <div 
+                                className="flex items-center"
+                                onMouseEnter={() => handleHoverZoom('A')}
+                                onMouseLeave={() => handleHoverZoom(null)}
+                                onWheel={(e) => handleZoomPresetWheel(e, 'A')}
+                            >
                                 <span className="text-sm font-medium px-2 py-1 text-center bg-background w-10">
                                     {(zoomA * 100).toFixed(0)}%
                                 </span>
-                                <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
+                                <div className={cn(
+                                    "overflow-hidden transition-all duration-300 ease-in-out",
+                                    hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
+                                )}>
                                     <Slider 
                                         value={[zoomA]}
-                                        onValueChange={(v) => handleZoomPresetDrag(v[0], 'A')}
+                                        onValueChange={(v) => setZoomA(v[0])}
                                         min={0.1} max={10} step={0.1}
                                     />
                                 </div>
@@ -538,7 +548,7 @@ export function ProSegmentAI() {
                                      <Button
                                         variant={activeZoom === 'B' ? "default" : "ghost"}
                                         size="icon"
-                                        className={cn("h-9 w-9", activeZoom === 'B' ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : 'border border-input')}
+                                        className={cn("h-9 w-9 border border-input", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
                                         onClick={() => setActiveZoom('B')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
@@ -546,14 +556,22 @@ export function ProSegmentAI() {
                                 </TooltipTrigger>
                                 <TooltipContent>Activate Zoom B</TooltipContent>
                             </Tooltip>
-                            <div className="group flex items-center" onWheel={(e) => handleZoomPresetWheel(e, 'B')}>
+                            <div 
+                                className="flex items-center"
+                                onMouseEnter={() => handleHoverZoom('B')}
+                                onMouseLeave={() => handleHoverZoom(null)}
+                                onWheel={(e) => handleZoomPresetWheel(e, 'B')}
+                            >
                                 <span className="text-sm font-medium px-2 py-1 text-center bg-background w-10">
                                     {(zoomB * 100).toFixed(0)}%
                                 </span>
-                                <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
+                                <div className={cn(
+                                    "overflow-hidden transition-all duration-300 ease-in-out",
+                                    hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
+                                )}>
                                     <Slider 
                                         value={[zoomB]}
-                                        onValueChange={(v) => handleZoomPresetDrag(v[0], 'B')}
+                                        onValueChange={(v) => setZoomB(v[0])}
                                         min={0.1} max={10} step={0.1}
                                     />
                                 </div>
