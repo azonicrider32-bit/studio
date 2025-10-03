@@ -23,6 +23,7 @@ import {
   Frame,
   Contrast,
   GripVertical,
+  Scan,
 } from "lucide-react"
 
 import {
@@ -64,10 +65,11 @@ import { AssetDrawer } from "./asset-drawer"
 import { ToolPanel } from "./tool-panel"
 import { cn } from "@/lib/utils"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
+import { SegmentHoverPreview } from "./segment-hover-preview"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform";
 type TopPanel = 'tools' | 'feather' | 'layers' | 'ai';
-type BottomPanel = 'telemetry' | 'history' | 'color-analysis';
+type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview';
 
 
 export function ProSegmentAI() {
@@ -339,92 +341,113 @@ export function ProSegmentAI() {
   }
 
   const renderTopPanelContent = () => {
-    switch (activeTopPanel) {
-      case "tools":
-        switch (activeTool) {
-          case "lasso":
-            return <PixelZoomPanel
-              canvas={canvasRef.current}
-              mousePos={canvasMousePos}
-              selectionEngine={selectionEngineRef.current}
-              onHoverChange={setIsLassoPreviewHovered}
-              className="flex-1"
-            />;
-          case "magic-wand":
-            return <MagicWandPanel 
-                      settings={magicWandSettings} 
-                      onSettingsChange={handleMagicWandSettingsChange}
-                      exclusionSettings={negativeMagicWandSettings}
-                      onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
-                      canvas={canvasRef.current}
-                      mousePos={canvasMousePos}
-                   />;
-          case "brush":
-            return <BrushPanel />;
-          case "eraser":
-            return <BrushPanel isEraser />;
-          case "adjustments":
-            return <LayerAdjustmentPanel />;
-          default:
-            return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
-        }
-      case "feather":
-        return <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />;
-      case "layers":
-        return <LayersPanel 
-                layers={layers}
-                activeLayerId={activeLayerId}
-                onLayerSelect={setActiveLayerId}
-                onToggleVisibility={toggleLayerVisibility}
-                onToggleLock={toggleLayerLock}
-                onToggleMask={toggleLayerMask}
-                onDeleteLayer={deleteLayer}
+    if (!activeTopPanel) return null;
+
+    const content = () => {
+      switch (activeTopPanel) {
+        case "tools":
+          switch (activeTool) {
+            case "lasso":
+              return <PixelZoomPanel
+                canvas={canvasRef.current}
+                mousePos={canvasMousePos}
+                selectionEngine={selectionEngineRef.current}
+                onHoverChange={setIsLassoPreviewHovered}
+                className="flex-1"
               />;
-      case "ai":
-        return (
-          <Tabs defaultValue="models" className="flex h-full flex-col">
-            <TabsList className="m-2 grid grid-cols-3">
-                <TabsTrigger value="models">Models</TabsTrigger>
-                <TabsTrigger value="canny">Canny</TabsTrigger>
-                <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
-            </TabsList>
-            <TabsContent value="models" className="m-0 flex-1">
-                <AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} />
-            </TabsContent>
-            <TabsContent value="canny" className="m-0 flex-1">
-                <CannyTuningPanel />
-            </TabsContent>
-            <TabsContent value="inpaint" className="m-0 flex-1">
-                <InpaintingPanel
-                  imageUrl={imageUrl}
-                  getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
-                  onGenerationComplete={(newUrl) => handleImageSelect(newUrl)}
-                  clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
-                />
-            </TabsContent>
-          </Tabs>
-        );
-      default:
-        return null;
-    }
+            case "magic-wand":
+              return <MagicWandPanel 
+                        settings={magicWandSettings} 
+                        onSettingsChange={handleMagicWandSettingsChange}
+                        exclusionSettings={negativeMagicWandSettings}
+                        onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
+                        canvas={canvasRef.current}
+                        mousePos={canvasMousePos}
+                     />;
+            case "brush":
+              return <BrushPanel />;
+            case "eraser":
+              return <BrushPanel isEraser />;
+            case "adjustments":
+              return <LayerAdjustmentPanel />;
+            default:
+              return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
+          }
+        case "feather":
+          return <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />;
+        case "layers":
+          return <LayersPanel 
+                  layers={layers}
+                  activeLayerId={activeLayerId}
+                  onLayerSelect={setActiveLayerId}
+                  onToggleVisibility={toggleLayerVisibility}
+                  onToggleLock={toggleLayerLock}
+                  onToggleMask={toggleLayerMask}
+                  onDeleteLayer={deleteLayer}
+                />;
+        case "ai":
+          return (
+            <Tabs defaultValue="models" className="flex h-full flex-col">
+              <TabsList className="m-2 grid grid-cols-3">
+                  <TabsTrigger value="models">Models</TabsTrigger>
+                  <TabsTrigger value="canny">Canny</TabsTrigger>
+                  <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
+              </TabsList>
+              <TabsContent value="models" className="m-0 flex-1">
+                  <AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} />
+              </TabsContent>
+              <TabsContent value="canny" className="m-0 flex-1">
+                  <CannyTuningPanel />
+              </TabsContent>
+              <TabsContent value="inpaint" className="m-0 flex-1">
+                  <InpaintingPanel
+                    imageUrl={imageUrl}
+                    getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
+                    onGenerationComplete={(newUrl) => handleImageSelect(newUrl)}
+                    clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
+                  />
+              </TabsContent>
+            </Tabs>
+          );
+        default:
+          return null;
+      }
+    };
+    
+    return <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">{content()}</div>;
   };
 
   const renderBottomPanelContent = () => {
-    switch (activeBottomPanel) {
-      case "telemetry":
-        return <TelemetryPanel />;
-      case "color-analysis":
-        return (
-          <ColorAnalysisPanel
-            canvas={canvasRef.current}
-            mousePos={canvasMousePos}
-            magicWandSettings={magicWandSettings}
-            onMagicWandSettingsChange={handleMagicWandSettingsChange}
-          />
-        );
-      default:
-        return null;
-    }
+    if (!activeBottomPanel) return null;
+
+    const content = () => {
+        switch (activeBottomPanel) {
+        case "telemetry":
+            return <TelemetryPanel />;
+        case "color-analysis":
+            return (
+            <ColorAnalysisPanel
+                canvas={canvasRef.current}
+                mousePos={canvasMousePos}
+                magicWandSettings={magicWandSettings}
+                onMagicWandSettingsChange={handleMagicWandSettingsChange}
+            />
+            );
+        case "pixel-preview":
+            return (
+                <div className="p-4 flex-1 flex flex-col min-h-0">
+                    <SegmentHoverPreview
+                        canvas={canvasRef.current}
+                        mousePos={canvasMousePos}
+                        settings={magicWandSettings}
+                    />
+                </div>
+            );
+        default:
+            return null;
+        }
+    };
+    return <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">{content()}</div>;
   };
   
   const rightPanelVisible = activeTopPanel || activeBottomPanel;
@@ -542,19 +565,11 @@ export function ProSegmentAI() {
             </div>
               
             <div className="flex-1 flex flex-col min-h-0">
-              {activeTopPanel && (
-                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-                  {renderTopPanelContent()}
-                </div>
-              )}
+                {renderTopPanelContent()}
               
               {activeTopPanel && activeBottomPanel && <Separator />}
 
-              {activeBottomPanel && (
-                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-                  {renderBottomPanelContent()}
-                </div>
-              )}
+                {renderBottomPanelContent()}
             </div>
 
             <div className="flex h-12 items-center border-t px-2">
@@ -568,6 +583,10 @@ export function ProSegmentAI() {
                      <Tooltip>
                       <TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
                       <TooltipContent>Color Analysis</TooltipContent>
+                    </Tooltip>
+                     <Tooltip>
+                      <TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                      <TooltipContent>Pixel Preview</TooltipContent>
                     </Tooltip>
                   </TabsList>
                 </TooltipProvider>

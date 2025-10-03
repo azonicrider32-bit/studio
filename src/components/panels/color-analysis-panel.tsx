@@ -4,7 +4,6 @@
 import * as React from "react"
 import { Separator } from "@/components/ui/separator"
 import { rgbToHex, rgbToHsv, rgbToLab } from "@/lib/color-utils"
-import { SegmentHoverPreview } from "../segment-hover-preview"
 import { cn } from "@/lib/utils"
 import { MagicWandSettings } from "@/lib/types"
 
@@ -111,8 +110,6 @@ export function ColorAnalysisPanel({ canvas, mousePos, magicWandSettings, onMagi
 
   return (
     <div className="p-4 space-y-6">
-       <SegmentHoverPreview canvas={canvas} mousePos={mousePos} />
-        
         <div className="space-y-4">
             {renderColorValue("Hex", analysis?.hex ?? "#------", analysis?.hex ?? "transparent")}
             <Separator />
