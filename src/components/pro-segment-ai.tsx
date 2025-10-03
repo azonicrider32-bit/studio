@@ -504,46 +504,57 @@ export function ProSegmentAI() {
                 </div>
                 <div className="flex items-center gap-4">
                     <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div 
-                                    className={cn("group flex items-center gap-2 rounded-md p-1 border cursor-pointer", activeZoom === 'A' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
-                                    onClick={() => setActiveZoom('A')}
-                                    onWheel={(e) => handleZoomPresetWheel(e, 'A')}
-                                >
-                                    <ZoomIn className="w-4 h-4"/>
-                                    <span className="text-sm font-medium w-12 text-center">{(zoomA * 100).toFixed(0)}%</span>
-                                    <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
-                                        <Slider 
-                                            value={[zoomA]}
-                                            onValueChange={(v) => handleZoomPresetDrag(v[0], 'A')}
-                                            min={0.1} max={10} step={0.1}
-                                        />
-                                    </div>
+                        <div className="group flex items-center gap-1" onWheel={(e) => handleZoomPresetWheel(e, 'A')}>
+                             <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={activeZoom === 'A' ? "secondary" : "ghost"}
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => setActiveZoom('A')}
+                                    >
+                                        <ZoomIn className="w-4 h-4"/>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Activate Zoom A</TooltipContent>
+                            </Tooltip>
+                            <div className={cn("flex items-center gap-2 rounded-md p-1 border", activeZoom === 'A' ? "border-primary bg-primary/10" : "border-input bg-background")}>
+                                <span className="text-sm font-medium w-12 text-center">{(zoomA * 100).toFixed(0)}%</span>
+                                <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
+                                    <Slider 
+                                        value={[zoomA]}
+                                        onValueChange={(v) => handleZoomPresetDrag(v[0], 'A')}
+                                        min={0.1} max={10} step={0.1}
+                                    />
                                 </div>
-                            </TooltipTrigger>
-                            <TooltipContent>Zoom Preset A (Click to activate, Scroll or Drag to adjust)</TooltipContent>
-                        </Tooltip>
-                         <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div 
-                                    className={cn("group flex items-center gap-2 rounded-md p-1 border cursor-pointer", activeZoom === 'B' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
-                                    onClick={() => setActiveZoom('B')}
-                                    onWheel={(e) => handleZoomPresetWheel(e, 'B')}
-                                >
-                                    <ZoomIn className="w-4 h-4"/>
-                                    <span className="text-sm font-medium w-12 text-center">{(zoomB * 100).toFixed(0)}%</span>
-                                    <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
-                                        <Slider 
-                                            value={[zoomB]}
-                                            onValueChange={(v) => handleZoomPresetDrag(v[0], 'B')}
-                                            min={0.1} max={10} step={0.1}
-                                        />
-                                    </div>
+                            </div>
+                        </div>
+
+                         <div className="group flex items-center gap-1" onWheel={(e) => handleZoomPresetWheel(e, 'B')}>
+                             <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={activeZoom === 'B' ? "secondary" : "ghost"}
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => setActiveZoom('B')}
+                                    >
+                                        <ZoomIn className="w-4 h-4"/>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Activate Zoom B</TooltipContent>
+                            </Tooltip>
+                             <div className={cn("flex items-center gap-2 rounded-md p-1 border", activeZoom === 'B' ? "border-primary bg-primary/10" : "border-input bg-background")}>
+                                <span className="text-sm font-medium w-12 text-center">{(zoomB * 100).toFixed(0)}%</span>
+                                <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
+                                    <Slider 
+                                        value={[zoomB]}
+                                        onValueChange={(v) => handleZoomPresetDrag(v[0], 'B')}
+                                        min={0.1} max={10} step={0.1}
+                                    />
                                 </div>
-                            </TooltipTrigger>
-                            <TooltipContent>Zoom Preset B (Click to activate, Scroll or Drag to adjust)</TooltipContent>
-                        </Tooltip>
+                            </div>
+                        </div>
                     </TooltipProvider>
                 </div>
             </header>
@@ -655,3 +666,4 @@ export function ProSegmentAI() {
     
 
     
+
