@@ -2,6 +2,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import {
   Bot,
   Brush,
@@ -53,7 +54,6 @@ import { LassoSettings, MagicWandSettings, FeatherSettings, Layer } from "@/lib/
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
-import Image from "next/image"
 import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { SelectionEngine } from "@/lib/selection-engine"
