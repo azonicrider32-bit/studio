@@ -22,16 +22,6 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, c
     
   return (
     <div className={cn("p-4 space-y-4 h-full flex flex-col", className)}>
-        <div className="space-y-2">
-            <h3 className="font-headline text-lg flex items-center gap-2">
-                <Lasso className="w-5 h-5"/>
-                Lasso Zoom Preview
-            </h3>
-            <p className="text-sm text-muted-foreground">
-            A zoomed-in view for precise path creation with the lasso tool.
-            </p>
-        </div>
-        <Separator />
       <LassoHoverPreview 
           canvas={canvas} 
           mousePos={mousePos} 
