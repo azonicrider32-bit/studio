@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -503,13 +504,13 @@ export function ProSegmentAI() {
                 </div>
                 <div className="flex items-center gap-4">
                     <TooltipProvider>
-                        <div className="flex items-center gap-2">
-                             <Tooltip>
+                        <div className="flex items-center gap-1">
+                            <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        variant={activeZoom === 'A' ? "secondary" : "ghost"}
+                                        variant={activeZoom === 'A' ? "default" : "ghost"}
                                         size="icon"
-                                        className="h-8 w-8"
+                                        className={cn("h-8 w-8 border", activeZoom === 'A' ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : 'border-input')}
                                         onClick={() => setActiveZoom('A')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
@@ -517,8 +518,10 @@ export function ProSegmentAI() {
                                 </TooltipTrigger>
                                 <TooltipContent>Activate Zoom A</TooltipContent>
                             </Tooltip>
-                            <div className="group flex items-center gap-2 rounded-md py-1 border border-input bg-background" onWheel={(e) => handleZoomPresetWheel(e, 'A')}>
-                                <span className="text-sm font-medium px-2 text-center">{(zoomA * 100).toFixed(0)}%</span>
+                            <div className="group flex items-center" onWheel={(e) => handleZoomPresetWheel(e, 'A')}>
+                                <span className="text-sm font-medium px-2 py-1 text-center bg-background">
+                                    {(zoomA * 100).toFixed(0)}%
+                                </span>
                                 <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
                                     <Slider 
                                         value={[zoomA]}
@@ -529,13 +532,13 @@ export function ProSegmentAI() {
                             </div>
                         </div>
 
-                         <div className="flex items-center gap-2">
-                             <Tooltip>
+                         <div className="flex items-center gap-1">
+                            <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        variant={activeZoom === 'B' ? "secondary" : "ghost"}
+                                        variant={activeZoom === 'B' ? "default" : "ghost"}
                                         size="icon"
-                                        className="h-8 w-8"
+                                        className={cn("h-8 w-8 border", activeZoom === 'B' ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : 'border-input')}
                                         onClick={() => setActiveZoom('B')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
@@ -543,8 +546,10 @@ export function ProSegmentAI() {
                                 </TooltipTrigger>
                                 <TooltipContent>Activate Zoom B</TooltipContent>
                             </Tooltip>
-                             <div className="group flex items-center gap-2 rounded-md py-1 border border-input bg-background" onWheel={(e) => handleZoomPresetWheel(e, 'B')}>
-                                <span className="text-sm font-medium px-2 text-center">{(zoomB * 100).toFixed(0)}%</span>
+                            <div className="group flex items-center" onWheel={(e) => handleZoomPresetWheel(e, 'B')}>
+                                <span className="text-sm font-medium px-2 py-1 text-center bg-background">
+                                    {(zoomB * 100).toFixed(0)}%
+                                </span>
                                 <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
                                     <Slider 
                                         value={[zoomB]}
@@ -576,7 +581,7 @@ export function ProSegmentAI() {
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
                     onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                    onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
                     getCanvasRef={canvasRef}
