@@ -1,9 +1,7 @@
 
-
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import {
   Bot,
   Brush,
@@ -460,142 +458,37 @@ function ProSegmentAIContent() {
 
   const renderTopPanelContent = () => {
     if (!activeTopPanel) return null;
-
-    const content = () => {
-      switch (activeTopPanel) {
-        case "zoom":
-          return <PixelZoomPanel
-            canvas={canvasRef.current}
-            mousePos={canvasMousePos}
-            selectionEngine={selectionEngineRef.current}
-            onHoverChange={setIsLassoPreviewHovered}
-            className="flex-1"
-          />;
-        case "feather":
-          return <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />;
-        case "layers":
-          return <LayersPanel 
-                  layers={layers}
-                  activeLayerId={activeLayerId}
-                  onLayerSelect={setActiveLayerId}
-                  onToggleVisibility={toggleLayerVisibility}
-                  onToggleLock={toggleLayerLock}
-                  onToggleMask={toggleLayerMask}
-                  onDeleteLayer={deleteLayer}
-                  draggedLayerId={draggedLayerId}
-                  setDraggedLayerId={setDraggedLayerId}
-                  dropTargetId={dropTargetId}
-                  setDropTargetId={setDropTargetId}
-                  onDrop={(draggedId, targetId) => {
-                    const draggedLayer = layers.find(l => l.id === draggedId);
-                    if (!draggedLayer || draggedId === targetId || draggedLayer.parentId === targetId) return;
-
-                    setLayers(currentLayers => {
-                        const newLayers = currentLayers.map(l => {
-                            // Detach from old parent
-                            if (l.id === draggedId) {
-                                return { ...l, parentId: targetId, subType: 'mask' as const };
-                            }
-                            return l;
-                        }).filter(l => l.id !== draggedId); // remove from top level if it was there
-
-                        const targetLayerIndex = newLayers.findIndex(l => l.id === targetId);
-                        
-                        if (targetLayerIndex > -1) {
-                            // Don't add to itself.
-                            if (newLayers[targetLayerIndex].modifiers?.find(m => m.id === draggedId)) return currentLayers;
-                            
-                             const draggedLayerWithParent = { ...draggedLayer, parentId: targetId, subType: 'mask' as const };
-                             
-                             const targetLayer = newLayers[targetLayerIndex];
-                             const existingModifiers = targetLayer.modifiers || [];
-
-                             newLayers[targetLayerIndex] = {
-                                ...targetLayer,
-                                modifiers: [...existingModifiers, draggedLayerWithParent]
-                             };
-                             
-                             // Also update the layer in the main array
-                             const draggedIndexInMain = newLayers.findIndex(l => l.id === draggedId);
-                             if (draggedIndexInMain > -1) {
-                                newLayers[draggedIndexInMain] = draggedLayerWithParent;
-                             } else {
-                                // If it wasn't a modifier before, it might not be in the main list anymore
-                                // It should be part of its new parent's modifier list
-                             }
-
-                        }
-                        
-                        // return newLayers.filter(l => !l.parentId);
-                        return newLayers;
-                    });
-                  }}
-                />;
-        case "ai":
-          return (
-            <Tabs defaultValue="models" className="flex h-full flex-col">
-              <TabsList className="m-2 grid grid-cols-3">
-                  <TabsTrigger value="models">Models</TabsTrigger>
-                  <TabsTrigger value="canny">Canny</TabsTrigger>
-                  <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
-              </TabsList>
-              <TabsContent value="models" className="m-0 flex-1">
-                  <AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} />
-              </TabsContent>
-              <TabsContent value="canny" className="m-0 flex-1">
-                  <CannyTuningPanel />
-              </TabsContent>
-              <TabsContent value="inpaint" className="m-0 flex-1">
-                  <InpaintingPanel
-                    imageUrl={imageUrl}
-                    getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
-                    onGenerationComplete={(newUrl) => handleImageSelect(newUrl)}
-                    clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
-                  />
-              </TabsContent>
-            </Tabs>
-          );
-        default:
-          return null;
-      }
-    };
-    
-    return <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">{content()}</div>;
+    return (
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+        {activeTopPanel === "zoom" && <PixelZoomPanel canvas={canvasRef.current} mousePos={canvasMousePos} selectionEngine={selectionEngineRef.current} onHoverChange={setIsLassoPreviewHovered} className="flex-1"/>}
+        {activeTopPanel === "feather" && <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />}
+        {activeTopPanel === "layers" && <LayersPanel layers={layers} activeLayerId={activeLayerId} onLayerSelect={setActiveLayerId} onToggleVisibility={toggleLayerVisibility} onToggleLock={toggleLayerLock} onToggleMask={toggleLayerMask} onDeleteLayer={deleteLayer} draggedLayerId={draggedLayerId} setDraggedLayerId={setDraggedLayerId} dropTargetId={dropTargetId} setDropTargetId={setDropTargetId} onDrop={(draggedId, targetId) => { const draggedLayer = layers.find(l => l.id === draggedId); if (!draggedLayer || draggedId === targetId || draggedLayer.parentId === targetId) return; setLayers(currentLayers => { const newLayers = currentLayers.map(l => { if (l.id === draggedId) { return { ...l, parentId: targetId, subType: 'mask' as const }; } return l; }).filter(l => l.id !== draggedId); const targetLayerIndex = newLayers.findIndex(l => l.id === targetId); if (targetLayerIndex > -1) { if (newLayers[targetLayerIndex].modifiers?.find(m => m.id === draggedId)) return currentLayers; const draggedLayerWithParent = { ...draggedLayer, parentId: targetId, subType: 'mask' as const }; const targetLayer = newLayers[targetLayerIndex]; const existingModifiers = targetLayer.modifiers || []; newLayers[targetLayerIndex] = { ...targetLayer, modifiers: [...existingModifiers, draggedLayerWithParent] }; const draggedIndexInMain = newLayers.findIndex(l => l.id === draggedId); if (draggedIndexInMain > -1) { newLayers[draggedIndexInMain] = draggedLayerWithParent; } } return newLayers; }); }} />}
+        {activeTopPanel === "ai" && (
+          <Tabs defaultValue="models" className="flex h-full flex-col">
+            <TabsList className="m-2 grid grid-cols-3">
+                <TabsTrigger value="models">Models</TabsTrigger>
+                <TabsTrigger value="canny">Canny</TabsTrigger>
+                <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
+            </TabsList>
+            <TabsContent value="models" className="m-0 flex-1"><AiModelsPanel setSegmentationMask={setSegmentationMask} setImageUrl={setImageUrl} /></TabsContent>
+            <TabsContent value="canny" className="m-0 flex-1"><CannyTuningPanel /></TabsContent>
+            <TabsContent value="inpaint" className="m-0 flex-1"><InpaintingPanel imageUrl={imageUrl} getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined} onGenerationComplete={(newUrl) => handleImageSelect(newUrl)} clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined} /></TabsContent>
+          </Tabs>
+        )}
+      </div>
+    );
   };
 
   const renderBottomPanelContent = () => {
     if (!activeBottomPanel) return null;
-
-    const content = () => {
-        switch (activeBottomPanel) {
-        case "telemetry":
-            return <TelemetryPanel />;
-        case "chat":
-            return <AiChatPanel />;
-        case "color-analysis":
-            return (
-            <ColorAnalysisPanel
-                canvas={canvasRef.current}
-                mousePos={canvasMousePos}
-                magicWandSettings={magicWandSettings}
-                onMagicWandSettingsChange={handleMagicWandSettingsChange}
-            />
-            );
-        case "pixel-preview":
-            return (
-                <div className="flex-1 flex flex-col min-h-0">
-                    <SegmentHoverPreview
-                        canvas={canvasRef.current}
-                        mousePos={canvasMousePos}
-                        settings={magicWandSettings}
-                    />
-                </div>
-            );
-        default:
-            return null;
-        }
-    };
-    return <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">{content()}</div>;
+    return (
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+          {activeBottomPanel === "telemetry" && <TelemetryPanel />}
+          {activeBottomPanel === "chat" && <AiChatPanel />}
+          {activeBottomPanel === "color-analysis" && <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>}
+          {activeBottomPanel === "pixel-preview" && <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>}
+      </div>
+    );
   };
   
   const handleHoverZoom = (preset: 'A' | 'B' | null) => {
@@ -636,8 +529,8 @@ function ProSegmentAIContent() {
           onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
         />
 
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
-            <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4">
+        <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
+            <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4 bg-background/80 backdrop-blur-sm z-10">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
                     <div className="flex items-center gap-1">
@@ -746,7 +639,7 @@ function ProSegmentAIContent() {
                     </TooltipProvider>
                 </div>
             </header>
-            <main className="flex-1 overflow-auto bg-muted/30 flex flex-col">
+            <main className="flex-1 overflow-auto bg-muted/30">
                  <ImageCanvas 
                     imageUrl={imageUrl}
                     layers={layers}
@@ -788,13 +681,18 @@ function ProSegmentAIContent() {
              />
         </div>
 
-        <div className="relative flex h-screen flex-col border-l" style={{ width: rightPanelWidth }}>
-          <div 
-            onMouseDown={handleMouseDownResize}
-            className="absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group"
-          >
-            <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
-          </div>
+        <div 
+          className="absolute top-0 right-0 h-full flex flex-col border-l bg-background/80 backdrop-blur-sm z-20" 
+          style={{ width: rightPanelWidth }}
+        >
+          {(activeTopPanel || activeBottomPanel) && (
+            <div 
+              onMouseDown={handleMouseDownResize}
+              className="absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group"
+            >
+              <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
+            </div>
+          )}
             
           <div className="flex h-12 items-center border-b px-2">
               <Tabs value={activeTopPanel || 'none'} className="w-full">
@@ -821,13 +719,15 @@ function ProSegmentAIContent() {
             </Tabs>
           </div>
             
-          <div className="flex-1 flex flex-col min-h-0">
-              {renderTopPanelContent()}
-            
-            {activeTopPanel && activeBottomPanel && <Separator />}
+          {(activeTopPanel || activeBottomPanel) && (
+            <div className="flex-1 flex flex-col min-h-0">
+                {renderTopPanelContent()}
+              
+              {activeTopPanel && activeBottomPanel && <Separator />}
 
-              {renderBottomPanelContent()}
-          </div>
+                {renderBottomPanelContent()}
+            </div>
+          )}
 
           <div className="flex h-12 items-center border-t px-2">
             <Tabs value={activeBottomPanel || 'none'} className="w-full">
