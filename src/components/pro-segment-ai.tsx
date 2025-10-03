@@ -602,15 +602,18 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
-  const sidebarWidth = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
-  const toolPanelWidth = '68px'; // from your ToolPanel component's container
+  const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
+  const toolPanelWidth = '68px';
+  const mainContentLeftOffset = `calc(${sidebarWidthVar} + ${toolPanelWidth})`;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <Sidebar collapsible="icon">
           <SidebarHeader>
-            <SidebarTrigger>
-                <PanelLeft />
+             <SidebarTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <PanelLeft />
+                </Button>
             </SidebarTrigger>
           </SidebarHeader>
           <SidebarContent>
@@ -618,7 +621,7 @@ function ProSegmentAIContent() {
           </SidebarContent>
       </Sidebar>
 
-       <ToolPanel
+      <ToolPanel
         activeTool={activeTool}
         setActiveTool={setActiveTool}
         onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
@@ -626,13 +629,13 @@ function ProSegmentAIContent() {
       />
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header 
-            className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm absolute top-0"
-            style={{
-                left: `calc(${sidebarWidth} + ${toolPanelWidth})`,
-                right: `${rightPanelWidth}px`,
-                transition: 'left 0.2s ease-in-out',
-            }}
+        <header
+          className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 absolute top-0 bg-background/80 backdrop-blur-sm"
+          style={{
+            left: mainContentLeftOffset,
+            right: `${rightPanelWidth}px`,
+            transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out',
+          }}
         >
           <div className="flex items-center gap-4 flex-1">
             <WorkspaceTabs 
@@ -753,9 +756,7 @@ function ProSegmentAIContent() {
         <main 
             className="flex-1 flex bg-muted/30 relative"
             style={{
-                paddingLeft: `calc(${sidebarWidth} + ${toolPanelWidth})`,
                 paddingTop: '3rem',
-                transition: 'padding-left 0.2s ease-in-out',
             }}
         >
             <div className="w-full h-full" style={{}}>
@@ -939,6 +940,7 @@ export function ProSegmentAI() {
     
 
     
+
 
 
 
