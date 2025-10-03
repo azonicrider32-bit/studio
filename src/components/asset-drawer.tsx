@@ -3,10 +3,11 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp, GripVertical, X } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import { Button } from './ui/button';
 import AdvancedAssetPanel from './panels/AdvancedAssetsPanel';
 import { cn } from '@/lib/utils';
+import { useSidebar } from './ui/sidebar';
 
 interface AssetDrawerProps {
   isOpen: boolean;
@@ -22,6 +23,8 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect }: AssetDrawerProp
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const [isResizing, setIsResizing] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const { state: sidebarState } = useSidebar();
+
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -59,6 +62,8 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect }: AssetDrawerProp
     onToggle();
   }
 
+  const leftPosition = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
+
   return (
     <>
         <AnimatePresence>
@@ -69,8 +74,8 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect }: AssetDrawerProp
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-            className="fixed bottom-0 left-[var(--sidebar-width-icon)] right-[380px] z-40 bg-background border-t border-border shadow-2xl"
-            style={{ height }}
+            className="fixed bottom-0 right-[380px] z-40 bg-background border-t border-border shadow-2xl"
+            style={{ height, left: leftPosition, transition: 'left 0.2s ease-in-out' }}
             >
             <div 
                 onMouseDown={handleMouseDown}
