@@ -94,6 +94,7 @@ export function ProSegmentAI() {
   const [hoveredZoom, setHoveredZoom] = React.useState<'A' | 'B' | null>(null);
   const hoverTimeoutRef = React.useRef<{ A: NodeJS.Timeout | null, B: NodeJS.Timeout | null }>({ A: null, B: null });
 
+  const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
 
   const [pan, setPan] = React.useState({ x: 0, y: 0 });
 
@@ -508,7 +509,7 @@ export function ProSegmentAI() {
                                     <Button
                                         variant={activeZoom === 'A' ? "default" : "ghost"}
                                         size="icon"
-                                        className={cn("h-9 w-9 border border-input relative", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                        className={cn("h-9 w-9 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
                                         onClick={() => setActiveZoom('A')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
@@ -523,7 +524,7 @@ export function ProSegmentAI() {
                                 onMouseLeave={() => handleHoverZoom(null)}
                             >
                                 <span 
-                                    className="text-sm font-medium px-2 py-1 text-center bg-background w-10"
+                                    className="text-sm font-medium px-2 py-1 text-center bg-background"
                                     onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
                                 >
                                     {(zoomA * 100).toFixed(0)}%
@@ -547,7 +548,7 @@ export function ProSegmentAI() {
                                      <Button
                                         variant={activeZoom === 'B' ? "default" : "ghost"}
                                         size="icon"
-                                        className={cn("h-9 w-9 border border-input relative", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                        className={cn("h-9 w-9 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
                                         onClick={() => setActiveZoom('B')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
@@ -562,7 +563,7 @@ export function ProSegmentAI() {
                                 onMouseLeave={() => handleHoverZoom(null)}
                             >
                                 <span 
-                                    className="text-sm font-medium px-2 py-1 text-center bg-background w-10"
+                                    className="text-sm font-medium px-2 py-1 text-center bg-background"
                                     onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
                                 >
                                     {(zoomB * 100).toFixed(0)}%
