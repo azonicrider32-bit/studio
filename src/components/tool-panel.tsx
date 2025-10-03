@@ -58,9 +58,11 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
                     size="icon"
                     onClick={() => setActiveTool(tool.id)}
                     disabled={tool.disabled}
-                    className="h-12 w-12 relative"
+                    className="h-12 w-12 relative ps-tool-icon-container"
                 >
-                    <tool.icon className="h-5 w-5" />
+                    <div className="ps-tool-icon">
+                        <tool.icon className="h-5 w-5 ps-tool-icon__icon" />
+                    </div>
                     <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">{tool.shortcut}</span>
                 </Button>
                 </TooltipTrigger>
@@ -76,8 +78,10 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
           <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={onToggleAssetDrawer} className="h-12 w-12 relative">
-                        <ImageIcon className="h-5 w-5" />
+                    <Button variant="ghost" size="icon" onClick={onToggleAssetDrawer} className="h-12 w-12 relative ps-tool-icon-container">
+                        <div className="ps-tool-icon">
+                            <ImageIcon className="h-5 w-5 ps-tool-icon__icon" />
+                        </div>
                         <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">O</span>
                     </Button>
                 </TooltipTrigger>

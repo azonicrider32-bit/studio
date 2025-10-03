@@ -107,30 +107,40 @@ body {
     position: relative;
   }
 
-  .ps-logo::before,
-  .ps-logo::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: black;
-    z-index: 1;
-    mix-blend-mode: overlay;
-    opacity: 0;
+  /* Impressive Tool Icons */
+  .ps-tool-icon-container {
+    @apply rounded-lg transition-all duration-300;
+  }
+  .ps-tool-icon {
+    @apply h-full w-full flex items-center justify-center rounded-lg;
+    background: transparent;
+    transition: background 0.3s ease;
+  }
+  .ps-tool-icon__icon {
+    @apply text-foreground transition-colors duration-300;
   }
 
-  .ps-logo::before {
-    animation: segment-edge-one 5s infinite ease-in-out;
-    clip-path: polygon(0% 0%, 100% 0, 100% 2%, 0% 2%);
+  .ps-tool-icon-container:hover .ps-tool-icon {
+    background-image: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)));
+    background-size: 200% 200%;
+    animation: gradient-flow 5s ease-in-out infinite;
   }
 
-  .ps-logo::after {
-    animation: segment-edge-two 5s 2.5s infinite ease-in-out;
-    clip-path: polygon(0% 100%, 100% 100%, 100% 98%, 0% 98%);
+  .ps-tool-icon-container:hover .ps-tool-icon__icon {
+    @apply text-primary-foreground;
+  }
+  
+  .ps-tool-icon-container[data-variant="default"] .ps-tool-icon {
+     background-image: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--chart-2)));
+     background-size: 200% 200%;
+     animation: gradient-flow 5s ease-in-out infinite;
+  }
+
+  .ps-tool-icon-container[data-variant="default"] .ps-tool-icon__icon {
+    @apply text-primary-foreground;
   }
 }
+
 
 @keyframes gradient-flow {
   0% { background-position: 0% 50%; }
@@ -142,16 +152,4 @@ body {
   0%, 100% { -webkit-text-stroke-color: hsl(var(--primary-foreground) / 0.2); }
   50% { -webkit-text-stroke-color: hsl(var(--primary-foreground) / 0.8); }
   51% { -webkit-text-stroke-color: hsl(var(--primary-foreground) / 0.2); }
-}
-
-@keyframes segment-edge-one {
-  0%, 100% { transform: translateY(-50px); opacity: 0; }
-  10%, 40% { transform: translateY(0); opacity: 0.8; }
-  50% { transform: translateY(50px); opacity: 0; }
-}
-
-@keyframes segment-edge-two {
-  0%, 100% { transform: translateY(50px); opacity: 0; }
-  10%, 40% { transform: translateY(0); opacity: 0.8; }
-  50% { transform: translateY(-50px); opacity: 0; }
 }
