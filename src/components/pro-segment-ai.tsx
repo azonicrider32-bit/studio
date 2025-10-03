@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -338,56 +339,61 @@ export function ProSegmentAI() {
 
   const renderTopPanelContent = () => {
     if (!activeTopPanel) return null;
-    switch (activeTopPanel) {
-      case 'tools':
-        switch (activeTool) {
-          case "lasso":
-            return <LassoPanel
-              canvas={canvasRef.current}
-              mousePos={canvasMousePos}
-              selectionEngine={selectionEngineRef.current}
-              onHoverChange={setIsLassoPreviewHovered}
-              className="h-full"
-            />;
-          case "magic-wand":
-            return <MagicWandPanel 
-                      settings={magicWandSettings} 
-                      onSettingsChange={handleMagicWandSettingsChange}
-                      exclusionSettings={negativeMagicWandSettings}
-                      onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
-                      canvas={canvasRef.current}
-                      mousePos={canvasMousePos}
-                   />;
-          case "brush":
-            return <BrushPanel />;
-          case "eraser":
-            return <BrushPanel isEraser />;
-          case "adjustments":
-            return <LayerAdjustmentPanel />;
-          case "color-analysis":
-            return <ColorAnalysisPanel 
-                    canvas={canvasRef.current}
-                    mousePos={canvasMousePos}
-                    magicWandSettings={magicWandSettings}
-                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                  />;
-          default:
-            return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
-        }
-      case 'feather':
-        return <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />;
-      case 'layers':
-        return <LayersPanel 
-                  layers={layers}
-                  activeLayerId={activeLayerId}
-                  onLayerSelect={setActiveLayerId}
-                  onToggleVisibility={toggleLayerVisibility}
-                  onToggleLock={toggleLayerLock}
-                  onToggleMask={toggleLayerMask}
-                  onDeleteLayer={deleteLayer}
+    return (
+      <Tabs value={activeTopPanel} className="flex-1 flex flex-col min-h-0">
+        <TabsContent value="tools" className="m-0 flex-1 overflow-y-auto">
+          {(() => {
+            switch (activeTool) {
+              case "lasso":
+                return <LassoPanel
+                  canvas={canvasRef.current}
+                  mousePos={canvasMousePos}
+                  selectionEngine={selectionEngineRef.current}
+                  onHoverChange={setIsLassoPreviewHovered}
+                  className="h-full"
                 />;
-      case 'ai':
-        return (
+              case "magic-wand":
+                return <MagicWandPanel 
+                          settings={magicWandSettings} 
+                          onSettingsChange={handleMagicWandSettingsChange}
+                          exclusionSettings={negativeMagicWandSettings}
+                          onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
+                          canvas={canvasRef.current}
+                          mousePos={canvasMousePos}
+                       />;
+              case "brush":
+                return <BrushPanel />;
+              case "eraser":
+                return <BrushPanel isEraser />;
+              case "adjustments":
+                return <LayerAdjustmentPanel />;
+              case "color-analysis":
+                return <ColorAnalysisPanel 
+                        canvas={canvasRef.current}
+                        mousePos={canvasMousePos}
+                        magicWandSettings={magicWandSettings}
+                        onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                      />;
+              default:
+                return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
+            }
+          })()}
+        </TabsContent>
+        <TabsContent value="feather" className="m-0 flex-1 overflow-y-auto">
+          <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
+        </TabsContent>
+        <TabsContent value="layers" className="m-0 flex-1 overflow-y-auto">
+          <LayersPanel 
+            layers={layers}
+            activeLayerId={activeLayerId}
+            onLayerSelect={setActiveLayerId}
+            onToggleVisibility={toggleLayerVisibility}
+            onToggleLock={toggleLayerLock}
+            onToggleMask={toggleLayerMask}
+            onDeleteLayer={deleteLayer}
+          />
+        </TabsContent>
+        <TabsContent value="ai" className="m-0 flex-1 flex flex-col">
           <Tabs defaultValue="models" className="flex h-full flex-col">
             <TabsList className="m-2 grid grid-cols-3">
                 <TabsTrigger value="models">Models</TabsTrigger>
@@ -409,20 +415,20 @@ export function ProSegmentAI() {
                 />
             </TabsContent>
           </Tabs>
-        );
-      default:
-        return null;
-    }
+        </TabsContent>
+      </Tabs>
+    );
   };
 
   const renderBottomPanelContent = () => {
     if (!activeBottomPanel) return null;
-    switch(activeBottomPanel) {
-      case 'telemetry':
-        return <TelemetryPanel />;
-      default:
-        return null;
-    }
+    return (
+      <Tabs value={activeBottomPanel} className="flex-1 flex flex-col min-h-0">
+        <TabsContent value="telemetry" className="m-0 flex-1 overflow-y-auto">
+          <TelemetryPanel />
+        </TabsContent>
+      </Tabs>
+    )
   }
   
   const rightPanelVisible = activeTopPanel || activeBottomPanel;
@@ -514,7 +520,8 @@ export function ProSegmentAI() {
           </div>
 
           {/* Top Panel Section */}
-          <div className={`flex flex-col ${activeTopPanel && activeBottomPanel ? 'flex-basis-1/2' : 'flex-1'}`}>
+          <div className={`flex flex-col ${activeTopPanel && activeBottomPanel ? 'h-1/2' : 'flex-1'}`}>
+            <Tabs value={activeTopPanel || 'none'}>
               <SidebarHeader>
                 <TooltipProvider>
                     <TabsList className="grid w-full grid-cols-4">
@@ -541,10 +548,12 @@ export function ProSegmentAI() {
               <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
                 {renderTopPanelContent()}
               </div>
+            </Tabs>
           </div>
 
           {/* Bottom Panel Section */}
-          <div className={`flex flex-col border-t ${activeTopPanel && activeBottomPanel ? 'flex-basis-1/2' : 'flex-1'}`}>
+          <div className={`flex flex-col border-t ${activeTopPanel && activeBottomPanel ? 'h-1/2' : 'flex-1'}`}>
+            <Tabs value={activeBottomPanel || 'none'}>
               <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
                 {renderBottomPanelContent()}
               </div>
@@ -559,6 +568,7 @@ export function ProSegmentAI() {
                   </TabsList>
                 </TooltipProvider>
               </SidebarHeader>
+            </Tabs>
           </div>
         </div>
       </div>
