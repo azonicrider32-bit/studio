@@ -39,6 +39,7 @@ import {
 import {
   SidebarProvider,
   Sidebar,
+  SidebarContent,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -561,7 +562,7 @@ function ProSegmentAIContent() {
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <header
           className="flex h-12 items-center justify-between border-b px-2 z-10 bg-background/80 backdrop-blur-sm"
-          style={{ paddingRight: `var(--right-panel-width)`}}
+          style={{ paddingRight: `calc(var(--right-panel-width) + 1rem)`}}
         >
           <div className="flex-1 flex items-center">
             <WorkspaceTabs 
@@ -674,7 +675,7 @@ function ProSegmentAIContent() {
         </div>
           
         <div className="flex h-12 items-center justify-between border-b px-2">
-           <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" onClick={handleUndo} disabled={activeWorkspace.historyIndex < 0}>
                 <Undo2 className="w-5 h-5"/>
               </Button>
@@ -697,7 +698,6 @@ function ProSegmentAIContent() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            
             <TooltipProvider>
                 <div className="flex items-center gap-2">
                     <Tooltip>
