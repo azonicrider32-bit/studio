@@ -168,34 +168,12 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
     ]
 
   return (
-    <div className="flex flex-col h-full items-center justify-around py-2 px-1">
+    <div className="flex flex-col h-full items-center justify-around py-2 px-0.5">
       <TooltipProvider>
         <div className="flex flex-col items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
-            <div className="flex items-end h-24 gap-1">
-              {RGB_COMPONENTS.map(config => (
-                  <VerticalToleranceSlider
-                      key={config.id}
-                      id={config.id}
-                      label={config.label}
-                      tolerance={settings.tolerances[config.id]}
-                      max={config.max}
-                      color={config.color}
-                      pixelValue={undefined}
-                      isEnabled={settings.enabledTolerances.has(config.id)}
-                      isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
-                      onToggleEnabled={() => handleToggleEnabled(config.id)}
-                      onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
-                      onToleranceChange={(value) => handleToleranceChange(config.id, value)}
-                  />
-              ))}
-            </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-1 my-2">
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", settings.contiguous && "bg-accent text-accent-foreground")} onClick={() => onSettingsChange({ contiguous: !settings.contiguous })}>
+                    <Button variant={settings.contiguous ? "secondary" : "ghost"} size="icon" className="h-8 w-8" onClick={() => onSettingsChange({ contiguous: !settings.contiguous })}>
                         <Layers className="w-4 h-4"/>
                     </Button>
                 </TooltipTrigger>
@@ -203,7 +181,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", settings.createAsMask && "bg-accent text-accent-foreground")} onClick={() => onSettingsChange({ createAsMask: !settings.createAsMask })}>
+                    <Button variant={settings.createAsMask ? "secondary" : "ghost"} size="icon" className="h-8 w-8" onClick={() => onSettingsChange({ createAsMask: !settings.createAsMask })}>
                         <Link className="w-4 h-4"/>
                     </Button>
                 </TooltipTrigger>
@@ -211,7 +189,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", settings.showAllMasks && "bg-accent text-accent-foreground")} onClick={() => onSettingsChange({ showAllMasks: !settings.showAllMasks })}>
+                    <Button variant={settings.showAllMasks ? "secondary" : "ghost"} size="icon" className="h-8 w-8" onClick={() => onSettingsChange({ showAllMasks: !settings.showAllMasks })}>
                         <Palette className="w-4 h-4"/>
                     </Button>
                 </TooltipTrigger>
@@ -219,7 +197,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", settings.ignoreExistingSegments && "bg-accent text-accent-foreground")} onClick={() => onSettingsChange({ ignoreExistingSegments: !settings.ignoreExistingSegments })}>
+                    <Button variant={settings.ignoreExistingSegments ? "secondary" : "ghost"} size="icon" className="h-8 w-8" onClick={() => onSettingsChange({ ignoreExistingSegments: !settings.ignoreExistingSegments })}>
                         <EyeOff className="w-4 h-4"/>
                     </Button>
                 </TooltipTrigger>
@@ -248,6 +226,29 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
               ))}
             </div>
         </div>
+        
+        <div className="flex flex-col items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
+            <div className="flex items-end h-24 gap-1">
+              {RGB_COMPONENTS.map(config => (
+                  <VerticalToleranceSlider
+                      key={config.id}
+                      id={config.id}
+                      label={config.label}
+                      tolerance={settings.tolerances[config.id]}
+                      max={config.max}
+                      color={config.color}
+                      pixelValue={undefined}
+                      isEnabled={settings.enabledTolerances.has(config.id)}
+                      isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
+                      onToggleEnabled={() => handleToggleEnabled(config.id)}
+                      onToggleScrollAdjust={() => handleToggleScrollAdjust(config.id)}
+                      onToleranceChange={(value) => handleToleranceChange(config.id, value)}
+                  />
+              ))}
+            </div>
+        </div>
+
         <div className="flex flex-col items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(LAB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">LAB</Button>
             <div className="flex items-end h-24 gap-1">
