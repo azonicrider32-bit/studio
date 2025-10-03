@@ -564,7 +564,7 @@ function ProSegmentAIContent() {
           className="flex h-12 items-center justify-between border-b px-2 z-10 bg-background/80 backdrop-blur-sm"
           style={{ paddingRight: `calc(var(--right-panel-width) + 1rem)`}}
         >
-          <div className="flex-1 flex items-center">
+          <div className="flex-1 flex items-center gap-4">
             <WorkspaceTabs 
               workspaces={workspaces}
               activeWorkspaceId={activeWorkspaceId}
@@ -572,11 +572,34 @@ function ProSegmentAIContent() {
               onWorkspaceAdd={handleAddNewWorkspace}
               onWorkspaceClose={handleCloseWorkspace}
             />
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setIsSplitView(p => !p)}>
-              <Split className={cn("w-5 h-5", isSplitView && "text-primary")} />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={handleUndo} disabled={activeWorkspace.historyIndex < 0}>
+                <Undo2 className="w-5 h-5"/>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleRedo} disabled={activeWorkspace.historyIndex >= activeWorkspace.history.length - 1}>
+                <Redo2 className="w-5 h-5"/>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <History className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuSeparator />
+                  {activeWorkspace.history.length > 0 ? activeWorkspace.history.slice().reverse().map((action, index) => (
+                    <DropdownMenuItem key={action.id} onSelect={() => {}}>
+                        <span>{action.type.replace(/_/g, ' ')}</span>
+                    </DropdownMenuItem>
+                  )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+             <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => setIsSplitView(p => !p)}>
+                <Split className={cn("w-5 h-5", isSplitView && "text-primary")} />
+              </Button>
+            </div>
           </div>
         </header>
           
@@ -675,29 +698,7 @@ function ProSegmentAIContent() {
         </div>
           
         <div className="flex h-12 items-center justify-between border-b px-2">
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={handleUndo} disabled={activeWorkspace.historyIndex < 0}>
-                <Undo2 className="w-5 h-5"/>
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleRedo} disabled={activeWorkspace.historyIndex >= activeWorkspace.history.length - 1}>
-                <Redo2 className="w-5 h-5"/>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <History className="w-5 h-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuSeparator />
-                  {activeWorkspace.history.length > 0 ? activeWorkspace.history.slice().reverse().map((action, index) => (
-                    <DropdownMenuItem key={action.id} onSelect={() => {}}>
-                        <span>{action.type.replace(/_/g, ' ')}</span>
-                    </DropdownMenuItem>
-                  )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            
             <TooltipProvider>
                 <div className="flex items-center gap-2">
                     <Tooltip>
@@ -877,3 +878,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
