@@ -504,13 +504,13 @@ export function ProSegmentAI() {
                 </div>
                 <div className="flex items-center gap-4">
                     <TooltipProvider>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
                                         variant={activeZoom === 'A' ? "default" : "ghost"}
                                         size="icon"
-                                        className={cn("h-8 w-8 border", activeZoom === 'A' ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : 'border-input')}
+                                        className={cn("h-9 w-9", activeZoom === 'A' ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : 'border border-input')}
                                         onClick={() => setActiveZoom('A')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
@@ -519,7 +519,7 @@ export function ProSegmentAI() {
                                 <TooltipContent>Activate Zoom A</TooltipContent>
                             </Tooltip>
                             <div className="group flex items-center" onWheel={(e) => handleZoomPresetWheel(e, 'A')}>
-                                <span className="text-sm font-medium px-2 py-1 text-center bg-background">
+                                <span className="text-sm font-medium px-2 py-1 text-center bg-background w-10">
                                     {(zoomA * 100).toFixed(0)}%
                                 </span>
                                 <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
@@ -532,13 +532,13 @@ export function ProSegmentAI() {
                             </div>
                         </div>
 
-                         <div className="flex items-center gap-1">
-                            <Tooltip>
+                         <div className="flex items-center gap-2">
+                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button
+                                     <Button
                                         variant={activeZoom === 'B' ? "default" : "ghost"}
                                         size="icon"
-                                        className={cn("h-8 w-8 border", activeZoom === 'B' ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : 'border-input')}
+                                        className={cn("h-9 w-9", activeZoom === 'B' ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : 'border border-input')}
                                         onClick={() => setActiveZoom('B')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
@@ -547,7 +547,7 @@ export function ProSegmentAI() {
                                 <TooltipContent>Activate Zoom B</TooltipContent>
                             </Tooltip>
                             <div className="group flex items-center" onWheel={(e) => handleZoomPresetWheel(e, 'B')}>
-                                <span className="text-sm font-medium px-2 py-1 text-center bg-background">
+                                <span className="text-sm font-medium px-2 py-1 text-center bg-background w-10">
                                     {(zoomB * 100).toFixed(0)}%
                                 </span>
                                 <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
