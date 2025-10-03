@@ -65,9 +65,9 @@ import { ToolPanel } from "./tool-panel"
 import { cn } from "@/lib/utils"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform";
 type TopPanel = 'tools' | 'feather' | 'layers' | 'ai';
-type BottomPanel = 'telemetry' | 'history';
+type BottomPanel = 'telemetry' | 'history' | 'color-analysis';
 
 
 export function ProSegmentAI() {
@@ -365,13 +365,6 @@ export function ProSegmentAI() {
             return <BrushPanel isEraser />;
           case "adjustments":
             return <LayerAdjustmentPanel />;
-          case "color-analysis":
-            return <ColorAnalysisPanel 
-                    canvas={canvasRef.current}
-                    mousePos={canvasMousePos}
-                    magicWandSettings={magicWandSettings}
-                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                  />;
           default:
             return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
         }
@@ -417,15 +410,22 @@ export function ProSegmentAI() {
   };
 
   const renderBottomPanelContent = () => {
-    if (!activeBottomPanel) return null;
-    return (
-      <Tabs value={activeBottomPanel} className="flex-1 flex flex-col min-h-0">
-        <TabsContent value="telemetry" className="m-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
-          <TelemetryPanel />
-        </TabsContent>
-      </Tabs>
-    )
-  }
+    switch (activeBottomPanel) {
+      case "telemetry":
+        return <TelemetryPanel />;
+      case "color-analysis":
+        return (
+          <ColorAnalysisPanel
+            canvas={canvasRef.current}
+            mousePos={canvasMousePos}
+            magicWandSettings={magicWandSettings}
+            onMagicWandSettingsChange={handleMagicWandSettingsChange}
+          />
+        );
+      default:
+        return null;
+    }
+  };
   
   const rightPanelVisible = activeTopPanel || activeBottomPanel;
 
@@ -564,6 +564,10 @@ export function ProSegmentAI() {
                     <Tooltip>
                       <TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
                       <TooltipContent>Telemetry</TooltipContent>
+                    </Tooltip>
+                     <Tooltip>
+                      <TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
+                      <TooltipContent>Color Analysis</TooltipContent>
                     </Tooltip>
                   </TabsList>
                 </TooltipProvider>

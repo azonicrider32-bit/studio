@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform";
 
 const tools: { id: Tool; icon: React.ElementType; tooltip: string; shortcut: string; disabled?: boolean }[] = [
     { id: "magic-wand", icon: Wand2, tooltip: "Magic Wand", shortcut: "W" },
@@ -28,7 +28,6 @@ const tools: { id: Tool; icon: React.ElementType; tooltip: string; shortcut: str
     { id: "clone", icon: Replace, tooltip: "Clone Stamp", shortcut: "C", disabled: true },
     { id: "transform", icon: Move, tooltip: "Transform", shortcut: "T", disabled: true },
     { id: "pipette-minus", icon: PipetteMinusIcon, tooltip: "Sample Exclusion Color", shortcut: "I" },
-    { id: "color-analysis", icon: Palette, tooltip: "Color Analysis", shortcut: "" },
     { id: "adjustments", icon: SlidersHorizontal, tooltip: "Adjustments", shortcut: "A" },
 ]
 
