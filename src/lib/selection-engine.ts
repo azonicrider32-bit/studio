@@ -246,6 +246,14 @@ export class SelectionEngine {
     const newAnchor = this.lassoNodes[this.lassoNodes.length-1];
     this.updateLassoPreview(newAnchor[0], newAnchor[1], []);
   }
+
+  removeLastLassoNode() {
+    if (this.lassoNodes.length > 1) {
+      this.lassoNodes.pop();
+    } else if (this.lassoNodes.length === 1) {
+      this.cancelLasso();
+    }
+  }
   
   endLassoWithEnhancedPath(enhancedPath: {x:number, y:number}[]): Layer | null {
       if (!this.isDrawingLasso) return null;

@@ -320,6 +320,12 @@ const drawLayers = React.useCallback(() => {
         drawOverlay();
         toast({ title: 'Lasso cancelled.' });
       }
+
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        engine.removeLastLassoNode();
+        drawOverlay();
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
