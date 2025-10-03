@@ -27,7 +27,7 @@ export function LassoPanel({ canvas, mousePos, selectionEngine, onHoverChange, c
           mousePos={mousePos} 
           selectionEngine={selectionEngine} 
           onHoverChange={onHoverChange}
-          className="flex-grow min-h-0"
+          className="flex-1"
       />
     </div>
   )
