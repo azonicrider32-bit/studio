@@ -88,7 +88,7 @@ export function ProSegmentAI() {
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
   const isResizingRef = React.useRef(false);
   
-  const [activeTopPanel, setActiveTopPanel] = React.useState<TopPanel | null>('zoom');
+  const [activeTopPanel, setActiveTopPanel] = React.useState<TopPanel | null>('layers');
   const [activeBottomPanel, setActiveBottomPanel] = React.useState<BottomPanel | null>(null);
   
   const [zoomA, setZoomA] = React.useState(1.0);
@@ -110,11 +110,15 @@ export function ProSegmentAI() {
       visible: true,
       locked: true,
       pixels: new Set(),
-      bounds: { x: 0, y: 0, width: 0, height: 0 }
+      bounds: { x: 0, y: 0, width: 0, height: 0 },
+      modifiers: [],
     };
     return [backgroundLayer];
   });
   const [activeLayerId, setActiveLayerId] = React.useState<string | null>(layers[0]?.id);
+
+  const [draggedLayerId, setDraggedLayerId] = React.useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = React.useState<string | null>(null);
 
   const {
     draggedLayer,
@@ -403,6 +407,27 @@ export function ProSegmentAI() {
                   onToggleLock={toggleLayerLock}
                   onToggleMask={toggleLayerMask}
                   onDeleteLayer={deleteLayer}
+                  draggedLayerId={draggedLayerId}
+                  setDraggedLayerId={setDraggedLayerId}
+                  dropTargetId={dropTargetId}
+                  setDropTargetId={setDropTargetId}
+                  onDrop={(draggedId, targetId) => {
+                    const draggedLayer = layers.find(l => l.id === draggedId);
+                    if (!draggedLayer) return;
+
+                    // Remove from top level
+                    const newLayers = layers.filter(l => l.id !== draggedId);
+                    
+                    // Add as modifier to target
+                    const targetIndex = newLayers.findIndex(l => l.id === targetId);
+                    if (targetIndex > -1) {
+                        const targetLayer = newLayers[targetIndex];
+                        const newModifiers = [...(targetLayer.modifiers || []), draggedLayer];
+                        newLayers[targetIndex] = { ...targetLayer, modifiers: newModifiers };
+                    }
+                    
+                    setLayers(newLayers);
+                  }}
                 />;
         case "ai":
           return (

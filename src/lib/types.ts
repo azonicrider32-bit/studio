@@ -15,6 +15,7 @@ export interface Layer {
     highlightColor?: string; // e.g., 'hsl(210, 40%, 96.1%)'
     highlightOpacity?: number; // 0-1
     highlightTexture?: 'solid' | 'checkerboard' | 'lines';
+    modifiers?: Layer[];
 }
 
 export interface LassoSettings {

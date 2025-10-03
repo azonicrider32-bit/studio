@@ -3,7 +3,7 @@
 "use client"
 
 import * as React from "react"
-import { Eye, EyeOff, Lock, Unlock, GripVertical, Trash2, Palette, MoreHorizontal, Plus, Pipette, Link } from "lucide-react"
+import { Eye, EyeOff, Lock, Unlock, GripVertical, Trash2, Palette, MoreHorizontal, Plus, Pipette, Link, ChevronDown, ChevronRight } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -16,23 +16,47 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 interface LayersPanelProps {
     layers: Layer[];
     activeLayerId: string | null;
+    draggedLayerId: string | null;
+    setDraggedLayerId: (id: string | null) => void;
+    dropTargetId: string | null;
+    setDropTargetId: (id: string | null) => void;
     onLayerSelect: (id: string) => void;
     onToggleVisibility: (id: string) => void;
     onToggleLock: (id: string) => void;
     onToggleMask: (id: string) => void;
     onDeleteLayer: (id: string) => void;
+    onDrop: (draggedId: string, targetId: string) => void;
 }
 
 
 export function LayersPanel({
     layers,
     activeLayerId,
+    draggedLayerId,
+    setDraggedLayerId,
+    dropTargetId,
+    setDropTargetId,
     onLayerSelect,
     onToggleVisibility,
     onToggleLock,
     onToggleMask,
     onDeleteLayer,
+    onDrop,
 }: LayersPanelProps) {
+  
+  const [expandedLayers, setExpandedLayers] = React.useState(new Set<string>());
+
+  const toggleLayerExpansion = (layerId: string) => {
+    setExpandedLayers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(layerId)) {
+        newSet.delete(layerId);
+      } else {
+        newSet.add(layerId);
+      }
+      return newSet;
+    });
+  };
 
   const renderLayer = (layer: Layer, isMask = false) => {
     const layerTypeIcon = layer.subType === 'mask' 
@@ -42,15 +66,50 @@ export function LayersPanel({
           : <div className="w-10 h-7 rounded-sm border bg-card flex items-center justify-center"><div className="w-full h-full bg-black/5" /></div>
       );
 
+    const isDropTarget = dropTargetId === layer.id && draggedLayerId !== layer.id;
+
     return (
       <div
         key={layer.id}
+        draggable={!isMask && layer.type !== 'background'}
+        onDragStart={(e) => {
+            if (layer.type === 'background') return;
+            e.stopPropagation();
+            setDraggedLayerId(layer.id);
+        }}
+        onDragEnd={() => {
+            setDraggedLayerId(null);
+            setDropTargetId(null);
+        }}
+        onDragEnter={(e) => {
+            e.preventDefault();
+            if (draggedLayerId && draggedLayerId !== layer.id) {
+                setDropTargetId(layer.id);
+            }
+        }}
+        onDragLeave={(e) => {
+             e.preventDefault();
+             if (dropTargetId === layer.id) {
+                setDropTargetId(null);
+             }
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+            e.preventDefault();
+            if (draggedLayerId && dropTargetId) {
+                onDrop(draggedLayerId, dropTargetId);
+            }
+            setDraggedLayerId(null);
+            setDropTargetId(null);
+        }}
         onClick={() => !layer.locked && onLayerSelect(layer.id)}
         className={cn(
-          "flex items-center gap-2 p-2 rounded-md transition-colors",
+          "flex items-center gap-2 p-2 rounded-md transition-all",
           layer.id === activeLayerId ? "bg-accent/50" : "hover:bg-accent/30",
           layer.locked ? "cursor-not-allowed opacity-70" : "cursor-pointer",
-          isMask && "ml-6"
+          isMask && "ml-6",
+          draggedLayerId === layer.id && "opacity-50",
+          isDropTarget && "ring-2 ring-primary"
         )}
       >
         <GripVertical className="h-5 w-5 text-muted-foreground" />
@@ -113,18 +172,27 @@ export function LayersPanel({
   };
   
   const layerTree = React.useMemo(() => {
-    const tree: { parent: Layer; children: Layer[] }[] = [];
-    const layerMap = new Map(layers.map(l => [l.id, l]));
+    const layerMap = new Map(layers.map(l => [l.id, { ...l, children: [] as Layer[] }]));
+    const tree: { parent: Layer & { children: Layer[] }, children: (Layer & { children: Layer[] })[] }[] = [];
 
-    const topLevelLayers = layers.filter(l => !l.parentId);
+    const topLevelLayers: (Layer & { children: Layer[] })[] = [];
 
-    topLevelLayers.forEach(parent => {
-      const children = layers.filter(l => l.parentId === parent.id);
-      tree.push({ parent, children });
+    layers.forEach(layer => {
+        const currentLayer = layerMap.get(layer.id);
+        if (!currentLayer) return;
+
+        if (layer.parentId && layerMap.has(layer.parentId)) {
+            const parent = layerMap.get(layer.parentId);
+            if(parent) {
+                parent.children.push(currentLayer);
+            }
+        } else {
+            topLevelLayers.push(currentLayer);
+        }
     });
 
-    return tree;
-  }, [layers]);
+    return topLevelLayers.map(parent => ({ parent, children: parent.children || [] }));
+}, [layers]);
 
 
   return (
@@ -142,7 +210,28 @@ export function LayersPanel({
           {layerTree.slice().reverse().map(({ parent, children }) => (
             <React.Fragment key={parent.id}>
               {renderLayer(parent)}
-              {children.map(child => renderLayer(child, true))}
+                {(children.length > 0 || parent.modifiers?.length > 0) && (
+                    <div className="pl-6">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleLayerExpansion(parent.id)}
+                            className="h-6 w-full justify-start text-xs text-muted-foreground -ml-2"
+                        >
+                            {expandedLayers.has(parent.id) ? (
+                                <ChevronDown className="w-3 h-3 mr-1" />
+                            ) : (
+                                <ChevronRight className="w-3 h-3 mr-1" />
+                            )}
+                            Modifiers ({parent.modifiers?.length || 0})
+                        </Button>
+                        {expandedLayers.has(parent.id) && (
+                            <div className="pl-4 border-l ml-1.5 py-1 space-y-1">
+                                {(parent.modifiers || []).map(child => renderLayer(child, true))}
+                            </div>
+                        )}
+                    </div>
+                )}
                {parent.type !== 'background' && (
                 <div className="pl-8 py-1">
                     <button className="flex items-center w-full text-left gap-2 p-1 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors border-2 border-dashed border-transparent hover:border-accent">
