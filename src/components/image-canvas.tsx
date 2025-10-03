@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Image from "next/image";
@@ -592,30 +591,37 @@ const drawLayers = React.useCallback(() => {
     const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
     if(mainCtx) {
         const R = 8; // cursor radius
-        const imageData = mainCtx.getImageData(pos.x - R, pos.y - R, 2 * R, 2 * R);
-        let r = 0, g = 0, b = 0, count = 0;
-        for (let i = 0; i < imageData.data.length; i += 4) {
-            r += imageData.data[i];
-            g += imageData.data[i + 1];
-            b += imageData.data[i + 2];
-            count++;
-        }
-        const avgR = r / count;
-        const avgG = g / count;
-        const avgB = b / count;
-        const luminance = (0.299 * avgR + 0.587 * avgG + 0.114 * avgB) / 255;
-        const contrastColor = luminance > 0.5 ? 'black' : 'white';
+        const startX = Math.max(0, Math.floor(pos.x - R));
+        const startY = Math.max(0, Math.floor(pos.y - R));
+        const width = Math.min(mainCanvas.width - startX, 2 * R);
+        const height = Math.min(mainCanvas.height - startY, 2 * R);
         
-        const circleRadius = 8;
-        const dotRadius = 1;
-        const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="${circleRadius}" stroke="${contrastColor}" stroke-width="2" stroke-opacity="0.5" fill="none" />
-            <circle cx="12" cy="${12 - circleRadius/2}" r="${dotRadius}" fill="${contrastColor}" />
-            <circle cx="12" cy="${12 + circleRadius/2}" r="${dotRadius}" fill="${contrastColor}" />
-            <circle cx="${12 - circleRadius/2}" cy="12" r="${dotRadius}" fill="${contrastColor}" />
-            <circle cx="${12 + circleRadius/2}" cy="12" r="${dotRadius}" fill="${contrastColor}" />
-        </svg>`;
-        setCursorStyle(`url("data:image/svg+xml;base64,${btoa(svg)}") 12 12, crosshair`);
+        if (width > 0 && height > 0) {
+          const imageData = mainCtx.getImageData(startX, startY, width, height);
+          let r = 0, g = 0, b = 0, count = 0;
+          for (let i = 0; i < imageData.data.length; i += 4) {
+              r += imageData.data[i];
+              g += imageData.data[i + 1];
+              b += imageData.data[i + 2];
+              count++;
+          }
+          const avgR = r / count;
+          const avgG = g / count;
+          const avgB = b / count;
+          const luminance = (0.299 * avgR + 0.587 * avgG + 0.114 * avgB) / 255;
+          const contrastColor = luminance > 0.5 ? 'black' : 'white';
+          
+          const circleRadius = 8;
+          const dotRadius = 1;
+          const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="${circleRadius}" stroke="${contrastColor}" stroke-width="2" stroke-opacity="0.5" fill="none" />
+              <circle cx="12" cy="${12 - circleRadius/2}" r="${dotRadius}" fill="${contrastColor}" />
+              <circle cx="12" cy="${12 + circleRadius/2}" r="${dotRadius}" fill="${contrastColor}" />
+              <circle cx="${12 - circleRadius/2}" cy="12" r="${dotRadius}" fill="${contrastColor}" />
+              <circle cx="${12 + circleRadius/2}" cy="12" r="${dotRadius}" fill="${contrastColor}" />
+          </svg>`;
+          setCursorStyle(`url("data:image/svg+xml;base64,${btoa(svg)}") 12 12, crosshair`);
+        }
     }
 
     if (activeTool === 'lasso') {
@@ -785,3 +791,5 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
+
+    
