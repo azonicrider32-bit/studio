@@ -607,8 +607,8 @@ function ProSegmentAIContent() {
             showHotkeys={showHotkeyLabels}
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden relative">
-            <header className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
+        <div className="flex-1 flex flex-col overflow-hidden">
+            <header className="sticky top-0 h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
                 <div className="flex items-center gap-4 flex-1">
                 <WorkspaceTabs 
                     workspaces={workspaces}
@@ -725,7 +725,7 @@ function ProSegmentAIContent() {
                 </div>
             </header>
 
-            <main className="flex-1 flex flex-col bg-muted/30">
+            <main className="flex-1 flex flex-col bg-muted/30 overflow-hidden">
                 <div className={cn("flex-1", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
                     <ImageCanvas 
                     key={activeWorkspace.id}
@@ -746,7 +746,7 @@ function ProSegmentAIContent() {
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
                     onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                    onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
                     getCanvasRef={canvasRef}
@@ -780,7 +780,7 @@ function ProSegmentAIContent() {
                             clearSelectionRef={React.useRef()}
                             onLassoSettingChange={() => {}}
                             onMagicWandSettingsChange={() => {}}
-                            onNegativeMagicWandSettingChange={() => {}}
+                            onNegativeMagicWandSettingsChange={() => {}}
                             canvasMousePos={null}
                             setCanvasMousePos={() => {}}
                             getCanvasRef={React.useRef()}
@@ -928,4 +928,5 @@ export function ProSegmentAI() {
 
 
     
+
 
