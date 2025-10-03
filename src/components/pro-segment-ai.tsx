@@ -507,18 +507,19 @@ export function ProSegmentAI() {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div 
-                                    className={cn("group flex items-center gap-2 rounded-md p-1 pr-2 border cursor-pointer", activeZoom === 'A' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
+                                    className={cn("group flex items-center gap-2 rounded-md p-1 border cursor-pointer", activeZoom === 'A' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
                                     onClick={() => setActiveZoom('A')}
                                     onWheel={(e) => handleZoomPresetWheel(e, 'A')}
                                 >
                                     <ZoomIn className="w-4 h-4"/>
                                     <span className="text-sm font-medium w-12 text-center">{(zoomA * 100).toFixed(0)}%</span>
-                                    <Slider 
-                                        value={[zoomA]}
-                                        onValueChange={(v) => handleZoomPresetDrag(v[0], 'A')}
-                                        min={0.1} max={10} step={0.1}
-                                        className="w-20 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    />
+                                    <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
+                                        <Slider 
+                                            value={[zoomA]}
+                                            onValueChange={(v) => handleZoomPresetDrag(v[0], 'A')}
+                                            min={0.1} max={10} step={0.1}
+                                        />
+                                    </div>
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent>Zoom Preset A (Click to activate, Scroll or Drag to adjust)</TooltipContent>
@@ -526,18 +527,19 @@ export function ProSegmentAI() {
                          <Tooltip>
                             <TooltipTrigger asChild>
                                 <div 
-                                    className={cn("group flex items-center gap-2 rounded-md p-1 pr-2 border cursor-pointer", activeZoom === 'B' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
+                                    className={cn("group flex items-center gap-2 rounded-md p-1 border cursor-pointer", activeZoom === 'B' ? "border-primary bg-primary/10" : "border-input bg-background hover:bg-accent/50")}
                                     onClick={() => setActiveZoom('B')}
                                     onWheel={(e) => handleZoomPresetWheel(e, 'B')}
                                 >
                                     <ZoomIn className="w-4 h-4"/>
                                     <span className="text-sm font-medium w-12 text-center">{(zoomB * 100).toFixed(0)}%</span>
-                                    <Slider 
-                                        value={[zoomB]}
-                                        onValueChange={(v) => handleZoomPresetDrag(v[0], 'B')}
-                                        min={0.1} max={10} step={0.1}
-                                        className="w-20 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    />
+                                    <div className="w-0 opacity-0 group-hover:w-20 group-hover:opacity-100 transition-all overflow-hidden">
+                                        <Slider 
+                                            value={[zoomB]}
+                                            onValueChange={(v) => handleZoomPresetDrag(v[0], 'B')}
+                                            min={0.1} max={10} step={0.1}
+                                        />
+                                    </div>
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent>Zoom Preset B (Click to activate, Scroll or Drag to adjust)</TooltipContent>
@@ -563,7 +565,7 @@ export function ProSegmentAI() {
                     getSelectionMaskRef={getSelectionMaskRef}
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
-                    onMagicWandSettingChange={handleMagicWandSettingsChange}
+                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
                     onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
