@@ -589,7 +589,7 @@ function ProSegmentAIContent() {
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
   return (
-    <div className="h-screen w-screen grid" style={{ gridTemplateColumns: 'auto 80px 1fr auto' }}>
+    <div className="h-screen w-screen flex">
       <Sidebar collapsible="icon">
           <SidebarHeader/>
           <SidebarContent>
@@ -913,6 +913,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
