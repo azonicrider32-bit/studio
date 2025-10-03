@@ -428,8 +428,8 @@ export function ProSegmentAI() {
                     getSelectionMaskRef={getSelectionMaskRef}
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
-                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                    onMagicWandSettingChange={handleMagicWandSettingsChange}
+                    onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
                     getCanvasRef={canvasRef}
@@ -441,6 +441,7 @@ export function ProSegmentAI() {
                 isOpen={isAssetDrawerOpen}
                 onToggle={() => setIsAssetDrawerOpen(prev => !prev)}
                 onImageSelect={handleImageSelect}
+                rightPanelWidth={rightPanelWidth}
              />
         </div>
 

@@ -13,13 +13,14 @@ interface AssetDrawerProps {
   isOpen: boolean;
   onToggle: () => void;
   onImageSelect: (url: string, name: string) => void;
+  rightPanelWidth: number;
 }
 
 const MIN_HEIGHT = 60; // Height of the handle
 const DEFAULT_HEIGHT = 400;
 const MAX_HEIGHT_RATIO = 0.8; // 80% of window height
 
-export function AssetDrawer({ isOpen, onToggle, onImageSelect }: AssetDrawerProps) {
+export function AssetDrawer({ isOpen, onToggle, onImageSelect, rightPanelWidth }: AssetDrawerProps) {
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const [isResizing, setIsResizing] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -75,7 +76,7 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect }: AssetDrawerProp
             exit={{ y: "100%" }}
             transition={{ type: 'spring', stiffness: 400, damping: 40 }}
             className="fixed bottom-0 right-[380px] z-40 bg-background border-t border-border shadow-2xl"
-            style={{ height, left: leftPosition, transition: 'left 0.2s ease-in-out' }}
+            style={{ height, left: leftPosition, right: `${rightPanelWidth}px`, transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out' }}
             >
             <div 
                 onMouseDown={handleMouseDown}
