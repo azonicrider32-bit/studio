@@ -9,6 +9,8 @@ import { MagicWandSettings } from "@/lib/types"
 import { Button } from "../ui/button"
 import { EyeOff, Layers, Link, Palette } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { Info } from "lucide-react"
 
 const VerticalToleranceSlider = ({
     id,
@@ -17,6 +19,7 @@ const VerticalToleranceSlider = ({
     max,
     color,
     pixelValue,
+    description,
     isEnabled,
     isSelectedForScroll,
     onToggleEnabled,
@@ -29,6 +32,7 @@ const VerticalToleranceSlider = ({
     max: number;
     color: string;
     pixelValue: number | undefined;
+    description: string;
     isEnabled: boolean;
     isSelectedForScroll: boolean;
     onToggleEnabled: () => void;
@@ -67,20 +71,20 @@ const VerticalToleranceSlider = ({
     };
     
     return (
-        <div className="flex flex-col items-center justify-end gap-1 h-full w-4 cursor-pointer" onWheel={handleWheel} onClick={onToggleScrollAdjust}>
+        <div className={cn("flex flex-col items-center justify-end gap-2 h-full w-4 cursor-pointer p-1 rounded-md", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
             <Tooltip>
                 <TooltipTrigger asChild>
                      <span className="text-xs font-semibold">{label}</span>
                 </TooltipTrigger>
-                <TooltipContent side="right">
+                <TooltipContent>
                     <p>{label} Tolerance</p>
                 </TooltipContent>
             </Tooltip>
 
-             <div className={`w-2 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative ${color}`}>
+             <div className={cn("w-2 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative", color)}>
                 {pixelValue !== undefined && isEnabled && (
                   <div 
-                      className="w-full absolute bg-primary/75 border-y border-primary-foreground/50"
+                      className={cn("w-full absolute bg-primary/75 border-y border-primary-foreground/50")} 
                       style={{ 
                           bottom: `${bottomPercent}%`, 
                           height: `${rangeHeight}%`
@@ -104,6 +108,16 @@ const VerticalToleranceSlider = ({
                 disabled={!isEnabled}
             />
             <span className="font-mono text-xs">{displayValue}</span>
+             <div className="flex flex-col items-center gap-2">
+                <Switch
+                    id={`${id}-toggle`}
+                    checked={isEnabled}
+                    onCheckedChange={onToggleEnabled}
+                    orientation="vertical"
+                    size="sm"
+                    onClick={(e) => e.stopPropagation()}
+                />
+            </div>
         </div>
     );
 };
@@ -151,24 +165,24 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
         onSettingsChange({ enabledTolerances: newEnabledTolerances });
       };
 
-    const RGB_COMPONENTS: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string}[] = [
-        { id: 'r', label: 'R', max: 255, color: "bg-red-500" },
-        { id: 'g', label: 'G', max: 255, color: "bg-green-500" },
-        { id: 'b', label: 'B', max: 255, color: "bg-blue-500" },
+    const RGB_COMPONENTS: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, description: string}[] = [
+        { id: 'r', label: 'R', max: 255, color: "bg-red-500", description: "Red channel tolerance" },
+        { id: 'g', label: 'G', max: 255, color: "bg-green-500", description: "Green channel tolerance" },
+        { id: 'b', label: 'B', max: 255, color: "bg-blue-500", description: "Blue channel tolerance" },
     ]
-    const HSV_COMPONENTS: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string}[] = [
-        { id: 'h', label: 'H', max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500" },
-        { id: 's', label: 'S', max: 100, color: "bg-slate-400" },
-        { id: 'v', label: 'V', max: 100, color: "bg-white" },
+    const HSV_COMPONENTS: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, description: string}[] = [
+        { id: 'h', label: 'H', max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500", description: "Hue tolerance (color type)" },
+        { id: 's', label: 'S', max: 100, color: "bg-slate-400", description: "Saturation tolerance (color intensity)" },
+        { id: 'v', label: 'V', max: 100, color: "bg-white", description: "Value/Brightness tolerance" },
     ]
-    const LAB_COMPONENTS: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string}[] = [
-        { id: 'l', label: 'L', max: 100, color: "bg-gray-500" },
-        { id: 'a', label: 'a', max: 256, color: "bg-gradient-to-t from-green-500 to-red-500" },
-        { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500" },
+    const LAB_COMPONENTS: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, description: string}[] = [
+        { id: 'l', label: 'L', max: 100, color: "bg-gray-500", description: "Lightness tolerance" },
+        { id: 'a', label: 'a', max: 256, color: "bg-gradient-to-t from-green-500 to-red-500", description: "Green-Red axis tolerance" },
+        { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500", description: "Blue-Yellow axis tolerance" },
     ]
 
   return (
-    <div className="flex flex-col h-full items-center justify-around py-2 px-0.5">
+    <div className="flex flex-col h-full items-center justify-start py-2 px-2 gap-4">
       <TooltipProvider>
         <div className="flex flex-col items-center gap-2">
             <Tooltip>
@@ -207,7 +221,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
         
         <div className="flex flex-col items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
-            <div className="flex items-end h-24 gap-1">
+            <div className="flex items-end h-24 gap-px">
               {HSV_COMPONENTS.map(config => (
                   <VerticalToleranceSlider
                       key={config.id}
@@ -217,6 +231,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
                       max={config.max}
                       color={config.color}
                       pixelValue={undefined}
+                      description={config.description}
                       isEnabled={settings.enabledTolerances.has(config.id)}
                       isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
                       onToggleEnabled={() => handleToggleEnabled(config.id)}
@@ -229,7 +244,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
         
         <div className="flex flex-col items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
-            <div className="flex items-end h-24 gap-1">
+            <div className="flex items-end h-24 gap-px">
               {RGB_COMPONENTS.map(config => (
                   <VerticalToleranceSlider
                       key={config.id}
@@ -239,6 +254,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
                       max={config.max}
                       color={config.color}
                       pixelValue={undefined}
+                      description={config.description}
                       isEnabled={settings.enabledTolerances.has(config.id)}
                       isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
                       onToggleEnabled={() => handleToggleEnabled(config.id)}
@@ -251,7 +267,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
 
         <div className="flex flex-col items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(LAB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">LAB</Button>
-            <div className="flex items-end h-24 gap-1">
+            <div className="flex items-end h-24 gap-px">
               {LAB_COMPONENTS.map(config => (
                   <VerticalToleranceSlider
                       key={config.id}
@@ -261,6 +277,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
                       max={config.max}
                       color={config.color}
                       pixelValue={undefined}
+                      description={config.description}
                       isEnabled={settings.enabledTolerances.has(config.id)}
                       isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
                       onToggleEnabled={() => handleToggleEnabled(config.id)}
