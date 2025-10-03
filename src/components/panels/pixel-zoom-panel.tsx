@@ -27,6 +27,7 @@ export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChang
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const [deadZone, setDeadZone] = useState(80); // Percentage of the preview size
   const [panSpeed, setPanSpeed] = useState(0.1);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -209,23 +210,25 @@ export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChang
             }}
           ></div>
         )}
-        <div 
-          className="absolute rounded-sm border border-dashed border-white/50"
-          style={{
-              width: `${deadZone}%`, 
-              height: `${deadZone}%`,
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)'
-          }}
-        ></div>
+        {isSettingsOpen && (
+          <div 
+            className="absolute rounded-sm border border-dashed border-white/50"
+            style={{
+                width: `${deadZone}%`, 
+                height: `${deadZone}%`,
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)'
+            }}
+          ></div>
+        )}
       </div>
        <div className="absolute bottom-2 right-2 flex gap-1">
         <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(-4)}><Minus className="w-4 h-4"/></Button>
         <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(4)}><Plus className="w-4 h-4"/></Button>
       </div>
       <div className="absolute top-2 left-2 flex gap-1">
-         <Popover>
+         <Popover open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="icon" className="h-6 w-6">
               <Settings className="w-4 h-4" />

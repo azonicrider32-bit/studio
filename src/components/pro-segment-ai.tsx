@@ -591,7 +591,7 @@ export function ProSegmentAI() {
                       <TabsList className="grid w-full grid-cols-4">
                           <Tooltip>
                               <TooltipTrigger asChild><TabsTrigger value="tools" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'tools' ? null : 'tools')}><Wand2 className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                              <TooltipContent>Tool Options</TooltipContent>
+                              <TooltipContent>Zoom</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                               <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>

@@ -22,6 +22,7 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
   const [zoom, setZoom] = useState(16);
   const [deadZone, setDeadZone] = useState(80);
   const [panSpeed, setPanSpeed] = useState(0.1);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const size = 256; 
 
@@ -123,19 +124,21 @@ export function SegmentHoverPreview({ mousePos, canvas, settings, className }: S
         <div className="w-px h-full bg-white/50 absolute"></div>
         <div className="h-px w-full bg-white/50 absolute"></div>
         <div className="w-[calc(100%/16)] h-[calc(100%/16)] border-2 border-accent rounded-sm"></div>
-        <div 
-          className="absolute rounded-sm border border-dashed border-white/50"
-          style={{
-              width: `${deadZone}%`, 
-              height: `${deadZone}%`,
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)'
-          }}
-        ></div>
+        {isSettingsOpen && (
+          <div 
+            className="absolute rounded-sm border border-dashed border-white/50"
+            style={{
+                width: `${deadZone}%`, 
+                height: `${deadZone}%`,
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)'
+            }}
+          ></div>
+        )}
       </div>
       <div className="absolute top-2 left-2 flex gap-1">
-         <Popover>
+         <Popover open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" size="icon" className="h-6 w-6">
               <Settings className="w-4 h-4" />

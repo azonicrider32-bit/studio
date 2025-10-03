@@ -642,13 +642,17 @@ const drawLayers = React.useCallback(() => {
   };
   
   const getCursor = () => {
-    if (activeTool === 'magic-wand') return 'crosshair';
-    if (activeTool === 'pipette-minus') return 'copy';
-    if (activeTool === 'lasso') {
-        const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3V11M12 13V21M21 12H13M11 12H3" stroke="white" stroke-width="2"/><path d="M12 3V11M12 13V21M21 12H13M11 12H3" stroke="black" stroke-width="2" stroke-dasharray="2 2"/></svg>`;
-        return `url("data:image/svg+xml;base64,${btoa(svg)}") 12 12, crosshair`;
-    }
-    return 'default';
+    const circleRadius = 8;
+    const dotRadius = 1;
+    const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="${circleRadius}" stroke="white" stroke-width="1.5" fill="none" />
+        <circle cx="12" cy="12" r="${circleRadius}" stroke="black" stroke-width="1.5" fill="none" stroke-dasharray="2 2" />
+        <circle cx="12" cy="${12 - circleRadius/2}" r="${dotRadius}" fill="white" stroke="black" stroke-width="0.5" />
+        <circle cx="12" cy="${12 + circleRadius/2}" r="${dotRadius}" fill="white" stroke="black" stroke-width="0.5" />
+        <circle cx="${12 - circleRadius/2}" cy="12" r="${dotRadius}" fill="white" stroke="black" stroke-width="0.5" />
+        <circle cx="${12 + circleRadius/2}" cy="12" r="${dotRadius}" fill="white" stroke="black" stroke-width="0.5" />
+    </svg>`;
+    return `url("data:image/svg+xml;base64,${btoa(svg)}") 12 12, crosshair`;
   }
   
   const isBackgroundVisible = layers.find(l => l.type === 'background')?.visible ?? true;
