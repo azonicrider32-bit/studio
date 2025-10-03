@@ -745,7 +745,7 @@ function ProSegmentAIContent() {
                     getSelectionMaskRef={getSelectionMaskRef}
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
-                    onMagicWandSettingChange={handleMagicWandSettingsChange}
+                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
                     onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
@@ -779,7 +779,7 @@ function ProSegmentAIContent() {
                             getSelectionMaskRef={React.useRef()}
                             clearSelectionRef={React.useRef()}
                             onLassoSettingChange={() => {}}
-                            onMagicWandSettingChange={() => {}}
+                            onMagicWandSettingsChange={() => {}}
                             onNegativeMagicWandSettingChange={() => {}}
                             canvasMousePos={null}
                             setCanvasMousePos={() => {}}
@@ -833,7 +833,7 @@ function ProSegmentAIContent() {
           {renderTopPanelContent()}
         </div>
         
-        <div className="flex flex-col min-h-0 justify-end">
+        <div className="flex-1 flex flex-col min-h-0 justify-end">
           {activeTopPanel && activeBottomPanel && <Separator />}
           {renderBottomPanelContent()}
           <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
@@ -928,3 +928,4 @@ export function ProSegmentAI() {
 
 
     
+
