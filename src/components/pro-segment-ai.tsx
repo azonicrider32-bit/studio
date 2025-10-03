@@ -602,31 +602,36 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
-  const sidebarCurrentWidth = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
-  const toolPanelWidth = '68px';
-
-
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <Sidebar collapsible="icon">
           <SidebarHeader>
-             <SidebarTrigger>
-                <PanelLeft />
-             </SidebarTrigger>
+            <SidebarTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <PanelLeft />
+                </Button>
+            </SidebarTrigger>
           </SidebarHeader>
           <SidebarContent>
               {renderLeftPanelContent()}
           </SidebarContent>
       </Sidebar>
 
+       <ToolPanel
+        activeTool={activeTool}
+        setActiveTool={setActiveTool}
+        onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+      />
+
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header
-          className="absolute top-0 h-12 shrink-0 items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm flex"
-          style={{
-            left: `calc(${sidebarCurrentWidth} + ${toolPanelWidth})`,
-            right: `${rightPanelWidth}px`,
-            transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out',
-          }}
+        <header 
+            className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm absolute top-0"
+            style={{
+                left: `calc(${sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)'} + 68px)`,
+                right: `${rightPanelWidth}px`,
+                transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out',
+            }}
         >
           <div className="flex items-center gap-4 flex-1">
             <WorkspaceTabs 
@@ -745,31 +750,14 @@ function ProSegmentAIContent() {
         </header>
 
         <main 
-          className="flex-1 flex bg-muted/30 relative"
-          style={{ 
-            paddingTop: '3rem',
-          }}
-        >
-          <div 
-            className="absolute inset-0"
-            style={{ 
-              left: sidebarCurrentWidth,
-              transition: 'left 0.2s ease-in-out',
+            className="flex-1 flex bg-muted/30 relative"
+            style={{
+                paddingLeft: `calc(${sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)'} + 68px)`,
+                paddingTop: '3rem',
+                transition: 'padding-left 0.2s ease-in-out',
             }}
-          >
-            <ToolPanel
-                activeTool={activeTool}
-                setActiveTool={setActiveTool}
-                onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-                onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-            />
-             <div 
-              className="absolute inset-0"
-              style={{
-                left: toolPanelWidth,
-                transition: 'left 0.2s ease-in-out'
-              }}
-             >
+        >
+            <div className="w-full h-full" style={{}}>
                 <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
                     <ImageCanvas 
                     key={activeWorkspace.id}
@@ -841,7 +829,6 @@ function ProSegmentAIContent() {
                 )}
                 </div>
             </div>
-        </div>
         </main>
         
 
@@ -951,6 +938,7 @@ export function ProSegmentAI() {
     
 
     
+
 
 
 
