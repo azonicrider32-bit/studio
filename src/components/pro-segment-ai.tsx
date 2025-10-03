@@ -341,7 +341,7 @@ export function ProSegmentAI() {
   const renderTopPanelContent = () => {
     return (
       <Tabs value={activeTopPanel || 'none'} className="flex-1 flex flex-col min-h-0">
-        <TabsContent value="tools" className="m-0 flex-1 flex flex-col">
+        <TabsContent value="tools" className="m-0 flex-1 flex flex-col data-[state=inactive]:hidden">
           {(() => {
             switch (activeTool) {
               case "lasso":
@@ -379,10 +379,10 @@ export function ProSegmentAI() {
             }
           })()}
         </TabsContent>
-        <TabsContent value="feather" className="m-0 flex-1 overflow-y-auto">
+        <TabsContent value="feather" className="m-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
           <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
         </TabsContent>
-        <TabsContent value="layers" className="m-0 flex-1 overflow-y-auto">
+        <TabsContent value="layers" className="m-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
           <LayersPanel 
             layers={layers}
             activeLayerId={activeLayerId}
@@ -393,7 +393,7 @@ export function ProSegmentAI() {
             onDeleteLayer={deleteLayer}
           />
         </TabsContent>
-        <TabsContent value="ai" className="m-0 flex-1 flex flex-col">
+        <TabsContent value="ai" className="m-0 flex-1 flex flex-col data-[state=inactive]:hidden">
           <Tabs defaultValue="models" className="flex h-full flex-col">
             <TabsList className="m-2 grid grid-cols-3">
                 <TabsTrigger value="models">Models</TabsTrigger>
@@ -424,7 +424,7 @@ export function ProSegmentAI() {
     if (!activeBottomPanel) return null;
     return (
       <Tabs value={activeBottomPanel} className="flex-1 flex flex-col min-h-0">
-        <TabsContent value="telemetry" className="m-0 flex-1 overflow-y-auto">
+        <TabsContent value="telemetry" className="m-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
           <TelemetryPanel />
         </TabsContent>
       </Tabs>
@@ -545,7 +545,7 @@ export function ProSegmentAI() {
               </Tabs>
             </div>
               
-            <div className="flex flex-1 flex-col min-h-0">
+            <div className="flex-1 flex flex-col min-h-0">
               {activeTopPanel && (
                 <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
                   {renderTopPanelContent()}
