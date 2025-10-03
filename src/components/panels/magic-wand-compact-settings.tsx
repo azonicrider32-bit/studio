@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { MagicWandSettings } from "@/lib/types"
 import { Button } from "../ui/button"
+import { EyeOff, Layers, Link, Palette } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 const VerticalToleranceSlider = ({
     id,
@@ -108,7 +110,7 @@ const VerticalToleranceSlider = ({
 
 export function MagicWandCompactSettings({ settings, onSettingsChange }: { settings: MagicWandSettings, onSettingsChange: (s: Partial<MagicWandSettings>) => void}) {
 
-    const handleToggleEnabled = (setting: keyof MagicWandSettings['tolerances']) => {
+      const handleToggleEnabled = (setting: keyof MagicWandSettings['tolerances']) => {
         const newSet = new Set(settings.enabledTolerances);
         if (newSet.has(setting)) {
           newSet.delete(setting);
@@ -166,11 +168,11 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
     ]
 
   return (
-    <div className="flex flex-col h-full items-center justify-around py-4 px-1">
+    <div className="flex flex-col h-full items-center justify-around py-2 px-1">
       <TooltipProvider>
         <div className="flex flex-col items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
-            <div className="flex items-end h-32 gap-1">
+            <div className="flex items-end h-24 gap-1">
               {RGB_COMPONENTS.map(config => (
                   <VerticalToleranceSlider
                       key={config.id}
@@ -189,9 +191,45 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
               ))}
             </div>
         </div>
+        
+        <div className="grid grid-cols-2 gap-1 my-2">
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", settings.contiguous && "bg-accent text-accent-foreground")} onClick={() => onSettingsChange({ contiguous: !settings.contiguous })}>
+                        <Layers className="w-4 h-4"/>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right"><p>Contiguous</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", settings.createAsMask && "bg-accent text-accent-foreground")} onClick={() => onSettingsChange({ createAsMask: !settings.createAsMask })}>
+                        <Link className="w-4 h-4"/>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right"><p>Create as Mask</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", settings.showAllMasks && "bg-accent text-accent-foreground")} onClick={() => onSettingsChange({ showAllMasks: !settings.showAllMasks })}>
+                        <Palette className="w-4 h-4"/>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right"><p>Show All Masks</p></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className={cn("h-8 w-8", settings.ignoreExistingSegments && "bg-accent text-accent-foreground")} onClick={() => onSettingsChange({ ignoreExistingSegments: !settings.ignoreExistingSegments })}>
+                        <EyeOff className="w-4 h-4"/>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right"><p>Ignore Existing Segments</p></TooltipContent>
+            </Tooltip>
+        </div>
+        
         <div className="flex flex-col items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
-            <div className="flex items-end h-32 gap-1">
+            <div className="flex items-end h-24 gap-1">
               {HSV_COMPONENTS.map(config => (
                   <VerticalToleranceSlider
                       key={config.id}
@@ -212,7 +250,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
         </div>
         <div className="flex flex-col items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(LAB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">LAB</Button>
-            <div className="flex items-end h-32 gap-1">
+            <div className="flex items-end h-24 gap-1">
               {LAB_COMPONENTS.map(config => (
                   <VerticalToleranceSlider
                       key={config.id}
