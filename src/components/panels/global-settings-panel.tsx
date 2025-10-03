@@ -20,11 +20,10 @@ export function GlobalSettingsPanel() {
       </div>
 
       <Tabs defaultValue="hotkeys" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="hotkeys">Hotkeys</TabsTrigger>
           <TabsTrigger value="project">Project</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
         <TabsContent value="hotkeys" className="mt-4 flex-1">
           <div className="space-y-4">
@@ -49,12 +48,7 @@ export function GlobalSettingsPanel() {
         <TabsContent value="performance" className="mt-4 flex-1">
             <TelemetryPanel />
         </TabsContent>
-        <TabsContent value="account" className="mt-4">
-          <p className="text-sm text-muted-foreground">Account management settings will go here.</p>
-        </TabsContent>
       </Tabs>
     </div>
   )
 }
-
-    
