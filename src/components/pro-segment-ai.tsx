@@ -27,6 +27,7 @@ import {
   Scan,
   ZoomIn,
   Hand,
+  MessageSquare,
 } from "lucide-react"
 
 import {
@@ -70,10 +71,11 @@ import { cn } from "@/lib/utils"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
 import { SegmentHoverPreview } from "./segment-hover-preview"
 import { Slider } from "./ui/slider"
+import { AiChatPanel } from "./panels/ai-chat-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
-type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview';
+type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
 
 
 export function ProSegmentAI() {
@@ -416,6 +418,8 @@ export function ProSegmentAI() {
         switch (activeBottomPanel) {
         case "telemetry":
             return <TelemetryPanel />;
+        case "chat":
+            return <AiChatPanel />;
         case "color-analysis":
             return (
             <ColorAnalysisPanel
@@ -501,7 +505,7 @@ export function ProSegmentAI() {
                     <SidebarTrigger className="md:hidden" />
                     <h2 className="font-headline text-xl font-semibold">Workspace</h2>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                     <TooltipProvider>
                         <div className="flex items-center gap-2">
                             <Tooltip>
@@ -674,6 +678,10 @@ export function ProSegmentAI() {
                      <Tooltip>
                       <TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span></TabsTrigger></TooltipTrigger>
                       <TooltipContent>Color Analysis (C)</TooltipContent>
+                    </Tooltip>
+                     <Tooltip>
+                      <TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span></TabsTrigger></TooltipTrigger>
+                      <TooltipContent>AI Chat (M)</TooltipContent>
                     </Tooltip>
                      <Tooltip>
                       <TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span></TabsTrigger></TooltipTrigger>
