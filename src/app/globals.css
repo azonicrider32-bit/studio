@@ -89,25 +89,6 @@ body {
 }
 
 @layer components {
-  .ps-logo-container {
-    position: relative;
-    font-family: var(--font-headline);
-    font-weight: 700;
-    font-size: 2.5rem;
-    cursor: pointer;
-  }
-
-  .ps-logo {
-    background-image: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--chart-2)));
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-stroke: 1px hsl(var(--primary-foreground) / 0.2);
-    animation: gradient-flow 10s ease-in-out infinite, glimmer 10s infinite;
-    position: relative;
-  }
-
   /* Impressive Tool Icons */
   .ps-tool-icon-container {
     @apply rounded-lg transition-all duration-300;
