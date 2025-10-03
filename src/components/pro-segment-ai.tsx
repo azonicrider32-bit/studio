@@ -755,10 +755,7 @@ function ProSegmentAIContent() {
         </header>
 
         <main 
-            className="flex-1 flex bg-muted/30 relative"
-            style={{
-                paddingTop: '3rem',
-            }}
+            className="flex-1 flex bg-muted/30 relative pt-12"
         >
             <div className="w-full h-full" style={{}}>
                 <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
@@ -951,3 +948,6 @@ export function ProSegmentAI() {
 
 
 
+
+
+    
