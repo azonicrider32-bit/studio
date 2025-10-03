@@ -4,35 +4,35 @@
 
 import * as React from "react"
 import {
-  Wand2,
-  Brush,
-  Eraser,
   SlidersHorizontal,
-  Palette,
   Replace,
-  Move,
   Image as ImageIcon,
-  Hand,
-  PenTool,
 } from "lucide-react"
-import { LassoIcon } from "./icons/lasso-icon"
-import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
+
+import {
+  CustomWand2,
+  CustomBrush,
+  CustomEraser,
+  CustomMove,
+  CustomHand,
+  CustomPenTool,
+  MagnetLassoIcon,
+} from "@/components/icons/custom-tool-icons"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan" | "line";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "clone" | "transform" | "pan" | "line";
 
 const tools: { id: Tool; icon: React.ElementType; tooltip: string; shortcut: string; disabled?: boolean }[] = [
-    { id: "transform", icon: Move, tooltip: "Transform", shortcut: "V" },
-    { id: "magic-wand", icon: Wand2, tooltip: "Magic Wand", shortcut: "W" },
-    { id: "lasso", icon: LassoIcon, tooltip: "Intelligent Lasso", shortcut: "L" },
-    { id: "line", icon: PenTool, tooltip: "Line Tool", shortcut: "P"},
-    { id: "brush", icon: Brush, tooltip: "Brush", shortcut: "B" },
-    { id: "eraser", icon: Eraser, tooltip: "Eraser", shortcut: "E" },
-    { id: "pan", icon: Hand, tooltip: "Pan Tool", shortcut: "H" },
+    { id: "transform", icon: CustomMove, tooltip: "Transform", shortcut: "V" },
+    { id: "magic-wand", icon: CustomWand2, tooltip: "Magic Wand", shortcut: "W" },
+    { id: "lasso", icon: MagnetLassoIcon, tooltip: "Intelligent Lasso", shortcut: "L" },
+    { id: "line", icon: CustomPenTool, tooltip: "Line Tool", shortcut: "P"},
+    { id: "brush", icon: CustomBrush, tooltip: "Brush", shortcut: "B" },
+    { id: "eraser", icon: CustomEraser, tooltip: "Eraser", shortcut: "E" },
+    { id: "pan", icon: CustomHand, tooltip: "Pan Tool", shortcut: "H" },
     { id: "clone", icon: Replace, tooltip: "Clone Stamp", shortcut: "C", disabled: true },
-    { id: "pipette-minus", icon: PipetteMinusIcon, tooltip: "Sample Exclusion Color", shortcut: "I" },
     { id: "adjustments", icon: SlidersHorizontal, tooltip: "Adjustments", shortcut: "A" },
 ]
 
@@ -59,9 +59,10 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
                     onClick={() => setActiveTool(tool.id)}
                     disabled={tool.disabled}
                     className="h-12 w-12 relative ps-tool-icon-container"
+                    data-variant={activeTool === tool.id ? "default" : "ghost"}
                 >
                     <div className="ps-tool-icon">
-                        <tool.icon className="h-5 w-5 ps-tool-icon__icon" />
+                        <tool.icon className="h-6 w-6 ps-tool-icon__icon" />
                     </div>
                     <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">{tool.shortcut}</span>
                 </Button>

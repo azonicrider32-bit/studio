@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -120,24 +121,12 @@ body {
     @apply text-foreground transition-colors duration-300;
   }
 
-  .ps-tool-icon-container:hover .ps-tool-icon {
-    background-image: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)));
-    background-size: 200% 200%;
-    animation: gradient-flow 5s ease-in-out infinite;
-  }
-
   .ps-tool-icon-container:hover .ps-tool-icon__icon {
-    @apply text-primary-foreground;
+    @apply text-primary;
   }
   
-  .ps-tool-icon-container[data-variant="default"] .ps-tool-icon {
-     background-image: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--chart-2)));
-     background-size: 200% 200%;
-     animation: gradient-flow 5s ease-in-out infinite;
-  }
-
   .ps-tool-icon-container[data-variant="default"] .ps-tool-icon__icon {
-    @apply text-primary-foreground;
+    @apply text-primary;
   }
 }
 
