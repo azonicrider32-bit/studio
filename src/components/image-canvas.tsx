@@ -10,9 +10,7 @@ import { SelectionEngine } from "@/lib/selection-engine";
 import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-lasso-assisted-path-snapping";
 import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } from "@/ai/flows/magic-wand-assisted-segmentation";
 import { LassoSettings, MagicWandSettings, Segment, Layer } from "@/lib/types";
-import { debounce } from "@/lib/utils";
 import { handleApiError } from "@/lib/error-handling";
-import { SegmentHoverPreview } from "./segment-hover-preview";
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils";
 
 
@@ -77,6 +75,11 @@ export function ImageCanvas({
   const [isClient, setIsClient] = React.useState(false);
   const [hoveredSegment, setHoveredSegment] = React.useState<Segment | null>(null);
   const lassoMouseTraceRef = React.useRef<[number, number][]>([]);
+
+  // Refs for throttling wand preview
+  const lastPreviewTimeRef = React.useRef(0);
+  const wandPreviewTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const lastMousePosRef = React.useRef<{x: number, y: number} | null>(null);
 
 
   const { toast } = useToast();
@@ -513,10 +516,32 @@ const drawLayers = React.useCallback(() => {
       drawOverlay(segment as Segment | null);
   }, [drawOverlay, magicWandSettings.useAiAssist]);
 
-  const debouncedWandPreview = React.useCallback(
-    debounce(triggerWandPreview, 200),
-    [triggerWandPreview]
-  );
+  const throttledWandPreview = (x: number, y: number) => {
+    const now = Date.now();
+    const lastExecution = lastPreviewTimeRef.current;
+    const throttleDelay = 200;
+
+    if (now - lastExecution > throttleDelay) {
+      // Check if mouse actually moved
+      if (!lastMousePosRef.current || lastMousePosRef.current.x !== x || lastMousePosRef.current.y !== y) {
+        triggerWandPreview(x, y);
+        lastPreviewTimeRef.current = now;
+        lastMousePosRef.current = { x, y };
+      }
+    } else {
+      if (wandPreviewTimeoutRef.current) {
+        clearTimeout(wandPreviewTimeoutRef.current);
+      }
+      wandPreviewTimeoutRef.current = setTimeout(() => {
+        if (!lastMousePosRef.current || lastMousePosRef.current.x !== x || lastMousePosRef.current.y !== y) {
+            triggerWandPreview(x, y);
+            lastPreviewTimeRef.current = Date.now();
+            lastMousePosRef.current = { x, y };
+        }
+      }, throttleDelay - (now - lastExecution));
+    }
+  };
+
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
@@ -533,7 +558,7 @@ const drawLayers = React.useCallback(() => {
         drawOverlay();
       }
     } else if (activeTool === 'magic-wand') {
-        debouncedWandPreview(pos.x, pos.y);
+        throttledWandPreview(pos.x, pos.y);
     }
   };
   
@@ -684,5 +709,3 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
-
-    
