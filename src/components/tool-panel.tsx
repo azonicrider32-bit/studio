@@ -46,6 +46,9 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: To
   return (
     <div className="flex h-full flex-col items-center justify-between gap-2 border-r bg-background p-2">
       <div className="flex flex-col items-center gap-2">
+        <div className="ps-logo-container h-14 w-14 flex items-center justify-center">
+            <div className="ps-logo">PS</div>
+        </div>
         <TooltipProvider>
             {tools.map((tool) => (
             <Tooltip key={tool.id}>

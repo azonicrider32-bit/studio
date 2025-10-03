@@ -87,3 +87,72 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .ps-logo-container {
+    position: relative;
+    font-family: var(--font-headline);
+    font-weight: 700;
+    font-size: 2.5rem;
+    cursor: pointer;
+  }
+
+  .ps-logo {
+    background-image: linear-gradient(45deg, #007cf0, #f00, #0f0);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 1px midnightblue;
+    animation: gradient-flow 10s ease-in-out infinite, glimmer 10s infinite;
+    position: relative;
+  }
+
+  .ps-logo::before,
+  .ps-logo::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: black;
+    z-index: 1;
+    mix-blend-mode: overlay;
+    opacity: 0;
+  }
+
+  .ps-logo::before {
+    animation: segment-edge-one 5s infinite ease-in-out;
+    clip-path: polygon(0% 0%, 100% 0, 100% 2%, 0% 2%);
+  }
+
+  .ps-logo::after {
+    animation: segment-edge-two 5s 2.5s infinite ease-in-out;
+    clip-path: polygon(0% 100%, 100% 100%, 100% 98%, 0% 98%);
+  }
+}
+
+@keyframes gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes glimmer {
+  0%, 100% { -webkit-text-stroke-color: midnightblue; }
+  50% { -webkit-text-stroke-color: lightblue; }
+  51% { -webkit-text-stroke-color: midnightblue; }
+}
+
+@keyframes segment-edge-one {
+  0%, 100% { transform: translateY(-50px); opacity: 0; }
+  10%, 40% { transform: translateY(0); opacity: 0.8; }
+  50% { transform: translateY(50px); opacity: 0; }
+}
+
+@keyframes segment-edge-two {
+  0%, 100% { transform: translateY(50px); opacity: 0; }
+  10%, 40% { transform: translateY(0); opacity: 0.8; }
+  50% { transform: translateY(-50px); opacity: 0; }
+}
