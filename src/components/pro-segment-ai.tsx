@@ -25,6 +25,7 @@ import {
   Minus,
   Move,
   Palette,
+  PanelLeft,
   PenTool,
   Plus,
   Redo2,
@@ -43,6 +44,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarHeader,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
@@ -151,6 +153,9 @@ function ProSegmentAIContent() {
 
   const activeWorkspace = workspaces.find(ws => ws.id === activeWorkspaceId);
   const activeWorkspaceIndex = workspaces.findIndex(ws => ws.id === activeWorkspaceId);
+  
+  const [isSidebarVisible, setIsSidebarVisible] = React.useState(true);
+
 
   const setActiveWorkspaceState = (updater: (prevState: WorkspaceState) => WorkspaceState) => {
     setWorkspaces(prevWorkspaces => 
@@ -598,24 +603,19 @@ function ProSegmentAIContent() {
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground" style={{'--right-panel-width': `${rightPanelWidth}px`} as React.CSSProperties}>
-      
-      <Sidebar collapsible="icon">
-        <SidebarContent>
-           {renderLeftPanelContent()}
-        </SidebarContent>
-      </Sidebar>
-
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <ToolPanel 
         activeTool={activeTool} 
         setActiveTool={setActiveTool}
         onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
       />
-
+      
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <header className="flex h-12 shrink-0 items-center border-b px-4 z-10 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-4 flex-1">
-            <SidebarTrigger />
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarVisible(p => !p)}>
+                <PanelLeft className="w-5 h-5"/>
+            </Button>
             <WorkspaceTabs 
               workspaces={workspaces}
               activeWorkspaceId={activeWorkspaceId}
@@ -730,79 +730,92 @@ function ProSegmentAIContent() {
             </DropdownMenu>
           </div>
         </header>
-        
-        <main className="flex-1 flex overflow-auto bg-muted/30">
-          <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
-             <ImageCanvas 
-                key={activeWorkspace.id}
-                imageUrl={activeWorkspace.imageUrl}
-                layers={activeWorkspace.layers}
-                addLayer={addLayer}
-                updateLayer={updateLayer}
-                removePixelsFromLayers={removePixelsFromLayers}
-                activeLayerId={activeWorkspace.activeLayerId}
-                onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
-                segmentationMask={activeWorkspace.segmentationMask}
-                setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({ ...ws, segmentationMask: mask }))}
-                activeTool={activeTool}
-                lassoSettings={lassoSettings}
-                magicWandSettings={magicWandSettings}
-                negativeMagicWandSettings={negativeMagicWandSettings}
-                getSelectionMaskRef={getSelectionMaskRef}
-                clearSelectionRef={clearSelectionRef}
-                onLassoSettingChange={handleLassoSettingsChange}
-                onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
-                canvasMousePos={canvasMousePos}
-                setCanvasMousePos={setCanvasMousePos}
-                getCanvasRef={canvasRef}
-                getSelectionEngineRef={selectionEngineRef}
-                isLassoPreviewHovered={isLassoPreviewHovered}
-                mainCanvasZoom={mainCanvasZoom}
-                pan={pan}
-                setPan={setPan}
-                onDragMouseDown={handleDragMouseDown}
-                onDragMouseMove={handleDragMouseMove}
-                onDragMouseUp={handleDragMouseUp}
-                draggedLayer={draggedLayer}
-            />
-            {isSplitView && secondaryWorkspace && (
-               <ImageCanvas 
-                  key={secondaryWorkspace.id}
-                  imageUrl={secondaryWorkspace.imageUrl}
-                  layers={secondaryWorkspace.layers}
-                  addLayer={() => {}}
-                  updateLayer={() => {}}
-                  removePixelsFromLayers={() => {}}
-                  activeLayerId={secondaryWorkspace.activeLayerId}
-                  onLayerSelect={() => {}}
-                  segmentationMask={secondaryWorkspace.segmentationMask}
-                  setSegmentationMask={() => {}}
-                  activeTool={activeTool}
-                  lassoSettings={lassoSettings}
-                  magicWandSettings={magicWandSettings}
-                  negativeMagicWandSettings={negativeMagicWandSettings}
-                  getSelectionMaskRef={React.useRef()}
-                  clearSelectionRef={React.useRef()}
-                  onLassoSettingChange={() => {}}
-                  onMagicWandSettingsChange={() => {}}
-                  onNegativeMagicWandSettingsChange={() => {}}
-                  canvasMousePos={null}
-                  setCanvasMousePos={() => {}}
-                  getCanvasRef={React.useRef()}
-                  getSelectionEngineRef={React.useRef()}
-                  isLassoPreviewHovered={false}
-                  mainCanvasZoom={mainCanvasZoom}
-                  pan={pan}
-                  setPan={setPan}
-                  onDragMouseDown={() => {}}
-                  onDragMouseMove={() => {}}
-                  onDragMouseUp={() => {}}
-                  draggedLayer={null}
-              />
+
+        <div className="flex flex-1 overflow-hidden">
+            {isSidebarVisible && (
+              <Sidebar collapsible="icon">
+                <SidebarHeader>
+                  <SidebarTrigger/>
+                </SidebarHeader>
+                <SidebarContent>
+                  {renderLeftPanelContent()}
+                </SidebarContent>
+              </Sidebar>
             )}
-          </div>
-        </main>
+
+            <main className="flex-1 flex overflow-auto bg-muted/30">
+              <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
+                 <ImageCanvas 
+                    key={activeWorkspace.id}
+                    imageUrl={activeWorkspace.imageUrl}
+                    layers={activeWorkspace.layers}
+                    addLayer={addLayer}
+                    updateLayer={updateLayer}
+                    removePixelsFromLayers={removePixelsFromLayers}
+                    activeLayerId={activeWorkspace.activeLayerId}
+                    onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
+                    segmentationMask={activeWorkspace.segmentationMask}
+                    setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({ ...ws, segmentationMask: mask }))}
+                    activeTool={activeTool}
+                    lassoSettings={lassoSettings}
+                    magicWandSettings={magicWandSettings}
+                    negativeMagicWandSettings={negativeMagicWandSettings}
+                    getSelectionMaskRef={getSelectionMaskRef}
+                    clearSelectionRef={clearSelectionRef}
+                    onLassoSettingChange={handleLassoSettingsChange}
+                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                    canvasMousePos={canvasMousePos}
+                    setCanvasMousePos={setCanvasMousePos}
+                    getCanvasRef={canvasRef}
+                    getSelectionEngineRef={selectionEngineRef}
+                    isLassoPreviewHovered={isLassoPreviewHovered}
+                    mainCanvasZoom={mainCanvasZoom}
+                    pan={pan}
+                    setPan={setPan}
+                    onDragMouseDown={handleDragMouseDown}
+                    onDragMouseMove={handleDragMouseMove}
+                    onDragMouseUp={handleDragMouseUp}
+                    draggedLayer={draggedLayer}
+                />
+                {isSplitView && secondaryWorkspace && (
+                   <ImageCanvas 
+                      key={secondaryWorkspace.id}
+                      imageUrl={secondaryWorkspace.imageUrl}
+                      layers={secondaryWorkspace.layers}
+                      addLayer={() => {}}
+                      updateLayer={() => {}}
+                      removePixelsFromLayers={() => {}}
+                      activeLayerId={secondaryWorkspace.activeLayerId}
+                      onLayerSelect={() => {}}
+                      segmentationMask={secondaryWorkspace.segmentationMask}
+                      setSegmentationMask={() => {}}
+                      activeTool={activeTool}
+                      lassoSettings={lassoSettings}
+                      magicWandSettings={magicWandSettings}
+                      negativeMagicWandSettings={negativeMagicWandSettings}
+                      getSelectionMaskRef={React.useRef()}
+                      clearSelectionRef={React.useRef()}
+                      onLassoSettingChange={() => {}}
+                      onMagicWandSettingsChange={() => {}}
+                      onNegativeMagicWandSettingsChange={() => {}}
+                      canvasMousePos={null}
+                      setCanvasMousePos={() => {}}
+                      getCanvasRef={React.useRef()}
+                      getSelectionEngineRef={React.useRef()}
+                      isLassoPreviewHovered={false}
+                      mainCanvasZoom={mainCanvasZoom}
+                      pan={pan}
+                      setPan={setPan}
+                      onDragMouseDown={() => {}}
+                      onDragMouseMove={() => {}}
+                      onDragMouseUp={() => {}}
+                      draggedLayer={null}
+                  />
+                )}
+              </div>
+            </main>
+         </div>
 
          <AssetDrawer
             isOpen={isAssetDrawerOpen}
