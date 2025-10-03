@@ -70,7 +70,7 @@ const VerticalToleranceSlider = ({
     };
     
     return (
-        <div className={cn("flex flex-col items-center justify-end gap-2 h-full w-8 cursor-pointer p-1 rounded-md", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
+        <div className={cn("flex flex-col items-center justify-end gap-2 h-full w-8 cursor-pointer rounded-md", isSelectedForScroll && "bg-primary/20")} onWheel={handleWheel} onClick={onToggleScrollAdjust}>
             <Tooltip>
                 <TooltipTrigger asChild>
                      <span className="text-xs font-semibold">{label}</span>
@@ -181,7 +181,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
     ]
 
   return (
-    <div className="flex flex-col h-full items-center justify-start py-2 px-1 gap-4">
+    <div className="flex flex-col h-full items-center justify-start py-2 px-1">
       <TooltipProvider>
         <div className="flex flex-col items-center gap-2">
             <Tooltip>
@@ -218,11 +218,11 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </Tooltip>
         </div>
         
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center">
             <div className="flex flex-col items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
                 <div className="flex items-end h-32 gap-px">
-                  {RGB_COMPONENTS.map(config => (
+                  {HSV_COMPONENTS.map(config => (
                       <VerticalToleranceSlider
                           key={config.id}
                           id={config.id}
@@ -243,9 +243,9 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
             </div>
 
             <div className="flex flex-col items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(HSV_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">HSV</Button>
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(RGB_COMPONENTS.map(c => c.id))} className="font-semibold text-xs h-auto p-1">RGB</Button>
                 <div className="flex items-end h-32 gap-px">
-                  {HSV_COMPONENTS.map(config => (
+                  {RGB_COMPONENTS.map(config => (
                       <VerticalToleranceSlider
                           key={config.id}
                           id={config.id}
