@@ -644,7 +644,7 @@ function ProSegmentAIContent() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="flex items-center gap-2">
+             <div className="flex items-center gap-2">
                 <TooltipProvider>
                     <div className="flex items-center gap-2">
                         <Tooltip>
@@ -915,4 +915,6 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+    
+
     

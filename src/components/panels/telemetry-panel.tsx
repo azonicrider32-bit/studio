@@ -23,16 +23,7 @@ export function TelemetryPanel() {
   );
 
   return (
-    <div className="p-4 space-y-6">
-      <div className="space-y-2">
-        <h3 className="font-headline text-lg">Performance Telemetry</h3>
-        <p className="text-sm text-muted-foreground">
-          Real-time diagnostics for application performance and lag detection.
-        </p>
-      </div>
-
-      <Separator />
-
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2"><Cpu className="w-5 h-5"/> Tool Performance</CardTitle>
@@ -84,3 +75,5 @@ export function TelemetryPanel() {
     </div>
   )
 }
+
+    
