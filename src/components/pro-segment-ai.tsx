@@ -339,61 +339,56 @@ export function ProSegmentAI() {
   }
 
   const renderTopPanelContent = () => {
-    return (
-      <Tabs value={activeTopPanel || 'none'} className="flex-1 flex flex-col min-h-0">
-        <TabsContent value="tools" className="m-0 flex-1 flex flex-col data-[state=inactive]:hidden">
-          {(() => {
-            switch (activeTool) {
-              case "lasso":
-                return <PixelZoomPanel
-                  canvas={canvasRef.current}
-                  mousePos={canvasMousePos}
-                  selectionEngine={selectionEngineRef.current}
-                  onHoverChange={setIsLassoPreviewHovered}
-                  className="flex-1"
-                />;
-              case "magic-wand":
-                return <MagicWandPanel 
-                          settings={magicWandSettings} 
-                          onSettingsChange={handleMagicWandSettingsChange}
-                          exclusionSettings={negativeMagicWandSettings}
-                          onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
-                          canvas={canvasRef.current}
-                          mousePos={canvasMousePos}
-                       />;
-              case "brush":
-                return <BrushPanel />;
-              case "eraser":
-                return <BrushPanel isEraser />;
-              case "adjustments":
-                return <LayerAdjustmentPanel />;
-              case "color-analysis":
-                return <ColorAnalysisPanel 
-                        canvas={canvasRef.current}
-                        mousePos={canvasMousePos}
-                        magicWandSettings={magicWandSettings}
-                        onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                      />;
-              default:
-                return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
-            }
-          })()}
-        </TabsContent>
-        <TabsContent value="feather" className="m-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
-          <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />
-        </TabsContent>
-        <TabsContent value="layers" className="m-0 flex-1 overflow-y-auto data-[state=inactive]:hidden">
-          <LayersPanel 
-            layers={layers}
-            activeLayerId={activeLayerId}
-            onLayerSelect={setActiveLayerId}
-            onToggleVisibility={toggleLayerVisibility}
-            onToggleLock={toggleLayerLock}
-            onToggleMask={toggleLayerMask}
-            onDeleteLayer={deleteLayer}
-          />
-        </TabsContent>
-        <TabsContent value="ai" className="m-0 flex-1 flex flex-col data-[state=inactive]:hidden">
+    switch (activeTopPanel) {
+      case "tools":
+        switch (activeTool) {
+          case "lasso":
+            return <PixelZoomPanel
+              canvas={canvasRef.current}
+              mousePos={canvasMousePos}
+              selectionEngine={selectionEngineRef.current}
+              onHoverChange={setIsLassoPreviewHovered}
+              className="flex-1"
+            />;
+          case "magic-wand":
+            return <MagicWandPanel 
+                      settings={magicWandSettings} 
+                      onSettingsChange={handleMagicWandSettingsChange}
+                      exclusionSettings={negativeMagicWandSettings}
+                      onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
+                      canvas={canvasRef.current}
+                      mousePos={canvasMousePos}
+                   />;
+          case "brush":
+            return <BrushPanel />;
+          case "eraser":
+            return <BrushPanel isEraser />;
+          case "adjustments":
+            return <LayerAdjustmentPanel />;
+          case "color-analysis":
+            return <ColorAnalysisPanel 
+                    canvas={canvasRef.current}
+                    mousePos={canvasMousePos}
+                    magicWandSettings={magicWandSettings}
+                    onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                  />;
+          default:
+            return <p className="p-4 text-sm text-muted-foreground">Select a tool to see its options.</p>;
+        }
+      case "feather":
+        return <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />;
+      case "layers":
+        return <LayersPanel 
+                layers={layers}
+                activeLayerId={activeLayerId}
+                onLayerSelect={setActiveLayerId}
+                onToggleVisibility={toggleLayerVisibility}
+                onToggleLock={toggleLayerLock}
+                onToggleMask={toggleLayerMask}
+                onDeleteLayer={deleteLayer}
+              />;
+      case "ai":
+        return (
           <Tabs defaultValue="models" className="flex h-full flex-col">
             <TabsList className="m-2 grid grid-cols-3">
                 <TabsTrigger value="models">Models</TabsTrigger>
@@ -415,9 +410,10 @@ export function ProSegmentAI() {
                 />
             </TabsContent>
           </Tabs>
-        </TabsContent>
-      </Tabs>
-    );
+        );
+      default:
+        return null;
+    }
   };
 
   const renderBottomPanelContent = () => {
@@ -521,7 +517,7 @@ export function ProSegmentAI() {
             </div>
               
             <div className="flex h-12 items-center border-b px-2">
-              <Tabs value={activeTopPanel || 'none'} className="w-full">
+               <Tabs value={activeTopPanel || 'none'} className="w-full">
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-4">
                           <Tooltip>
