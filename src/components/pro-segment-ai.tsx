@@ -604,7 +604,6 @@ function ProSegmentAIContent() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
-      <SidebarProvider>
         {isSidebarVisible && (
             <Sidebar collapsible="icon">
             <SidebarHeader>
@@ -617,9 +616,6 @@ function ProSegmentAIContent() {
         )}
         <div 
           className="relative h-full z-20 transition-all duration-200"
-          style={{
-            left: !isSidebarVisible ? '0px' : (sidebarState === 'collapsed' ? 'var(--sidebar-width-icon)' : 'var(--sidebar-width)')
-          }}
         >
           <ToolPanel 
             activeTool={activeTool} 
@@ -770,7 +766,7 @@ function ProSegmentAIContent() {
                   clearSelectionRef={clearSelectionRef}
                   onLassoSettingChange={handleLassoSettingsChange}
                   onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                  onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                  onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
                   canvasMousePos={canvasMousePos}
                   setCanvasMousePos={setCanvasMousePos}
                   getCanvasRef={canvasRef}
@@ -874,7 +870,6 @@ function ProSegmentAIContent() {
             </div>
           </div>
         </div>
-      </SidebarProvider>
     </div>
   )
 }
@@ -931,7 +926,9 @@ export function ProSegmentAI() {
   }
   
   return (
-    <ProSegmentAIContent />
+    <SidebarProvider>
+      <ProSegmentAIContent />
+    </SidebarProvider>
   )
 }
     
