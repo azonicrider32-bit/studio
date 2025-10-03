@@ -94,7 +94,6 @@ function ProSegmentAIContent() {
   const [zoomB, setZoomB] = React.useState(4.0);
   const [activeZoom, setActiveZoom] = React.useState<'A' | 'B'>('A');
   const [hoveredZoom, setHoveredZoom] = React.useState<'A' | 'B' | null>(null);
-  const hoverTimeoutRef = React.useRef<{ A: NodeJS.Timeout | null, B: NodeJS.Timeout | null }>({ A: null, B: null });
 
   const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
 
@@ -356,6 +355,8 @@ function ProSegmentAIContent() {
     };
   }, [handleMouseMoveResize, handleMouseUpResize]);
 
+  const { toggleSidebar, state: sidebarState } = useSidebar();
+
   const renderLeftPanelContent = () => {
     switch(activeTool) {
       case 'magic-wand':
@@ -502,9 +503,6 @@ function ProSegmentAIContent() {
       }, 200);
     }
   };
-
-  const { toggleSidebar } = useSidebar();
-
 
   return (
     <div className="flex h-screen w-screen items-stretch overflow-hidden bg-background text-foreground">

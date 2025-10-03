@@ -34,6 +34,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { useSidebar } from "../ui/sidebar"
+import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
+import { LassoCompactSettings } from "./lasso-compact-settings"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -52,6 +55,7 @@ export function ToolSettingsPanel({
 }: ToolSettingsPanelProps) {
   
   const isWand = activeTool === 'magic-wand';
+  const { state: sidebarState } = useSidebar();
   
     const DRAW_MODES: { id: LassoSettings['drawMode']; label: string; icon: React.ElementType; description: string}[] = [
         { id: 'magic', label: 'Magic Snap', icon: Sparkles, description: 'Path snaps to detected edges as you draw.' },
@@ -60,64 +64,23 @@ export function ToolSettingsPanel({
     ];
     const currentMode = DRAW_MODES.find(m => m.id === lassoSettings.drawMode);
 
-  const VerticalLassoSlider = ({
-    settingKey,
-    label,
-    max,
-    step,
-    unit = '',
-  }: {
-    settingKey: keyof LassoSettings;
-    label: string;
-    max: number;
-    step: number;
-    unit?: string;
-  }) => {
-    const isEnabled = lassoSettings[`${settingKey}Enabled` as keyof LassoSettings] as boolean;
-    const value = lassoSettings[settingKey] as number;
-
-    const handleWheel = (e: React.WheelEvent) => {
-        e.preventDefault();
-        if (!isEnabled) return;
-        const delta = e.deltaY > 0 ? -1 : 1;
-        let newValue = value + delta * step;
-        newValue = Math.max(0, Math.min(max, newValue));
-        onLassoSettingsChange({ [settingKey]: newValue } as Partial<LassoSettings>);
-    };
-
-    return (
-        <div className="flex flex-col items-center gap-2 flex-1 p-1 rounded-md" onWheel={handleWheel}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <span className="text-xs font-semibold">{label}</span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>{label}</p>
-                </TooltipContent>
-            </Tooltip>
-            <div className="relative h-24 w-full flex items-center justify-center">
-                 <Slider
-                    id={`${settingKey}-slider`}
-                    min={0}
-                    max={max}
-                    step={step}
-                    value={[value]}
-                    onValueChange={(v) => onLassoSettingsChange({ [settingKey]: v[0] } as Partial<LassoSettings>)}
-                    orientation="vertical"
-                    className="h-full"
-                    disabled={!isEnabled}
-                />
-            </div>
-            <span className="font-mono text-xs">{value.toFixed(step < 1 ? 2 : 0)}{unit}</span>
-             <Switch
-                id={`${settingKey}-toggle`}
-                size="sm"
-                checked={isEnabled}
-                onCheckedChange={(checked) => onLassoSettingsChange({ [`${settingKey}Enabled`]: checked } as Partial<LassoSettings>)}
-            />
-        </div>
-    );
-  };
+  if (sidebarState === 'collapsed') {
+    if (isWand) {
+      return (
+        <MagicWandCompactSettings 
+          settings={magicWandSettings}
+          onSettingsChange={onMagicWandSettingsChange}
+        />
+      );
+    } else {
+      return (
+        <LassoCompactSettings 
+          settings={lassoSettings}
+          onSettingsChange={onLassoSettingsChange}
+        />
+      );
+    }
+  }
 
 
   return (
@@ -469,3 +432,67 @@ export function ToolSettingsPanel({
     </div>
   )
 }
+
+
+const VerticalLassoSlider = ({
+    settingKey,
+    label,
+    max,
+    step,
+    unit = '',
+    lassoSettings,
+    onLassoSettingsChange,
+  }: {
+    settingKey: keyof LassoSettings;
+    label: string;
+    max: number;
+    step: number;
+    unit?: string;
+    lassoSettings: LassoSettings;
+    onLassoSettingsChange: (settings: Partial<LassoSettings>) => void;
+  }) => {
+    const isEnabled = lassoSettings[`${settingKey}Enabled` as keyof LassoSettings] as boolean;
+    const value = lassoSettings[settingKey] as number;
+
+    const handleWheel = (e: React.WheelEvent) => {
+        e.preventDefault();
+        if (!isEnabled) return;
+        const delta = e.deltaY > 0 ? -1 : 1;
+        let newValue = value + delta * step;
+        newValue = Math.max(0, Math.min(max, newValue));
+        onLassoSettingsChange({ [settingKey]: newValue } as Partial<LassoSettings>);
+    };
+
+    return (
+        <div className="flex flex-col items-center gap-2 flex-1 p-1 rounded-md" onWheel={handleWheel}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <span className="text-xs font-semibold">{label}</span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>{label}</p>
+                </TooltipContent>
+            </Tooltip>
+            <div className="relative h-24 w-full flex items-center justify-center">
+                 <Slider
+                    id={`${settingKey}-slider`}
+                    min={0}
+                    max={max}
+                    step={step}
+                    value={[value]}
+                    onValueChange={(v) => onLassoSettingsChange({ [settingKey]: v[0] } as Partial<LassoSettings>)}
+                    orientation="vertical"
+                    className="h-full"
+                    disabled={!isEnabled}
+                />
+            </div>
+            <span className="font-mono text-xs">{value.toFixed(step < 1 ? 2 : 0)}{unit}</span>
+             <Switch
+                id={`${settingKey}-toggle`}
+                size="sm"
+                checked={isEnabled}
+                onCheckedChange={(checked) => onLassoSettingsChange({ [`${settingKey}Enabled`]: checked } as Partial<LassoSettings>)}
+            />
+        </div>
+    );
+  };
