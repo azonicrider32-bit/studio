@@ -232,14 +232,12 @@ export function LayersPanel({
                         )}
                     </div>
                 )}
-               {parent.type !== 'background' && (
                 <div className="pl-8 py-1">
                     <button className="flex items-center w-full text-left gap-2 p-1 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors border-2 border-dashed border-transparent hover:border-accent">
                       <Plus className="h-4 w-4" />
                       <span className="text-xs">Add Modifier/Mask</span>
                     </button>
                 </div>
-              )}
             </React.Fragment>
           ))}
           </TooltipProvider>

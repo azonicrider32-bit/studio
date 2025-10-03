@@ -127,12 +127,6 @@ export function ProSegmentAI() {
     handleMouseMove: handleDragMouseMove,
     handleMouseUp: handleDragMouseUp,
   } = useSelectionDrag(layers, setLayers, activeTool, mainCanvasZoom);
-
-  React.useEffect(() => {
-    if (draggedLayer) {
-        setLayers(prevLayers => prevLayers.map(l => l.id === draggedLayer.id ? draggedLayer : l));
-    }
-  }, [draggedLayer, setLayers]);
   
 
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
@@ -656,7 +650,7 @@ export function ProSegmentAI() {
                     clearSelectionRef={clearSelectionRef}
                     onLassoSettingChange={handleLassoSettingsChange}
                     onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                    onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                    onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
                     canvasMousePos={canvasMousePos}
                     setCanvasMousePos={setCanvasMousePos}
                     getCanvasRef={canvasRef}
@@ -668,6 +662,7 @@ export function ProSegmentAI() {
                     onDragMouseDown={handleDragMouseDown}
                     onDragMouseMove={handleDragMouseMove}
                     onDragMouseUp={handleDragMouseUp}
+                    draggedLayer={draggedLayer}
                 />
             </main>
              <AssetDrawer

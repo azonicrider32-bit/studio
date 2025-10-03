@@ -45,6 +45,7 @@ interface ImageCanvasProps {
   onDragMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onDragMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onDragMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
+  draggedLayer: Layer | null;
 }
 
 export function ImageCanvas({
@@ -77,6 +78,7 @@ export function ImageCanvas({
   onDragMouseDown,
   onDragMouseMove,
   onDragMouseUp,
+  draggedLayer,
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -128,16 +130,18 @@ const drawLayers = React.useCallback(() => {
     layersCtx.clearRect(0, 0, layersCanvas.width, layersCanvas.height);
 
     const layerTree = layers.reduce((acc, layer) => {
-        const parentId = layer.parentId || layer.id;
+        const currentLayer = draggedLayer?.id === layer.id ? draggedLayer : layer;
+        
+        const parentId = currentLayer.parentId || currentLayer.id;
         let parentGroup = acc.find(p => p.parent.id === parentId);
 
-        if (layer.parentId) { // It's a child mask
+        if (currentLayer.parentId) { // It's a child mask
              if (parentGroup) {
-                parentGroup.children.push(layer);
+                parentGroup.children.push(currentLayer);
             }
         } else { // It's a parent
              if (!parentGroup) {
-                acc.push({ parent: layer, children: [] });
+                acc.push({ parent: currentLayer, children: [] });
             }
         }
         return acc;
@@ -197,7 +201,7 @@ const drawLayers = React.useCallback(() => {
         
         layersCtx.drawImage(tempParentCanvas, 0, 0);
     });
-}, [layers]);
+}, [layers, draggedLayer]);
 
 
   const drawOverlay = React.useCallback((currentHoverSegment: Segment | null = hoveredSegment) => {
@@ -207,14 +211,14 @@ const drawLayers = React.useCallback(() => {
 
     const overlayCtx = overlayCanvas.getContext('2d');
     if (overlayCtx) {
-      engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment);
+      engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment, draggedLayer, activeLayerId);
     }
-  }, [magicWandSettings, lassoSettings, layers, hoveredSegment]);
+  }, [magicWandSettings, lassoSettings, layers, hoveredSegment, draggedLayer, activeLayerId]);
 
   React.useEffect(() => {
     drawLayers();
     drawOverlay();
-  }, [layers, drawLayers, drawOverlay, magicWandSettings.showAllMasks, lassoSettings.showAllMasks]);
+  }, [layers, drawLayers, drawOverlay, magicWandSettings.showAllMasks, lassoSettings.showAllMasks, draggedLayer]);
 
 
   const initEngine = React.useCallback(() => {
@@ -511,17 +515,21 @@ const drawLayers = React.useCallback(() => {
 
     const pos = getMousePos(canvas, e);
     
-    if (e.button === 2 || (activeTool === 'pan' && e.button === 0) || (activeTool === 'transform' && e.button === 2)) {
+    if (e.button === 2 || (activeTool === 'pan' && e.button === 0)) {
         setIsPanning(true);
         lastPanPointRef.current = { x: e.clientX, y: e.clientY };
         e.preventDefault();
         return;
     }
+    
+    if (activeTool === 'transform' && e.button === 0) {
+        onDragMouseDown(e);
+        return;
+    }
+
 
     if (e.button === 0) {
-      if (activeTool === 'transform') {
-        onDragMouseDown(e);
-      } else if (activeTool === 'lasso') {
+      if (activeTool === 'lasso') {
         if (!engine.isDrawingLasso) {
           engine.startLasso(pos.x, pos.y);
           lassoMouseTraceRef.current = [[pos.x, pos.y]];
