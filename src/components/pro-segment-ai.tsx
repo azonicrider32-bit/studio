@@ -608,7 +608,7 @@ function ProSegmentAIContent() {
         />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-            <header className="sticky top-0 h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
+          <header className="shrink-0 flex items-center border-b border-border/50 px-4 z-20 h-12 bg-background/80 backdrop-blur-sm">
                 <div className="flex items-center gap-4 flex-1">
                 <WorkspaceTabs 
                     workspaces={workspaces}
@@ -928,5 +928,6 @@ export function ProSegmentAI() {
 
 
     
+
 
 
