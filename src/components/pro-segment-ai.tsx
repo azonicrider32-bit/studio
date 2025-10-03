@@ -339,9 +339,8 @@ export function ProSegmentAI() {
   }
 
   const renderTopPanelContent = () => {
-    if (!activeTopPanel) return null;
     return (
-      <Tabs value={activeTopPanel} className="flex-1 flex flex-col min-h-0">
+      <Tabs value={activeTopPanel || 'none'} className="flex-1 flex flex-col min-h-0">
         <TabsContent value="tools" className="m-0 flex-1 flex flex-col">
           {(() => {
             switch (activeTool) {
@@ -547,16 +546,20 @@ export function ProSegmentAI() {
                   <Separator />
               </Tabs>
               
-              <div className="flex-1 flex flex-col min-h-0">
-                  <div className={cn("overflow-y-auto", !activeTopPanel && 'hidden', activeBottomPanel ? 'h-1/2' : 'h-full')}>
-                      {renderTopPanelContent()}
+              <div className="flex flex-1 flex-col min-h-0">
+                {activeTopPanel && (
+                  <div className="flex-1 overflow-y-auto">
+                    {renderTopPanelContent()}
                   </div>
-                  
-                  {activeTopPanel && activeBottomPanel && <Separator />}
+                )}
+                
+                {activeTopPanel && activeBottomPanel && <Separator />}
 
-                  <div className={cn("overflow-y-auto", !activeBottomPanel && 'hidden', activeTopPanel ? 'h-1/2' : 'h-full')}>
+                {activeBottomPanel && (
+                  <div className="flex-1 overflow-y-auto">
                     {renderBottomPanelContent()}
                   </div>
+                )}
               </div>
 
               <Tabs value={activeBottomPanel || 'none'}>
@@ -578,5 +581,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
