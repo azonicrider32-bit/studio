@@ -40,6 +40,8 @@ interface ImageCanvasProps {
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
   isLassoPreviewHovered: boolean;
   mainCanvasZoom: number;
+  pan: {x: number, y: number};
+  setPan: (pan: {x: number, y: number}) => void;
 }
 
 export function ImageCanvas({
@@ -67,6 +69,8 @@ export function ImageCanvas({
   clearSelectionRef,
   isLassoPreviewHovered,
   mainCanvasZoom,
+  pan,
+  setPan
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -78,6 +82,9 @@ export function ImageCanvas({
   const [isClient, setIsClient] = React.useState(false);
   const [hoveredSegment, setHoveredSegment] = React.useState<Segment | null>(null);
   const lassoMouseTraceRef = React.useRef<[number, number][]>([]);
+
+  const [isPanning, setIsPanning] = React.useState(false);
+  const lastPanPointRef = React.useRef({ x: 0, y: 0 });
 
   // Refs for throttling wand preview
   const lastPreviewTimeRef = React.useRef(0);
@@ -490,20 +497,29 @@ const drawLayers = React.useCallback(() => {
 
     const pos = getMousePos(canvas, e);
     
-    if (activeTool === 'lasso') {
-      if (!engine.isDrawingLasso) {
-        engine.startLasso(pos.x, pos.y);
-        lassoMouseTraceRef.current = [[pos.x, pos.y]];
-        toast({ title: 'Lasso started', description: 'Click to add points. Double-click or Press Enter to complete.' });
-      } else {
-        engine.addLassoNode(lassoMouseTraceRef.current);
-        lassoMouseTraceRef.current = [];
+    if (e.button === 2 || (e.button === 0 && activeTool === 'pan')) {
+        setIsPanning(true);
+        lastPanPointRef.current = { x: e.clientX, y: e.clientY };
+        e.preventDefault();
+        return;
+    }
+
+    if (e.button === 0) {
+      if (activeTool === 'lasso') {
+        if (!engine.isDrawingLasso) {
+          engine.startLasso(pos.x, pos.y);
+          lassoMouseTraceRef.current = [[pos.x, pos.y]];
+          toast({ title: 'Lasso started', description: 'Click to add points. Double-click or Press Enter to complete.' });
+        } else {
+          engine.addLassoNode(lassoMouseTraceRef.current);
+          lassoMouseTraceRef.current = [];
+        }
+        drawOverlay();
+      } else if (activeTool === 'magic-wand') {
+          handleMagicWandClick(pos, e);
+      } else if (activeTool === 'pipette-minus') {
+          sampleExclusionColor(pos);
       }
-      drawOverlay();
-    } else if (activeTool === 'magic-wand') {
-        handleMagicWandClick(pos, e);
-    } else if (activeTool === 'pipette-minus') {
-        sampleExclusionColor(pos);
     }
   };
   
@@ -525,7 +541,6 @@ const drawLayers = React.useCallback(() => {
     const throttleDelay = 200;
 
     if (now - lastExecution > throttleDelay) {
-      // Check if mouse actually moved
       if (!lastMousePosRef.current || lastMousePosRef.current.x !== x || lastMousePosRef.current.y !== y) {
         triggerWandPreview(x, y);
         lastPreviewTimeRef.current = now;
@@ -549,6 +564,18 @@ const drawLayers = React.useCallback(() => {
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
     const engine = selectionEngineRef.current;
+
+    if (isPanning) {
+        const deltaX = e.clientX - lastPanPointRef.current.x;
+        const deltaY = e.clientY - lastPanPointRef.current.y;
+        setPan({
+            x: pan.x + deltaX / mainCanvasZoom,
+            y: pan.y + deltaY / mainCanvasZoom
+        });
+        lastPanPointRef.current = { x: e.clientX, y: e.clientY };
+        return;
+    }
+
     if (!canvas || !engine || isProcessing) return;
 
     const pos = getMousePos(canvas, e);
@@ -568,10 +595,13 @@ const drawLayers = React.useCallback(() => {
   const handleMouseLeave = () => {
     setHoveredSegment(null);
     drawOverlay(null);
+    setIsPanning(false);
   }
 
-  const handleMouseUp = () => {
-    // With the node-based lasso, mouse up doesn't end the drawing.
+  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (e.button === 2) {
+      setIsPanning(false);
+    }
   };
 
   const handleDoubleClick = () => {
@@ -640,8 +670,14 @@ const drawLayers = React.useCallback(() => {
         }
     }
   };
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+  }
   
   const getCursor = () => {
+    if (isPanning) return 'grabbing';
+    if (activeTool === 'pan') return 'grab';
     const circleRadius = 8;
     const dotRadius = 1;
     const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -668,15 +704,21 @@ const drawLayers = React.useCallback(() => {
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <Card className="relative w-full h-full overflow-hidden shadow-2xl bg-muted/20">
-        <div className="relative w-full h-full" style={{ transform: `scale(${mainCanvasZoom})`}}>
+      <div className="relative w-full h-full overflow-hidden" style={{ cursor: getCursor() }}>
+        <div 
+          className="relative w-full h-full" 
+          style={{ 
+            transform: `scale(${mainCanvasZoom}) translate(${pan.x}px, ${pan.y}px)`, 
+            transformOrigin: 'center center' 
+          }}
+        >
             {isClient && (
                 <Image
                     ref={imageRef}
                     src={imageUrl}
                     alt={image?.description || "Workspace image"}
                     fill
-                    className="object-contain"
+                    className="object-contain pointer-events-none"
                     style={{ opacity: isBackgroundVisible ? 1 : 0 }}
                     onLoad={handleImageLoad}
                     crossOrigin="anonymous"
@@ -700,8 +742,8 @@ const drawLayers = React.useCallback(() => {
             onMouseLeave={handleMouseLeave}
             onWheel={handleWheel}
             onDoubleClick={handleDoubleClick}
+            onContextMenu={handleContextMenu}
             className="absolute top-0 left-0 h-full w-full object-contain"
-            style={{ cursor: getCursor() }}
             />
             {segmentationMask && (
             <Image
@@ -712,7 +754,7 @@ const drawLayers = React.useCallback(() => {
             />
             )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

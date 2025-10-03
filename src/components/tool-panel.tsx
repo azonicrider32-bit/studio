@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -11,6 +12,7 @@ import {
   Replace,
   Move,
   Image as ImageIcon,
+  Hand,
 } from "lucide-react"
 import { LassoIcon } from "./icons/lasso-icon"
 import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
@@ -18,15 +20,16 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan";
 
 const tools: { id: Tool; icon: React.ElementType; tooltip: string; shortcut: string; disabled?: boolean }[] = [
+    { id: "transform", icon: Move, tooltip: "Transform", shortcut: "V" },
     { id: "magic-wand", icon: Wand2, tooltip: "Magic Wand", shortcut: "W" },
     { id: "lasso", icon: LassoIcon, tooltip: "Intelligent Lasso", shortcut: "L" },
     { id: "brush", icon: Brush, tooltip: "Brush", shortcut: "B" },
     { id: "eraser", icon: Eraser, tooltip: "Eraser", shortcut: "E" },
+    { id: "pan", icon: Hand, tooltip: "Pan Tool", shortcut: "H" },
     { id: "clone", icon: Replace, tooltip: "Clone Stamp", shortcut: "C", disabled: true },
-    { id: "transform", icon: Move, tooltip: "Transform", shortcut: "T", disabled: true },
     { id: "pipette-minus", icon: PipetteMinusIcon, tooltip: "Sample Exclusion Color", shortcut: "I" },
     { id: "adjustments", icon: SlidersHorizontal, tooltip: "Adjustments", shortcut: "A" },
 ]

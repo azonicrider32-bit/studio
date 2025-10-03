@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -26,6 +25,7 @@ import {
   GripVertical,
   Scan,
   ZoomIn,
+  Hand,
 } from "lucide-react"
 
 import {
@@ -70,7 +70,7 @@ import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
 import { SegmentHoverPreview } from "./segment-hover-preview"
 import { Slider } from "./ui/slider"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
 type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview';
 
@@ -87,13 +87,15 @@ export function ProSegmentAI() {
   const [activeTopPanel, setActiveTopPanel] = React.useState<TopPanel | null>('zoom');
   const [activeBottomPanel, setActiveBottomPanel] = React.useState<BottomPanel | null>(null);
   
-  // New Zoom State
   const [zoomA, setZoomA] = React.useState(1.0);
   const [zoomB, setZoomB] = React.useState(4.0);
   const [activeZoom, setActiveZoom] = React.useState<'A' | 'B'>('A');
   const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
   const lastSliderValueRef = React.useRef({ A: zoomA, B: zoomB });
 
+  const [pan, setPan] = React.useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = React.useState(false);
+  const [lastPanPoint, setLastPanPoint] = React.useState({ x: 0, y: 0 });
 
   const [layers, setLayers] = React.useState<Layer[]>(() => {
     const backgroundLayer: Layer = {
@@ -228,7 +230,6 @@ export function ProSegmentAI() {
           if (newPixels.size < layer.pixels.size) {
             const engine = selectionEngineRef.current;
             if (!engine) return layer;
-            // Recalculate bounds and update imageData
             const newBounds = engine.getBoundsForPixels(newPixels);
             const newImageData = layer.subType === 'pixel' ? engine.createImageDataForLayer(newPixels, newBounds) : undefined;
             return { ...layer, pixels: newPixels, bounds: newBounds, imageData: newImageData };
@@ -584,6 +585,8 @@ export function ProSegmentAI() {
                     getSelectionEngineRef={selectionEngineRef}
                     isLassoPreviewHovered={isLassoPreviewHovered}
                     mainCanvasZoom={mainCanvasZoom}
+                    pan={pan}
+                    setPan={setPan}
                 />
             </main>
              <AssetDrawer
@@ -662,8 +665,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
-
-    
-
