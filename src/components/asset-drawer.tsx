@@ -3,10 +3,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ImageIcon } from 'lucide-react';
-import { Button } from './ui/button';
 import AdvancedAssetPanel from './panels/AdvancedAssetsPanel';
-import { cn } from '@/lib/utils';
 import { useSidebar } from './ui/sidebar';
 
 interface AssetDrawerProps {
@@ -66,45 +63,33 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect, rightPanelWidth }
   const leftPosition = sidebarState === 'expanded' ? 'calc(var(--sidebar-width) + 3rem)' : 'calc(var(--sidebar-width-icon) + 3rem)';
 
   return (
-    <>
-        <AnimatePresence>
-        {isOpen && (
-            <motion.div
-            ref={drawerRef}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-            className="fixed bottom-0 right-[380px] z-40 bg-background border-t border-border shadow-2xl"
-            style={{ height, left: leftPosition, right: `${rightPanelWidth}px`, transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out' }}
-            >
-            <div 
-                onMouseDown={handleMouseDown}
-                className="absolute -top-2 left-0 right-0 h-4 bg-transparent flex items-center justify-center cursor-row-resize group"
-            >
-                <div className="w-12 h-1.5 bg-muted-foreground/50 rounded-full transition-all group-hover:bg-muted-foreground"></div>
-            </div>
-            
-            <div className="h-full overflow-hidden">
-                <AdvancedAssetPanel 
-                    isOpen={isOpen}
-                    onToggle={onToggle}
-                    onImageSelect={handleSelectAndClose}
-                />
-            </div>
-            </motion.div>
-        )}
-        </AnimatePresence>
-        {!isOpen && (
-             <Button 
-                variant="outline"
-                onClick={onToggle}
-                className="fixed bottom-0 h-8 w-12 rounded-t-lg rounded-b-none z-40 border-b-0"
-                style={{ left: `calc((${leftPosition} + (100% - ${leftPosition} - ${rightPanelWidth}px)) / 6)` }}
-             >
-                <ImageIcon className="h-4 w-4"/>
-            </Button>
-        )}
-    </>
+    <AnimatePresence>
+    {isOpen && (
+        <motion.div
+        ref={drawerRef}
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: 'spring', stiffness: 400, damping: 40 }}
+        className="fixed bottom-0 right-[380px] z-40 bg-background border-t border-border shadow-2xl"
+        style={{ height, left: leftPosition, right: `${rightPanelWidth}px`, transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out' }}
+        >
+        <div 
+            onMouseDown={handleMouseDown}
+            className="absolute -top-2 left-0 right-0 h-4 bg-transparent flex items-center justify-center cursor-row-resize group"
+        >
+            <div className="w-12 h-1.5 bg-muted-foreground/50 rounded-full transition-all group-hover:bg-muted-foreground"></div>
+        </div>
+        
+        <div className="h-full overflow-hidden">
+            <AdvancedAssetPanel 
+                isOpen={isOpen}
+                onToggle={onToggle}
+                onImageSelect={handleSelectAndClose}
+            />
+        </div>
+        </motion.div>
+    )}
+    </AnimatePresence>
   );
 }

@@ -10,11 +10,13 @@ import {
   Palette,
   Replace,
   Move,
+  Image as ImageIcon,
 } from "lucide-react"
 import { LassoIcon } from "./icons/lasso-icon"
 import { PipetteMinusIcon } from "./icons/pipette-minus-icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Button } from "./ui/button"
+import { Separator } from "./ui/separator"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
 
@@ -33,31 +35,49 @@ const tools: { id: Tool; icon: React.ElementType; tooltip: string; shortcut: str
 interface ToolPanelProps {
   activeTool: Tool;
   setActiveTool: (tool: Tool) => void;
+  onToggleAssetDrawer: () => void;
 }
 
-export function ToolPanel({ activeTool, setActiveTool }: ToolPanelProps) {
+export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer }: ToolPanelProps) {
   return (
-    <div className="flex h-full flex-col items-center gap-2 border-r bg-background p-2">
-      <TooltipProvider>
-        {tools.map((tool) => (
-          <Tooltip key={tool.id}>
-            <TooltipTrigger asChild>
-              <Button
-                variant={activeTool === tool.id ? "default" : "ghost"}
-                size="icon"
-                onClick={() => setActiveTool(tool.id)}
-                disabled={tool.disabled}
-                className="h-12 w-12"
-              >
-                <tool.icon className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>{tool.tooltip} ({tool.shortcut})</p>
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </TooltipProvider>
+    <div className="flex h-full flex-col items-center justify-between gap-2 border-r bg-background p-2">
+      <div className="flex flex-col items-center gap-2">
+        <TooltipProvider>
+            {tools.map((tool) => (
+            <Tooltip key={tool.id}>
+                <TooltipTrigger asChild>
+                <Button
+                    variant={activeTool === tool.id ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => setActiveTool(tool.id)}
+                    disabled={tool.disabled}
+                    className="h-12 w-12"
+                >
+                    <tool.icon className="h-5 w-5" />
+                </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                <p>{tool.tooltip} ({tool.shortcut})</p>
+                </TooltipContent>
+            </Tooltip>
+            ))}
+        </TooltipProvider>
+      </div>
+      <div className="flex flex-col items-center gap-2">
+          <Separator />
+          <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={onToggleAssetDrawer} className="h-12 w-12">
+                        <ImageIcon className="h-5 w-5" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                    <p>Asset Library</p>
+                </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+      </div>
     </div>
   )
 }
