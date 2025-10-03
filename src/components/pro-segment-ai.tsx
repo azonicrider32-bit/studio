@@ -462,7 +462,7 @@ function ProSegmentAIContent() {
     };
   }, [handleMouseMoveResize, handleMouseUpResize]);
 
-  const { toggleSidebar, state: sidebarState } = useSidebar();
+  const { state: sidebarState } = useSidebar();
 
   const handleAddNewWorkspace = () => {
     const newId = `ws-${Date.now()}`;
@@ -600,7 +600,7 @@ function ProSegmentAIContent() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground" style={{'--right-panel-width': `${rightPanelWidth}px`} as React.CSSProperties}>
       
-      <Sidebar>
+      <Sidebar collapsible="icon">
         <SidebarContent>
            {renderLeftPanelContent()}
         </SidebarContent>
