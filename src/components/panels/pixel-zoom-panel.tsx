@@ -4,13 +4,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { SelectionEngine } from '@/lib/selection-engine';
-import { Button } from './ui/button';
+import { Button } from '../ui/button';
 import { Minus, Plus, Settings } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Slider } from './ui/slider';
-import { Label } from './ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Slider } from '../ui/slider';
+import { Label } from '../ui/label';
 
-interface LassoHoverPreviewProps {
+interface PixelZoomPanelProps {
   mousePos: { x: number; y: number } | null;
   canvas: HTMLCanvasElement | null;
   selectionEngine: SelectionEngine | null;
@@ -18,14 +18,12 @@ interface LassoHoverPreviewProps {
   className?: string;
 }
 
-export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverChange, className }: LassoHoverPreviewProps) {
+export function PixelZoomPanel({ mousePos, canvas, selectionEngine, onHoverChange, className }: PixelZoomPanelProps) {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(4);
   const [isHovered, setIsHovered] = useState(false);
-  const viewPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [deadZone, setDeadZone] = useState(80); // Percentage of the preview size
   
   useEffect(() => {
     const container = containerRef.current;
@@ -52,29 +50,6 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   useEffect(() => {
     const previewCanvas = previewCanvasRef.current;
     if (!previewCanvas || !canvas || !selectionEngine || !mousePos || size.width === 0 || size.height === 0) return;
-    
-    const sourceSizeX = size.width / zoom;
-    const sourceSizeY = size.height / zoom;
-    
-    const deadZoneSizeX = sourceSizeX * (deadZone / 100);
-    const deadZoneSizeY = sourceSizeY * (deadZone / 100);
-
-    const viewCenterX = viewPositionRef.current.x + sourceSizeX / 2;
-    const viewCenterY = viewPositionRef.current.y + sourceSizeY / 2;
-
-    const dx = mousePos.x - viewCenterX;
-    const dy = mousePos.y - viewCenterY;
-
-    if (Math.abs(dx) > deadZoneSizeX / 2) {
-      viewPositionRef.current.x += dx - (Math.sign(dx) * deadZoneSizeX / 2);
-    }
-    if (Math.abs(dy) > deadZoneSizeY / 2) {
-      viewPositionRef.current.y += dy - (Math.sign(dy) * deadZoneSizeY / 2);
-    }
-    
-    viewPositionRef.current.x = Math.max(0, Math.min(canvas.width - sourceSizeX, viewPositionRef.current.x));
-    viewPositionRef.current.y = Math.max(0, Math.min(canvas.height - sourceSizeY, viewPositionRef.current.y));
-
 
     const previewCtx = previewCanvas.getContext('2d');
     if (!previewCtx) return;
@@ -82,6 +57,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     previewCtx.imageSmoothingEnabled = false;
     previewCtx.clearRect(0, 0, size.width, size.height);
     
+    // Background
     previewCtx.fillStyle = '#666';
     previewCtx.fillRect(0, 0, size.width, size.height);
     previewCtx.fillStyle = '#999';
@@ -94,10 +70,15 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
         }
     }
 
+    const sourceSizeX = size.width / zoom;
+    const sourceSizeY = size.height / zoom;
+    const sourceX = mousePos.x - sourceSizeX / 2;
+    const sourceY = mousePos.y - sourceSizeY / 2;
+
     previewCtx.drawImage(
       canvas,
-      viewPositionRef.current.x,
-      viewPositionRef.current.y,
+      sourceX,
+      sourceY,
       sourceSizeX,
       sourceSizeY,
       0,
@@ -109,7 +90,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     if (selectionEngine.isDrawingLasso) {
         previewCtx.save();
         previewCtx.scale(zoom, zoom);
-        previewCtx.translate(-viewPositionRef.current.x, -viewPositionRef.current.y);
+        previewCtx.translate(-sourceX, -sourceY);
 
         const { lassoNodes, lassoPreviewPath, futureLassoPath, lassoMouseTrace, lassoSettings } = selectionEngine;
 
@@ -163,7 +144,7 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
     }
 
 
-  }, [mousePos, canvas, selectionEngine, size, zoom, deadZone]);
+  }, [mousePos, canvas, selectionEngine, size, zoom]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.stopPropagation();
@@ -174,83 +155,40 @@ export function LassoHoverPreview({ mousePos, canvas, selectionEngine, onHoverCh
   const changeZoom = (amount: number) => {
     setZoom(prev => Math.max(1, Math.min(128, prev + amount)));
   }
-  
-  useEffect(() => {
-    if (!mousePos && !isHovered) {
-      viewPositionRef.current = { x: 0, y: 0 };
-    }
-  }, [mousePos, isHovered]);
 
   return (
-    <div
-      ref={containerRef}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onWheel={handleWheel}
-      className={cn(
-        "relative w-full h-full overflow-hidden rounded-md border-2 border-border shadow-inner bg-background",
-        className
-      )}
-    >
-        {size.width > 0 && size.height > 0 ? (
+    <div className={cn("p-4 flex flex-col h-full", className)}>
+        <div
+            ref={containerRef}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onWheel={handleWheel}
+            className={cn(
+                "relative w-full h-full overflow-hidden rounded-md border-2 border-border shadow-inner bg-background",
+                className
+            )}
+            >
             <canvas ref={previewCanvasRef} width={size.width} height={size.height} className="w-full h-full" />
-        ) : (
-            <div className="w-full h-full bg-muted animate-pulse"></div>
-        )}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {mousePos && (
-          <div
-            className="absolute w-1 h-1 bg-accent rounded-full pointer-events-none"
-            style={{
-              left: `${((mousePos.x - viewPositionRef.current.x) / (size.width / zoom)) * 100}%`,
-              top: `${((mousePos.y - viewPositionRef.current.y) / (size.height / zoom)) * 100}%`,
-              transform: 'translate(-50%, -50%)',
-            }}
-          ></div>
-        )}
-        <div 
-          className="absolute rounded-sm border border-dashed border-white/50"
-          style={{
-              width: `${deadZone}%`, 
-              height: `${deadZone}%`,
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)'
-          }}
-        ></div>
-      </div>
-       <div className="absolute bottom-2 right-2 flex gap-1">
-        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(-4)}><Minus className="w-4 h-4"/></Button>
-        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(4)}><Plus className="w-4 h-4"/></Button>
-      </div>
-      <div className="absolute top-2 left-2 flex gap-1">
-         <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="h-6 w-6">
-              <Settings className="w-4 h-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 p-4" side="bottom" align="start">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="deadzone-slider">Dead Zone Buffer: {deadZone}%</Label>
-                <Slider
-                  id="deadzone-slider"
-                  min={0}
-                  max={100}
-                  step={5}
-                  value={[deadZone]}
-                  onValueChange={(value) => setDeadZone(value[0])}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {mousePos && (
+                <div
+                    className="absolute w-px h-full bg-white/30"
                 />
-                <p className='text-xs text-muted-foreground'>Controls how far the cursor moves before the preview pans.</p>
-              </div>
+                )}
+                 {mousePos && (
+                <div
+                    className="absolute h-px w-full bg-white/30"
+                />
+                )}
             </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-      <div className="absolute top-2 right-2 bg-background/50 text-foreground text-xs px-2 py-1 rounded-md">
-        {zoom.toFixed(1)}x
-      </div>
+            <div className="absolute bottom-2 right-2 flex gap-1">
+                <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(-1)}><Minus className="w-4 h-4"/></Button>
+                <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => changeZoom(1)}><Plus className="w-4 h-4"/></Button>
+            </div>
+            <div className="absolute top-2 right-2 bg-background/50 text-foreground text-xs px-2 py-1 rounded-md">
+                {zoom.toFixed(1)}x
+            </div>
+        </div>
     </div>
   );
 }
