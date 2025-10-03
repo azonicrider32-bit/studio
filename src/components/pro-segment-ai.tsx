@@ -603,10 +603,6 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
-  const toolPanelWidth = '68px';
-  const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
-  const mainContentLeftOffset = `calc(${sidebarWidthVar} + ${toolPanelWidth})`;
-
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <Sidebar collapsible="icon">
@@ -631,12 +627,7 @@ function ProSegmentAIContent() {
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <header
-          className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 absolute top-0 bg-background/80 backdrop-blur-sm"
-          style={{
-            left: mainContentLeftOffset,
-            right: `${rightPanelWidth}px`,
-            transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out',
-          }}
+          className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
         >
           <div className="flex items-center gap-4 flex-1">
             <WorkspaceTabs 
@@ -755,7 +746,7 @@ function ProSegmentAIContent() {
         </header>
 
         <main 
-            className="flex-1 flex bg-muted/30 relative pt-12"
+            className="flex-1 flex bg-muted/30 relative"
         >
             <div className="w-full h-full" style={{}}>
                 <div className={cn("w-full h-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
@@ -951,3 +942,4 @@ export function ProSegmentAI() {
 
 
     
+
