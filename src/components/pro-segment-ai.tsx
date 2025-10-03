@@ -607,8 +607,8 @@ function ProSegmentAIContent() {
             showHotkeys={showHotkeyLabels}
         />
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="shrink-0 flex items-center border-b border-border/50 px-4 z-20 h-12 bg-background/80 backdrop-blur-sm">
+        <div className="flex-1 relative">
+          <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
                 <div className="flex items-center gap-4 flex-1">
                 <WorkspaceTabs 
                     workspaces={workspaces}
@@ -725,8 +725,8 @@ function ProSegmentAIContent() {
                 </div>
             </header>
 
-            <main className="flex-1 flex flex-col bg-muted/30 overflow-hidden">
-                <div className={cn("flex-1", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
+            <main className="h-full w-full bg-muted/30 overflow-hidden">
+                <div className={cn("h-full w-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
                     <ImageCanvas 
                     key={activeWorkspace.id}
                     imageUrl={activeWorkspace.imageUrl}
@@ -928,6 +928,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
