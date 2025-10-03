@@ -44,7 +44,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "./ui/dropdown-menu"
 import { GlobalSettingsPanel } from "./panels/global-settings-panel"
 import { ImageCanvas } from "./image-canvas"
 import { InpaintingPanel } from "./panels/inpainting-panel"
@@ -584,24 +584,22 @@ function ProSegmentAIContent() {
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
-      <Sidebar collapsible="icon">
-          <SidebarHeader>
-             <SidebarTrigger asChild>
-                <Button variant="ghost" size="icon">
-                    <PanelLeft />
-                </Button>
-            </SidebarTrigger>
-          </SidebarHeader>
-          <SidebarContent>
-              {renderLeftPanelContent()}
-          </SidebarContent>
-      </Sidebar>
-      <ToolPanel
-        activeTool={activeTool}
-        setActiveTool={setActiveTool}
-        onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-      />
+      <div className="flex">
+        <Sidebar collapsible="icon">
+            <SidebarHeader>
+              
+            </SidebarHeader>
+            <SidebarContent>
+                {renderLeftPanelContent()}
+            </SidebarContent>
+        </Sidebar>
+        <ToolPanel
+          activeTool={activeTool}
+          setActiveTool={setActiveTool}
+          onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+          onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+        />
+      </div>
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-12 shrink-0 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
             <div className="flex items-center gap-4 flex-1">
@@ -911,6 +909,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
