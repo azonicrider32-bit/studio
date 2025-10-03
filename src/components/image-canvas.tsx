@@ -636,48 +636,50 @@ const drawLayers = React.useCallback(() => {
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <Card className="relative w-full h-full overflow-hidden shadow-2xl">
-        {isClient && (
-             <Image
-                ref={imageRef}
-                src={imageUrl}
-                alt={image?.description || "Workspace image"}
-                fill
-                className="object-contain"
-                style={{ opacity: isBackgroundVisible ? 1 : 0 }}
-                onLoad={handleImageLoad}
-                crossOrigin="anonymous"
-                key={imageUrl} 
+      <Card className="relative w-full h-full overflow-hidden shadow-2xl bg-muted/20">
+        <div className="relative w-full h-full">
+            {isClient && (
+                <Image
+                    ref={imageRef}
+                    src={imageUrl}
+                    alt={image?.description || "Workspace image"}
+                    fill
+                    className="object-contain"
+                    style={{ opacity: isBackgroundVisible ? 1 : 0 }}
+                    onLoad={handleImageLoad}
+                    crossOrigin="anonymous"
+                    key={imageUrl} 
+                />
+            )}
+        
+            <canvas
+            ref={canvasRef}
+            className="absolute top-0 left-0 h-full w-full object-contain opacity-0 pointer-events-none"
             />
-        )}
-       
-        <canvas
-          ref={canvasRef}
-          className="absolute top-0 left-0 h-full w-full object-contain opacity-0 pointer-events-none"
-        />
-        <canvas
-          ref={layersCanvasRef}
-          className="absolute top-0 left-0 h-full w-full object-contain pointer-events-none"
-        />
-        <canvas
-          ref={overlayCanvasRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onWheel={handleWheel}
-          onDoubleClick={handleDoubleClick}
-          className="absolute top-0 left-0 h-full w-full object-contain"
-          style={{ cursor: getCursor() }}
-        />
-        {segmentationMask && (
-          <Image
-            src={segmentationMask}
-            alt="Segmentation Mask"
-            fill
-            className="object-contain opacity-50 pointer-events-none"
-          />
-        )}
+            <canvas
+            ref={layersCanvasRef}
+            className="absolute top-0 left-0 h-full w-full object-contain pointer-events-none"
+            />
+            <canvas
+            ref={overlayCanvasRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onWheel={handleWheel}
+            onDoubleClick={handleDoubleClick}
+            className="absolute top-0 left-0 h-full w-full object-contain"
+            style={{ cursor: getCursor() }}
+            />
+            {segmentationMask && (
+            <Image
+                src={segmentationMask}
+                alt="Segmentation Mask"
+                fill
+                className="object-contain opacity-50 pointer-events-none"
+            />
+            )}
+        </div>
       </Card>
     </div>
   );
