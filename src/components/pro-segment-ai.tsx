@@ -25,6 +25,7 @@ import {
   Contrast,
   GripVertical,
   Scan,
+  ZoomIn,
 } from "lucide-react"
 
 import {
@@ -84,6 +85,12 @@ export function ProSegmentAI() {
   
   const [activeTopPanel, setActiveTopPanel] = React.useState<TopPanel | null>('tools');
   const [activeBottomPanel, setActiveBottomPanel] = React.useState<BottomPanel | null>(null);
+  
+  // New Zoom State
+  const [zoomA, setZoomA] = React.useState(1.0);
+  const [zoomB, setZoomB] = React.useState(4.0);
+  const [activeZoom, setActiveZoom] = React.useState<'A' | 'B'>('A');
+  const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
 
 
   const [layers, setLayers] = React.useState<Layer[]>(() => {
@@ -436,7 +443,7 @@ export function ProSegmentAI() {
             );
         case "pixel-preview":
             return (
-                <div className="flex-1 flex flex-col min-h-0 p-4">
+                <div className="flex-1 flex flex-col min-h-0">
                     <SegmentHoverPreview
                         canvas={canvasRef.current}
                         mousePos={canvasMousePos}
@@ -452,6 +459,13 @@ export function ProSegmentAI() {
   };
   
   const rightPanelVisible = activeTopPanel || activeBottomPanel;
+  
+  const handleZoomPresetWheel = (e: React.WheelEvent, preset: 'A' | 'B') => {
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const setter = preset === 'A' ? setZoomA : setZoomB;
+      setter(prev => Math.max(0.1, Math.min(10, prev + delta)));
+  }
+
 
   if (!isClient) {
     return null;
@@ -494,6 +508,36 @@ export function ProSegmentAI() {
                     <h2 className="font-headline text-xl font-semibold">Workspace</h2>
                 </div>
                 <div className="flex items-center gap-2">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant={activeZoom === 'A' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setActiveZoom('A')}
+                                    onWheel={(e) => handleZoomPresetWheel(e, 'A')}
+                                    className="w-24"
+                                >
+                                    <ZoomIn className="w-4 h-4 mr-1"/> {(zoomA * 100).toFixed(0)}%
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Zoom Preset A (Scroll to adjust)</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                 <Button
+                                    variant={activeZoom === 'B' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setActiveZoom('B')}
+                                    onWheel={(e) => handleZoomPresetWheel(e, 'B')}
+                                    className="w-24"
+                                >
+                                    <ZoomIn className="w-4 h-4 mr-1"/> {(zoomB * 100).toFixed(0)}%
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Zoom Preset B (Scroll to adjust)</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             </header>
             <main className="flex-1 overflow-auto bg-muted/30 flex flex-col">
@@ -521,6 +565,7 @@ export function ProSegmentAI() {
                     getCanvasRef={canvasRef}
                     getSelectionEngineRef={selectionEngineRef}
                     isLassoPreviewHovered={isLassoPreviewHovered}
+                    mainCanvasZoom={mainCanvasZoom}
                 />
             </main>
              <AssetDrawer

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Image from "next/image";
@@ -38,6 +39,7 @@ interface ImageCanvasProps {
   getSelectionMaskRef: React.MutableRefObject<(() => string | undefined) | undefined>;
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
   isLassoPreviewHovered: boolean;
+  mainCanvasZoom: number;
 }
 
 export function ImageCanvas({
@@ -64,6 +66,7 @@ export function ImageCanvas({
   getSelectionMaskRef,
   clearSelectionRef,
   isLassoPreviewHovered,
+  mainCanvasZoom,
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -662,7 +665,7 @@ const drawLayers = React.useCallback(() => {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       <Card className="relative w-full h-full overflow-hidden shadow-2xl bg-muted/20">
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full" style={{ transform: `scale(${mainCanvasZoom})`}}>
             {isClient && (
                 <Image
                     ref={imageRef}
