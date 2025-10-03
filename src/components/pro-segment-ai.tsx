@@ -63,6 +63,7 @@ import { TelemetryPanel } from "./panels/telemetry-panel"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import { AssetDrawer } from "./asset-drawer"
 import { ToolPanel } from "./tool-panel"
+import { cn } from "@/lib/utils"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "color-analysis"
 type TopPanel = 'tools' | 'feather' | 'layers' | 'ai';
@@ -341,7 +342,7 @@ export function ProSegmentAI() {
     if (!activeTopPanel) return null;
     return (
       <Tabs value={activeTopPanel} className="flex-1 flex flex-col min-h-0">
-        <TabsContent value="tools" className="m-0 flex-1 overflow-y-auto">
+        <TabsContent value="tools" className="m-0 flex-1 overflow-y-auto flex flex-col">
           {(() => {
             switch (activeTool) {
               case "lasso":
@@ -467,7 +468,7 @@ export function ProSegmentAI() {
           onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
         />
 
-        <div className="flex flex-1 flex-col h-screen overflow-hidden">
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
             <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="md:hidden" />
@@ -547,13 +548,13 @@ export function ProSegmentAI() {
               </Tabs>
               
               <div className="flex-1 flex flex-col min-h-0">
-                  <div className="flex-1 overflow-y-auto">
+                  <div className={cn("overflow-y-auto flex-1", !activeBottomPanel && 'h-full')}>
                       {renderTopPanelContent()}
                   </div>
                   
                   {activeTopPanel && activeBottomPanel && <Separator />}
 
-                  <div className="flex-1 overflow-y-auto">
+                  <div className={cn("overflow-y-auto flex-1", !activeTopPanel && 'h-full')}>
                     {renderBottomPanelContent()}
                   </div>
               </div>
