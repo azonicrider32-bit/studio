@@ -91,7 +91,6 @@ export function ProSegmentAI() {
   const [zoomA, setZoomA] = React.useState(1.0);
   const [zoomB, setZoomB] = React.useState(4.0);
   const [activeZoom, setActiveZoom] = React.useState<'A' | 'B'>('A');
-  const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
   const [hoveredZoom, setHoveredZoom] = React.useState<'A' | 'B' | null>(null);
   const hoverTimeoutRef = React.useRef<{ A: NodeJS.Timeout | null, B: NodeJS.Timeout | null }>({ A: null, B: null });
 
@@ -444,24 +443,21 @@ export function ProSegmentAI() {
   
   const rightPanelVisible = activeTopPanel || activeBottomPanel;
   
-  const handleZoomPresetWheel = (e: React.WheelEvent, preset: 'A' | 'B') => {
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      const setter = preset === 'A' ? setZoomA : setZoomB;
-      setter(prev => Math.max(0.1, Math.min(10, prev + delta)));
-  }
-
-    const handleHoverZoom = (preset: 'A' | 'B' | null) => {
-        if (preset === null) {
-            if (hoverTimeoutRef.current.A) clearTimeout(hoverTimeoutRef.current.A);
-            if (hoverTimeoutRef.current.B) clearTimeout(hoverTimeoutRef.current.B);
-            setHoveredZoom(null);
-        } else {
-            if(hoverTimeoutRef.current[preset]) clearTimeout(hoverTimeoutRef.current[preset]);
-            hoverTimeoutRef.current[preset] = setTimeout(() => {
-                setHoveredZoom(preset);
-            }, 200);
-        }
+  const handleHoverZoom = (preset: 'A' | 'B' | null) => {
+    const clearTimers = () => {
+      if (hoverTimeoutRef.current.A) clearTimeout(hoverTimeoutRef.current.A);
+      if (hoverTimeoutRef.current.B) clearTimeout(hoverTimeoutRef.current.B);
     };
+
+    clearTimers();
+    setHoveredZoom(null); // Hide immediately on leave or new enter
+
+    if (preset) {
+      hoverTimeoutRef.current[preset] = setTimeout(() => {
+        setHoveredZoom(preset);
+      }, 200);
+    }
+  };
 
 
   if (!isClient) {
@@ -512,21 +508,24 @@ export function ProSegmentAI() {
                                     <Button
                                         variant={activeZoom === 'A' ? "default" : "ghost"}
                                         size="icon"
-                                        className={cn("h-9 w-9 border border-input", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                        className={cn("h-9 w-9 border border-input relative", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
                                         onClick={() => setActiveZoom('A')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
+                                        <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Activate Zoom A</TooltipContent>
+                                <TooltipContent>Activate Zoom A (1)</TooltipContent>
                             </Tooltip>
-                            <div 
-                                className="flex items-center"
+                             <div 
+                                className="group flex items-center"
                                 onMouseEnter={() => handleHoverZoom('A')}
                                 onMouseLeave={() => handleHoverZoom(null)}
-                                onWheel={(e) => handleZoomPresetWheel(e, 'A')}
                             >
-                                <span className="text-sm font-medium px-2 py-1 text-center bg-background w-10">
+                                <span 
+                                    className="text-sm font-medium px-2 py-1 text-center bg-background w-10"
+                                    onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                                >
                                     {(zoomA * 100).toFixed(0)}%
                                 </span>
                                 <div className={cn(
@@ -548,21 +547,24 @@ export function ProSegmentAI() {
                                      <Button
                                         variant={activeZoom === 'B' ? "default" : "ghost"}
                                         size="icon"
-                                        className={cn("h-9 w-9 border border-input", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                        className={cn("h-9 w-9 border border-input relative", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
                                         onClick={() => setActiveZoom('B')}
                                     >
                                         <ZoomIn className="w-4 h-4"/>
+                                        <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Activate Zoom B</TooltipContent>
+                                <TooltipContent>Activate Zoom B (2)</TooltipContent>
                             </Tooltip>
                             <div 
-                                className="flex items-center"
+                                className="group flex items-center"
                                 onMouseEnter={() => handleHoverZoom('B')}
                                 onMouseLeave={() => handleHoverZoom(null)}
-                                onWheel={(e) => handleZoomPresetWheel(e, 'B')}
                             >
-                                <span className="text-sm font-medium px-2 py-1 text-center bg-background w-10">
+                                <span 
+                                    className="text-sm font-medium px-2 py-1 text-center bg-background w-10"
+                                    onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                                >
                                     {(zoomB * 100).toFixed(0)}%
                                 </span>
                                 <div className={cn(
@@ -632,20 +634,20 @@ export function ProSegmentAI() {
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-4">
                           <Tooltip>
-                              <TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                              <TooltipContent>Zoom</TooltipContent>
+                              <TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span></TabsTrigger></TooltipTrigger>
+                              <TooltipContent>Zoom Panel (Z)</TooltipContent>
                           </Tooltip>
                           <Tooltip>
-                              <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                              <TooltipContent>Feather & Edges</TooltipContent>
+                              <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span></TabsTrigger></TooltipTrigger>
+                              <TooltipContent>Feather & Edges (F)</TooltipContent>
                           </Tooltip>
                           <Tooltip>
-                              <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                              <TooltipContent>Layers</TooltipContent>
+                              <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span></TabsTrigger></TooltipTrigger>
+                              <TooltipContent>Layers (L)</TooltipContent>
                           </Tooltip>
                           <Tooltip>
-                              <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                              <TooltipContent>AI Tools</TooltipContent>
+                              <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span></TabsTrigger></TooltipTrigger>
+                              <TooltipContent>AI Tools (A)</TooltipContent>
                           </Tooltip>
                       </TabsList>
                   </TooltipProvider>
@@ -665,16 +667,16 @@ export function ProSegmentAI() {
                 <TooltipProvider>
                   <TabsList className="grid w-full grid-cols-4">
                     <Tooltip>
-                      <TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                      <TooltipContent>Telemetry</TooltipContent>
+                      <TooltipTrigger asChild><TabsTrigger value="telemetry" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'telemetry' ? null : 'telemetry')}><AreaChart className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">T</span></TabsTrigger></TooltipTrigger>
+                      <TooltipContent>Telemetry (T)</TooltipContent>
                     </Tooltip>
                      <Tooltip>
-                      <TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                      <TooltipContent>Color Analysis</TooltipContent>
+                      <TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span></TabsTrigger></TooltipTrigger>
+                      <TooltipContent>Color Analysis (C)</TooltipContent>
                     </Tooltip>
                      <Tooltip>
-                      <TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/></TabsTrigger></TooltipTrigger>
-                      <TooltipContent>Pixel Preview</TooltipContent>
+                      <TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span></TabsTrigger></TooltipTrigger>
+                      <TooltipContent>Pixel Preview (P)</TooltipContent>
                     </Tooltip>
                   </TabsList>
                 </TooltipProvider>
