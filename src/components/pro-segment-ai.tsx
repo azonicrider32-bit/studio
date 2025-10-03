@@ -28,6 +28,7 @@ import {
   ZoomIn,
   Hand,
   MessageSquare,
+  PenTool,
 } from "lucide-react"
 
 import {
@@ -75,12 +76,12 @@ import { Slider } from "./ui/slider"
 import { AiChatPanel } from "./panels/ai-chat-panel"
 import { useSelectionDrag } from "@/hooks/use-selection-drag"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "adjustments" | "pipette-minus" | "clone" | "transform" | "pan" | "line";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
 type BottomPanel = 'telemetry' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
 
 function ProSegmentAIContent() {
-  const [activeTool, setActiveTool] = React.useState<Tool>("lasso")
+  const [activeTool, setActiveTool] = React.useState<Tool>("line")
   const [segmentationMask, setSegmentationMask] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | undefined>(PlaceHolderImages[0]?.imageUrl);
   const [isAssetDrawerOpen, setIsAssetDrawerOpen] = React.useState(false);
@@ -215,6 +216,7 @@ function ProSegmentAIContent() {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
   const [isLassoPreviewHovered, setIsLassoPreviewHovered] = React.useState(false);
+  const hoverTimeoutRef = React.useRef<{ A: NodeJS.Timeout | null, B: NodeJS.Timeout | null }>({ A: null, B: null });
 
 
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
@@ -271,7 +273,7 @@ function ProSegmentAIContent() {
   const deleteLayer = (layerId: string) => {
     if (layerId === "background-0") return; // Cannot delete background
 
-    setLayers(prev => prev.filter(l => l.id !== layerId));
+    setLayers(prev => prev.filter(l => l.id !== layerId && l.parentId !== layerId));
 
     if (activeLayerId === layerId) {
       setActiveLayerId("background-0");
@@ -319,6 +321,9 @@ function ProSegmentAIContent() {
         if(e.key.toLowerCase() === 'v') {
             setActiveTool('transform');
         }
+        if(e.key.toLowerCase() === 'p') {
+            setActiveTool('line');
+        }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -361,6 +366,7 @@ function ProSegmentAIContent() {
     switch(activeTool) {
       case 'magic-wand':
       case 'lasso':
+      case 'line':
         return <ToolSettingsPanel 
                   magicWandSettings={magicWandSettings}
                   onMagicWandSettingsChange={handleMagicWandSettingsChange}
@@ -403,20 +409,47 @@ function ProSegmentAIContent() {
                   setDropTargetId={setDropTargetId}
                   onDrop={(draggedId, targetId) => {
                     const draggedLayer = layers.find(l => l.id === draggedId);
-                    if (!draggedLayer) return;
+                    if (!draggedLayer || draggedId === targetId || draggedLayer.parentId === targetId) return;
 
-                    // Remove from top level
-                    const newLayers = layers.filter(l => l.id !== draggedId);
-                    
-                    // Add as modifier to target
-                    const targetIndex = newLayers.findIndex(l => l.id === targetId);
-                    if (targetIndex > -1) {
-                        const targetLayer = newLayers[targetIndex];
-                        const newModifiers = [...(targetLayer.modifiers || []), draggedLayer];
-                        newLayers[targetIndex] = { ...targetLayer, modifiers: newModifiers };
-                    }
-                    
-                    setLayers(newLayers);
+                    setLayers(currentLayers => {
+                        const newLayers = currentLayers.map(l => {
+                            // Detach from old parent
+                            if (l.id === draggedId) {
+                                return { ...l, parentId: targetId, subType: 'mask' as const };
+                            }
+                            return l;
+                        }).filter(l => l.id !== draggedId); // remove from top level if it was there
+
+                        const targetLayerIndex = newLayers.findIndex(l => l.id === targetId);
+                        
+                        if (targetLayerIndex > -1) {
+                            // Don't add to itself.
+                            if (newLayers[targetLayerIndex].modifiers?.find(m => m.id === draggedId)) return currentLayers;
+                            
+                             const draggedLayerWithParent = { ...draggedLayer, parentId: targetId, subType: 'mask' as const };
+                             
+                             const targetLayer = newLayers[targetLayerIndex];
+                             const existingModifiers = targetLayer.modifiers || [];
+
+                             newLayers[targetLayerIndex] = {
+                                ...targetLayer,
+                                modifiers: [...existingModifiers, draggedLayerWithParent]
+                             };
+                             
+                             // Also update the layer in the main array
+                             const draggedIndexInMain = newLayers.findIndex(l => l.id === draggedId);
+                             if (draggedIndexInMain > -1) {
+                                newLayers[draggedIndexInMain] = draggedLayerWithParent;
+                             } else {
+                                // If it wasn't a modifier before, it might not be in the main list anymore
+                                // It should be part of its new parent's modifier list
+                             }
+
+                        }
+                        
+                        // return newLayers.filter(l => !l.parentId);
+                        return newLayers;
+                    });
                   }}
                 />;
         case "ai":
@@ -509,22 +542,15 @@ function ProSegmentAIContent() {
         <Sidebar side="left" collapsible="icon" className="border-r">
           <SidebarContent>
             <SidebarHeader>
-              {/* This space is intentionally left blank for now */}
+              <Button variant="ghost" size="icon" className="h-12 w-12" onClick={toggleSidebar}>
+                <Settings2 />
+              </Button>
             </SidebarHeader>
             <SidebarSeparator />
             <div className="flex-1 overflow-y-auto">
               {renderLeftPanelContent()}
             </div>
           </SidebarContent>
-          <SidebarFooter>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings" className="justify-center" onClick={toggleSidebar}>
-                  <Settings2 />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
         </Sidebar>
 
         <ToolPanel 

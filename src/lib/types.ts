@@ -4,11 +4,16 @@ export interface Layer {
     id: string;
     name: string;
     type: 'segmentation' | 'background' | 'adjustment';
-    subType?: 'pixel' | 'mask';
+    subType?: 'pixel' | 'mask' | 'path';
     parentId?: string | null;
     visible: boolean;
     locked: boolean;
     pixels: Set<number>;
+    path?: [number, number][];
+    stroke?: string;
+    strokeWidth?: number;
+    fill?: string;
+    closed?: boolean;
     bounds: { x: number; y: number; width: number; height: number };
     imageData?: ImageData;
     maskVisible?: boolean;

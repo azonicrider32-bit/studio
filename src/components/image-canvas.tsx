@@ -150,55 +150,80 @@ const drawLayers = React.useCallback(() => {
 
     layerTree.forEach(({ parent: parentLayer, children: childMasks }) => {
         if (!parentLayer.visible) return;
-
+        
         const tempParentCanvas = document.createElement('canvas');
         tempParentCanvas.width = layersCanvas.width;
         tempParentCanvas.height = layersCanvas.height;
         const tempParentCtx = tempParentCanvas.getContext('2d');
         if (!tempParentCtx) return;
-        
-        const { x, y, width, height } = parentLayer.bounds;
 
-        if (parentLayer.type === 'background') {
-            tempParentCtx.drawImage(mainImage, 0, 0, layersCanvas.width, layersCanvas.height);
-        } else if (parentLayer.imageData) {
-             const tempImageCanvas = document.createElement('canvas');
-            tempImageCanvas.width = parentLayer.imageData.width;
-            tempImageCanvas.height = parentLayer.imageData.height;
-            const tempImageCtx = tempImageCanvas.getContext('2d');
-            if(tempImageCtx) {
-                tempImageCtx.putImageData(parentLayer.imageData, 0, 0);
-                tempParentCtx.drawImage(tempImageCanvas, x, y, width, height);
+        if (parentLayer.subType === 'path') {
+            tempParentCtx.save();
+            if (parentLayer.path && parentLayer.path.length > 1) {
+                tempParentCtx.beginPath();
+                tempParentCtx.moveTo(parentLayer.path[0][0], parentLayer.path[0][1]);
+                for (let i = 1; i < parentLayer.path.length; i++) {
+                    tempParentCtx.lineTo(parentLayer.path[i][0], parentLayer.path[i][1]);
+                }
+                if (parentLayer.closed) {
+                    tempParentCtx.closePath();
+                    if (parentLayer.fill) {
+                        tempParentCtx.fillStyle = parentLayer.fill;
+                        tempParentCtx.fill();
+                    }
+                }
+                if (parentLayer.stroke && parentLayer.strokeWidth) {
+                    tempParentCtx.strokeStyle = parentLayer.stroke;
+                    tempParentCtx.lineWidth = parentLayer.strokeWidth;
+                    tempParentCtx.stroke();
+                }
             }
-        }
-        
-        const visibleMasks = childMasks.filter(m => m.subType === 'mask' && m.visible);
-        if (visibleMasks.length > 0) {
-            const tempMaskCanvas = document.createElement('canvas');
-            tempMaskCanvas.width = layersCanvas.width;
-            tempMaskCanvas.height = layersCanvas.height;
-            const tempMaskCtx = tempMaskCanvas.getContext('2d');
-            if(tempMaskCtx) {
-                tempMaskCtx.fillStyle = 'black'; 
-                tempMaskCtx.fillRect(0, 0, tempMaskCanvas.width, tempMaskCanvas.height);
-                
-                tempMaskCtx.globalCompositeOperation = 'destination-out';
-                visibleMasks.forEach(mask => {
-                    mask.pixels.forEach(pixelIndex => {
-                        const x = pixelIndex % layersCanvas.width;
-                        const y = Math.floor(pixelIndex / layersCanvas.width);
-                        tempMaskCtx.fillStyle = 'white'; 
-                        tempMaskCtx.fillRect(x, y, 1, 1);
+            tempParentCtx.restore();
+
+        } else {
+            const { x, y, width, height } = parentLayer.bounds;
+
+            if (parentLayer.type === 'background') {
+                tempParentCtx.drawImage(mainImage, 0, 0, layersCanvas.width, layersCanvas.height);
+            } else if (parentLayer.imageData) {
+                 const tempImageCanvas = document.createElement('canvas');
+                tempImageCanvas.width = parentLayer.imageData.width;
+                tempImageCanvas.height = parentLayer.imageData.height;
+                const tempImageCtx = tempImageCanvas.getContext('2d');
+                if(tempImageCtx) {
+                    tempImageCtx.putImageData(parentLayer.imageData, 0, 0);
+                    tempParentCtx.drawImage(tempImageCanvas, x, y, width, height);
+                }
+            }
+            
+            const visibleMasks = childMasks.filter(m => m.subType === 'mask' && m.visible);
+            if (visibleMasks.length > 0) {
+                const tempMaskCanvas = document.createElement('canvas');
+                tempMaskCanvas.width = layersCanvas.width;
+                tempMaskCanvas.height = layersCanvas.height;
+                const tempMaskCtx = tempMaskCanvas.getContext('2d');
+                if(tempMaskCtx) {
+                    tempMaskCtx.fillStyle = 'black'; 
+                    tempMaskCtx.fillRect(0, 0, tempMaskCanvas.width, tempMaskCanvas.height);
+                    
+                    tempMaskCtx.globalCompositeOperation = 'destination-out';
+                    visibleMasks.forEach(mask => {
+                        mask.pixels.forEach(pixelIndex => {
+                            const x = pixelIndex % layersCanvas.width;
+                            const y = Math.floor(pixelIndex / layersCanvas.width);
+                            tempMaskCtx.fillStyle = 'white'; 
+                            tempMaskCtx.fillRect(x, y, 1, 1);
+                        });
                     });
-                });
-                tempMaskCtx.globalCompositeOperation = 'source-over';
-                
-                tempParentCtx.globalCompositeOperation = 'destination-in';
-                tempParentCtx.drawImage(tempMaskCanvas, 0, 0);
-                tempParentCtx.globalCompositeOperation = 'source-over'; 
+                    tempMaskCtx.globalCompositeOperation = 'source-over';
+                    
+                    tempParentCtx.globalCompositeOperation = 'destination-in';
+                    tempParentCtx.drawImage(tempMaskCanvas, 0, 0);
+                    tempParentCtx.globalCompositeOperation = 'source-over'; 
+                }
             }
         }
-        
+
         layersCtx.drawImage(tempParentCanvas, 0, 0);
     });
 }, [layers, draggedLayer]);
@@ -211,9 +236,9 @@ const drawLayers = React.useCallback(() => {
 
     const overlayCtx = overlayCanvas.getContext('2d');
     if (overlayCtx) {
-      engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment, draggedLayer, activeLayerId);
+      engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment, draggedLayer, activeLayerId, activeTool);
     }
-  }, [magicWandSettings, lassoSettings, layers, hoveredSegment, draggedLayer, activeLayerId]);
+  }, [magicWandSettings, lassoSettings, layers, hoveredSegment, draggedLayer, activeLayerId, activeTool]);
 
   React.useEffect(() => {
     drawLayers();
@@ -309,40 +334,61 @@ const drawLayers = React.useCallback(() => {
     }
   }, [drawOverlay, toast, addLayer, activeLayerId]);
 
+  const endLineAndProcess = React.useCallback(async () => {
+    const engine = selectionEngineRef.current;
+    if (!engine || !engine.isDrawingLine) return;
+
+    const newLayer = engine.endLine(activeLayerId);
+    if (newLayer) addLayer(newLayer);
+    drawOverlay();
+    toast({ title: 'Line path completed.' });
+  }, [addLayer, activeLayerId, drawOverlay, toast]);
+
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const engine = selectionEngineRef.current;
+      if (!engine) return;
       
-      if (e.key === 'Enter' && engine && engine.isDrawingLasso) {
+      if (e.key === 'Enter') {
+          e.preventDefault();
+          if (engine.isDrawingLasso) {
+            if (lassoSettings.useAiEnhancement) {
+                endLassoAndProcess();
+            } else {
+                const newLayer = engine.endLasso(activeLayerId);
+                if (newLayer) addLayer(newLayer);
+                drawOverlay();
+                toast({ title: 'Lasso path completed.' });
+            }
+          } else if(engine.isDrawingLine) {
+            endLineAndProcess();
+          }
+      }
+      
+      if (e.key === 'Escape') {
         e.preventDefault();
-        if (lassoSettings.useAiEnhancement) {
-            endLassoAndProcess();
-        } else {
-            const newLayer = engine.endLasso(activeLayerId);
-            if (newLayer) addLayer(newLayer);
+        if (engine.isDrawingLasso) {
+            engine.cancelLasso();
             drawOverlay();
-            toast({ title: 'Lasso path completed.' });
+            toast({ title: 'Lasso cancelled.' });
+        } else if (engine.isDrawingLine) {
+            engine.cancelLine();
+            drawOverlay();
+            toast({ title: 'Line cancelled.' });
         }
       }
-      
-      if (e.key === 'Escape' && engine && engine.isDrawingLasso) {
-        e.preventDefault();
-        engine.cancelLasso();
-        drawOverlay();
-        toast({ title: 'Lasso cancelled.' });
-      }
 
-      if (e.key === 'Backspace' && engine && engine.isDrawingLasso) {
+      if (e.key === 'Backspace' && (engine.isDrawingLasso || engine.isDrawingLine)) {
         e.preventDefault();
-        engine.removeLastLassoNode();
+        engine.removeLastNode();
         drawOverlay();
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTool, toast, drawOverlay, endLassoAndProcess, lassoSettings.useAiEnhancement, addLayer, activeLayerId]);
+  }, [activeTool, toast, drawOverlay, endLassoAndProcess, endLineAndProcess, lassoSettings.useAiEnhancement, addLayer, activeLayerId]);
 
 
   const getMousePos = (canvasEl: HTMLCanvasElement, evt: React.MouseEvent | React.WheelEvent) => {
@@ -538,12 +584,18 @@ const drawLayers = React.useCallback(() => {
           engine.addLassoNode(lassoMouseTraceRef.current);
           lassoMouseTraceRef.current = [];
         }
-        drawOverlay();
+      } else if (activeTool === 'line') {
+        if (!engine.isDrawingLine) {
+          engine.startLine(pos.x, pos.y);
+        } else {
+          engine.addNodeToLine();
+        }
       } else if (activeTool === 'magic-wand') {
           handleMagicWandClick(pos, e);
       } else if (activeTool === 'pipette-minus') {
           sampleExclusionColor(pos);
       }
+      drawOverlay();
     }
   };
   
@@ -653,6 +705,11 @@ const drawLayers = React.useCallback(() => {
         engine.updateLassoPreview(pos.x, pos.y, lassoMouseTraceRef.current);
         drawOverlay();
       }
+    } else if (activeTool === 'line') {
+      if (engine.isDrawingLine) {
+        engine.updateLinePreview(pos.x, pos.y);
+        drawOverlay();
+      }
     } else if (activeTool === 'magic-wand') {
         throttledWandPreview(pos.x, pos.y);
     }
@@ -675,9 +732,9 @@ const drawLayers = React.useCallback(() => {
 
   const handleDoubleClick = () => {
     const engine = selectionEngineRef.current;
-    if (!engine || !engine.isDrawingLasso) return;
+    if (!engine) return;
     
-    if (activeTool === 'lasso') {
+    if (activeTool === 'lasso' && engine.isDrawingLasso) {
       if (lassoSettings.useAiEnhancement) {
         endLassoAndProcess();
       } else {
@@ -686,6 +743,8 @@ const drawLayers = React.useCallback(() => {
         drawOverlay();
         toast({ title: 'Lasso path completed.' });
       }
+    } else if (activeTool === 'line' && engine.isDrawingLine) {
+      endLineAndProcess();
     }
   };
 
