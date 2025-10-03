@@ -530,115 +530,6 @@ function ProSegmentAIContent() {
         />
 
         <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-            <header className="flex h-12 flex-shrink-0 items-center justify-between border-b px-4 bg-background/80 backdrop-blur-sm z-10">
-                <div className="flex items-center gap-2">
-                    <SidebarTrigger className="md:hidden" />
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" onClick={handleUndo} disabled={historyIndex < 0}>
-                        <Undo2 className="w-5 h-5"/>
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={handleRedo} disabled={historyIndex >= history.length - 1}>
-                        <Redo2 className="w-5 h-5"/>
-                      </Button>
-                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <History className="w-5 h-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuSeparator />
-                          {history.length > 0 ? history.slice().reverse().map((action, index) => (
-                            <DropdownMenuItem key={action.id} onSelect={() => {}}>
-                               <span>{action.type.replace(/_/g, ' ')}</span>
-                            </DropdownMenuItem>
-                          )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <TooltipProvider>
-                        <div className="flex items-center gap-2">
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant={activeZoom === 'A' ? "default" : "ghost"}
-                                        size="icon"
-                                        className={cn("h-9 w-9 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                                        onClick={() => setActiveZoom('A')}
-                                    >
-                                        <ZoomIn className="w-4 h-4"/>
-                                        <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Activate Zoom A (1)</TooltipContent>
-                            </Tooltip>
-                             <div 
-                                className="group flex items-center"
-                                onMouseEnter={() => handleHoverZoom('A')}
-                                onMouseLeave={() => handleHoverZoom(null)}
-                            >
-                                <span 
-                                    className="text-sm font-medium px-2 py-1 text-center bg-background"
-                                    onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                                >
-                                    {(zoomA * 100).toFixed(0)}%
-                                </span>
-                                <div className={cn(
-                                    "overflow-hidden transition-all duration-300 ease-in-out",
-                                    hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
-                                )}>
-                                    <Slider 
-                                        value={[zoomA]}
-                                        onValueChange={(v) => setZoomA(v[0])}
-                                        min={0.1} max={10} step={0.1}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                         <div className="flex items-center gap-2">
-                             <Tooltip>
-                                <TooltipTrigger asChild>
-                                     <Button
-                                        variant={activeZoom === 'B' ? "default" : "ghost"}
-                                        size="icon"
-                                        className={cn("h-9 w-9 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                                        onClick={() => setActiveZoom('B')}
-                                    >
-                                        <ZoomIn className="w-4 h-4"/>
-                                        <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Activate Zoom B (2)</TooltipContent>
-                            </Tooltip>
-                            <div 
-                                className="group flex items-center"
-                                onMouseEnter={() => handleHoverZoom('B')}
-                                onMouseLeave={() => handleHoverZoom(null)}
-                            >
-                                <span 
-                                    className="text-sm font-medium px-2 py-1 text-center bg-background"
-                                    onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                                >
-                                    {(zoomB * 100).toFixed(0)}%
-                                </span>
-                                <div className={cn(
-                                    "overflow-hidden transition-all duration-300 ease-in-out",
-                                    hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
-                                )}>
-                                    <Slider 
-                                        value={[zoomB]}
-                                        onValueChange={(v) => setZoomB(v[0])}
-                                        min={0.1} max={10} step={0.1}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </TooltipProvider>
-                </div>
-            </header>
             <main className="flex-1 overflow-auto bg-muted/30">
                  <ImageCanvas 
                     imageUrl={imageUrl}
@@ -685,37 +576,141 @@ function ProSegmentAIContent() {
           className="absolute top-0 right-0 h-full flex flex-col border-l bg-background/80 backdrop-blur-sm z-20" 
           style={{ width: rightPanelWidth }}
         >
-          {(activeTopPanel || activeBottomPanel) && (
-            <div 
-              onMouseDown={handleMouseDownResize}
-              className="absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group"
-            >
-              <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
-            </div>
-          )}
+          <div 
+            onMouseDown={handleMouseDownResize}
+            className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group", !(activeTopPanel || activeBottomPanel) && "hidden")}
+          >
+            <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
+          </div>
             
-          <div className="flex h-12 items-center border-b px-2">
-              <Tabs value={activeTopPanel || 'none'} className="w-full">
-                <TooltipProvider>
-                    <TabsList className="grid w-full grid-cols-4">
+          <div className="flex h-12 items-center justify-between border-b px-2">
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={handleUndo} disabled={historyIndex < 0}>
+                <Undo2 className="w-5 h-5"/>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleRedo} disabled={historyIndex >= history.length - 1}>
+                <Redo2 className="w-5 h-5"/>
+              </Button>
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <History className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuSeparator />
+                  {history.length > 0 ? history.slice().reverse().map((action, index) => (
+                    <DropdownMenuItem key={action.id} onSelect={() => {}}>
+                        <span>{action.type.replace(/_/g, ' ')}</span>
+                    </DropdownMenuItem>
+                  )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                  <div className="flex items-center gap-2">
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Button
+                                  variant={activeZoom === 'A' ? "default" : "ghost"}
+                                  size="icon"
+                                  className={cn("h-9 w-9 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                  onClick={() => setActiveZoom('A')}
+                              >
+                                  <ZoomIn className="w-4 h-4"/>
+                                  <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Activate Zoom A (1)</TooltipContent>
+                      </Tooltip>
+                        <div 
+                          className="group flex items-center"
+                          onMouseEnter={() => handleHoverZoom('A')}
+                          onMouseLeave={() => handleHoverZoom(null)}
+                      >
+                          <span 
+                              className="text-sm font-medium px-2 py-1 text-center bg-background"
+                              onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                          >
+                              {(zoomA * 100).toFixed(0)}%
+                          </span>
+                          <div className={cn(
+                              "overflow-hidden transition-all duration-300 ease-in-out",
+                              hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
+                          )}>
+                              <Slider 
+                                  value={[zoomA]}
+                                  onValueChange={(v) => setZoomA(v[0])}
+                                  min={0.1} max={10} step={0.1}
+                              />
+                          </div>
+                      </div>
+                  </div>
+
+                    <div className="flex items-center gap-2">
                         <Tooltip>
-                            <TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span></TabsTrigger></TooltipTrigger>
-                            <TooltipContent>Zoom Panel (Z)</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span></TabsTrigger></TooltipTrigger>
-                            <TooltipContent>Feather & Edges (F)</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span></TabsTrigger></TooltipTrigger>
-                            <TooltipContent>Layers (L)</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span></TabsTrigger></TooltipTrigger>
-                            <TooltipContent>AI Tools (A)</TooltipContent>
-                        </Tooltip>
-                    </TabsList>
-                </TooltipProvider>
+                          <TooltipTrigger asChild>
+                                <Button
+                                  variant={activeZoom === 'B' ? "default" : "ghost"}
+                                  size="icon"
+                                  className={cn("h-9 w-9 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+                                  onClick={() => setActiveZoom('B')}
+                              >
+                                  <ZoomIn className="w-4 h-4"/>
+                                  <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Activate Zoom B (2)</TooltipContent>
+                      </Tooltip>
+                      <div 
+                          className="group flex items-center"
+                          onMouseEnter={() => handleHoverZoom('B')}
+                          onMouseLeave={() => handleHoverZoom(null)}
+                      >
+                          <span 
+                              className="text-sm font-medium px-2 py-1 text-center bg-background"
+                              onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
+                          >
+                              {(zoomB * 100).toFixed(0)}%
+                          </span>
+                          <div className={cn(
+                              "overflow-hidden transition-all duration-300 ease-in-out",
+                              hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
+                          )}>
+                              <Slider 
+                                  value={[zoomB]}
+                                  onValueChange={(v) => setZoomB(v[0])}
+                                  min={0.1} max={10} step={0.1}
+                              />
+                          </div>
+                      </div>
+                  </div>
+              </TooltipProvider>
+            </div>
+            
+            <Tabs value={activeTopPanel || 'none'} className="w-full">
+              <TooltipProvider>
+                  <TabsList className="grid w-full grid-cols-4">
+                      <Tooltip>
+                          <TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span></TabsTrigger></TooltipTrigger>
+                          <TooltipContent>Zoom Panel (Z)</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                          <TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span></TabsTrigger></TooltipTrigger>
+                          <TooltipContent>Feather & Edges (F)</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                          <TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span></TabsTrigger></TooltipTrigger>
+                          <TooltipContent>Layers (L)</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                          <TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/><span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span></TabsTrigger></TooltipTrigger>
+                          <TooltipContent>AI Tools (A)</TooltipContent>
+                      </Tooltip>
+                  </TabsList>
+              </TooltipProvider>
             </Tabs>
           </div>
             
@@ -775,3 +770,4 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
