@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import React, { useState } from 'react';
@@ -14,15 +15,12 @@ import {
   Search,
   Grid3x3,
   List,
-  X,
   Eye,
-  Download,
   Trash2
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirebase, useUser } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 import { uploadAsset } from '@/ai/flows/upload-asset-flow';
 import { useToast } from '@/hooks/use-toast';
 import { handleApiError } from '@/lib/error-handling';
@@ -42,12 +40,8 @@ const categories = [
 
 export default function AdvancedAssetPanel({ 
   onImageSelect, 
-  isOpen, 
-  onToggle 
 }: {
   onImageSelect: (url: string, name: string) => void;
-  isOpen: boolean;
-  onToggle: () => void;
 }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
@@ -82,7 +76,7 @@ export default function AdvancedAssetPanel({
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
         if (file.size > 10 * 1024 * 1024) { // 10MB limit
-           toast({ variant: 'destructive', title: 'File too large', description: `${file.name} exceeds the 10MB limit.`});
+           toast({ variant: 'destructive', title: 'File too large', description: `'${file.name}' exceeds the 10MB limit.`});
            continue;
         }
 
@@ -116,7 +110,7 @@ export default function AdvancedAssetPanel({
             };
 
             setUploadedImages(prev => [...prev, newImage]);
-            toast({ title: 'Upload Successful', description: `${file.name} has been uploaded.` });
+            toast({ title: 'Upload Successful', description: `'${file.name}' has been uploaded.` });
 
           } catch (uploadError) {
              handleApiError(uploadError, toast, { title: `Upload Failed for ${file.name}` });
@@ -133,13 +127,10 @@ export default function AdvancedAssetPanel({
     }
   };
 
-  if (!isOpen) {
-    return null;
-  }
 
   return (
-    <div className="h-full w-full bg-background text-foreground flex flex-col">
-          <CardHeader className="border-b py-2">
+    <div className="h-full w-full bg-background text-foreground flex flex-col p-4">
+          <CardHeader className="p-0 pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-3 text-lg">
                 <ImageIcon className="w-5 h-5 text-primary" />
@@ -174,21 +165,13 @@ export default function AdvancedAssetPanel({
                     <List className="w-4 h-4" />
                     </Button>
                 </div>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onToggle}
-                    className="h-8 w-8"
-                >
-                    <X className="w-5 h-5" />
-                </Button>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-0 flex-1 flex overflow-hidden">
             <div className="flex h-full w-full">
-              <div className="w-56 border-r p-2 overflow-y-auto">
+              <div className="w-56 border-r pr-2 mr-2 overflow-y-auto">
                 <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2">Categories</h3>
                 <div className="space-y-1">
                   {categories.map((category) => (
@@ -231,7 +214,7 @@ export default function AdvancedAssetPanel({
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto">
                 <Tabs defaultValue="gallery" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="gallery">Sample Gallery</TabsTrigger>
@@ -240,7 +223,7 @@ export default function AdvancedAssetPanel({
 
                   <TabsContent value="gallery">
                     {viewMode === 'grid' ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {filteredImages.map((image) => (
                           <motion.div
                             key={image.id}
@@ -296,7 +279,7 @@ export default function AdvancedAssetPanel({
                   </TabsContent>
                   <TabsContent value="uploaded">
                      {viewMode === 'grid' ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {uploadedImages.map((image) => (
                           <motion.div
                             key={image.id}

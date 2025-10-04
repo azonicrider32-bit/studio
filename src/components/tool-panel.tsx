@@ -111,7 +111,6 @@ const tools: (typeof toolDetails)[keyof typeof toolDetails][] = [
 interface ToolPanelProps {
   activeTool: Tool;
   setActiveTool: (tool: Tool) => void;
-  onToggleAssetDrawer: () => void;
   showHotkeys: boolean;
 }
 
@@ -189,7 +188,7 @@ const ToolButtonWithProgressiveHover = ({
 };
 
 
-export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, showHotkeys }: ToolPanelProps) {
+export function ToolPanel({ activeTool, setActiveTool, showHotkeys }: ToolPanelProps) {
   
   return (
     <div className="h-full flex-shrink-0 w-20 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
@@ -224,19 +223,6 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, show
                 </TooltipTrigger>
                 <TooltipContent side="right">
                     <p>Global Settings</p>
-                </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={onToggleAssetDrawer} className="h-12 w-12 relative ps-tool-icon-container bg-transparent hover:bg-white/10">
-                        <div className="ps-tool-icon">
-                            <ImageIcon className="h-5 w-5 ps-tool-icon__icon" />
-                        </div>
-                        {showHotkeys && <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">O</span>}
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                    <p>Asset Library (O)</p>
                 </TooltipContent>
             </Tooltip>
           </TooltipProvider>

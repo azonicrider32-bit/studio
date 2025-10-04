@@ -46,7 +46,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { AssetDrawer } from "./asset-drawer"
 import { Button } from "./ui/button"
 import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
 import {
@@ -80,9 +79,10 @@ import { useAuth, useUser } from "@/firebase"
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import { ProgressiveHover } from "./ui/progressive-hover"
+import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
-type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
+type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets';
 type BottomPanel = 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
 
 interface WorkspaceState {
@@ -123,7 +123,6 @@ const createNewWorkspace = (id: string, name: string, imageUrl?: string): Worksp
 
 function ProSegmentAIContent() {
   const [activeTool, setActiveTool] = React.useState<Tool>("line")
-  const [isAssetDrawerOpen, setIsAssetDrawerOpen] = React.useState(false);
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
   const [isRightPanelOpen, setIsRightPanelOpen] = React.useState(true);
   const isResizingRef = React.useRef(false);
@@ -491,7 +490,7 @@ function ProSegmentAIContent() {
 
   const handleShelfClick = (panel: TopPanel | BottomPanel) => {
     setIsRightPanelOpen(true);
-    if (['zoom', 'feather', 'layers', 'ai'].includes(panel)) {
+    if (['zoom', 'feather', 'layers', 'ai', 'assets'].includes(panel)) {
       setActiveTopPanel(panel as TopPanel);
     } else {
       setActiveBottomPanel(panel as BottomPanel);
@@ -572,6 +571,7 @@ function ProSegmentAIContent() {
                 }}
             />
         }
+        {activeTopPanel === "assets" && <AdvancedAssetPanel onImageSelect={handleImageSelect} />}
         {activeTopPanel === "ai" && (
           <Tabs defaultValue="segment" className="flex h-full flex-col">
             <TabsList className="grid w-full grid-cols-3">
@@ -625,6 +625,7 @@ function ProSegmentAIContent() {
   const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   
   const topPanelIcons = [
+    { id: 'assets', icon: ImageIcon, label: 'Asset Library (O)' },
     { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)' },
     { id: 'feather', icon: FeatherIcon, label: 'Feather & Edges (F)' },
     { id: 'layers', icon: LayersIcon, label: 'Layers (L)' },
@@ -686,7 +687,6 @@ function ProSegmentAIContent() {
         <ToolPanel
           activeTool={activeTool}
           setActiveTool={setActiveTool}
-          onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
           showHotkeys={showHotkeyLabels}
         />
       </div>
@@ -888,7 +888,7 @@ function ProSegmentAIContent() {
                 
                 <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
                     <Tabs value={activeTopPanel || 'none'} className="w-full">
-                      <TabsList className="grid w-full grid-cols-4">
+                      <TabsList className="grid w-full grid-cols-5">
                           {topPanelIcons.map(({id, icon: Icon, label}) => (
                             <TabsTrigger key={id} value={id} className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === id ? null : id as TopPanel)}>
                                <ProgressiveHover initialContent={<p>{label}</p>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
@@ -935,13 +935,6 @@ function ProSegmentAIContent() {
             </div>
         </div>
       )}
-
-      <AssetDrawer
-          isOpen={isAssetDrawerOpen}
-          onToggle={() => setIsAssetDrawerOpen(prev => !prev)}
-          onImageSelect={handleImageSelect}
-          rightPanelWidth={isRightPanelOpen ? rightPanelWidth : 0}
-      />
     </div>
   )
 }
