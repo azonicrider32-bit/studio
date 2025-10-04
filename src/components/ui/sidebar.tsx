@@ -4,7 +4,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { PanelLeft } from "lucide-react"
+import { PanelLeft, ChevronLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -371,14 +371,26 @@ SidebarInput.displayName = "SidebarInput"
 const SidebarHeader = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
+  const { state, toggleSidebar } = useSidebar();
   return (
     <div
       ref={ref}
       data-sidebar="header"
       className={cn("flex flex-col gap-2 p-2", className)}
       {...props}
-    />
+    >
+      <div className="flex items-center justify-between">
+        <div className={cn("flex-1", state === 'collapsed' && 'hidden')}>
+            {children}
+        </div>
+        <SidebarTrigger asChild className={cn(state === 'collapsed' && 'hidden')}>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+                <ChevronLeft />
+            </Button>
+        </SidebarTrigger>
+      </div>
+    </div>
   )
 })
 SidebarHeader.displayName = "SidebarHeader"

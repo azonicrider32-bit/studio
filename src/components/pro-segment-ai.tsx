@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -144,7 +145,7 @@ function ProSegmentAIContent() {
   const activeWorkspace = workspaces.find(ws => ws.id === activeWorkspaceId);
   const activeWorkspaceIndex = workspaces.findIndex(ws => ws.id === activeWorkspaceId);
   
-  const { state: sidebarState, toggleSidebar } = useSidebar();
+  const { state: sidebarState } = useSidebar();
   const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(false);
 
 
@@ -649,14 +650,17 @@ function ProSegmentAIContent() {
           activeTool={activeTool}
           setActiveTool={setActiveTool}
           onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-          onToggleSidebar={toggleSidebar}
           showHotkeys={showHotkeyLabels}
         />
       </div>
 
       <div className="absolute top-0 left-0 h-full z-40">
         <Sidebar collapsible="icon">
-          <SidebarHeader/>
+          <SidebarHeader>
+             <div className="flex items-center justify-between">
+                <div className="font-headline font-bold text-lg tracking-tight">Settings</div>
+            </div>
+          </SidebarHeader>
           <SidebarContent>
               {renderLeftPanelContent()}
           </SidebarContent>
