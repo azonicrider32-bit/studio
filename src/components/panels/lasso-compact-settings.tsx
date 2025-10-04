@@ -84,14 +84,14 @@ export function LassoCompactSettings({ settings, onSettingsChange }: { settings:
     <div className="p-2 space-y-4 h-full flex flex-col justify-around">
       <TooltipProvider>
         <div className="flex justify-around gap-1">
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapRadius" label="R" max={50} step={1} unit="px"/>
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapThreshold" label="T" max={1} step={0.05} />
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="directionalStrength" label="D" max={1} step={0.05} />
+            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
+            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
+            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
         </div>
         <div className="flex justify-around gap-1">
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="cursorInfluence" label="C" max={1} step={0.05} />
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="traceInfluence" label="T" max={1} step={0.05} />
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="colorInfluence" label="Co" max={1} step={0.05} />
+            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
+            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
+            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="colorInfluence" label="Color" max={1} step={0.05} />
         </div>
       </TooltipProvider>
     </div>
