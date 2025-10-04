@@ -31,6 +31,9 @@ import {
   Keyboard,
   ArrowBigUpDash,
   ArrowBigRightDash,
+  Wand2,
+  Camera,
+  Scissors,
 } from "lucide-react"
 
 import {
@@ -546,13 +549,15 @@ function ProSegmentAIContent() {
             />
         }
         {activeTopPanel === "ai" && (
-          <Tabs defaultValue="models" className="flex h-full flex-col">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="models">Models</TabsTrigger>
-                <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
+          <Tabs defaultValue="segment" className="flex h-full flex-col">
+            <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="segment" className="text-xs gap-1"><Scissors className="w-4 h-4" />Segment</TabsTrigger>
+                <TabsTrigger value="generate" className="text-xs gap-1"><Wand2 className="w-4 h-4"/>Generate</TabsTrigger>
+                <TabsTrigger value="enhance" className="text-xs gap-1"><Camera className="w-4 h-4"/>Enhance</TabsTrigger>
             </TabsList>
-            <TabsContent value="models" className="m-0 flex-1"><AiModelsPanel imageUrl={activeWorkspace?.imageUrl} setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))} setImageUrl={handleImageSelect} /></TabsContent>
-            <TabsContent value="inpaint" className="m-0 flex-1"><InpaintingPanel imageUrl={activeWorkspace?.imageUrl} getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined} onGenerationComplete={(newUrl) => handleImageSelect(newUrl)} clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined} /></TabsContent>
+            <TabsContent value="segment" className="m-0 flex-1"><AiModelsPanel imageUrl={activeWorkspace?.imageUrl} setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))} setImageUrl={handleImageSelect} /></TabsContent>
+            <TabsContent value="generate" className="m-0 flex-1"><InpaintingPanel imageUrl={activeWorkspace?.imageUrl} getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined} onGenerationComplete={(newUrl) => handleImageSelect(newUrl)} clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined} /></TabsContent>
+            <TabsContent value="enhance" className="m-0 flex-1"><div className="p-4 text-center text-sm text-muted-foreground">Upscaling and enhancement tools coming soon.</div></TabsContent>
           </Tabs>
         )}
       </div>
@@ -931,3 +936,6 @@ export function ProSegmentAI() {
 
 
 
+
+
+      
