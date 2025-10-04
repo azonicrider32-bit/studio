@@ -595,30 +595,34 @@ function ProSegmentAIContent() {
   return (
     <div className="h-screen w-screen flex bg-background relative overflow-hidden">
       
-      <div className="absolute top-12 z-30" style={{ left: `calc(${sidebarWidthVar})` }}>
+      <div className="absolute top-0 left-0 h-full z-30 flex">
+        <Sidebar collapsible="icon">
+          <SidebarHeader/>
+          <SidebarContent>
+              {renderLeftPanelContent()}
+          </SidebarContent>
+        </Sidebar>
         <ToolPanel
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-            onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-            onToggleSidebar={toggleSidebar}
-            showHotkeys={showHotkeyLabels}
+          activeTool={activeTool}
+          setActiveTool={setActiveTool}
+          onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+          onToggleSidebar={toggleSidebar}
+          showHotkeys={showHotkeyLabels}
         />
       </div>
 
-      <div className="absolute top-0 left-0 h-full z-20 flex">
-          <Sidebar collapsible="icon">
-              <SidebarHeader/>
-              <SidebarContent>
-                  {renderLeftPanelContent()}
-              </SidebarContent>
-          </Sidebar>
-      </div>
 
       <main 
         className="flex-1 h-full w-full bg-muted/30 overflow-hidden relative transition-all duration-200"
-        style={{ paddingLeft: `calc(${sidebarWidthVar})`, marginRight: `${rightPanelWidth}px` }}
+        style={{ marginRight: `${rightPanelWidth}px` }}
       >
-        <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
+        <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
+          style={{
+              left: sidebarState === 'expanded' ? `calc(${sidebarWidthVar} + 80px)` : '80px',
+              right: `${rightPanelWidth}px`,
+              transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
+          }}
+        >
           <div className="flex items-center gap-4 flex-1">
           <WorkspaceTabs 
               workspaces={workspaces}
@@ -743,7 +747,7 @@ function ProSegmentAIContent() {
           </div>
         </header>
 
-        <div className="h-full">
+        <div className="h-full pt-12">
           <div className={cn("h-full w-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
               <ImageCanvas 
               key={activeWorkspace.id}
@@ -946,6 +950,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
