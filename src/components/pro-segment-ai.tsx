@@ -648,7 +648,7 @@ function ProSegmentAIContent() {
 
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
-      <main className="absolute inset-0 pt-12">
+      <main className="absolute inset-y-0 left-0 right-0 pt-12">
           <ImageCanvas 
             key={activeWorkspace.id}
             imageUrl={activeWorkspace.imageUrl}
@@ -688,9 +688,10 @@ function ProSegmentAIContent() {
       </main>
       
       <div 
-        className="absolute top-12 bottom-0 z-30 flex"
+        className="absolute bottom-0 z-30 flex"
         style={{
             left: `calc(${sidebarWidthVar})`,
+            top: '3rem',
             transition: 'left 0.2s ease-in-out',
           }}
         >
@@ -707,7 +708,7 @@ function ProSegmentAIContent() {
         />
       </div>
 
-      <div className="absolute top-12 left-0 h-[calc(100vh-3rem)] z-40">
+      <div className="absolute left-0 h-[calc(100vh-3rem)] top-12 z-40">
         <Sidebar collapsible="icon">
           <SidebarHeader>
              <div className="flex items-center justify-between">
@@ -858,7 +859,7 @@ function ProSegmentAIContent() {
         </div>
       </header>
       
-      <div className="fixed top-12 right-0 bottom-0 flex z-20">
+      <div className="fixed right-0 bottom-0 flex z-20" style={{ top: '3rem'}}>
         {isRightPanelOpen && (
           <div
             className="flex flex-col border-l border-border/50 bg-background transition-all"
@@ -944,10 +945,9 @@ function WorkspaceTabs({
           key={ws.id}
           onClick={() => onWorkspaceSelect(ws.id)}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 border-b-2 cursor-pointer text-sm font-medium transition-colors",
-            "rounded-t-md border",
+            "flex items-center gap-2 px-4 py-2 border cursor-pointer text-sm font-medium transition-colors rounded-t-md",
             activeWorkspaceId === ws.id 
-              ? "bg-muted border-primary border-b-transparent text-primary" 
+              ? "bg-background border-border/50 border-b-transparent text-foreground" 
               : "border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           )}
         >
@@ -1014,6 +1014,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
