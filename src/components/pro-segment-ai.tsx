@@ -858,80 +858,67 @@ function ProSegmentAIContent() {
         </div>
       </header>
       
-      <div 
-        className="fixed top-12 right-0 bottom-0 flex z-20"
-      >
-          <div 
-            className={cn("transition-all duration-300 ease-in-out flex")}
+      <div className="fixed top-12 right-0 bottom-0 flex z-20">
+        {isRightPanelOpen && (
+          <div
+            className="flex flex-col border-l border-border/50 bg-background transition-all"
+            style={{ width: `${rightPanelWidth}px` }}
           >
-              <div 
-                  className={cn("flex flex-col border-l border-border/50 bg-background transition-all", isRightPanelOpen && "w-[--panel-width]")}
-                  style={{'--panel-width': `${rightPanelWidth}px`} as React.CSSProperties}
-              >
-                  <div 
-                      onMouseDown={handleMouseDownResize}
-                      className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50", !isRightPanelOpen && "hidden")}
-                  >
-                      <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
-                  </div>
-                  
-                  <div className="flex h-full">
-                      <div className="w-14 flex flex-col items-center justify-between border-r border-border/50 bg-background/80 backdrop-blur-sm p-2">
-                          <div className="flex flex-col gap-2">
-                              <TooltipProvider>
-                                  <Tooltip>
-                                      <TooltipTrigger asChild>
-                                          <Button variant="ghost" size="icon" onClick={() => setIsRightPanelOpen(p => !p)}>
-                                              {isRightPanelOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
-                                          </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="right"><p>{isRightPanelOpen ? 'Close Panel' : 'Open Panel'}</p></TooltipContent>
-                                  </Tooltip>
-                                  <Separator />
-                                  {topPanelIcons.map(({id, icon: Icon, label}) => (
-                                      <Tooltip key={id}>
-                                          <TooltipTrigger asChild>
-                                              <Button variant={activeTopPanel === id && isRightPanelOpen ? "secondary" : "ghost"} size="icon" onClick={() => handleShelfClick(id as TopPanel)}>
-                                                  <Icon className="h-5 w-5"/>
-                                              </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent side="right"><p>{label}</p></TooltipContent>
-                                      </Tooltip>
-                                  ))}
-                              </TooltipProvider>
-                          </div>
-                          <div className="flex flex-col gap-2">
-                              <TooltipProvider>
-                                  {bottomPanelIcons.map(({id, icon: Icon, label}) => (
-                                      <Tooltip key={id}>
-                                          <TooltipTrigger asChild>
-                                              <Button variant={activeBottomPanel === id && isRightPanelOpen ? "secondary" : "ghost"} size="icon" onClick={() => handleShelfClick(id as BottomPanel)}>
-                                                  <Icon className="h-5 w-5"/>
-                                              </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent side="right"><p>{label}</p></TooltipContent>
-                                      </Tooltip>
-                                  ))}
-                              </TooltipProvider>
-                          </div>
-                      </div>
-
-                      {isRightPanelOpen && (
-                          <div className="flex-1 flex flex-col min-h-0">
-                              <div className={cn("flex-1 flex flex-col min-h-0", !activeTopPanel && "hidden")}>
-                                  {activeTopPanel && renderTopPanelContent()}
-                              </div>
-                              
-                              {activeTopPanel && activeBottomPanel && <Separator />}
-
-                              <div className={cn("flex-1 flex flex-col min-h-0", !activeBottomPanel && "hidden")}>
-                                  {activeBottomPanel && renderBottomPanelContent()}
-                              </div>
-                          </div>
-                      )}
-                  </div>
-              </div>
+            <div
+              onMouseDown={handleMouseDownResize}
+              className="absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50"
+            >
+              <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
+            </div>
+            <div className="flex-1 flex flex-col min-h-0">
+              {activeTopPanel && renderTopPanelContent()}
+            </div>
+            {activeTopPanel && activeBottomPanel && <Separator />}
+            <div className="flex-1 flex flex-col min-h-0">
+              {activeBottomPanel && renderBottomPanelContent()}
+            </div>
           </div>
+        )}
+
+        <div className="w-14 flex flex-col items-center justify-between border-l border-border/50 bg-background/80 backdrop-blur-sm p-2">
+          <div className="flex flex-col gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={() => setIsRightPanelOpen(p => !p)}>
+                    {isRightPanelOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left"><p>{isRightPanelOpen ? 'Close Panel' : 'Open Panel'}</p></TooltipContent>
+              </Tooltip>
+              <Separator />
+              {topPanelIcons.map(({id, icon: Icon, label}) => (
+                <Tooltip key={id}>
+                  <TooltipTrigger asChild>
+                    <Button variant={activeTopPanel === id && isRightPanelOpen ? "secondary" : "ghost"} size="icon" onClick={() => handleShelfClick(id as TopPanel)}>
+                      <Icon className="h-5 w-5"/>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left"><p>{label}</p></TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+          </div>
+          <div className="flex flex-col gap-2">
+            <TooltipProvider>
+              {bottomPanelIcons.map(({id, icon: Icon, label}) => (
+                <Tooltip key={id}>
+                  <TooltipTrigger asChild>
+                    <Button variant={activeBottomPanel === id && isRightPanelOpen ? "secondary" : "ghost"} size="icon" onClick={() => handleShelfClick(id as BottomPanel)}>
+                      <Icon className="h-5 w-5"/>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left"><p>{label}</p></TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -1027,6 +1014,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
