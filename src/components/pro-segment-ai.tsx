@@ -684,7 +684,7 @@ function ProSegmentAIContent() {
             clearSelectionRef={clearSelectionRef}
             onLassoSettingChange={handleLassoSettingsChange}
             onMagicWandSettingsChange={handleMagicWandSettingsChange}
-            onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+            onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
             canvasMousePos={canvasMousePos}
             setCanvasMousePos={setCanvasMousePos}
             getCanvasRef={canvasRef}
@@ -727,16 +727,6 @@ function ProSegmentAIContent() {
 
       <div className="absolute left-0 top-12 h-[calc(100vh-3rem)]">
         <Sidebar collapsible="icon">
-          <SidebarHeader>
-             <div className="flex items-center justify-between">
-                <div className="font-headline font-bold text-lg tracking-tight">Settings</div>
-                <SidebarTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <ChevronLeft />
-                    </Button>
-                </SidebarTrigger>
-            </div>
-          </SidebarHeader>
           <SidebarContent>
               {renderLeftPanelContent()}
           </SidebarContent>
@@ -745,16 +735,11 @@ function ProSegmentAIContent() {
 
       <header className="absolute top-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
           style={{
-            left: '0px',
+            left: sidebarWidthVar,
             right: '0px',
             transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
           }}
         >
-        <div className="h-full w-20 flex-shrink-0 flex items-center justify-start pl-2">
-            <div className="font-headline font-black text-4xl text-primary">
-                Ps
-            </div>
-        </div>
         <div className="flex items-center gap-4 flex-1">
             <WorkspaceTabs 
                 workspaces={workspaces}
@@ -879,20 +864,14 @@ function ProSegmentAIContent() {
         </div>
       </header>
       
-      <div className="fixed right-14 bottom-0 flex z-20" style={{ top: '3rem'}}>
+      <div className="fixed right-0 top-12 flex h-[calc(100vh-3rem)]">
         <div 
           className={cn(
-            "h-full flex flex-col border-l border-border/50 bg-background transition-all",
+            "h-full flex flex-col border-l bg-background/80 backdrop-blur-sm transition-all",
             isRightPanelOpen ? "w-auto" : "w-0"
           )}
           style={{ width: isRightPanelOpen ? `${rightPanelWidth}px` : '0px'}}
         >
-            <div
-              onMouseDown={handleMouseDownResize}
-              className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50", !isRightPanelOpen && "hidden")}
-            >
-              <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
-            </div>
             <div className="flex-1 flex flex-col min-h-0">
               {activeTopPanel && renderTopPanelContent()}
             </div>
@@ -901,8 +880,7 @@ function ProSegmentAIContent() {
               {activeBottomPanel && renderBottomPanelContent()}
             </div>
         </div>
-      </div>
-      <div className="fixed right-0 h-[calc(100vh-3rem)] top-12 w-14 flex flex-col items-center justify-between border-l border-border/50 bg-background/80 backdrop-blur-sm p-2 z-30">
+        <div className="h-full w-14 flex flex-col items-center justify-between border-l bg-background/80 backdrop-blur-sm p-2 z-10">
           <div className="flex flex-col gap-2">
             <TooltipProvider>
               <Tooltip>
@@ -960,6 +938,7 @@ function ProSegmentAIContent() {
                 </div>
             </TooltipProvider>
           </div>
+      </div>
       </div>
     </div>
   )
@@ -1054,6 +1033,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
