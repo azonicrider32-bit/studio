@@ -604,6 +604,20 @@ function ProSegmentAIContent() {
           </Sidebar>
       </div>
 
+      <div 
+        className="absolute top-12 h-full z-20"
+        style={{ left: `calc(${sidebarWidthVar})` }}
+      >
+        <ToolPanel
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+            onToggleSidebar={toggleSidebar}
+            showHotkeys={showHotkeyLabels}
+        />
+      </div>
+
+
       <main 
         className="flex-1 h-full w-full bg-muted/30 overflow-hidden relative transition-all duration-200"
         style={{ paddingLeft: `calc(${sidebarWidthVar})`, paddingRight: `${rightPanelWidth + 80}px` }}
@@ -735,7 +749,7 @@ function ProSegmentAIContent() {
           </div>
         </header>
 
-        <div className="h-full">
+        <div className="h-full pt-12">
           <div className={cn("h-full w-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
               <ImageCanvas 
               key={activeWorkspace.id}
@@ -818,13 +832,6 @@ function ProSegmentAIContent() {
       <div 
         className="fixed top-0 right-0 h-full flex z-20"
       >
-        <ToolPanel
-            activeTool={activeTool}
-            setActiveTool={setActiveTool}
-            onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-            onToggleSidebar={toggleSidebar}
-            showHotkeys={showHotkeyLabels}
-        />
         <div className="flex flex-col border-l border-border/50 bg-background" style={{ width: rightPanelWidth }}>
             <div 
             onMouseDown={handleMouseDownResize}
@@ -945,6 +952,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
