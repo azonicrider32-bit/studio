@@ -23,8 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirebase, useUser } from '@/firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 
 const categories = [
   { id: 'all', name: 'All Images', icon: ImageIcon },
@@ -69,7 +68,7 @@ export default function AdvancedAssetPanel({
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || !user || !firebaseApp) return;
+    if (!event.target.files || !user || !firebaseApp || !firestore) return;
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
@@ -102,9 +101,7 @@ export default function AdvancedAssetPanel({
           gcsPath: gcsPath,
           uploadDate: new Date().toISOString(),
         };
-
-        setUploadedImages(prev => [...prev, newImage]);
-
+        
         // Store metadata in Firestore
         const assetDocRef = doc(firestore, `users/${user.uid}/assets`, assetId);
         const assetData = {
@@ -120,8 +117,10 @@ export default function AdvancedAssetPanel({
           accessControl: 'private',
           tags: ['uploaded'],
         };
+        
+        await setDoc(assetDocRef, assetData, { merge: true });
 
-        setDocumentNonBlocking(assetDocRef, assetData, { merge: true });
+        setUploadedImages(prev => [...prev, newImage]);
       }
     } catch (error) {
       console.error('Upload error:', error);
