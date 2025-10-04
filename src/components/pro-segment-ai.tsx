@@ -855,35 +855,19 @@ function ProSegmentAIContent() {
               )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
               </DropdownMenuContent>
           </DropdownMenu>
-           <div className={cn("ml-auto flex flex-col gap-0.5", isRightPanelOpen && "hidden")}>
-              <div className="flex gap-1">
-                {topPanelIcons.map(({id, icon: Icon, label}) => (
+           <div className={cn("ml-auto flex items-center gap-1", isRightPanelOpen && "hidden")}>
+                {[...topPanelIcons, ...bottomPanelIcons].map(({id, icon: Icon, label}) => (
                    <TooltipProvider key={id}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShelfClick(id as TopPanel)}>
-                              <Icon className="h-4 w-4"/>
+                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShelfClick(id as TopPanel | BottomPanel)}>
+                              <Icon className="h-5 w-5"/>
                            </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>{label}</p></TooltipContent>
                       </Tooltip>
                    </TooltipProvider>
                 ))}
-              </div>
-              <div className="flex gap-1">
-                 {bottomPanelIcons.map(({id, icon: Icon, label}) => (
-                   <TooltipProvider key={id}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShelfClick(id as BottomPanel)}>
-                              <Icon className="h-4 w-4"/>
-                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{label}</p></TooltipContent>
-                      </Tooltip>
-                   </TooltipProvider>
-                ))}
-              </div>
             </div>
         </div>
       </header>
@@ -900,52 +884,59 @@ function ProSegmentAIContent() {
                 <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
                 </div>
                 
-                <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
-                    <Tabs value={activeTopPanel || 'none'} className="w-full">
-                      <TabsList className="grid w-full grid-cols-6">
-                           <Button variant="ghost" size="icon" className="h-full w-full rounded-none" onClick={() => setIsRightPanelOpen(false)}>
-                                <PanelRightClose className="h-5 w-5" />
-                            </Button>
-                          {topPanelIcons.map(({id, icon: Icon, label}) => (
-                            <TabsTrigger key={id} value={id} className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === id ? null : id as TopPanel)}>
-                               <ProgressiveHover initialContent={<div className="text-center"><p className="font-semibold">{label.split('(')[0]}</p><p className="text-muted-foreground">{label.split('(')[1]?.slice(0,-1)}</p></div>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
-                                <div className="flex items-center justify-center w-full h-full">
-                                    <Icon className="h-5 w-5"/>
-                                </div>
-                               </ProgressiveHover>
-                            </TabsTrigger>
-                          ))}
-                      </TabsList>
-                    </Tabs>
-                </div>
-
-                <div className="flex-1 flex flex-col min-h-0">
-                    <div className={cn("flex-1 flex flex-col min-h-0", !activeTopPanel && "hidden")}>
-                        {activeTopPanel && renderTopPanelContent()}
+                <div className="flex h-full">
+                    <div className="w-14 flex flex-col items-center justify-between border-r border-border/50 bg-background/80 backdrop-blur-sm p-2">
+                        <div className="flex flex-col gap-2">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setIsRightPanelOpen(false)}>
+                                            <PanelRightClose className="h-5 w-5" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right"><p>Close Panel</p></TooltipContent>
+                                </Tooltip>
+                                <Separator />
+                                {topPanelIcons.map(({id, icon: Icon, label}) => (
+                                    <Tooltip key={id}>
+                                        <TooltipTrigger asChild>
+                                            <Button variant={activeTopPanel === id ? "secondary" : "ghost"} size="icon" onClick={() => setActiveTopPanel(p => p === id ? null : id as TopPanel)}>
+                                                <Icon className="h-5 w-5"/>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right"><p>{label}</p></TooltipContent>
+                                    </Tooltip>
+                                ))}
+                            </TooltipProvider>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <TooltipProvider>
+                                {bottomPanelIcons.map(({id, icon: Icon, label}) => (
+                                    <Tooltip key={id}>
+                                        <TooltipTrigger asChild>
+                                            <Button variant={activeBottomPanel === id ? "secondary" : "ghost"} size="icon" onClick={() => setActiveBottomPanel(p => p === id ? null : id as BottomPanel)}>
+                                                <Icon className="h-5 w-5"/>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right"><p>{label}</p></TooltipContent>
+                                    </Tooltip>
+                                ))}
+                            </TooltipProvider>
+                        </div>
                     </div>
-                    
-                    {activeTopPanel && activeBottomPanel && <Separator />}
+                    <div className="flex-1 flex flex-col min-h-0">
+                        <div className={cn("flex-1 flex flex-col min-h-0", !activeTopPanel && "hidden")}>
+                            {activeTopPanel && renderTopPanelContent()}
+                        </div>
+                        
+                        {activeTopPanel && activeBottomPanel && <Separator />}
 
-                    <div className={cn("flex-1 flex flex-col min-h-0", !activeBottomPanel && "hidden")}>
-                        {activeBottomPanel && renderBottomPanelContent()}
+                        <div className={cn("flex-1 flex flex-col min-h-0", !activeBottomPanel && "hidden")}>
+                            {activeBottomPanel && renderBottomPanelContent()}
+                        </div>
                     </div>
                 </div>
 
-                <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
-                    <Tabs value={activeBottomPanel || 'none'} className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            {bottomPanelIcons.slice(0,4).map(({id, icon: Icon, label}) => (
-                                <TabsTrigger key={id} value={id} className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === id ? null : id as BottomPanel)}>
-                                    <ProgressiveHover initialContent={<div className="text-center"><p className="font-semibold">{label.split('(')[0]}</p><p className="text-muted-foreground">{label.split('(')[1]?.slice(0,-1)}</p></div>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
-                                        <div className="flex items-center justify-center w-full h-full">
-                                            <Icon className="h-5 w-5"/>
-                                        </div>
-                                    </ProgressiveHover>
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </Tabs>
-                </div>
             </div>
         </div>
       )}
@@ -1043,6 +1034,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
