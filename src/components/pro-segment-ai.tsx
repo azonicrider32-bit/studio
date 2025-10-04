@@ -690,7 +690,7 @@ function ProSegmentAIContent() {
       </main>
       
       <div 
-        className="absolute bottom-0 z-30 flex"
+        className="absolute bottom-0 z-30"
         style={{
             left: `calc(${sidebarWidthVar})`,
             top: '3rem',
@@ -736,7 +736,7 @@ function ProSegmentAIContent() {
           }}
         >
         <div className="h-full w-20 flex-shrink-0 flex items-center justify-start pl-2">
-            <div className="font-headline font-black text-4xl text-red-500">
+            <div className="font-headline font-black text-4xl text-primary">
                 Ps
             </div>
         </div>
@@ -1019,6 +1019,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
