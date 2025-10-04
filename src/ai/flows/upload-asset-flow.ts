@@ -8,15 +8,14 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { getStorage } from 'firebase-admin/storage';
 import { initializeApp, getApps } from 'firebase-admin/app';
-import { firebaseConfig } from '@/firebase/config';
 import { UploadAssetInputSchema, type UploadAssetInput, type UploadAssetOutput, UploadAssetOutputSchema } from '@/lib/types';
 
 
 // Ensure Firebase Admin is initialized only once.
 if (!getApps().length) {
-  initializeApp({
-    storageBucket: firebaseConfig.storageBucket,
-  });
+  // Call initializeApp without arguments. 
+  // It will automatically use the service account credentials from the environment.
+  initializeApp();
 }
 
 export async function uploadAsset(input: UploadAssetInput): Promise<UploadAssetOutput> {
