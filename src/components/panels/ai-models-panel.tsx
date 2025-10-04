@@ -14,7 +14,7 @@ import { BrainCircuit, GitCompareArrows } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { compareAiModels, CompareAiModelsOutput } from "@/ai/flows/compare-ai-models"
-import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationOutput } from "@/ai/flows/magic-wand-assisted-segmentation"
+import { magicWandAssistedSegmentation } from "@/ai/flows/magic-wand-assisted-segmentation"
 import { Skeleton } from "../ui/skeleton"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { handleApiError } from "@/lib/error-handling"
@@ -43,6 +43,7 @@ export function AiModelsPanel({ imageUrl, setSegmentationMask, setImageUrl }: Ai
     setIsProcessing(true)
     setComparison(null)
     setSegmentationMask(null);
+    toast({ title: "AI is thinking...", description: `Running segmentation with ${selectedModel}.`})
     try {
       const res = await magicWandAssistedSegmentation({
         photoDataUri: imageUrl,
@@ -72,7 +73,7 @@ export function AiModelsPanel({ imageUrl, setSegmentationMask, setImageUrl }: Ai
     setIsComparing(true)
     setComparison(null)
     setSegmentationMask(null);
-
+    toast({ title: "Comparing AI Models..." })
     try {
       const res = await compareAiModels({
         photoDataUri: imageUrl,

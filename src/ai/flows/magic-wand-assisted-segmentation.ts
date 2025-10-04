@@ -49,7 +49,7 @@ const magicWandAssistedSegmentationFlow = ai.defineFlow(
           media: { url: input.photoDataUri },
         }];
         
-      let promptText = `You are an expert image segmentation assistant. Your task is to create a color-coded segmentation map.
+      let promptText = `You are an expert image segmentation assistant. Your task is to create a color-coded segmentation map where every distinct object is a different solid color.
 Analyze the image and identify the following distinct objects: ${input.contentType || 'the main subject and all other distinct objects in the image'}.
 For each distinct object you identify, assign it a unique, solid color (e.g., red, blue, green, yellow, etc.) and create a mask.
 The final output should be a single image where each segmented object is filled with its assigned solid color at 100% opacity. This will be used as a map for programmatic selection, so colors must be distinct and solid.`;
