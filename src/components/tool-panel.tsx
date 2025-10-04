@@ -50,7 +50,7 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onTo
   const { state: sidebarState } = useSidebar();
   
   return (
-    <div className="flex-shrink-0 w-20 flex flex-col items-center justify-between gap-2 border-r border-border/50 bg-background/80 backdrop-blur-sm p-2 z-30">
+    <div className="flex-shrink-0 w-20 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
       <div className="flex flex-col items-center gap-2">
         <div className="h-14 w-14 flex items-center justify-center">
             <div className="font-headline font-black text-4xl text-red-500">
@@ -66,7 +66,7 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onTo
                     size="icon"
                     onClick={() => setActiveTool(tool.id)}
                     disabled={tool.disabled}
-                    className="h-12 w-12 relative ps-tool-icon-container"
+                    className="h-12 w-12 relative ps-tool-icon-container bg-transparent hover:bg-white/10"
                     data-state={activeTool === tool.id ? "on" : "off"}
                 >
                     <div className="ps-tool-icon">
@@ -83,11 +83,11 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onTo
         </TooltipProvider>
       </div>
       <div className="flex flex-col items-center gap-2">
-          <Separator />
+          <Separator className="bg-border/10"/>
           <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="h-12 w-12 relative ps-tool-icon-container">
+                    <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="h-12 w-12 relative ps-tool-icon-container bg-transparent hover:bg-white/10">
                         <div className="ps-tool-icon">
                             <PanelLeft className="h-5 w-5 ps-tool-icon__icon" />
                         </div>
@@ -99,7 +99,7 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onTo
             </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setActiveTool('settings')} className="h-12 w-12 relative ps-tool-icon-container" data-state={activeTool === 'settings' ? "on" : "off"}>
+                    <Button variant="ghost" size="icon" onClick={() => setActiveTool('settings')} className="h-12 w-12 relative ps-tool-icon-container bg-transparent hover:bg-white/10" data-state={activeTool === 'settings' ? "on" : "off"}>
                         <div className="ps-tool-icon">
                             <Settings2 className="h-5 w-5 ps-tool-icon__icon" />
                         </div>
@@ -111,7 +111,7 @@ export function ToolPanel({ activeTool, setActiveTool, onToggleAssetDrawer, onTo
             </Tooltip>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={onToggleAssetDrawer} className="h-12 w-12 relative ps-tool-icon-container">
+                    <Button variant="ghost" size="icon" onClick={onToggleAssetDrawer} className="h-12 w-12 relative ps-tool-icon-container bg-transparent hover:bg-white/10">
                         <div className="ps-tool-icon">
                             <ImageIcon className="h-5 w-5 ps-tool-icon__icon" />
                         </div>
