@@ -787,19 +787,18 @@ function ProSegmentAIContent() {
       </header>
       
       <div 
-        className="fixed top-0 right-0 h-full flex z-20"
+        className="fixed top-12 right-0 bottom-0 flex z-20"
       >
         <div className="flex flex-col border-l border-border/50 bg-background" style={{ width: rightPanelWidth }}>
             <div 
-            onMouseDown={handleMouseDownResize}
-            className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50")}
+              onMouseDown={handleMouseDownResize}
+              className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50")}
             >
-            <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
+              <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
             </div>
             
-            <div className={cn("flex flex-col min-h-0", activeTopPanel && activeBottomPanel ? "h-1/2" : "h-full")}>
-              <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
-                  <Tabs value={activeTopPanel || 'none'} className="w-full">
+            <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
+                <Tabs value={activeTopPanel || 'none'} className="w-full">
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-4">
                           <Tooltip><TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Zoom Panel (Z)</TooltipContent></Tooltip>
@@ -808,25 +807,31 @@ function ProSegmentAIContent() {
                           <Tooltip><TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span>}</TabsTrigger></TooltipTrigger><TooltipContent>AI Tools (A)</TooltipContent></Tooltip>
                       </TabsList>
                   </TooltipProvider>
-                  </Tabs>
-              </div>
-              {activeTopPanel && renderTopPanelContent()}
+                </Tabs>
             </div>
-            
-            <div className={cn("flex flex-col min-h-0", activeTopPanel && activeBottomPanel ? "h-1/2" : activeBottomPanel ? "h-full" : "h-0")}>
-              {activeTopPanel && activeBottomPanel && <Separator />}
-              {activeBottomPanel && renderBottomPanelContent()}
-              <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
-                  <Tabs value={activeBottomPanel || 'none'} className="w-full">
+
+            <div className="flex-1 flex flex-col min-h-0">
+                <div className={cn("flex flex-col min-h-0", activeTopPanel && !activeBottomPanel ? "h-full" : "h-1/2")}>
+                    {activeTopPanel && renderTopPanelContent()}
+                </div>
+                
+                {activeTopPanel && activeBottomPanel && <Separator />}
+
+                <div className={cn("flex flex-col min-h-0", activeBottomPanel && !activeTopPanel ? "h-full" : "h-1/2")}>
+                    {activeBottomPanel && renderBottomPanelContent()}
+                </div>
+            </div>
+
+            <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
+                <Tabs value={activeBottomPanel || 'none'} className="w-full">
                   <TooltipProvider>
                       <TabsList className="grid w-full grid-cols-3">
-                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
-                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span>}</TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
-                      <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span>}</TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
                       </TabsList>
                   </TooltipProvider>
-                  </Tabs>
-              </div>
+                </Tabs>
             </div>
         </div>
       </div>
@@ -915,3 +920,4 @@ export function ProSegmentAI() {
 
 
     
+
