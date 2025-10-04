@@ -547,7 +547,11 @@ function ProSegmentAIContent() {
         }
         {activeTopPanel === "ai" && (
           <Tabs defaultValue="models" className="flex h-full flex-col">
-            <TabsContent value="models" className="m-0 flex-1"><AiModelsPanel setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))} setImageUrl={handleImageSelect} /></TabsContent>
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="models">Models</TabsTrigger>
+                <TabsTrigger value="inpaint">Inpainting</TabsTrigger>
+            </TabsList>
+            <TabsContent value="models" className="m-0 flex-1"><AiModelsPanel imageUrl={activeWorkspace?.imageUrl} setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))} setImageUrl={handleImageSelect} /></TabsContent>
             <TabsContent value="inpaint" className="m-0 flex-1"><InpaintingPanel imageUrl={activeWorkspace?.imageUrl} getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined} onGenerationComplete={(newUrl) => handleImageSelect(newUrl)} clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined} /></TabsContent>
           </Tabs>
         )}
@@ -630,7 +634,7 @@ function ProSegmentAIContent() {
       </main>
       
       <div 
-        className="absolute top-12 bottom-0 z-30 flex"
+        className="absolute top-0 bottom-0 z-30 flex"
         style={{
             left: `calc(${sidebarWidthVar})`,
             transition: 'left 0.2s ease-in-out',
@@ -656,21 +660,23 @@ function ProSegmentAIContent() {
 
       <header className="absolute top-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
           style={{
-            left: sidebarState === 'expanded' ? `calc(${sidebarWidthVar})` : '0px',
+            left: '0px',
             right: `${rightPanelWidth}px`,
             transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
           }}
         >
-        <div className="flex items-center gap-4 flex-1">
-        <WorkspaceTabs 
-            workspaces={workspaces}
-            activeWorkspaceId={activeWorkspaceId}
-            onWorkspaceSelect={setActiveWorkspaceId}
-            onWorkspaceAdd={handleAddNewWorkspace}
-            onWorkspaceClose={handleCloseWorkspace}
-        />
-        </div>
-        <div className="flex items-center gap-2">
+         <div style={{ marginLeft: `calc(${sidebarWidthVar} + 5rem)`}}>
+            <div className="flex items-center gap-4 flex-1">
+                <WorkspaceTabs 
+                    workspaces={workspaces}
+                    activeWorkspaceId={activeWorkspaceId}
+                    onWorkspaceSelect={setActiveWorkspaceId}
+                    onWorkspaceAdd={handleAddNewWorkspace}
+                    onWorkspaceClose={handleCloseWorkspace}
+                />
+            </div>
+         </div>
+        <div className="flex items-center gap-2 ml-auto">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><ArrowBigUpDash /></Button></TooltipTrigger>
@@ -786,7 +792,7 @@ function ProSegmentAIContent() {
       </header>
       
       <div 
-        className="fixed top-12 right-0 bottom-0 flex z-20"
+        className="fixed top-0 right-0 bottom-0 flex z-20"
       >
         <div className="flex flex-col border-l border-border/50 bg-background" style={{ width: rightPanelWidth }}>
             <div 
@@ -919,6 +925,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 

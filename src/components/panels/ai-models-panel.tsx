@@ -22,29 +22,30 @@ import { handleApiError } from "@/lib/error-handling"
 type AIModel = "googleai/gemini-2.5-flash-image-preview" | "bodypix" | "deeplab" | "sam" | "sam2"
 
 interface AiModelsPanelProps {
+  imageUrl?: string;
   setSegmentationMask: (mask: string | null) => void;
   setImageUrl: (url: string) => void;
 }
 
 
-export function AiModelsPanel({ setSegmentationMask, setImageUrl }: AiModelsPanelProps) {
+export function AiModelsPanel({ imageUrl, setSegmentationMask, setImageUrl }: AiModelsPanelProps) {
   const [selectedModel, setSelectedModel] = React.useState<AIModel>("googleai/gemini-2.5-flash-image-preview")
   const [isProcessing, setIsProcessing] = React.useState(false)
   const [isComparing, setIsComparing] = React.useState(false)
   const [comparison, setComparison] = React.useState<CompareAiModelsOutput | null>(null)
   const { toast } = useToast()
   
-  const image = PlaceHolderImages.find(img => img.id === "pro-segment-ai-1")
-
-
   const handleRunAI = async () => {
-    if (!image) return;
+    if (!imageUrl) {
+        toast({ title: "No Image", description: "Please select an image from the asset library.", variant: 'destructive'})
+        return;
+    };
     setIsProcessing(true)
     setComparison(null)
     setSegmentationMask(null);
     try {
       const res = await magicWandAssistedSegmentation({
-        photoDataUri: image.imageUrl,
+        photoDataUri: imageUrl,
         modelId: selectedModel,
       })
       if (res.isSuccessful && res.maskDataUri) {
@@ -64,14 +65,17 @@ export function AiModelsPanel({ setSegmentationMask, setImageUrl }: AiModelsPane
   }
 
   const handleCompare = async () => {
-    if(!image) return;
+    if (!imageUrl) {
+        toast({ title: "No Image", description: "Please select an image from the asset library.", variant: 'destructive'})
+        return;
+    }
     setIsComparing(true)
     setComparison(null)
     setSegmentationMask(null);
 
     try {
       const res = await compareAiModels({
-        photoDataUri: image.imageUrl,
+        photoDataUri: imageUrl,
         modelIds: ["googleai/gemini-2.5-flash-image-preview", "bodypix", "deeplab"],
       })
       setComparison(res)
@@ -151,5 +155,3 @@ export function AiModelsPanel({ setSegmentationMask, setImageUrl }: AiModelsPane
     </div>
   )
 }
-
-    
