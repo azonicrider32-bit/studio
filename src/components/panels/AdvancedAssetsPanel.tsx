@@ -85,10 +85,10 @@ export default function AdvancedAssetPanel({
         const gcsPath = `assets/${user.uid}/${assetId}-${file.name}`;
         const storageRef = ref(storage, gcsPath);
 
-        // Await the upload
+        // 1. Await the upload
         await uploadBytes(storageRef, file);
 
-        // Get the download URL
+        // 2. Get the download URL
         const downloadURL = await getDownloadURL(storageRef);
 
         const newImage = {
@@ -102,7 +102,7 @@ export default function AdvancedAssetPanel({
           uploadDate: new Date().toISOString(),
         };
         
-        // Store metadata in Firestore
+        // 3. Store metadata in Firestore
         const assetDocRef = doc(firestore, `users/${user.uid}/assets`, assetId);
         const assetData = {
           id: assetId,
@@ -120,6 +120,7 @@ export default function AdvancedAssetPanel({
         
         await setDoc(assetDocRef, assetData, { merge: true });
 
+        // 4. Update local state
         setUploadedImages(prev => [...prev, newImage]);
       }
     } catch (error) {
