@@ -590,6 +590,8 @@ function ProSegmentAIContent() {
   const splitViewSecondaryIndex = isSplitView ? (activeWorkspaceIndex + 1) % workspaces.length : -1;
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
+  const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
+
   return (
     <div className="h-screen w-screen flex bg-background relative overflow-hidden">
       
@@ -612,10 +614,10 @@ function ProSegmentAIContent() {
 
       <main 
         className="flex-1 h-full w-full bg-muted/30 overflow-hidden relative transition-all duration-200"
-        style={{ paddingLeft: sidebarState === 'expanded' ? 'calc(20rem + 5rem)' : '5rem', paddingRight: `${rightPanelWidth}px` }}
+        style={{ paddingLeft: `calc(${sidebarWidthVar} + 5rem)`, paddingRight: `${rightPanelWidth}px` }}
       >
         <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
-          style={{ left: sidebarState === 'expanded' ? 'calc(20rem + 5rem)' : '5rem', right: `${rightPanelWidth}px` }}
+          style={{ left: `calc(${sidebarWidthVar} + 5rem)`, right: `${rightPanelWidth}px` }}
         >
           <div className="flex items-center gap-4 flex-1">
           <WorkspaceTabs 
@@ -943,5 +945,6 @@ export function ProSegmentAI() {
 
 
     
+
 
 
