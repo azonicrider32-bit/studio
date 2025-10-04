@@ -688,7 +688,7 @@ function ProSegmentAIContent() {
       </main>
       
       <div 
-        className="absolute top-0 bottom-0 z-30 flex"
+        className="absolute top-12 bottom-0 z-30 flex"
         style={{
             left: `calc(${sidebarWidthVar})`,
             transition: 'left 0.2s ease-in-out',
@@ -707,7 +707,7 @@ function ProSegmentAIContent() {
         />
       </div>
 
-      <div className="absolute top-0 left-0 h-full z-40">
+      <div className="absolute top-12 left-0 h-[calc(100vh-3rem)] z-40">
         <Sidebar collapsible="icon">
           <SidebarHeader>
              <div className="flex items-center justify-between">
@@ -1027,6 +1027,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
