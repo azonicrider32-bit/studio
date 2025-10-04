@@ -645,6 +645,8 @@ function ProSegmentAIContent() {
     { id: 'pixel-preview', icon: Scan, label: 'Pixel Preview (P)' },
     { id: 'history', icon: History, label: 'History' },
   ];
+  
+  const allShelfIcons = [...topPanelIcons, ...bottomPanelIcons];
 
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
@@ -733,17 +735,20 @@ function ProSegmentAIContent() {
             transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
           }}
         >
-         <div style={{ marginLeft: `calc(${sidebarWidthVar} + 5rem)`}}>
-            <div className="flex items-center gap-4 flex-1">
-                <WorkspaceTabs 
-                    workspaces={workspaces}
-                    activeWorkspaceId={activeWorkspaceId}
-                    onWorkspaceSelect={setActiveWorkspaceId}
-                    onWorkspaceAdd={handleAddNewWorkspace}
-                    onWorkspaceClose={handleCloseWorkspace}
-                />
+        <div className="h-full w-20 flex-shrink-0 flex items-center justify-start pl-2">
+            <div className="font-headline font-black text-4xl text-red-500">
+                Ps
             </div>
-         </div>
+        </div>
+        <div className="flex items-center gap-4 flex-1">
+            <WorkspaceTabs 
+                workspaces={workspaces}
+                activeWorkspaceId={activeWorkspaceId}
+                onWorkspaceSelect={setActiveWorkspaceId}
+                onWorkspaceAdd={handleAddNewWorkspace}
+                onWorkspaceClose={handleCloseWorkspace}
+            />
+        </div>
         <div className="flex items-center gap-2 ml-auto">
           <TooltipProvider>
             <Tooltip>
@@ -945,9 +950,9 @@ function WorkspaceTabs({
           key={ws.id}
           onClick={() => onWorkspaceSelect(ws.id)}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 border cursor-pointer text-sm font-medium transition-colors rounded-t-md",
+            "flex items-center gap-2 px-4 py-2 cursor-pointer text-sm font-medium transition-colors rounded-t-md",
             activeWorkspaceId === ws.id 
-              ? "bg-background border-border/50 border-b-transparent text-foreground" 
+              ? "bg-background border-border/50 border border-b-transparent text-foreground" 
               : "border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           )}
         >
@@ -1014,6 +1019,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
