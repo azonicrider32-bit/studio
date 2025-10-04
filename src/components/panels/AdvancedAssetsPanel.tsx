@@ -22,8 +22,10 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirebase, useUser } from '@/firebase';
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, setDoc } from 'firebase/firestore';
+import { uploadAsset } from '@/ai/flows/upload-asset-flow';
+import { useToast } from '@/hooks/use-toast';
+import { handleApiError } from '@/lib/error-handling';
 
 const categories = [
   { id: 'all', name: 'All Images', icon: ImageIcon },
@@ -53,8 +55,9 @@ export default function AdvancedAssetPanel({
   const [uploadedImages, setUploadedImages] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   
-  const { firebaseApp, firestore } = useFirebase();
+  const { firestore } = useFirebase();
   const { user } = useUser();
+  const { toast } = useToast();
 
   const filteredImages = PlaceHolderImages.filter(img => {
     const categoryMatch = selectedCategory === 'all' || img.imageHint.toLowerCase().includes(selectedCategory.toLowerCase());
@@ -68,66 +71,66 @@ export default function AdvancedAssetPanel({
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || !user || !firebaseApp || !firestore) return;
+    if (!event.target.files || !user || !firestore) return;
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
     setIsUploading(true);
-
-    const storage = getStorage(firebaseApp);
+    toast({ title: 'Upload starting...', description: `Uploading ${files.length} file(s).` });
 
     try {
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
-        if (file.size > 10 * 1024 * 1024) continue; // 10MB limit
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+           toast({ variant: 'destructive', title: 'File too large', description: `${file.name} exceeds the 10MB limit.`});
+           continue;
+        }
 
-        const assetId = `asset_${Date.now()}_${Math.random()}`;
-        const gcsPath = `assets/${user.uid}/${assetId}-${file.name}`;
-        const storageRef = ref(storage, gcsPath);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          const fileDataUri = reader.result as string;
+          
+          try {
+            const result = await uploadAsset({
+              userId: user.uid,
+              fileName: file.name,
+              fileDataUri: fileDataUri,
+            });
 
-        // 1. Await the upload
-        await uploadBytes(storageRef, file);
+            if (result.error || !result.downloadURL || !result.gcsPath) {
+              throw new Error(result.error || 'Upload failed to return a URL.');
+            }
+            
+            const assetId = result.gcsPath.split('/').pop()?.split('-')[0] || `asset_${Date.now()}`;
 
-        // 2. Get the download URL
-        const downloadURL = await getDownloadURL(storageRef);
+            const newImage = {
+              id: assetId,
+              name: file.name.replace(/\.[^/.]+$/, ''),
+              imageUrl: result.downloadURL,
+              description: `Uploaded: ${file.name}`,
+              category: 'uploaded',
+              userId: user.uid,
+              gcsPath: result.gcsPath,
+              uploadDate: new Date().toISOString(),
+            };
 
-        const newImage = {
-          id: assetId,
-          name: file.name.replace(/\.[^/.]+$/, ''),
-          imageUrl: downloadURL, // Use the public download URL
-          description: `Uploaded: ${file.name}`,
-          category: 'uploaded',
-          userId: user.uid,
-          gcsPath: gcsPath,
-          uploadDate: new Date().toISOString(),
+            setUploadedImages(prev => [...prev, newImage]);
+            toast({ title: 'Upload Successful', description: `${file.name} has been uploaded.` });
+
+          } catch (uploadError) {
+             handleApiError(uploadError, toast, { title: `Upload Failed for ${file.name}` });
+          }
         };
-        
-        // 3. Store metadata in Firestore
-        const assetDocRef = doc(firestore, `users/${user.uid}/assets`, assetId);
-        const assetData = {
-          id: assetId,
-          userId: user.uid,
-          gcsBucket: storage.app.options.storageBucket,
-          gcsPath: gcsPath,
-          downloadURL: downloadURL,
-          assetType: 'image',
-          uploadDate: newImage.uploadDate,
-          fileSize: file.size,
-          originalName: file.name,
-          accessControl: 'private',
-          tags: ['uploaded'],
+        reader.onerror = (error) => {
+          handleApiError(error, toast, { title: `Failed to read ${file.name}` });
         };
-        
-        await setDoc(assetDocRef, assetData, { merge: true });
-
-        // 4. Update local state
-        setUploadedImages(prev => [...prev, newImage]);
       }
     } catch (error) {
-      console.error('Upload error:', error);
+       handleApiError(error, toast, { title: 'Upload Error' });
+    } finally {
+        setIsUploading(false);
     }
-
-    setIsUploading(false);
   };
 
   if (!isOpen) {
