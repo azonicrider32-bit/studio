@@ -9,6 +9,9 @@ import {
   Image as ImageIcon,
   PanelLeft,
   Settings2,
+  Ruler,
+  MoveHorizontal,
+  MoveVertical,
 } from "lucide-react"
 
 import {
@@ -25,6 +28,7 @@ import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
 import { useSidebar } from "./ui/sidebar"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { cn } from "@/lib/utils"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 
@@ -112,6 +116,12 @@ interface ToolPanelProps {
   activeTool: Tool;
   setActiveTool: (tool: Tool) => void;
   showHotkeys: boolean;
+  showHorizontalRuler: boolean;
+  onToggleHorizontalRuler: () => void;
+  showVerticalRuler: boolean;
+  onToggleVerticalRuler: () => void;
+  showGuides: boolean;
+  onToggleGuides: () => void;
 }
 
 const ToolButtonWithProgressiveHover = ({
@@ -188,7 +198,17 @@ const ToolButtonWithProgressiveHover = ({
 };
 
 
-export function ToolPanel({ activeTool, setActiveTool, showHotkeys }: ToolPanelProps) {
+export function ToolPanel({
+  activeTool,
+  setActiveTool,
+  showHotkeys,
+  showHorizontalRuler,
+  onToggleHorizontalRuler,
+  showVerticalRuler,
+  onToggleVerticalRuler,
+  showGuides,
+  onToggleGuides
+}: ToolPanelProps) {
   
   return (
     <div className="h-full flex-shrink-0 w-20 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
@@ -208,6 +228,31 @@ export function ToolPanel({ activeTool, setActiveTool, showHotkeys }: ToolPanelP
                 showHotkey={showHotkeys}
               />
             ))}
+             <Separator className="bg-border/10 my-2"/>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant={showHorizontalRuler ? "secondary" : "ghost"} size="icon" className="h-10 w-10" onClick={onToggleHorizontalRuler}>
+                        <MoveHorizontal className="w-5 h-5"/>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right"><p>Toggle Horizontal Ruler</p></TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant={showVerticalRuler ? "secondary" : "ghost"} size="icon" className="h-10 w-10" onClick={onToggleVerticalRuler}>
+                        <MoveVertical className="w-5 h-5"/>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right"><p>Toggle Vertical Ruler</p></TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant={showGuides ? "secondary" : "ghost"} size="icon" className="h-10 w-10" onClick={onToggleGuides}>
+                        <Ruler className="w-5 h-5"/>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right"><p>Toggle Guides</p></TooltipContent>
+              </Tooltip>
         </TooltipProvider>
       </div>
       <div className="flex flex-col items-center gap-2">
@@ -230,3 +275,4 @@ export function ToolPanel({ activeTool, setActiveTool, showHotkeys }: ToolPanelP
     </div>
   )
 }
+

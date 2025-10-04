@@ -698,6 +698,12 @@ function ProSegmentAIContent() {
           activeTool={activeTool}
           setActiveTool={setActiveTool}
           showHotkeys={showHotkeyLabels}
+          showHorizontalRuler={showHorizontalRuler}
+          onToggleHorizontalRuler={() => setShowHorizontalRuler(p => !p)}
+          showVerticalRuler={showVerticalRuler}
+          onToggleVerticalRuler={() => setShowVerticalRuler(p => !p)}
+          showGuides={showGuides}
+          onToggleGuides={() => setShowGuides(p => !p)}
         />
       </div>
 
@@ -738,48 +744,6 @@ function ProSegmentAIContent() {
             </div>
          </div>
         <div className="flex items-center gap-2 ml-auto">
-          <Button variant={showHorizontalRuler ? "secondary" : "ghost"} size="icon" onClick={() => setShowHorizontalRuler(p => !p)}>
-            <MoveHorizontal className="w-5 h-5"/>
-          </Button>
-          <Button variant={showVerticalRuler ? "secondary" : "ghost"} size="icon" onClick={() => setShowVerticalRuler(p => !p)}>
-            <MoveVertical className="w-5 h-5"/>
-          </Button>
-          <Button variant={showGuides ? "secondary" : "ghost"} size="icon" onClick={() => setShowGuides(p => !p)}>
-            <Ruler className="w-5 h-5"/>
-          </Button>
-          <Separator orientation="vertical" className="h-6 mx-2" />
-          {!isRightPanelOpen && (
-            <div className="flex flex-col gap-0.5">
-              <div className="flex gap-1">
-                {topPanelIcons.map(({id, icon: Icon, label}) => (
-                   <TooltipProvider key={id}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShelfClick(id as TopPanel)}>
-                              <Icon className="h-4 w-4"/>
-                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{label}</p></TooltipContent>
-                      </Tooltip>
-                   </TooltipProvider>
-                ))}
-              </div>
-              <div className="flex gap-1">
-                 {bottomPanelIcons.map(({id, icon: Icon, label}) => (
-                   <TooltipProvider key={id}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShelfClick(id as BottomPanel)}>
-                              <Icon className="h-4 w-4"/>
-                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>{label}</p></TooltipContent>
-                      </Tooltip>
-                   </TooltipProvider>
-                ))}
-              </div>
-            </div>
-          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><ArrowBigUpDash /></Button></TooltipTrigger>
@@ -891,6 +855,38 @@ function ProSegmentAIContent() {
               )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
               </DropdownMenuContent>
           </DropdownMenu>
+           {!isRightPanelOpen && (
+            <div className="flex flex-col gap-0.5 ml-auto">
+              <div className="flex gap-1">
+                {topPanelIcons.map(({id, icon: Icon, label}) => (
+                   <TooltipProvider key={id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShelfClick(id as TopPanel)}>
+                              <Icon className="h-4 w-4"/>
+                           </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{label}</p></TooltipContent>
+                      </Tooltip>
+                   </TooltipProvider>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                 {bottomPanelIcons.map(({id, icon: Icon, label}) => (
+                   <TooltipProvider key={id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShelfClick(id as BottomPanel)}>
+                              <Icon className="h-4 w-4"/>
+                           </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{label}</p></TooltipContent>
+                      </Tooltip>
+                   </TooltipProvider>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </header>
       
@@ -1049,5 +1045,7 @@ export function ProSegmentAI() {
 
 
     
+
+
 
 
