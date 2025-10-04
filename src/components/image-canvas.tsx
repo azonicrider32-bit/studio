@@ -46,7 +46,106 @@ interface ImageCanvasProps {
   onDragMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onDragMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   draggedLayer: Layer | null;
+  showHorizontalRuler: boolean;
+  showVerticalRuler: boolean;
+  showGuides: boolean;
 }
+
+const HorizontalRuler = ({ width, zoom, panX }: { width: number, zoom: number, panX: number }) => {
+    const rulerRef = React.useRef<HTMLCanvasElement>(null);
+
+    React.useEffect(() => {
+        const canvas = rulerRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const rulerHeight = 30;
+        canvas.width = canvas.offsetWidth;
+        canvas.height = rulerHeight;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(0, 0, canvas.width, rulerHeight);
+        ctx.strokeStyle = '#4b5563';
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+
+        const panOffset = panX * zoom;
+
+        for (let i = 0; i < width * zoom; i += 10) {
+            const x = i + panOffset;
+            if (x < 0 || x > canvas.width) continue;
+            
+            let tickHeight = 5;
+            if (i % 50 === 0) tickHeight = 10;
+            if (i % 100 === 0) tickHeight = 15;
+
+            ctx.beginPath();
+            ctx.moveTo(x, rulerHeight);
+            ctx.lineTo(x, rulerHeight - tickHeight);
+            ctx.stroke();
+
+            if (i % 100 === 0) {
+                ctx.fillText(Math.round(i / zoom).toString(), x, rulerHeight - tickHeight - 2);
+            }
+        }
+    }, [width, zoom, panX]);
+
+    return <canvas ref={rulerRef} className="absolute top-0 left-0 w-full h-[30px]" style={{ zIndex: 50}}/>
+}
+
+
+const VerticalRuler = ({ height, zoom, panY }: { height: number, zoom: number, panY: number }) => {
+    const rulerRef = React.useRef<HTMLCanvasElement>(null);
+
+    React.useEffect(() => {
+        const canvas = rulerRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const rulerWidth = 30;
+        canvas.width = rulerWidth;
+        canvas.height = canvas.offsetHeight;
+
+        ctx.clearRect(0, 0, rulerWidth, canvas.height);
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(0, 0, rulerWidth, canvas.height);
+        ctx.strokeStyle = '#4b5563';
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'left';
+
+        const panOffset = panY * zoom;
+
+        for (let i = 0; i < height * zoom; i += 10) {
+            const y = i + panOffset;
+            if (y < 0 || y > canvas.height) continue;
+            
+            let tickWidth = 5;
+            if (i % 50 === 0) tickWidth = 10;
+            if (i % 100 === 0) tickWidth = 15;
+
+            ctx.beginPath();
+            ctx.moveTo(rulerWidth, y);
+            ctx.lineTo(rulerWidth - tickWidth, y);
+            ctx.stroke();
+
+            if (i % 100 === 0) {
+                ctx.save();
+                ctx.translate(rulerWidth - tickWidth - 2, y);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText(Math.round(i / zoom).toString(), 0, 0);
+                ctx.restore();
+            }
+        }
+    }, [height, zoom, panY]);
+
+    return <canvas ref={rulerRef} className="absolute top-0 left-0 w-[30px] h-full" style={{ zIndex: 50}}/>
+}
+
 
 export function ImageCanvas({
   imageUrl,
@@ -79,6 +178,9 @@ export function ImageCanvas({
   onDragMouseMove,
   onDragMouseUp,
   draggedLayer,
+  showHorizontalRuler,
+  showVerticalRuler,
+  showGuides,
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -237,8 +339,29 @@ const drawLayers = React.useCallback(() => {
     const overlayCtx = overlayCanvas.getContext('2d');
     if (overlayCtx) {
       engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment, draggedLayer, activeLayerId, activeTool);
+      
+      if(showGuides && canvasMousePos) {
+          overlayCtx.save();
+          overlayCtx.strokeStyle = 'hsla(var(--primary), 0.5)';
+          overlayCtx.lineWidth = 1;
+          overlayCtx.setLineDash([4, 4]);
+
+          // Horizontal guide
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(0, canvasMousePos.y);
+          overlayCtx.lineTo(overlayCanvas.width, canvasMousePos.y);
+          overlayCtx.stroke();
+
+          // Vertical guide
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(canvasMousePos.x, 0);
+          overlayCtx.lineTo(canvasMousePos.x, overlayCanvas.height);
+          overlayCtx.stroke();
+          
+          overlayCtx.restore();
+      }
     }
-  }, [magicWandSettings, lassoSettings, layers, hoveredSegment, draggedLayer, activeLayerId, activeTool]);
+  }, [magicWandSettings, lassoSettings, layers, hoveredSegment, draggedLayer, activeLayerId, activeTool, showGuides, canvasMousePos]);
 
   React.useEffect(() => {
     drawLayers();
@@ -307,7 +430,8 @@ const drawLayers = React.useCallback(() => {
         const response = await intelligentLassoAssistedPathSnapping({
             photoDataUri: canvas.toDataURL(),
             lassoPath: engine.lassoNodes.map(n => ({x: n[0], y: n[1]})),
-            prompt: 'the main subject'
+            prompt: 'the main subject',
+            cost_function: 'sobel',
         });
 
         if (response.enhancedPath && response.enhancedPath.length > 2) {
@@ -828,7 +952,9 @@ const drawLayers = React.useCallback(() => {
           className="relative w-full h-full" 
           style={{ 
             transform: `scale(${mainCanvasZoom}) translate(${pan.x}px, ${pan.y}px)`, 
-            transformOrigin: 'center center' 
+            transformOrigin: 'center center',
+            paddingTop: showHorizontalRuler ? 30 : 0,
+            paddingLeft: showVerticalRuler ? 30 : 0,
           }}
         >
             {isClient && (
@@ -873,8 +999,15 @@ const drawLayers = React.useCallback(() => {
             />
             )}
         </div>
+        {showHorizontalRuler && canvasRef.current && (
+            <HorizontalRuler width={canvasRef.current.width} zoom={mainCanvasZoom} panX={pan.x} />
+        )}
+        {showVerticalRuler && canvasRef.current && (
+            <VerticalRuler height={canvasRef.current.height} zoom={mainCanvasZoom} panY={pan.y} />
+        )}
       </div>
     </div>
   );
 }
+
 

@@ -36,6 +36,9 @@ import {
   Camera,
   Scissors,
   PanelRightClose,
+  Ruler,
+  MoveHorizontal,
+  MoveVertical,
 } from "lucide-react"
 
 import {
@@ -152,6 +155,10 @@ function ProSegmentAIContent() {
   const { state: sidebarState } = useSidebar();
   const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(false);
   
+  const [showHorizontalRuler, setShowHorizontalRuler] = React.useState(false);
+  const [showVerticalRuler, setShowVerticalRuler] = React.useState(false);
+  const [showGuides, setShowGuides] = React.useState(false);
+
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
 
@@ -661,7 +668,7 @@ function ProSegmentAIContent() {
             clearSelectionRef={clearSelectionRef}
             onLassoSettingChange={handleLassoSettingsChange}
             onMagicWandSettingsChange={handleMagicWandSettingsChange}
-            onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+            onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
             canvasMousePos={canvasMousePos}
             setCanvasMousePos={setCanvasMousePos}
             getCanvasRef={canvasRef}
@@ -674,6 +681,9 @@ function ProSegmentAIContent() {
             onDragMouseMove={handleDragMouseMove}
             onDragMouseUp={handleDragMouseUp}
             draggedLayer={draggedLayer}
+            showHorizontalRuler={showHorizontalRuler}
+            showVerticalRuler={showVerticalRuler}
+            showGuides={showGuides}
             />
       </main>
       
@@ -728,6 +738,16 @@ function ProSegmentAIContent() {
             </div>
          </div>
         <div className="flex items-center gap-2 ml-auto">
+          <Button variant={showHorizontalRuler ? "secondary" : "ghost"} size="icon" onClick={() => setShowHorizontalRuler(p => !p)}>
+            <MoveHorizontal className="w-5 h-5"/>
+          </Button>
+          <Button variant={showVerticalRuler ? "secondary" : "ghost"} size="icon" onClick={() => setShowVerticalRuler(p => !p)}>
+            <MoveVertical className="w-5 h-5"/>
+          </Button>
+          <Button variant={showGuides ? "secondary" : "ghost"} size="icon" onClick={() => setShowGuides(p => !p)}>
+            <Ruler className="w-5 h-5"/>
+          </Button>
+          <Separator orientation="vertical" className="h-6 mx-2" />
           {!isRightPanelOpen && (
             <div className="flex flex-col gap-0.5">
               <div className="flex gap-1">
