@@ -1,5 +1,7 @@
 
 
+import { z } from 'zod';
+
 export interface Layer {
     id: string;
     name: string;
@@ -116,3 +118,21 @@ export interface FeatherSettings {
     };
   };
 }
+
+export const UploadAssetInputSchema = z.object({
+  userId: z.string().describe('The ID of the user uploading the asset.'),
+  fileName: z.string().describe('The name of the file to be uploaded.'),
+  fileDataUri: z
+    .string()
+    .describe(
+      "The file content as a data URI. Must include a MIME type and use Base64 encoding. Format: 'data:<mimetype>;base64,<encoded_data>'."
+    ),
+});
+export type UploadAssetInput = z.infer<typeof UploadAssetInputSchema>;
+
+export const UploadAssetOutputSchema = z.object({
+  downloadURL: z.string().optional().describe('The public URL to access the uploaded file.'),
+  gcsPath: z.string().optional().describe('The path to the file in Google Cloud Storage.'),
+  error: z.string().optional().describe('An error message if the upload failed.'),
+});
+export type UploadAssetOutput = z.infer<typeof UploadAssetOutputSchema>;
