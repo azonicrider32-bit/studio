@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -21,7 +22,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirebase, useUser } from '@/firebase';
-import { getStorage, ref, uploadBytes } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 
@@ -76,18 +77,20 @@ export default function AdvancedAssetPanel({
         if (!file.type.startsWith('image/')) continue;
         if (file.size > 10 * 1024 * 1024) continue; // 10MB limit
 
-        const localUrl = URL.createObjectURL(file);
         const assetId = `asset_${Date.now()}_${Math.random()}`;
         const gcsPath = `assets/${user.uid}/${assetId}-${file.name}`;
         const storageRef = ref(storage, gcsPath);
 
-        // Non-blocking upload
-        uploadBytes(storageRef, file);
+        // Await the upload
+        await uploadBytes(storageRef, file);
+
+        // Get the download URL
+        const downloadURL = await getDownloadURL(storageRef);
 
         const newImage = {
           id: assetId,
           name: file.name.replace(/\.[^/.]+$/, ''),
-          imageUrl: localUrl,
+          imageUrl: downloadURL, // Use the public download URL
           category: 'uploaded',
           description: `Uploaded: ${file.name}`,
           file: file,
@@ -105,6 +108,7 @@ export default function AdvancedAssetPanel({
           userId: user.uid,
           gcsBucket: storage.app.options.storageBucket,
           gcsPath: gcsPath,
+          downloadURL: downloadURL,
           assetType: 'image',
           uploadDate: newImage.uploadDate,
           fileSize: file.size,
@@ -283,6 +287,58 @@ export default function AdvancedAssetPanel({
                   </TabsContent>
                   <TabsContent value="uploaded">
                      {/* Same as gallery for now */}
+                     {viewMode === 'grid' ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {uploadedImages.map((image) => (
+                          <motion.div
+                            key={image.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="group cursor-pointer"
+                            onClick={() => handleImageSelect(image)}
+                          >
+                            <Card className="overflow-hidden hover:border-primary transition-all duration-200">
+                              <div className="aspect-square relative overflow-hidden">
+                                <Image
+                                  src={image.imageUrl}
+                                  alt={image.description}
+                                  fill
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Eye className="w-8 h-8 text-white" />
+                                </div>
+                              </div>
+                            </Card>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {uploadedImages.map((image) => (
+                            <Card key={image.id} className="hover:border-primary transition-all duration-200 cursor-pointer" onClick={() => handleImageSelect(image)}>
+                              <CardContent className="p-2">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-20 h-16 rounded-md overflow-hidden flex-shrink-0 relative">
+                                    <Image
+                                      src={image.imageUrl}
+                                      alt={image.description}
+                                      fill
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold text-sm mb-1 truncate">{image.name}</h4>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="secondary" className="text-xs">Uploaded</Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                        ))}
+                      </div>
+                    )}
                   </TabsContent>
                 </Tabs>
               </div>
