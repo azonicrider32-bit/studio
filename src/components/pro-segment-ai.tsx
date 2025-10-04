@@ -659,6 +659,11 @@ function ProSegmentAIContent() {
           <SidebarHeader>
              <div className="flex items-center justify-between">
                 <div className="font-headline font-bold text-lg tracking-tight">Settings</div>
+                <SidebarTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <ChevronLeft />
+                    </Button>
+                </SidebarTrigger>
             </div>
           </SidebarHeader>
           <SidebarContent>
