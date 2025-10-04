@@ -859,10 +859,10 @@ function ProSegmentAIContent() {
       </header>
       
       <div 
-        className="fixed top-0 right-0 bottom-0 flex z-20"
+        className="fixed top-12 right-0 bottom-0 flex z-20"
       >
           <div 
-            className={cn("transition-all duration-300 ease-in-out flex", isRightPanelOpen ? 'w-auto' : 'w-14')}
+            className={cn("transition-all duration-300 ease-in-out flex")}
           >
               <div 
                   className={cn("flex flex-col border-l border-border/50 bg-background transition-all", isRightPanelOpen && "w-[--panel-width]")}
@@ -1027,6 +1027,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
