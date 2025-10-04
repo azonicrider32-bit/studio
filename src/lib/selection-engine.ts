@@ -37,6 +37,11 @@ export class SelectionEngine {
   futureLassoPath: [number, number][] = [];
   lassoMouseTrace: [number, number][] = [];
   
+  // Line State
+  lineNodes: [number, number][] = [];
+  isDrawingLine: boolean = false;
+  linePreviewPos: [number, number] | null = null;
+
   // Edge Detection
   edgeMap: Float32Array | null = null;
 
@@ -181,6 +186,75 @@ export class SelectionEngine {
     const idx = (y * this.width + x) * 4;
     return (data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114);
   }
+
+  // #region LINE
+  startLine(x: number, y: number) {
+    this.cancelLine();
+    this.lineNodes = [[x, y]];
+    this.isDrawingLine = true;
+  }
+
+  cancelLine() {
+    this.lineNodes = [];
+    this.linePreviewPos = null;
+    this.isDrawingLine = false;
+  }
+  
+  updateLinePreview(x: number, y: number) {
+      if (!this.isDrawingLine) return;
+      this.linePreviewPos = [x, y];
+  }
+
+  addNodeToLine() {
+      if (!this.isDrawingLine || !this.linePreviewPos) return;
+      this.lineNodes.push(this.linePreviewPos);
+  }
+
+  endLine(activeLayerId: string | null): Layer | null {
+    if (!this.isDrawingLine || this.lineNodes.length < 2) {
+      this.cancelLine();
+      return null;
+    }
+
+    const path = [...this.lineNodes];
+    if (this.linePreviewPos) {
+      path.push(this.linePreviewPos);
+    }
+    
+    const bounds = this.getBoundsForPixels(new Set(), path);
+
+    const newLayer: Layer = {
+      id: `path-${Date.now()}`,
+      name: `Path ${this.layers.filter(l => l.subType === 'path').length + 1}`,
+      type: 'segmentation',
+      subType: 'path',
+      visible: true,
+      locked: false,
+      pixels: new Set(),
+      path: path,
+      bounds: bounds,
+      stroke: 'hsl(var(--primary))',
+      strokeWidth: 2,
+      closed: false,
+    };
+    
+    this.cancelLine();
+    return newLayer;
+  }
+  
+  removeLastNode() {
+      if (this.isDrawingLasso) this.removeLastLassoNode();
+      if (this.isDrawingLine) this.removeLastLineNode();
+  }
+
+  removeLastLineNode() {
+    if (this.lineNodes.length > 1) {
+      this.lineNodes.pop();
+    } else if (this.lineNodes.length === 1) {
+      this.cancelLine();
+    }
+  }
+  // #endregion
 
   // #region LASSO
   startLasso(x: number, y: number) {
@@ -843,18 +917,26 @@ export class SelectionEngine {
     return segment;
   }
   
-  getBoundsForPixels(pixels: Set<number>): Layer['bounds'] {
+  getBoundsForPixels(pixels: Set<number>, path?: [number, number][]): Layer['bounds'] {
       let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-      pixels.forEach(idx => {
-        const x = idx % this.width;
-        const y = Math.floor(idx / this.width);
+      
+      const processPoint = (x: number, y: number) => {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;
         if (y > maxY) maxY = y;
+      };
+
+      pixels.forEach(idx => {
+        processPoint(idx % this.width, Math.floor(idx / this.width));
       });
+
+      if (path) {
+        path.forEach(([x,y]) => processPoint(x,y));
+      }
+
       if (minX === Infinity) return { x: 0, y: 0, width: 0, height: 0};
-      return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+      return { x: Math.floor(minX), y: Math.floor(minY), width: Math.ceil(maxX) - Math.floor(minX) + 1, height: Math.ceil(maxY) - Math.floor(minY) + 1 };
   }
 
   createImageDataForLayer(pixels: Set<number>, bounds: Layer['bounds']): ImageData | null {
@@ -1115,7 +1197,7 @@ export class SelectionEngine {
         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
 
-  renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[], wandSettings: MagicWandSettings, lassoSettings: LassoSettings, hoveredSegment: Segment | null) {
+  renderSelection(overlayCtx: CanvasRenderingContext2D, layers: Layer[], wandSettings: MagicWandSettings, lassoSettings: LassoSettings, hoveredSegment: Segment | null, draggedLayer: Layer | null = null, activeLayerId: string | null = null, activeTool: string) {
     if (!overlayCtx) return;
 
     overlayCtx.clearRect(0, 0, this.width, this.height);
@@ -1124,16 +1206,17 @@ export class SelectionEngine {
 
     if (showMasks) {
         layers.forEach(layer => {
-            if (layer.visible && layer.maskVisible && (layer.type === 'segmentation' || layer.subType === 'mask')) {
+            const currentLayer = draggedLayer?.id === layer.id ? draggedLayer : layer;
+            if (currentLayer.visible && currentLayer.maskVisible && (currentLayer.type === 'segmentation' || currentLayer.subType === 'mask')) {
                 overlayCtx.save();
                 
-                const isMask = layer.subType === 'mask';
-                const texture = isMask ? 'checkerboard' : (layer.highlightTexture || 'solid');
-                let color = isMask ? 'hsl(0, 0%, 50%)' : (layer.highlightColor || 'hsl(var(--primary))');
-                const opacity = layer.highlightOpacity || 0.5;
+                const isMask = currentLayer.subType === 'mask';
+                const texture = isMask ? 'checkerboard' : (currentLayer.highlightTexture || 'solid');
+                let color = isMask ? 'hsl(0, 0%, 50%)' : (currentLayer.highlightColor || 'hsl(var(--primary))');
+                const opacity = currentLayer.highlightOpacity || 0.5;
 
                  if (!isMask && wandSettings.highlightColorMode === 'contrast') {
-                    const avgLuminance = this.getAverageLuminance(layer.pixels);
+                    const avgLuminance = this.getAverageLuminance(currentLayer.pixels);
                     color = avgLuminance > 0.5 ? '#000000' : '#FFFFFF';
                 }
 
@@ -1144,8 +1227,9 @@ export class SelectionEngine {
                     overlayCtx.restore();
                     return;
                 }
-
-                layer.pixels.forEach(idx => {
+                
+                const pixels = currentLayer.subType === 'path' ? this.pathToSelection(currentLayer.path || []) : currentLayer.pixels;
+                pixels.forEach(idx => {
                     const x = idx % this.width;
                     const y = Math.floor(idx / this.width);
                     overlayCtx.fillRect(x, y, 1, 1);
@@ -1188,51 +1272,36 @@ export class SelectionEngine {
         }
     }
 
+    const drawPath = (path: [number, number][], style: string, width: number, dash: number[] = []) => {
+        if (path.length < 2) return;
+        overlayCtx.strokeStyle = style;
+        overlayCtx.lineWidth = width;
+        overlayCtx.lineJoin = 'round';
+        overlayCtx.lineCap = 'round';
+        overlayCtx.setLineDash(dash);
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(path[0][0], path[0][1]);
+        for (let i = 1; i < path.length; i++) {
+            overlayCtx.lineTo(path[i][0], path[i][1]);
+        }
+        overlayCtx.stroke();
+        overlayCtx.setLineDash([]);
+    };
 
     if (this.isDrawingLasso) {
-      // Draw mouse trace if enabled
       if (this.lassoSettings.showMouseTrace && this.lassoMouseTrace.length > 1) {
-          overlayCtx.strokeStyle = 'hsla(var(--foreground), 0.3)';
-          overlayCtx.lineWidth = 1;
-          overlayCtx.setLineDash([2, 3]);
-          overlayCtx.beginPath();
-          overlayCtx.moveTo(this.lassoMouseTrace[0][0], this.lassoMouseTrace[0][1]);
-          for (let i = 1; i < this.lassoMouseTrace.length; i++) {
-              overlayCtx.lineTo(this.lassoMouseTrace[i][0], this.lassoMouseTrace[i][1]);
-          }
-          overlayCtx.stroke();
-          overlayCtx.setLineDash([]); // Reset line dash
+          drawPath(this.lassoMouseTrace, 'hsla(var(--foreground), 0.3)', 1, [2, 3]);
       }
       
       const mainPath = this.getLassoPath(false);
-      
-      if (mainPath.length > 0) {
-        overlayCtx.strokeStyle = 'hsl(var(--accent))';
-        overlayCtx.lineWidth = 2;
-        overlayCtx.lineJoin = 'round';
-        overlayCtx.lineCap = 'round';
-        overlayCtx.beginPath();
-        overlayCtx.moveTo(mainPath[0][0], mainPath[0][1]);
-        for (let i = 1; i < mainPath.length; i++) {
-            overlayCtx.lineTo(mainPath[i][0], mainPath[i][1]);
-        }
-        overlayCtx.stroke();
-      }
+      drawPath(mainPath, 'hsl(var(--accent))', 2);
       
       if (this.futureLassoPath.length > 0) {
-        overlayCtx.strokeStyle = 'hsla(var(--accent), 0.5)';
-        overlayCtx.lineWidth = 2;
-        overlayCtx.lineJoin = 'round';
-        overlayCtx.lineCap = 'round';
-        overlayCtx.beginPath();
         const lastMainPoint = mainPath[mainPath.length - 1] || this.lassoCurrentPos;
-        if(lastMainPoint) overlayCtx.moveTo(lastMainPoint[0], lastMainPoint[1]);
-        for (let i = 0; i < this.futureLassoPath.length; i++) {
-            overlayCtx.lineTo(this.futureLassoPath[i][0], this.futureLassoPath[i][1]);
+        if(lastMainPoint) {
+            drawPath([lastMainPoint, ...this.futureLassoPath], 'hsla(var(--accent), 0.5)', 2);
         }
-        overlayCtx.stroke();
       }
-
 
       this.lassoNodes.forEach(([x, y], index) => {
         overlayCtx.beginPath();
@@ -1243,6 +1312,22 @@ export class SelectionEngine {
         overlayCtx.lineWidth = 1;
         overlayCtx.stroke();
       });
+    }
+
+    if (this.isDrawingLine) {
+        const linePath = [...this.lineNodes];
+        if(this.linePreviewPos) linePath.push(this.linePreviewPos);
+        drawPath(linePath, 'hsl(var(--primary))', 2);
+        
+        this.lineNodes.forEach(([x, y], index) => {
+            overlayCtx.beginPath();
+            overlayCtx.arc(x, y, 3, 0, Math.PI * 2);
+            overlayCtx.fillStyle = '#fff';
+            overlayCtx.fill();
+            overlayCtx.strokeStyle = 'hsl(var(--primary))';
+            overlayCtx.lineWidth = 1.5;
+            overlayCtx.stroke();
+        });
     }
   }
 }
