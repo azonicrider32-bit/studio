@@ -725,7 +725,7 @@ function ProSegmentAIContent() {
         />
       </div>
 
-      <div className="absolute left-0 top-12 h-[calc(100vh-3rem)] z-40">
+      <div className="absolute left-0 top-12 h-[calc(100vh-3rem)]">
         <Sidebar collapsible="icon">
           <SidebarHeader>
              <div className="flex items-center justify-between">
@@ -1054,6 +1054,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
