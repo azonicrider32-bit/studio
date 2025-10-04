@@ -43,7 +43,7 @@ interface ToolSettingsPanelProps {
   onMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void
   lassoSettings: LassoSettings
   onLassoSettingsChange: (settings: Partial<LassoSettings>) => void
-  activeTool: 'magic-wand' | 'lasso'
+  activeTool: 'magic-wand' | 'lasso' | 'line'
 }
 
 export function ToolSettingsPanel({ 

@@ -790,5 +790,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    
