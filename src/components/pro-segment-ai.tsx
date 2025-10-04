@@ -590,6 +590,7 @@ function ProSegmentAIContent() {
   const secondaryWorkspace = splitViewSecondaryIndex !== -1 ? workspaces[splitViewSecondaryIndex] : null;
 
   const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
+  
   const headerLeft = sidebarState === 'expanded' ? sidebarWidthVar : '0px';
 
   return (
@@ -657,7 +658,7 @@ function ProSegmentAIContent() {
 
       <header className="absolute top-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
           style={{
-            left: `calc(${sidebarWidthVar})`,
+            left: headerLeft,
             right: `${rightPanelWidth}px`,
             transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
           }}
@@ -811,13 +812,13 @@ function ProSegmentAIContent() {
             </div>
 
             <div className="flex-1 flex flex-col min-h-0">
-                <div className={cn("flex flex-col min-h-0", activeTopPanel && !activeBottomPanel ? "h-full" : "h-1/2")}>
+                <div className={cn("flex-1 flex flex-col min-h-0", !activeTopPanel && "hidden")}>
                     {activeTopPanel && renderTopPanelContent()}
                 </div>
                 
                 {activeTopPanel && activeBottomPanel && <Separator />}
 
-                <div className={cn("flex flex-col min-h-0", activeBottomPanel && !activeTopPanel ? "h-full" : "h-1/2")}>
+                <div className={cn("flex-1 flex flex-col min-h-0", !activeBottomPanel && "hidden")}>
                     {activeBottomPanel && renderBottomPanelContent()}
                 </div>
             </div>
@@ -920,4 +921,5 @@ export function ProSegmentAI() {
 
 
     
+
 
