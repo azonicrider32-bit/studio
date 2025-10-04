@@ -252,6 +252,7 @@ export default function AdvancedAssetPanel({
                                   src={image.imageUrl}
                                   alt={image.description}
                                   fill
+                                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                 />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -273,6 +274,7 @@ export default function AdvancedAssetPanel({
                                       src={image.imageUrl}
                                       alt={image.description}
                                       fill
+                                      sizes="80px"
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
@@ -306,6 +308,7 @@ export default function AdvancedAssetPanel({
                                   src={image.imageUrl}
                                   alt={image.description}
                                   fill
+                                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                 />
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -327,6 +330,7 @@ export default function AdvancedAssetPanel({
                                       src={image.imageUrl}
                                       alt={image.description}
                                       fill
+                                      sizes="80px"
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
