@@ -684,7 +684,7 @@ function ProSegmentAIContent() {
             clearSelectionRef={clearSelectionRef}
             onLassoSettingChange={handleLassoSettingsChange}
             onMagicWandSettingsChange={handleMagicWandSettingsChange}
-            onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+            onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
             canvasMousePos={canvasMousePos}
             setCanvasMousePos={setCanvasMousePos}
             getCanvasRef={canvasRef}
@@ -704,9 +704,11 @@ function ProSegmentAIContent() {
       </main>
       
       <div 
-        className="absolute top-12 bottom-0 z-30"
+        className="absolute bottom-0 z-30"
         style={{
             left: `calc(${sidebarWidthVar})`,
+            top: '3rem',
+            height: 'calc(100vh - 3rem)',
             transition: 'left 0.2s ease-in-out',
           }}
         >
@@ -877,7 +879,7 @@ function ProSegmentAIContent() {
         </div>
       </header>
       
-      <div className="fixed right-0 bottom-0 flex z-20" style={{ top: '3rem'}}>
+      <div className="fixed right-14 bottom-0 flex z-20" style={{ top: '3rem'}}>
         <div 
           className={cn(
             "h-full flex flex-col border-l border-border/50 bg-background transition-all",
@@ -899,8 +901,8 @@ function ProSegmentAIContent() {
               {activeBottomPanel && renderBottomPanelContent()}
             </div>
         </div>
-
-        <div className="h-full w-14 flex flex-col items-center justify-between border-l border-border/50 bg-background/80 backdrop-blur-sm p-2">
+      </div>
+      <div className="fixed right-0 h-[calc(100vh-3rem)] top-12 w-14 flex flex-col items-center justify-between border-l border-border/50 bg-background/80 backdrop-blur-sm p-2 z-30">
           <div className="flex flex-col gap-2">
             <TooltipProvider>
               <Tooltip>
@@ -958,7 +960,6 @@ function ProSegmentAIContent() {
                 </div>
             </TooltipProvider>
           </div>
-        </div>
       </div>
     </div>
   )
@@ -1053,6 +1054,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
