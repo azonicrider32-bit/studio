@@ -31,7 +31,12 @@ const categories = [
   { id: 'portrait', name: 'Portraits', icon: ImageIcon },
   { id: 'landscape', name: 'Landscapes', icon: ImageIcon },
   { id: 'product', name: 'Products', icon: ImageIcon },
-  { id: 'nature', name: 'Nature', icon: ImageIcon }
+  { id: 'nature', name: 'Nature', icon: ImageIcon },
+  { id: 'sports', name: 'Sports', icon: ImageIcon },
+  { id: 'animal', name: 'Animals', icon: ImageIcon },
+  { id: 'food', name: 'Food', icon: ImageIcon },
+  { id: 'texture', name: 'Textures', icon: ImageIcon },
+  { id: 'architecture', name: 'Architecture', icon: ImageIcon },
 ];
 
 export default function AdvancedAssetPanel({ 
@@ -91,9 +96,8 @@ export default function AdvancedAssetPanel({
           id: assetId,
           name: file.name.replace(/\.[^/.]+$/, ''),
           imageUrl: downloadURL, // Use the public download URL
-          category: 'uploaded',
           description: `Uploaded: ${file.name}`,
-          file: file,
+          category: 'uploaded',
           userId: user.uid,
           gcsPath: gcsPath,
           uploadDate: new Date().toISOString(),
@@ -286,7 +290,6 @@ export default function AdvancedAssetPanel({
                     )}
                   </TabsContent>
                   <TabsContent value="uploaded">
-                     {/* Same as gallery for now */}
                      {viewMode === 'grid' ? (
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                         {uploadedImages.map((image) => (

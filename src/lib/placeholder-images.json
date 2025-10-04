@@ -35,6 +35,90 @@
       "description": "A vibrant bowl of fresh salad, great for segmenting multiple small, overlapping objects.",
       "imageUrl": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzYWxhZHxlbnwwfHx8fDE3NTkyMDk5Nzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "fresh salad"
+    },
+    {
+      "id": "pro-segment-ai-7",
+      "description": "Close-up of a bright yellow sunflower.",
+      "imageUrl": "https://images.unsplash.com/photo-1597848212624-a19eb35e2651?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "nature flower"
+    },
+    {
+      "id": "pro-segment-ai-8",
+      "description": "A modern building with interesting geometric lines.",
+      "imageUrl": "https://images.unsplash.com/photo-1580828343064-fde4fc206b60?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "architecture building"
+    },
+    {
+      "id": "pro-segment-ai-9",
+      "description": "A red apple with a single water drop.",
+      "imageUrl": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "product fruit"
+    },
+    {
+      "id": "pro-segment-ai-10",
+      "description": "Portrait of an elderly man with detailed wrinkles.",
+      "imageUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "portrait man"
+    },
+    {
+      "id": "pro-segment-ai-11",
+      "description": "A colorful chameleon on a branch.",
+      "imageUrl": "https://images.unsplash.com/photo-1588878939833-2a3124d7b056?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "animal reptile"
+    },
+    {
+      "id": "pro-segment-ai-12",
+      "description": "A plate of delicious pasta.",
+      "imageUrl": "https://images.unsplash.com/photo-1588013273468-31508b942a25?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "food pasta"
+    },
+    {
+      "id": "pro-segment-ai-13",
+      "description": "A person snowboarding down a snowy mountain.",
+      "imageUrl": "https://images.unsplash.com/photo-1551524358-c4b378ad7425?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "sports snowboard"
+    },
+    {
+      "id": "pro-segment-ai-14",
+      "description": "A classic leather boot, perfect for product segmentation.",
+      "imageUrl": "https://images.unsplash.com/photo-1603808033173-7c134e9639dd?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "product shoe"
+    },
+    {
+      "id": "pro-segment-ai-15",
+      "description": "A tropical beach with clear blue water and palm trees.",
+      "imageUrl": "https://images.unsplash.com/photo-1507525428034-b723a996f3ea?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "landscape beach"
+    },
+    {
+      "id": "pro-segment-ai-16",
+      "description": "A detailed texture of a rusted metal surface.",
+      "imageUrl": "https://images.unsplash.com/photo-1555116553-625b03c27187?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "texture metal"
+    },
+    {
+      "id": "pro-segment-ai-17",
+      "description": "A glass of whiskey on a dark background.",
+      "imageUrl": "https://images.unsplash.com/photo-1619158401321-f8a3d76de562?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "product drink"
+    },
+    {
+      "id": "pro-segment-ai-18",
+      "description": "A cat looking directly at the camera.",
+      "imageUrl": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "animal cat"
+    },
+    {
+      "id": "pro-segment-ai-19",
+      "description": "A city skyline at night with lights reflecting on the water.",
+      "imageUrl": "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "landscape city"
+    },
+    {
+      "id": "pro-segment-ai-20",
+      "description": "A close up of an eye with detailed iris.",
+      "imageUrl": "https://images.unsplash.com/photo-1616681993427-b089c74d6c1b?q=80&w=1080&auto=format&fit=crop",
+      "imageHint": "portrait eye"
     }
   ]
 }
