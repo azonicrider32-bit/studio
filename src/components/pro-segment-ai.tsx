@@ -593,25 +593,22 @@ function ProSegmentAIContent() {
   return (
     <div className="h-screen w-screen flex bg-background">
       <Sidebar collapsible="icon">
-          <SidebarHeader>
-          </SidebarHeader>
-          <SidebarContent>
-              {renderLeftPanelContent()}
-          </SidebarContent>
+        <SidebarHeader />
+        <SidebarContent>
+            {renderLeftPanelContent()}
+        </SidebarContent>
       </Sidebar>
       
+      <ToolPanel
+        activeTool={activeTool}
+        setActiveTool={setActiveTool}
+        onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
+        onToggleSidebar={() => {}}
+        showHotkeys={showHotkeyLabels}
+      />
+      
       <div className="flex-1 flex flex-col relative">
-        <div className="absolute top-0 left-0 h-full z-30 bg-background/80 backdrop-blur-sm">
-            <ToolPanel
-                activeTool={activeTool}
-                setActiveTool={setActiveTool}
-                onToggleAssetDrawer={() => setIsAssetDrawerOpen(prev => !prev)}
-                onToggleSidebar={() => {}}
-                showHotkeys={showHotkeyLabels}
-            />
-        </div>
-
-        <main className="flex-1 h-full w-full bg-muted/30 overflow-hidden relative pl-20">
+        <main className="flex-1 h-full w-full bg-muted/30 overflow-hidden relative">
           <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
             <div className="flex items-center gap-4 flex-1">
             <WorkspaceTabs 
@@ -940,11 +937,4 @@ export function ProSegmentAI() {
 
 
     
-
-
-
-
-
-
-
 
