@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react';
@@ -21,6 +20,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useFirebase, useUser } from '@/firebase';
+import { getStorage, ref, uploadBytes } from "firebase/storage";
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc } from 'firebase/firestore';
 
 const categories = [
   { id: 'all', name: 'All Images', icon: ImageIcon },
@@ -44,6 +47,9 @@ export default function AdvancedAssetPanel({
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadedImages, setUploadedImages] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  
+  const { firebaseApp, firestore } = useFirebase();
+  const { user } = useUser();
 
   const filteredImages = PlaceHolderImages.filter(img => {
     const categoryMatch = selectedCategory === 'all' || img.imageHint.toLowerCase().includes(selectedCategory.toLowerCase());
@@ -57,32 +63,57 @@ export default function AdvancedAssetPanel({
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files) return;
+    if (!event.target.files || !user || !firebaseApp) return;
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
     setIsUploading(true);
+
+    const storage = getStorage(firebaseApp);
 
     try {
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
         if (file.size > 10 * 1024 * 1024) continue; // 10MB limit
 
-        const url = URL.createObjectURL(file);
+        const localUrl = URL.createObjectURL(file);
+        const assetId = `asset_${Date.now()}_${Math.random()}`;
+        const gcsPath = `assets/${user.uid}/${assetId}-${file.name}`;
+        const storageRef = ref(storage, gcsPath);
+
+        // Non-blocking upload
+        uploadBytes(storageRef, file);
+
         const newImage = {
-          id: `upload_${Date.now()}_${Math.random()}`,
+          id: assetId,
           name: file.name.replace(/\.[^/.]+$/, ''),
-          imageUrl: url,
+          imageUrl: localUrl,
           category: 'uploaded',
           description: `Uploaded: ${file.name}`,
-          complexity: 'unknown',
-          recommendedTool: 'magic_wand',
-          size: 'unknown',
-          colorSpace: 'sRGB',
-          file: file
+          file: file,
+          userId: user.uid,
+          gcsPath: gcsPath,
+          uploadDate: new Date().toISOString(),
         };
 
         setUploadedImages(prev => [...prev, newImage]);
+
+        // Store metadata in Firestore
+        const assetDocRef = doc(firestore, `users/${user.uid}/assets`, assetId);
+        const assetData = {
+          id: assetId,
+          userId: user.uid,
+          gcsBucket: storage.app.options.storageBucket,
+          gcsPath: gcsPath,
+          assetType: 'image',
+          uploadDate: newImage.uploadDate,
+          fileSize: file.size,
+          originalName: file.name,
+          accessControl: 'private',
+          tags: ['uploaded'],
+        };
+
+        setDocumentNonBlocking(assetDocRef, assetData, { merge: true });
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -176,7 +207,7 @@ export default function AdvancedAssetPanel({
                     <Button
                       className="w-full"
                       variant="outline"
-                      disabled={isUploading}
+                      disabled={isUploading || !user}
                       asChild
                     >
                       <span>
@@ -185,6 +216,7 @@ export default function AdvancedAssetPanel({
                       </span>
                     </Button>
                   </label>
+                  {!user && <p className="text-xs text-muted-foreground mt-2 text-center">Sign in to upload.</p>}
                 </div>
               </div>
 

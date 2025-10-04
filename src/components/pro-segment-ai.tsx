@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -75,6 +74,8 @@ import { useSelectionDrag } from "@/hooks/use-selection-drag"
 import { useToast } from "@/hooks/use-toast"
 import { ToolPanel } from "./tool-panel"
 import { Slider } from "./ui/slider"
+import { useAuth, useUser } from "@/firebase"
+import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
@@ -147,6 +148,15 @@ function ProSegmentAIContent() {
   
   const { state: sidebarState } = useSidebar();
   const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(false);
+  
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [user, isUserLoading, auth]);
 
 
   const setActiveWorkspaceState = (updater: (prevState: WorkspaceState) => WorkspaceState) => {
@@ -948,3 +958,4 @@ export function ProSegmentAI() {
 
 
       
+
