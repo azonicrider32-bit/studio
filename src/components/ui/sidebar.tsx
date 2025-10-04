@@ -383,10 +383,10 @@ const SidebarHeader = React.forwardRef<
         <div className={cn("flex-1", state === 'collapsed' && 'hidden')}>
             {children}
         </div>
-        <SidebarTrigger asChild className={cn(state === 'collapsed' && 'hidden')}>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-                <ChevronLeft />
-            </Button>
+        <SidebarTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <ChevronLeft />
+          </Button>
         </SidebarTrigger>
       </div>
     </div>

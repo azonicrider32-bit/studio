@@ -6,6 +6,8 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { LassoSettings } from "@/lib/types"
+import { Button } from "../ui/button"
+import { cn } from "@/lib/utils"
 
 const VerticalLassoSlider = ({
   settingKey,
@@ -37,35 +39,42 @@ const VerticalLassoSlider = ({
   };
 
   return (
-      <div className="flex flex-col items-center gap-2 flex-1 p-1 rounded-md" onWheel={handleWheel}>
+      <div className={cn("flex flex-col items-center justify-end gap-2 h-full cursor-pointer rounded-md p-px")} onWheel={handleWheel}>
           <Tooltip>
               <TooltipTrigger asChild>
-                  <span className="text-xs font-semibold">{label}</span>
+                   <div className="w-full h-full flex flex-col items-center gap-2 justify-end">
+                      <div className={cn("w-3 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative")}>
+                        <div 
+                          className={cn("w-full bg-primary/75", { "bg-muted": !isEnabled })}
+                          style={{ height: `${(value/max)*100}%`}}
+                        ></div>
+                      </div>
+                      <Slider
+                          id={`${settingKey}-slider`}
+                          min={0}
+                          max={max}
+                          step={step}
+                          value={[value]}
+                          onValueChange={(v) => onLassoSettingsChange({ [settingKey]: v[0] } as Partial<LassoSettings>)}
+                          orientation="vertical"
+                          className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0 cursor-row-resize"
+                          disabled={!isEnabled}
+                      />
+                  </div>
               </TooltipTrigger>
               <TooltipContent side="right">
-                  <p>{label}</p>
+                  <p>{label}: {value.toFixed(step < 1 ? 2 : 0)}{unit}</p>
               </TooltipContent>
           </Tooltip>
-          <div className="relative h-24 w-full flex items-center justify-center">
-               <Slider
-                  id={`${settingKey}-slider`}
-                  min={0}
-                  max={max}
-                  step={step}
-                  value={[value]}
-                  onValueChange={(v) => onLassoSettingsChange({ [settingKey]: v[0] } as Partial<LassoSettings>)}
-                  orientation="vertical"
-                  className="h-full"
-                  disabled={!isEnabled}
-              />
-          </div>
-          <span className="font-mono text-xs">{value.toFixed(step < 1 ? 2 : 0)}{unit}</span>
-           <Switch
-              id={`${settingKey}-toggle`}
-              size="sm"
-              checked={isEnabled}
-              onCheckedChange={(checked) => onLassoSettingsChange({ [`${settingKey}Enabled`]: checked } as Partial<LassoSettings>)}
-          />
+           <div className="flex flex-col items-center gap-2">
+                <Switch
+                    id={`${settingKey}-toggle`}
+                    size="sm"
+                    checked={isEnabled}
+                    onCheckedChange={(checked) => onLassoSettingsChange({ [`${settingKey}Enabled`]: checked } as Partial<LassoSettings>)}
+                    orientation="vertical"
+                />
+            </div>
       </div>
   );
 };
@@ -80,18 +89,39 @@ export function LassoCompactSettings({ settings, onSettingsChange }: { settings:
     )
   }
   
+  const handleToggleGroup = (keys: (keyof LassoSettings)[]) => {
+    const allEnabled = keys.every(k => settings[`${k}Enabled` as keyof LassoSettings]);
+    const changes: Partial<LassoSettings> = {};
+    keys.forEach(key => {
+        changes[`${key}Enabled` as keyof LassoSettings] = !allEnabled;
+    });
+    onLassoSettingsChange(changes);
+  }
+
+  const snapKeys: (keyof LassoSettings)[] = ['snapRadius', 'snapThreshold', 'directionalStrength'];
+  const influenceKeys: (keyof LassoSettings)[] = ['cursorInfluence', 'traceInfluence', 'colorInfluence'];
+
   return (
-    <div className="p-2 space-y-4 h-full flex flex-col justify-around">
+    <div className="flex flex-col h-full items-center justify-start py-2 px-1">
       <TooltipProvider>
-        <div className="flex justify-around gap-1">
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
-        </div>
-        <div className="flex justify-around gap-1">
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
-            <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="colorInfluence" label="Color" max={1} step={0.05} />
+        <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center gap-1 my-2">
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(snapKeys)} className="font-semibold text-xs h-auto p-1">Snap</Button>
+                <div className="flex items-end h-32">
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
+                </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-1 my-2">
+                <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(influenceKeys)} className="font-semibold text-xs h-auto p-1">Influence</Button>
+                <div className="flex items-end h-32">
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="colorInfluence" label="Color" max={1} step={0.05} />
+                </div>
+            </div>
         </div>
       </TooltipProvider>
     </div>
