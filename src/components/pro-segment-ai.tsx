@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -77,6 +78,7 @@ import { Slider } from "./ui/slider"
 import { useAuth, useUser } from "@/firebase"
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
+import { ProgressiveHover } from "./ui/progressive-hover"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai';
@@ -828,14 +830,40 @@ function ProSegmentAIContent() {
             
             <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
                 <Tabs value={activeTopPanel || 'none'} className="w-full">
-                  <TooltipProvider>
-                      <TabsList className="grid w-full grid-cols-4">
-                          <Tooltip><TooltipTrigger asChild><TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}><ZoomIn className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Zoom Panel (Z)</TooltipContent></Tooltip>
-                          <Tooltip><TooltipTrigger asChild><TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}><FeatherIcon className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Feather & Edges (F)</TooltipContent></Tooltip>
-                          <Tooltip><TooltipTrigger asChild><TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}><LayersIcon className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Layers (L)</TooltipContent></Tooltip>
-                          <Tooltip><TooltipTrigger asChild><TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}><BrainCircuit className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span>}</TabsTrigger></TooltipTrigger><TooltipContent>AI Tools (A)</TooltipContent></Tooltip>
-                      </TabsList>
-                  </TooltipProvider>
+                  <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}>
+                        <ProgressiveHover initialContent={<p>Zoom Panel (Z)</p>} summaryContent="Pixel Zoom Panel" detailedContent="Get a magnified view of the area around your cursor for pixel-perfect selections and adjustments.">
+                          <>
+                            <ZoomIn className="h-5 w-5"/>
+                            {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span>}
+                          </>
+                        </ProgressiveHover>
+                      </TabsTrigger>
+                      <TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}>
+                        <ProgressiveHover initialContent={<p>Feather & Edges (F)</p>} summaryContent="Edge Refinement" detailedContent="Fine-tune selection edges with anti-aliasing and smart feathering for professional, seamless composites.">
+                          <>
+                            <FeatherIcon className="h-5 w-5"/>
+                            {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span>}
+                          </>
+                        </ProgressiveHover>
+                      </TabsTrigger>
+                      <TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}>
+                        <ProgressiveHover initialContent={<p>Layers (L)</p>} summaryContent="Layers Panel" detailedContent="Manage, organize, and edit all the layers in your project. Toggle visibility, lock layers, and manage masks.">
+                          <>
+                            <LayersIcon className="h-5 w-5"/>
+                            {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span>}
+                          </>
+                        </ProgressiveHover>
+                      </TabsTrigger>
+                      <TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}>
+                        <ProgressiveHover initialContent={<p>AI Tools (A)</p>} summaryContent="AI Tools Panel" detailedContent="Leverage powerful AI models for automated segmentation, inpainting, and other generative actions.">
+                          <>
+                            <BrainCircuit className="h-5 w-5"/>
+                            {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span>}
+                          </>
+                        </ProgressiveHover>
+                      </TabsTrigger>
+                  </TabsList>
                 </Tabs>
             </div>
 
@@ -853,13 +881,32 @@ function ProSegmentAIContent() {
 
             <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
                 <Tabs value={activeBottomPanel || 'none'} className="w-full">
-                  <TooltipProvider>
-                      <TabsList className="grid w-full grid-cols-3">
-                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}><Palette className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Color Analysis (C)</TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}><MessageSquare className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span>}</TabsTrigger></TooltipTrigger><TooltipContent>AI Chat (M)</TooltipContent></Tooltip>
-                        <Tooltip><TooltipTrigger asChild><TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}><Scan className="h-5 w-5"/>{showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span>}</TabsTrigger></TooltipTrigger><TooltipContent>Pixel Preview (P)</TooltipContent></Tooltip>
-                      </TabsList>
-                  </TooltipProvider>
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}>
+                           <ProgressiveHover initialContent={<p>Color Analysis (C)</p>} summaryContent="Color & Tolerance Analysis" detailedContent="Inspect the color values (RGB, HSV, LAB) under your cursor and fine-tune Magic Wand tolerances in real-time.">
+                            <>
+                              <Palette className="h-5 w-5"/>
+                              {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span>}
+                            </>
+                           </ProgressiveHover>
+                        </TabsTrigger>
+                        <TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}>
+                            <ProgressiveHover initialContent={<p>AI Chat (M)</p>} summaryContent="AI Assistant Chat" detailedContent="Converse with the AI-MOS assistant to get help, ask questions about the image, or perform complex tasks.">
+                                <>
+                                  <MessageSquare className="h-5 w-5"/>
+                                  {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span>}
+                                </>
+                            </ProgressiveHover>
+                        </TabsTrigger>
+                        <TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}>
+                           <ProgressiveHover initialContent={<p>Pixel Preview (P)</p>} summaryContent="Pixel Grid Preview" detailedContent="View a live, magnified grid of pixels around your cursor to see fine details and how your selection tools are behaving.">
+                             <>
+                              <Scan className="h-5 w-5"/>
+                              {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span>}
+                             </>
+                           </ProgressiveHover>
+                        </TabsTrigger>
+                    </TabsList>
                 </Tabs>
             </div>
         </div>
@@ -959,3 +1006,8 @@ export function ProSegmentAI() {
 
       
 
+
+
+
+
+    
