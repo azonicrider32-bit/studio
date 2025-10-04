@@ -60,7 +60,8 @@ export function AssetDrawer({ isOpen, onToggle, onImageSelect, rightPanelWidth }
     onToggle();
   }
 
-  const leftPosition = sidebarState === 'expanded' ? 'calc(var(--sidebar-width) + 3rem)' : 'calc(var(--sidebar-width-icon) + 3rem)';
+  const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
+  const leftPosition = `calc(${sidebarWidthVar} + 5rem)`;
 
   return (
     <AnimatePresence>
