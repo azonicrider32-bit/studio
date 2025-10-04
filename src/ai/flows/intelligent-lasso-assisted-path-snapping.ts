@@ -19,6 +19,7 @@ const IntelligentLassoInputSchema = z.object({
     ),
   lassoPath: z.array(z.object({x: z.number(), y: z.number()})).describe('The path drawn by the user using the lasso tool.'),
   prompt: z.string().describe('A description of the object to segment.'),
+  cost_function: z.enum(["sobel", "gradient", "laplacian"]).default("sobel").describe("The cost function to use for edge detection.")
 });
 export type IntelligentLassoInput = z.infer<typeof IntelligentLassoInputSchema>;
 
@@ -40,7 +41,7 @@ const prompt = ai.definePrompt({
     input: { schema: IntelligentLassoInputSchema },
     output: { schema: IntelligentLassoOutputSchema },
     prompt: `You are an expert image analysis assistant. Your task is to refine a user-drawn lasso path to snap to the most likely object boundary.
-Analyze the user's lasso path and the provided image.
+Analyze the user's lasso path and the provided image, using the '{{cost_function}}' cost function for edge detection.
 The user is trying to select: {{{prompt}}}.
 The user has provided a rough polygon with these vertices: {{{JSONstringify lassoPath}}}.
 Your task is to analyze the image content within and near this polygon and return a refined, more accurate list of vertices that tightly follows the boundary of the specified object. The new path should have a similar number of points but be snapped to the object's edges.
