@@ -35,6 +35,7 @@ import {
   Wand2,
   Camera,
   Scissors,
+  PanelRightClose,
 } from "lucide-react"
 
 import {
@@ -124,6 +125,7 @@ function ProSegmentAIContent() {
   const [activeTool, setActiveTool] = React.useState<Tool>("line")
   const [isAssetDrawerOpen, setIsAssetDrawerOpen] = React.useState(false);
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
+  const [isRightPanelOpen, setIsRightPanelOpen] = React.useState(true);
   const isResizingRef = React.useRef(false);
   const { toast } = useToast()
   
@@ -487,6 +489,15 @@ function ProSegmentAIContent() {
     }
   }
 
+  const handleShelfClick = (panel: TopPanel | BottomPanel) => {
+    setIsRightPanelOpen(true);
+    if (['zoom', 'feather', 'layers', 'ai'].includes(panel)) {
+      setActiveTopPanel(panel as TopPanel);
+    } else {
+      setActiveBottomPanel(panel as BottomPanel);
+    }
+  }
+
 
   const renderLeftPanelContent = () => {
     switch(activeTool) {
@@ -613,6 +624,20 @@ function ProSegmentAIContent() {
 
   const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   
+  const topPanelIcons = [
+    { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)' },
+    { id: 'feather', icon: FeatherIcon, label: 'Feather & Edges (F)' },
+    { id: 'layers', icon: LayersIcon, label: 'Layers (L)' },
+    { id: 'ai', icon: BrainCircuit, label: 'AI Tools (A)' },
+  ];
+
+  const bottomPanelIcons = [
+    { id: 'color-analysis', icon: Palette, label: 'Color Analysis (C)' },
+    { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)' },
+    { id: 'pixel-preview', icon: Scan, label: 'Pixel Preview (P)' },
+    { id: 'history', icon: History, label: 'History' },
+  ];
+
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
       <main className="absolute inset-0 pt-12">
@@ -687,7 +712,7 @@ function ProSegmentAIContent() {
       <header className="absolute top-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
           style={{
             left: '0px',
-            right: `${rightPanelWidth}px`,
+            right: isRightPanelOpen ? `${rightPanelWidth}px` : '0px',
             transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
           }}
         >
@@ -703,6 +728,38 @@ function ProSegmentAIContent() {
             </div>
          </div>
         <div className="flex items-center gap-2 ml-auto">
+          {!isRightPanelOpen && (
+            <div className="flex flex-col gap-0.5">
+              <div className="flex gap-1">
+                {topPanelIcons.map(({id, icon: Icon, label}) => (
+                   <TooltipProvider key={id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShelfClick(id as TopPanel)}>
+                              <Icon className="h-4 w-4"/>
+                           </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{label}</p></TooltipContent>
+                      </Tooltip>
+                   </TooltipProvider>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                 {bottomPanelIcons.map(({id, icon: Icon, label}) => (
+                   <TooltipProvider key={id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleShelfClick(id as BottomPanel)}>
+                              <Icon className="h-4 w-4"/>
+                           </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>{label}</p></TooltipContent>
+                      </Tooltip>
+                   </TooltipProvider>
+                ))}
+              </div>
+            </div>
+          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><ArrowBigUpDash /></Button></TooltipTrigger>
@@ -817,105 +874,73 @@ function ProSegmentAIContent() {
         </div>
       </header>
       
-      <div 
-        className="fixed top-0 right-0 bottom-0 flex z-20"
-      >
-        <div className="flex flex-col border-l border-border/50 bg-background" style={{ width: rightPanelWidth }}>
-            <div 
-              onMouseDown={handleMouseDownResize}
-              className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50")}
-            >
-              <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
-            </div>
-            
-            <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
-                <Tabs value={activeTopPanel || 'none'} className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
-                      <TabsTrigger value="zoom" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'zoom' ? null : 'zoom')}>
-                        <ProgressiveHover initialContent={<p>Zoom Panel (Z)</p>} summaryContent="Pixel Zoom Panel" detailedContent="Get a magnified view of the area around your cursor for pixel-perfect selections and adjustments.">
-                          <div className="flex items-center justify-center w-full h-full">
-                            <ZoomIn className="h-5 w-5"/>
-                            {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">Z</span>}
-                          </div>
-                        </ProgressiveHover>
-                      </TabsTrigger>
-                      <TabsTrigger value="feather" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'feather' ? null : 'feather')}>
-                        <ProgressiveHover initialContent={<p>Feather & Edges (F)</p>} summaryContent="Edge Refinement" detailedContent="Fine-tune selection edges with anti-aliasing and smart feathering for professional, seamless composites.">
-                          <div className="flex items-center justify-center w-full h-full">
-                            <FeatherIcon className="h-5 w-5"/>
-                            {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">F</span>}
-                          </div>
-                        </ProgressiveHover>
-                      </TabsTrigger>
-                      <TabsTrigger value="layers" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'layers' ? null : 'layers')}>
-                        <ProgressiveHover initialContent={<p>Layers (L)</p>} summaryContent="Layers Panel" detailedContent="Manage, organize, and edit all the layers in your project. Toggle visibility, lock layers, and manage masks.">
-                          <div className="flex items-center justify-center w-full h-full">
-                            <LayersIcon className="h-5 w-5"/>
-                            {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">L</span>}
-                          </div>
-                        </ProgressiveHover>
-                      </TabsTrigger>
-                      <TabsTrigger value="ai" className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === 'ai' ? null : 'ai')}>
-                        <ProgressiveHover initialContent={<p>AI Tools (A)</p>} summaryContent="AI Tools Panel" detailedContent="Leverage powerful AI models for automated segmentation, inpainting, and other generative actions.">
-                          <div className="flex items-center justify-center w-full h-full">
-                            <BrainCircuit className="h-5 w-5"/>
-                            {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">A</span>}
-                          </div>
-                        </ProgressiveHover>
-                      </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-            </div>
-
-            <div className="flex-1 flex flex-col min-h-0">
-                <div className={cn("flex-1 flex flex-col min-h-0", !activeTopPanel && "hidden")}>
-                    {activeTopPanel && renderTopPanelContent()}
+      {isRightPanelOpen && (
+        <div 
+            className="fixed top-0 right-0 bottom-0 flex z-20"
+        >
+            <div className="flex flex-col border-l border-border/50 bg-background" style={{ width: rightPanelWidth }}>
+                <div 
+                onMouseDown={handleMouseDownResize}
+                className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50")}
+                >
+                <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
                 </div>
                 
-                {activeTopPanel && activeBottomPanel && <Separator />}
+                <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
+                    <Tabs value={activeTopPanel || 'none'} className="w-full">
+                      <TabsList className="grid w-full grid-cols-4">
+                          {topPanelIcons.map(({id, icon: Icon, label}) => (
+                            <TabsTrigger key={id} value={id} className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === id ? null : id as TopPanel)}>
+                               <ProgressiveHover initialContent={<p>{label}</p>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
+                                <div className="flex items-center justify-center w-full h-full">
+                                    <Icon className="h-5 w-5"/>
+                                </div>
+                               </ProgressiveHover>
+                            </TabsTrigger>
+                          ))}
+                      </TabsList>
+                    </Tabs>
+                </div>
 
-                <div className={cn("flex-1 flex flex-col min-h-0", !activeBottomPanel && "hidden")}>
-                    {activeBottomPanel && renderBottomPanelContent()}
+                <div className="flex-1 flex flex-col min-h-0">
+                    <div className={cn("flex-1 flex flex-col min-h-0", !activeTopPanel && "hidden")}>
+                        {activeTopPanel && renderTopPanelContent()}
+                    </div>
+                    
+                    {activeTopPanel && activeBottomPanel && <Separator />}
+
+                    <div className={cn("flex-1 flex flex-col min-h-0", !activeBottomPanel && "hidden")}>
+                        {activeBottomPanel && renderBottomPanelContent()}
+                    </div>
+                </div>
+
+                <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
+                    <Tabs value={activeBottomPanel || 'none'} className="w-full">
+                        <TabsList className="grid w-full grid-cols-4">
+                            {bottomPanelIcons.slice(0,3).map(({id, icon: Icon, label}) => (
+                                <TabsTrigger key={id} value={id} className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === id ? null : id as BottomPanel)}>
+                                    <ProgressiveHover initialContent={<p>{label}</p>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
+                                        <div className="flex items-center justify-center w-full h-full">
+                                            <Icon className="h-5 w-5"/>
+                                        </div>
+                                    </ProgressiveHover>
+                                </TabsTrigger>
+                            ))}
+                             <Button variant="ghost" size="icon" className="h-full w-full rounded-none" onClick={() => setIsRightPanelOpen(false)}>
+                                <PanelRightClose className="h-5 w-5" />
+                            </Button>
+                        </TabsList>
+                    </Tabs>
                 </div>
             </div>
-
-            <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
-                <Tabs value={activeBottomPanel || 'none'} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="color-analysis" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'color-analysis' ? null : 'color-analysis')}>
-                           <ProgressiveHover initialContent={<p>Color Analysis (C)</p>} summaryContent="Color & Tolerance Analysis" detailedContent="Inspect the color values (RGB, HSV, LAB) under your cursor and fine-tune Magic Wand tolerances in real-time.">
-                            <div className="flex items-center justify-center w-full h-full">
-                              <Palette className="h-5 w-5"/>
-                              {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">C</span>}
-                            </div>
-                           </ProgressiveHover>
-                        </TabsTrigger>
-                        <TabsTrigger value="chat" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'chat' ? null : 'chat')}>
-                            <ProgressiveHover initialContent={<p>AI Chat (M)</p>} summaryContent="AI Assistant Chat" detailedContent="Converse with the AI-MOS assistant to get help, ask questions about the image, or perform complex tasks.">
-                                <div className="flex items-center justify-center w-full h-full">
-                                  <MessageSquare className="h-5 w-5"/>
-                                  {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">M</span>}
-                                </div>
-                            </ProgressiveHover>
-                        </TabsTrigger>
-                        <TabsTrigger value="pixel-preview" className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === 'pixel-preview' ? null : 'pixel-preview')}>
-                           <ProgressiveHover initialContent={<p>Pixel Preview (P)</p>} summaryContent="Pixel Grid Preview" detailedContent="View a live, magnified grid of pixels around your cursor to see fine details and how your selection tools are behaving.">
-                             <div className="flex items-center justify-center w-full h-full">
-                              <Scan className="h-5 w-5"/>
-                              {showHotkeyLabels && <span className="absolute bottom-0 right-1 text-xs font-bold opacity-50">P</span>}
-                             </div>
-                           </ProgressiveHover>
-                        </TabsTrigger>
-                    </TabsList>
-                </Tabs>
-            </div>
         </div>
-      </div>
+      )}
+
       <AssetDrawer
           isOpen={isAssetDrawerOpen}
           onToggle={() => setIsAssetDrawerOpen(prev => !prev)}
           onImageSelect={handleImageSelect}
-          rightPanelWidth={rightPanelWidth}
+          rightPanelWidth={isRightPanelOpen ? rightPanelWidth : 0}
       />
     </div>
   )
@@ -1011,4 +1036,5 @@ export function ProSegmentAI() {
 
 
     
+
 
