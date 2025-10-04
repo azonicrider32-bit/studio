@@ -631,26 +631,22 @@ function ProSegmentAIContent() {
 
   const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   
-  const topPanelIcons = [
-    { id: 'assets', icon: ImageIcon, label: 'Asset Library (O)' },
-    { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)' },
-    { id: 'feather', icon: FeatherIcon, label: 'Feather & Edges (F)' },
-    { id: 'layers', icon: LayersIcon, label: 'Layers (L)' },
-    { id: 'ai', icon: BrainCircuit, label: 'AI Tools (A)' },
+  const allShelfIcons = [
+    { id: 'assets', icon: ImageIcon, label: 'Asset Library (O)', panel: 'top' },
+    { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)', panel: 'top' },
+    { id: 'feather', icon: FeatherIcon, label: 'Feather & Edges (F)', panel: 'top' },
+    { id: 'layers', icon: LayersIcon, label: 'Layers (L)', panel: 'top' },
+    { id: 'ai', icon: BrainCircuit, label: 'AI Tools (A)', panel: 'top' },
+    { id: 'separator-1', icon: null, label: '' },
+    { id: 'color-analysis', icon: Palette, label: 'Color Analysis (C)', panel: 'bottom' },
+    { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)', panel: 'bottom' },
+    { id: 'pixel-preview', icon: Scan, label: 'Pixel Preview (P)', panel: 'bottom' },
+    { id: 'history', icon: History, label: 'History', panel: 'bottom' },
   ];
-
-  const bottomPanelIcons = [
-    { id: 'color-analysis', icon: Palette, label: 'Color Analysis (C)' },
-    { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)' },
-    { id: 'pixel-preview', icon: Scan, label: 'Pixel Preview (P)' },
-    { id: 'history', icon: History, label: 'History' },
-  ];
-  
-  const allShelfIcons = [...topPanelIcons, ...bottomPanelIcons];
 
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
-      <main className="absolute inset-y-0 left-0 right-0 pt-12">
+      <main className="absolute inset-y-0 right-0 pt-12" style={{ left: `calc(${sidebarWidthVar} + 4rem)`}}>
           <ImageCanvas 
             key={activeWorkspace.id}
             imageUrl={activeWorkspace.imageUrl}
@@ -690,10 +686,9 @@ function ProSegmentAIContent() {
       </main>
       
       <div 
-        className="absolute bottom-0 z-30"
+        className="absolute top-12 bottom-0 z-30"
         style={{
             left: `calc(${sidebarWidthVar})`,
-            top: '3rem',
             transition: 'left 0.2s ease-in-out',
           }}
         >
@@ -710,7 +705,7 @@ function ProSegmentAIContent() {
         />
       </div>
 
-      <div className="absolute left-0 h-[calc(100vh-3rem)] top-12 z-40">
+      <div className="absolute left-0 top-12 h-[calc(100vh-3rem)] z-40">
         <Sidebar collapsible="icon">
           <SidebarHeader>
              <div className="flex items-center justify-between">
@@ -865,14 +860,16 @@ function ProSegmentAIContent() {
       </header>
       
       <div className="fixed right-0 bottom-0 flex z-20" style={{ top: '3rem'}}>
-        {isRightPanelOpen && (
-          <div
-            className="flex flex-col border-l border-border/50 bg-background transition-all"
-            style={{ width: `${rightPanelWidth}px` }}
-          >
+        <div 
+          className={cn(
+            "flex flex-col border-l border-border/50 bg-background transition-all",
+            isRightPanelOpen ? "w-auto" : "w-0"
+          )}
+          style={{ width: isRightPanelOpen ? `${rightPanelWidth}px` : '0px'}}
+        >
             <div
               onMouseDown={handleMouseDownResize}
-              className="absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50"
+              className={cn("absolute -left-1.5 top-0 h-full w-3 cursor-ew-resize group z-50", !isRightPanelOpen && "hidden")}
             >
               <div className="w-0.5 h-full bg-border group-hover:bg-primary transition-colors mx-auto"></div>
             </div>
@@ -883,8 +880,7 @@ function ProSegmentAIContent() {
             <div className="flex-1 flex flex-col min-h-0">
               {activeBottomPanel && renderBottomPanelContent()}
             </div>
-          </div>
-        )}
+        </div>
 
         <div className="w-14 flex flex-col items-center justify-between border-l border-border/50 bg-background/80 backdrop-blur-sm p-2">
           <div className="flex flex-col gap-2">
@@ -898,30 +894,23 @@ function ProSegmentAIContent() {
                 <TooltipContent side="left"><p>{isRightPanelOpen ? 'Close Panel' : 'Open Panel'}</p></TooltipContent>
               </Tooltip>
               <Separator />
-              {topPanelIcons.map(({id, icon: Icon, label}) => (
-                <Tooltip key={id}>
-                  <TooltipTrigger asChild>
-                    <Button variant={activeTopPanel === id && isRightPanelOpen ? "secondary" : "ghost"} size="icon" onClick={() => handleShelfClick(id as TopPanel)}>
-                      <Icon className="h-5 w-5"/>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left"><p>{label}</p></TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
-          </div>
-          <div className="flex flex-col gap-2">
-            <TooltipProvider>
-              {bottomPanelIcons.map(({id, icon: Icon, label}) => (
-                <Tooltip key={id}>
-                  <TooltipTrigger asChild>
-                    <Button variant={activeBottomPanel === id && isRightPanelOpen ? "secondary" : "ghost"} size="icon" onClick={() => handleShelfClick(id as BottomPanel)}>
-                      <Icon className="h-5 w-5"/>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left"><p>{label}</p></TooltipContent>
-                </Tooltip>
-              ))}
+              {allShelfIcons.map(({id, icon: Icon, label, panel}) => {
+                if (!Icon) return <Separator key={id}/>;
+                const isActive = panel === 'top' ? activeTopPanel === id : activeBottomPanel === id;
+                return (
+                  <Tooltip key={id}>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant={isActive && isRightPanelOpen ? "secondary" : "ghost"} 
+                        size="icon" 
+                        onClick={() => handleShelfClick(id as any)}>
+                        <Icon className="h-5 w-5"/>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left"><p>{label}</p></TooltipContent>
+                  </Tooltip>
+                )
+              })}
             </TooltipProvider>
           </div>
         </div>
@@ -952,7 +941,7 @@ function WorkspaceTabs({
           className={cn(
             "flex items-center gap-2 px-4 py-2 cursor-pointer text-sm font-medium transition-colors rounded-t-md",
             activeWorkspaceId === ws.id 
-              ? "bg-background border-border/50 border border-b-transparent text-foreground" 
+              ? "bg-background border-border/50 border-x border-t text-foreground"
               : "border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           )}
         >
@@ -1019,6 +1008,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
