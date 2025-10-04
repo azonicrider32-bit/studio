@@ -211,7 +211,7 @@ export function ToolPanel({
 }: ToolPanelProps) {
   
   return (
-    <div className="h-full flex-shrink-0 w-20 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
+    <div className="h-full flex-shrink-0 w-16 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
       <div className="flex flex-col items-center gap-2">
         <TooltipProvider>
             {tools.map((tool) => (

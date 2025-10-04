@@ -496,11 +496,29 @@ function ProSegmentAIContent() {
   }
 
   const handleShelfClick = (panel: TopPanel | BottomPanel) => {
-    setIsRightPanelOpen(true);
-    if (['zoom', 'feather', 'layers', 'ai', 'assets'].includes(panel)) {
-      setActiveTopPanel(panel as TopPanel);
+    if (isRightPanelOpen) {
+      if (['zoom', 'feather', 'layers', 'ai', 'assets'].includes(panel)) {
+        if(activeTopPanel === panel) {
+          setActiveTopPanel(null);
+        } else {
+          setActiveTopPanel(panel as TopPanel);
+        }
+      } else {
+        if (activeBottomPanel === panel) {
+          setActiveBottomPanel(null);
+        } else {
+          setActiveBottomPanel(panel as BottomPanel);
+        }
+      }
     } else {
-      setActiveBottomPanel(panel as BottomPanel);
+      setIsRightPanelOpen(true);
+      if (['zoom', 'feather', 'layers', 'ai', 'assets'].includes(panel)) {
+        setActiveTopPanel(panel as TopPanel);
+        setActiveBottomPanel(null);
+      } else {
+        setActiveBottomPanel(panel as BottomPanel);
+        setActiveTopPanel(null);
+      }
     }
   }
 
@@ -862,7 +880,7 @@ function ProSegmentAIContent() {
       <div className="fixed right-0 bottom-0 flex z-20" style={{ top: '3rem'}}>
         <div 
           className={cn(
-            "flex flex-col border-l border-border/50 bg-background transition-all",
+            "h-full flex flex-col border-l border-border/50 bg-background transition-all",
             isRightPanelOpen ? "w-auto" : "w-0"
           )}
           style={{ width: isRightPanelOpen ? `${rightPanelWidth}px` : '0px'}}
@@ -882,7 +900,7 @@ function ProSegmentAIContent() {
             </div>
         </div>
 
-        <div className="w-14 flex flex-col items-center justify-between border-l border-border/50 bg-background/80 backdrop-blur-sm p-2">
+        <div className="h-full w-14 flex flex-col items-center justify-between border-l border-border/50 bg-background/80 backdrop-blur-sm p-2">
           <div className="flex flex-col gap-2">
             <TooltipProvider>
               <Tooltip>
@@ -894,23 +912,50 @@ function ProSegmentAIContent() {
                 <TooltipContent side="left"><p>{isRightPanelOpen ? 'Close Panel' : 'Open Panel'}</p></TooltipContent>
               </Tooltip>
               <Separator />
-              {allShelfIcons.map(({id, icon: Icon, label, panel}) => {
-                if (!Icon) return <Separator key={id}/>;
-                const isActive = panel === 'top' ? activeTopPanel === id : activeBottomPanel === id;
-                return (
-                  <Tooltip key={id}>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant={isActive && isRightPanelOpen ? "secondary" : "ghost"} 
-                        size="icon" 
-                        onClick={() => handleShelfClick(id as any)}>
-                        <Icon className="h-5 w-5"/>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="left"><p>{label}</p></TooltipContent>
-                  </Tooltip>
-                )
-              })}
+               <div className="space-y-1 flex flex-col">
+                <p className="text-xs text-muted-foreground font-semibold text-center">TOP</p>
+                {allShelfIcons.filter(i => i.panel === 'top').map(({id, icon: Icon, label}) => {
+                  if (!Icon) return <Separator key={id} className="my-1"/>;
+                  const isActive = activeTopPanel === id;
+                  return (
+                    <Tooltip key={id}>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant={isActive && isRightPanelOpen ? "secondary" : "ghost"} 
+                          size="icon" 
+                          onClick={() => handleShelfClick(id as any)}>
+                          <Icon className="h-5 w-5"/>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left"><p>{label}</p></TooltipContent>
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            </TooltipProvider>
+          </div>
+          <div className="flex flex-col gap-2">
+             <TooltipProvider>
+                <div className="space-y-1 flex flex-col">
+                    <p className="text-xs text-muted-foreground font-semibold text-center">BTM</p>
+                    {allShelfIcons.filter(i => i.panel === 'bottom').map(({id, icon: Icon, label}) => {
+                      if (!Icon) return <Separator key={id} className="my-1"/>;
+                      const isActive = activeBottomPanel === id;
+                      return (
+                        <Tooltip key={id}>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant={isActive && isRightPanelOpen ? "secondary" : "ghost"} 
+                              size="icon" 
+                              onClick={() => handleShelfClick(id as any)}>
+                              <Icon className="h-5 w-5"/>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left"><p>{label}</p></TooltipContent>
+                        </Tooltip>
+                      )
+                    })}
+                </div>
             </TooltipProvider>
           </div>
         </div>
@@ -1008,6 +1053,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
