@@ -591,11 +591,9 @@ function ProSegmentAIContent() {
 
   const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   
-  const headerLeft = sidebarState === 'expanded' ? sidebarWidthVar : '0px';
-
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
-      <main className="absolute inset-0">
+      <main className="absolute inset-0 pt-12">
           <ImageCanvas 
             key={activeWorkspace.id}
             imageUrl={activeWorkspace.imageUrl}
@@ -658,7 +656,7 @@ function ProSegmentAIContent() {
 
       <header className="absolute top-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
           style={{
-            left: headerLeft,
+            left: sidebarState === 'expanded' ? `calc(${sidebarWidthVar})` : '0px',
             right: `${rightPanelWidth}px`,
             transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
           }}
@@ -788,7 +786,7 @@ function ProSegmentAIContent() {
       </header>
       
       <div 
-        className="fixed top-12 right-0 bottom-0 flex z-20"
+        className="fixed top-0 right-0 bottom-0 flex z-20"
       >
         <div className="flex flex-col border-l border-border/50 bg-background" style={{ width: rightPanelWidth }}>
             <div 
@@ -921,5 +919,6 @@ export function ProSegmentAI() {
 
 
     
+
 
 
