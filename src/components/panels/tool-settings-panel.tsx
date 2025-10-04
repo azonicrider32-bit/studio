@@ -37,6 +37,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { useSidebar } from "../ui/sidebar"
 import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
 import { LassoCompactSettings } from "./lasso-compact-settings"
+import { ProgressiveHover } from "../ui/progressive-hover"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -99,39 +100,63 @@ export function ToolSettingsPanel({
                 <TabsTrigger value="general">General</TabsTrigger>
             </TabsList>
             <TabsContent value="general" className="m-0 space-y-4 px-2">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="contiguous" className="flex items-center gap-2"><Layers className="w-4 h-4"/>Contiguous</Label>
-                    <Switch
-                    id="contiguous"
-                    checked={magicWandSettings.contiguous}
-                    onCheckedChange={(v) => onMagicWandSettingsChange({ contiguous: v })}
-                    />
-                </div>
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="create-as-mask" className="flex items-center gap-2"><Link className="w-4 h-4" />Create as Mask</Label>
-                    <Switch
-                        id="create-as-mask"
-                        checked={magicWandSettings.createAsMask}
-                        onCheckedChange={(v) => onMagicWandSettingsChange({ createAsMask: v })}
-                    />
-                </div>
+                <ProgressiveHover
+                  initialContent="Contiguous"
+                  summaryContent="Contiguous Selection"
+                  detailedContent="When enabled, the Magic Wand only selects pixels that are connected to the area you click. When disabled, it selects all pixels in the entire image that fall within the color tolerance."
+                >
+                  <div className="flex items-center justify-between">
+                      <Label htmlFor="contiguous" className="flex items-center gap-2"><Layers className="w-4 h-4"/>Contiguous</Label>
+                      <Switch
+                      id="contiguous"
+                      checked={magicWandSettings.contiguous}
+                      onCheckedChange={(v) => onMagicWandSettingsChange({ contiguous: v })}
+                      />
+                  </div>
+                </ProgressiveHover>
+                <ProgressiveHover
+                  initialContent="Create as Mask"
+                  summaryContent="Create Selection as a Mask"
+                  detailedContent="If an existing layer is active, enabling this will cause the new selection to become a mask for that layer instead of creating a new, independent layer."
+                >
+                  <div className="flex items-center justify-between">
+                      <Label htmlFor="create-as-mask" className="flex items-center gap-2"><Link className="w-4 h-4" />Create as Mask</Label>
+                      <Switch
+                          id="create-as-mask"
+                          checked={magicWandSettings.createAsMask}
+                          onCheckedChange={(v) => onMagicWandSettingsChange({ createAsMask: v })}
+                      />
+                  </div>
+                </ProgressiveHover>
                 <Separator />
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
-                    <Switch
-                        id="show-masks"
-                        checked={magicWandSettings.showAllMasks}
-                        onCheckedChange={(v) => onMagicWandSettingsChange({ showAllMasks: v })}
-                    />
-                </div>
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="ignore-segments" className="flex items-center gap-2"><EyeOff className="w-4 h-4"/>Ignore Segments</Label>
-                    <Switch
-                        id="ignore-segments"
-                        checked={magicWandSettings.ignoreExistingSegments}
-                        onCheckedChange={(v) => onMagicWandSettingsChange({ ignoreExistingSegments: v })}
-                    />
-                </div>
+                 <ProgressiveHover
+                  initialContent="Show All Masks"
+                  summaryContent="Show All Selection Masks"
+                  detailedContent="Toggles the visibility of all selection highlights on the canvas. Use this for a clear view of the underlying image."
+                >
+                  <div className="flex items-center justify-between">
+                      <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
+                      <Switch
+                          id="show-masks"
+                          checked={magicWandSettings.showAllMasks}
+                          onCheckedChange={(v) => onMagicWandSettingsChange({ showAllMasks: v })}
+                      />
+                  </div>
+                </ProgressiveHover>
+                <ProgressiveHover
+                  initialContent="Ignore Existing Segments"
+                  summaryContent="Ignore Existing Selections"
+                  detailedContent="When enabled, the Magic Wand will ignore previously created selections, allowing you to create new selections that may overlap them. When disabled, existing selections act as boundaries."
+                >
+                  <div className="flex items-center justify-between">
+                      <Label htmlFor="ignore-segments" className="flex items-center gap-2"><EyeOff className="w-4 h-4"/>Ignore Segments</Label>
+                      <Switch
+                          id="ignore-segments"
+                          checked={magicWandSettings.ignoreExistingSegments}
+                          onCheckedChange={(v) => onMagicWandSettingsChange({ ignoreExistingSegments: v })}
+                      />
+                  </div>
+                </ProgressiveHover>
                 <Separator />
                 <Accordion type="multiple" defaultValue={['highlight-style']} className="w-full">
                     <AccordionItem value="highlight-style" className="border-b-0">

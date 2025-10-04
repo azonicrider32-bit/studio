@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import type { FeatherSettings } from "@/lib/types"
+import { ProgressiveHover } from "../ui/progressive-hover"
 
 interface FeatherPanelProps {
   settings: FeatherSettings;
@@ -105,14 +106,19 @@ export function FeatherPanel({ settings, onSettingsChange }: FeatherPanelProps) 
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label>Presets</Label>
-        <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" size="sm" onClick={() => handlePreset('fast')}>Fast</Button>
-            <Button variant="outline" size="sm" onClick={() => handlePreset('balanced')}>Balanced</Button>
-            <Button variant="outline" size="sm" onClick={() => handlePreset('professional')}>Professional</Button>
+      <ProgressiveHover
+        initialContent="Presets"
+        summaryContent="Quickly apply pre-configured settings for different use cases."
+      >
+        <div className="space-y-2">
+          <Label>Presets</Label>
+          <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" size="sm" onClick={() => handlePreset('fast')}>Fast</Button>
+              <Button variant="outline" size="sm" onClick={() => handlePreset('balanced')}>Balanced</Button>
+              <Button variant="outline" size="sm" onClick={() => handlePreset('professional')}>Professional</Button>
+          </div>
         </div>
-      </div>
+      </ProgressiveHover>
 
       <Separator />
 
@@ -120,32 +126,48 @@ export function FeatherPanel({ settings, onSettingsChange }: FeatherPanelProps) 
         <AccordionItem value="anti-alias">
           <AccordionTrigger className="text-base font-semibold">Anti-Aliasing</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
-             <div className="flex items-center justify-between">
-                <Label htmlFor="aa-enabled">Enable Anti-Aliasing</Label>
-                <Switch id="aa-enabled" checked={settings.antiAlias.enabled} onCheckedChange={createSubChangeHandler('antiAlias', 'enabled')} disabled />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="aa-method">Method</Label>
-                <Select value={settings.antiAlias.method} onValueChange={createSubChangeHandler('antiAlias', 'method')}>
-                    <SelectTrigger id="aa-method"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="smooth">Smooth</SelectItem>
-                        <SelectItem value="gaussian">Gaussian</SelectItem>
-                        <SelectItem value="bilinear">Bilinear</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="aa-quality">Quality</Label>
-                <Select value={settings.antiAlias.quality} onValueChange={createSubChangeHandler('antiAlias', 'quality')}>
-                    <SelectTrigger id="aa-quality"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="fast">Fast</SelectItem>
-                        <SelectItem value="balanced">Balanced</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
+            <ProgressiveHover
+              initialContent="Enable Anti-Aliasing"
+              summaryContent="Smooths the jagged edges of a selection."
+            >
+              <div className="flex items-center justify-between">
+                  <Label htmlFor="aa-enabled">Enable Anti-Aliasing</Label>
+                  <Switch id="aa-enabled" checked={settings.antiAlias.enabled} onCheckedChange={createSubChangeHandler('antiAlias', 'enabled')} disabled />
+              </div>
+            </ProgressiveHover>
+            <ProgressiveHover
+              initialContent="Method"
+              summaryContent="The algorithm used for smoothing."
+              detailedContent="Smooth: A basic, fast blur. Gaussian: A higher quality blur that produces more natural results. Bilinear: A simple interpolation method."
+            >
+              <div className="space-y-2">
+                  <Label htmlFor="aa-method">Method</Label>
+                  <Select value={settings.antiAlias.method} onValueChange={createSubChangeHandler('antiAlias', 'method')}>
+                      <SelectTrigger id="aa-method"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="smooth">Smooth</SelectItem>
+                          <SelectItem value="gaussian">Gaussian</SelectItem>
+                          <SelectItem value="bilinear">Bilinear</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+            </ProgressiveHover>
+            <ProgressiveHover
+              initialContent="Quality"
+              summaryContent="Controls the precision and processing time of the anti-aliasing."
+            >
+              <div className="space-y-2">
+                  <Label htmlFor="aa-quality">Quality</Label>
+                  <Select value={settings.antiAlias.quality} onValueChange={createSubChangeHandler('antiAlias', 'quality')}>
+                      <SelectTrigger id="aa-quality"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="fast">Fast</SelectItem>
+                          <SelectItem value="balanced">Balanced</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+            </ProgressiveHover>
           </AccordionContent>
         </AccordionItem>
         

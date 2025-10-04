@@ -17,6 +17,7 @@ import { rgbToHsv, rgbToLab } from "@/lib/color-utils"
 import { Button } from "../ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Label } from "../ui/label"
+import { ProgressiveHover } from "../ui/progressive-hover"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
@@ -112,7 +113,7 @@ export function MagicWandPanel({
     const handleToggleGroup = (groupKeys: (keyof MagicWandSettings['tolerances'])[]) => {
       const newEnabledTolerances = new Set(settings.enabledTolerances);
       const allEnabled = groupKeys.every(key => newEnabledTolerances.has(key));
-
+  
       if (allEnabled) {
         groupKeys.forEach(key => newEnabledTolerances.delete(key));
       } else {
@@ -190,7 +191,6 @@ export function MagicWandPanel({
   return (
     <div className="p-4 space-y-6">
       <div className="space-y-4">
-
         <Accordion type="single" collapsible defaultValue="sample-area">
           <AccordionItem value="sample-area">
             <AccordionTrigger>
@@ -200,43 +200,54 @@ export function MagicWandPanel({
               </div>
             </AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="search-radius">Search Radius: {settings.searchRadius}px</Label>
-                <Slider
-                  id="search-radius"
-                  min={1}
-                  max={100}
-                  step={1}
-                  value={[settings.searchRadius]}
-                  onValueChange={(v) => onSettingsChange({ searchRadius: v[0] })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Sample Mode</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <Button
-                    variant={settings.sampleMode === 'point' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onSettingsChange({ sampleMode: 'point' })}
-                  >
-                    Point
-                  </Button>
-                  <Button
-                    variant={settings.sampleMode === 'average' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onSettingsChange({ sampleMode: 'average' })}
-                  >
-                    <Sigma className="w-4 h-4 mr-1"/> Average
-                  </Button>
-                  <Button
-                    variant={settings.sampleMode === 'dominant' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onSettingsChange({ sampleMode: 'dominant' })}
-                  >
-                    <Droplets className="w-4 h-4 mr-1"/> Dominant
-                  </Button>
+              <ProgressiveHover
+                initialContent="Search Radius"
+                summaryContent="Defines the size of the area to sample when determining the initial color for the Magic Wand."
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="search-radius">Search Radius: {settings.searchRadius}px</Label>
+                  <Slider
+                    id="search-radius"
+                    min={1}
+                    max={100}
+                    step={1}
+                    value={[settings.searchRadius]}
+                    onValueChange={(v) => onSettingsChange({ searchRadius: v[0] })}
+                  />
                 </div>
-              </div>
+              </ProgressiveHover>
+              <ProgressiveHover
+                initialContent="Sample Mode"
+                summaryContent="Determines how the tool calculates the starting color from the sample area."
+                detailedContent="Point: Uses the single pixel you click. Average: Averages all colors in the radius. Dominant: Finds the most frequent color in the radius."
+              >
+                <div className="space-y-2">
+                  <Label>Sample Mode</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant={settings.sampleMode === 'point' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => onSettingsChange({ sampleMode: 'point' })}
+                    >
+                      Point
+                    </Button>
+                    <Button
+                      variant={settings.sampleMode === 'average' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => onSettingsChange({ sampleMode: 'average' })}
+                    >
+                      <Sigma className="w-4 h-4 mr-1"/> Average
+                    </Button>
+                    <Button
+                      variant={settings.sampleMode === 'dominant' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => onSettingsChange({ sampleMode: 'dominant' })}
+                    >
+                      <Droplets className="w-4 h-4 mr-1"/> Dominant
+                    </Button>
+                  </div>
+                </div>
+              </ProgressiveHover>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
