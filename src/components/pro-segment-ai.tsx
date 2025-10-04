@@ -595,19 +595,7 @@ function ProSegmentAIContent() {
   return (
     <div className="h-screen w-screen flex bg-background relative overflow-hidden">
       
-      <div className="absolute top-0 left-0 h-full z-30 flex">
-          <Sidebar collapsible="icon">
-              <SidebarHeader/>
-              <SidebarContent>
-                  {renderLeftPanelContent()}
-              </SidebarContent>
-          </Sidebar>
-      </div>
-
-      <div 
-        className="absolute top-12 h-full z-20"
-        style={{ left: `calc(${sidebarWidthVar})` }}
-      >
+      <div className="absolute top-12 z-30" style={{ left: `calc(${sidebarWidthVar})` }}>
         <ToolPanel
             activeTool={activeTool}
             setActiveTool={setActiveTool}
@@ -617,14 +605,20 @@ function ProSegmentAIContent() {
         />
       </div>
 
+      <div className="absolute top-0 left-0 h-full z-20 flex">
+          <Sidebar collapsible="icon">
+              <SidebarHeader/>
+              <SidebarContent>
+                  {renderLeftPanelContent()}
+              </SidebarContent>
+          </Sidebar>
+      </div>
 
       <main 
         className="flex-1 h-full w-full bg-muted/30 overflow-hidden relative transition-all duration-200"
-        style={{ paddingLeft: `calc(${sidebarWidthVar})`, paddingRight: `${rightPanelWidth + 80}px` }}
+        style={{ paddingLeft: `calc(${sidebarWidthVar})`, marginRight: `${rightPanelWidth}px` }}
       >
-        <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
-          style={{ left: `calc(${sidebarWidthVar})`, right: `${rightPanelWidth + 80}px` }}
-        >
+        <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-4 flex-1">
           <WorkspaceTabs 
               workspaces={workspaces}
@@ -749,7 +743,7 @@ function ProSegmentAIContent() {
           </div>
         </header>
 
-        <div className="h-full pt-12">
+        <div className="h-full">
           <div className={cn("h-full w-full", isSplitView && "grid grid-cols-2 gap-2 p-2")}>
               <ImageCanvas 
               key={activeWorkspace.id}
@@ -952,6 +946,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
