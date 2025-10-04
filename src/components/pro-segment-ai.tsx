@@ -668,7 +668,7 @@ function ProSegmentAIContent() {
             clearSelectionRef={clearSelectionRef}
             onLassoSettingChange={handleLassoSettingsChange}
             onMagicWandSettingsChange={handleMagicWandSettingsChange}
-            onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+            onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
             canvasMousePos={canvasMousePos}
             setCanvasMousePos={setCanvasMousePos}
             getCanvasRef={canvasRef}
@@ -855,8 +855,7 @@ function ProSegmentAIContent() {
               )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
               </DropdownMenuContent>
           </DropdownMenu>
-           {!isRightPanelOpen && (
-            <div className="flex flex-col gap-0.5 ml-auto">
+           <div className={cn("ml-auto flex flex-col gap-0.5", isRightPanelOpen && "hidden")}>
               <div className="flex gap-1">
                 {topPanelIcons.map(({id, icon: Icon, label}) => (
                    <TooltipProvider key={id}>
@@ -886,7 +885,6 @@ function ProSegmentAIContent() {
                 ))}
               </div>
             </div>
-          )}
         </div>
       </header>
       
@@ -904,10 +902,13 @@ function ProSegmentAIContent() {
                 
                 <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
                     <Tabs value={activeTopPanel || 'none'} className="w-full">
-                      <TabsList className="grid w-full grid-cols-5">
+                      <TabsList className="grid w-full grid-cols-6">
+                           <Button variant="ghost" size="icon" className="h-full w-full rounded-none" onClick={() => setIsRightPanelOpen(false)}>
+                                <PanelRightClose className="h-5 w-5" />
+                            </Button>
                           {topPanelIcons.map(({id, icon: Icon, label}) => (
                             <TabsTrigger key={id} value={id} className="flex-1 relative" onClick={() => setActiveTopPanel(p => p === id ? null : id as TopPanel)}>
-                               <ProgressiveHover initialContent={<p>{label}</p>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
+                               <ProgressiveHover initialContent={<div className="text-center"><p className="font-semibold">{label.split('(')[0]}</p><p className="text-muted-foreground">{label.split('(')[1]?.slice(0,-1)}</p></div>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
                                 <div className="flex items-center justify-center w-full h-full">
                                     <Icon className="h-5 w-5"/>
                                 </div>
@@ -933,18 +934,15 @@ function ProSegmentAIContent() {
                 <div className="border-t border-border/50 bg-background/80 backdrop-blur-sm">
                     <Tabs value={activeBottomPanel || 'none'} className="w-full">
                         <TabsList className="grid w-full grid-cols-4">
-                            {bottomPanelIcons.slice(0,3).map(({id, icon: Icon, label}) => (
+                            {bottomPanelIcons.slice(0,4).map(({id, icon: Icon, label}) => (
                                 <TabsTrigger key={id} value={id} className="flex-1 relative" onClick={() => setActiveBottomPanel(p => p === id ? null : id as BottomPanel)}>
-                                    <ProgressiveHover initialContent={<p>{label}</p>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
+                                    <ProgressiveHover initialContent={<div className="text-center"><p className="font-semibold">{label.split('(')[0]}</p><p className="text-muted-foreground">{label.split('(')[1]?.slice(0,-1)}</p></div>} summaryContent="Panel" detailedContent="Detailed description of the panel.">
                                         <div className="flex items-center justify-center w-full h-full">
                                             <Icon className="h-5 w-5"/>
                                         </div>
                                     </ProgressiveHover>
                                 </TabsTrigger>
                             ))}
-                             <Button variant="ghost" size="icon" className="h-full w-full rounded-none" onClick={() => setIsRightPanelOpen(false)}>
-                                <PanelRightClose className="h-5 w-5" />
-                            </Button>
                         </TabsList>
                     </Tabs>
                 </div>
@@ -1045,6 +1043,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
