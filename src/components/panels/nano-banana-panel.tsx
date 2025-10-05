@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "../ui/card";
-import { BananaIcon } from "../icons/banana-icon";
-import { Wand2, Mic, Trash2, Sparkles, Plus, Palette } from "lucide-react";
+import { Wand2, Mic, Trash2, Sparkles, Plus, Palette, BrainCircuit, ImageUp, Sparkle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "../ui/label";
 import { AITool } from "@/lib/types";
@@ -81,16 +80,30 @@ export function NanoBananaPanel({
   return (
     <div className="p-4 space-y-4 h-full flex flex-col">
       <Tabs defaultValue="instruct" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="instruct">Instruct</TabsTrigger>
-          <TabsTrigger value="generate">Generate</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="instruct"><Sparkle className="w-4 h-4 mr-2"/>Instruct</TabsTrigger>
+          <TabsTrigger value="generate"><Plus className="w-4 h-4 mr-2"/>Generate</TabsTrigger>
+          <TabsTrigger value="enhance"><BrainCircuit className="w-4 h-4 mr-2"/>Enhance</TabsTrigger>
+          <TabsTrigger value="inpaint"><ImageUp className="w-4 h-4 mr-2"/>Inpainting</TabsTrigger>
         </TabsList>
-        <TabsContent value="instruct" className="flex-1 overflow-y-auto -mx-4 mt-4">
-           <ScrollArea className="h-full px-4">
+        <TabsContent value="instruct" className="flex-1 flex flex-col min-h-0 -mx-4 mt-4">
+           <div className="space-y-2 px-4">
+              <Label className="flex items-center gap-2 text-xs text-muted-foreground">One-Click Actions</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {oneClickPrompts.map(p => (
+                  <Button key={p.id} variant="outline" size="sm" onClick={() => onAiToolClick(p)} disabled={isGenerating}>
+                    <p.icon className="w-4 h-4 mr-2"/>
+                    {p.label}
+                  </Button>
+                ))}
+              </div>
+          </div>
+          <Separator className="my-4"/>
+           <ScrollArea className="flex-1 px-4">
             <div className="space-y-3">
               {instructionLayers.length === 0 ? (
                 <div className="text-center text-muted-foreground text-sm py-8">
-                  <p>Start drawing on the canvas to create an instruction layer.</p>
+                  <p>Start drawing on the canvas or use a one-click tool to create an instruction layer.</p>
                   <p className="text-xs mt-2">Press <span className="font-mono bg-muted px-1.5 py-0.5 rounded">Shift</span> to switch colors for new instructions.</p>
                 </div>
               ) : (
@@ -133,27 +146,22 @@ export function NanoBananaPanel({
             </div>
            </ScrollArea>
         </TabsContent>
-        <TabsContent value="generate" className="mt-4 space-y-4">
+        <TabsContent value="generate" className="mt-4 space-y-4 text-center text-muted-foreground text-sm">
+           (Text-to-Image generation will be here)
+        </TabsContent>
+         <TabsContent value="enhance" className="mt-4 space-y-4 text-center text-muted-foreground text-sm">
+           (AI upscaling and enhancement tools will be here)
+        </TabsContent>
+         <TabsContent value="inpaint" className="mt-4 space-y-4">
             <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary"/> One-Click Actions</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {oneClickPrompts.map(p => (
-                    <Button key={p.id} variant="outline" size="sm" onClick={() => onAiToolClick(p)} disabled={isGenerating}>
-                      <p.icon className="w-4 h-4 mr-2"/>
-                      {p.label}
-                    </Button>
-                  ))}
-                </div>
-            </div>
-            <Separator/>
-            <div className="space-y-2">
-                <Label htmlFor="inpainting-prompt">Custom Prompt</Label>
+                <Label htmlFor="inpainting-prompt">Custom Inpainting Prompt</Label>
+                <p className="text-xs text-muted-foreground">Select an area on the canvas, then describe what you want to generate inside it.</p>
                 <Textarea
                   id="inpainting-prompt"
-                  placeholder="A majestic eagle soaring..."
+                  placeholder="A majestic eagle soaring through a cloudy sky..."
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  rows={3}
+                  rows={5}
                   disabled={isGenerating}
                 />
             </div>

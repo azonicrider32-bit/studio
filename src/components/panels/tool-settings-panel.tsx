@@ -23,12 +23,6 @@ import {
   X,
   Replace,
   SlidersHorizontal,
-  BrainCircuit,
-  Scissors,
-  Camera,
-  GitCompareArrows,
-  Trash2,
-  Glasses,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -43,7 +37,7 @@ import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
 import { LassoCompactSettings } from "./lasso-compact-settings"
 import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
-import { NanoBananaPanel, InstructionLayer, oneClickPrompts } from "./nano-banana-panel"
+import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -260,89 +254,79 @@ export function ToolSettingsPanel({
          
         <div className="flex-1 min-h-0 overflow-y-auto">
           {activeTool === 'lasso' || activeTool === 'line' ? (
-             <Tabs defaultValue="general" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="general">General</TabsTrigger>
-                    <TabsTrigger value="magic-snap" disabled={lassoSettings.drawMode !== 'magic'}>Magic Snap</TabsTrigger>
-                </TabsList>
+             <div className="space-y-4 px-2">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="draw-mode">Draw Mode</Label>
+                        <Popover>
+                            <PopoverTrigger>
+                                <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                            </PopoverTrigger>
+                            <PopoverContent side="right" className="text-sm">
+                                <h4 className="font-semibold mb-2">Switching Modes</h4>
+                                <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
+                        <SelectTrigger id="draw-mode">
+                            <div className="flex items-center gap-2">
+                                {currentMode && <currentMode.icon className="h-4 h-4" />}
+                                <SelectValue placeholder="Select mode..." />
+                            </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {DRAW_MODES.map(mode => (
+                                <SelectItem key={mode.id} value={mode.id}>
+                                    <div className="flex items-center gap-2">
+                                        <mode.icon className="h-4 h-4" />
+                                        <span>{mode.label}</span>
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="curve-tension" className="flex items-center gap-2">Curve Tension: {lassoSettings.curveTension.toFixed(2)}</Label>
+                    <Slider 
+                        id="curve-tension"
+                        min={0} max={1} step={0.05}
+                        value={[lassoSettings.curveTension]}
+                        onValueChange={(v) => onLassoSettingsChange({ curveTension: v[0]})}
+                        disabled={lassoSettings.drawMode === 'magic'}
+                    />
+                    <p className="text-xs text-muted-foreground">Smooths the line between nodes. 0 is straight, 1 is max curve. Only for Polygon & Free Draw.</p>
+                </div>
                 
-                <TabsContent value="general" className="m-0 space-y-6 px-2">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <Label htmlFor="draw-mode">Draw Mode</Label>
-                            <Popover>
-                                <PopoverTrigger>
-                                    <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                                </PopoverTrigger>
-                                <PopoverContent side="right" className="text-sm">
-                                    <h4 className="font-semibold mb-2">Switching Modes</h4>
-                                    <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
-                            <SelectTrigger id="draw-mode">
-                                <div className="flex items-center gap-2">
-                                    {currentMode && <currentMode.icon className="h-4 h-4" />}
-                                    <SelectValue placeholder="Select mode..." />
-                                </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {DRAW_MODES.map(mode => (
-                                    <SelectItem key={mode.id} value={mode.id}>
-                                        <div className="flex items-center gap-2">
-                                            <mode.icon className="h-4 h-4" />
-                                            <span>{mode.label}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="curve-tension" className="flex items-center gap-2">Curve Tension: {lassoSettings.curveTension.toFixed(2)}</Label>
-                        <Slider 
-                            id="curve-tension"
-                            min={0} max={1} step={0.05}
-                            value={[lassoSettings.curveTension]}
-                            onValueChange={(v) => onLassoSettingsChange({ curveTension: v[0]})}
-                            disabled={lassoSettings.drawMode === 'magic'}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="useAiEnhancement" className="flex items-center gap-2"><Wand2 className="w-4 h-4 text-primary" />AI Enhancement</Label>
+                        <Switch
+                            id="useAiEnhancement"
+                            checked={lassoSettings.useAiEnhancement}
+                            onCheckedChange={(checked) => onLassoSettingsChange({ useAiEnhancement: checked })}
                         />
-                        <p className="text-xs text-muted-foreground">Smooths the line between nodes. 0 is straight, 1 is max curve. Only for Polygon & Free Draw.</p>
                     </div>
-                    
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="useAiEnhancement" className="flex items-center gap-2"><Wand2 className="w-4 h-4 text-primary" />AI Enhancement</Label>
-                            <Switch
-                                id="useAiEnhancement"
-                                checked={lassoSettings.useAiEnhancement}
-                                onCheckedChange={(checked) => onLassoSettingsChange({ useAiEnhancement: checked })}
-                            />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="showMouseTrace" className="flex items-center gap-2"><Paintbrush className="w-4 h-4" />Show Mouse Trace</Label>
-                            <Switch
-                                id="showMouseTrace"
-                                checked={lassoSettings.showMouseTrace}
-                                onCheckedChange={(checked) => onLassoSettingsChange({ showMouseTrace: checked })}
-                                disabled={lassoSettings.drawMode !== 'magic'}
-                            />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
-                            <Switch
-                                id="show-masks"
-                                checked={lassoSettings.showAllMasks}
-                                onCheckedChange={(v) => onLassoSettingsChange({ showAllMasks: v })}
-                            />
-                        </div>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="showMouseTrace" className="flex items-center gap-2"><Paintbrush className="w-4 h-4" />Show Mouse Trace</Label>
+                        <Switch
+                            id="showMouseTrace"
+                            checked={lassoSettings.showMouseTrace}
+                            onCheckedChange={(checked) => onLassoSettingsChange({ showMouseTrace: checked })}
+                            disabled={lassoSettings.drawMode !== 'magic'}
+                        />
                     </div>
-                </TabsContent>
-                <TabsContent value="magic-snap" className="m-0 space-y-2 px-2">
-                   {/* Magic Snap sliders would go here */}
-                </TabsContent>
-            </Tabs>
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
+                        <Switch
+                            id="show-masks"
+                            checked={lassoSettings.showAllMasks}
+                            onCheckedChange={(v) => onLassoSettingsChange({ showAllMasks: v })}
+                        />
+                    </div>
+                </div>
+            </div>
           ) : activeTool === 'clone' ? (
             <CloneStampPanel 
                 settings={cloneStampSettings} 
