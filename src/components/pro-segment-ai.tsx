@@ -39,6 +39,8 @@ import {
   Ruler,
   MoveHorizontal,
   MoveVertical,
+  Volume2,
+  VolumeX,
 } from "lucide-react"
 
 import {
@@ -85,6 +87,7 @@ import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import { ProgressiveHover } from "./ui/progressive-hover"
 import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
 import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
+import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -163,6 +166,39 @@ function ProSegmentAIContent() {
 
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
+
+  const [isVoiceEnabled, setIsVoiceEnabled] = React.useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const speak = React.useCallback(async (text: string) => {
+    if (!isVoiceEnabled) return;
+
+    try {
+      const result = await textToSpeech(text);
+      if (result.error || !result.audioDataUri) {
+        throw new Error(result.error || "No audio data returned.");
+      }
+      
+      if (audioRef.current) {
+        audioRef.current.src = result.audioDataUri;
+        audioRef.current.play();
+      }
+
+    } catch (error) {
+      console.error("TTS Error:", error);
+    }
+  }, [isVoiceEnabled]);
+  
+  React.useEffect(() => {
+    // Create audio element once
+    audioRef.current = new Audio();
+  }, []);
+
+  const handleToolChange = (tool: Tool) => {
+    setActiveTool(tool);
+    const toolName = tool.replace(/-/g, ' ');
+    speak(`${toolName} selected`);
+  }
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
@@ -432,10 +468,10 @@ function ProSegmentAIContent() {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
         if(e.key.toLowerCase() === 'v') {
-            setActiveTool('transform');
+            handleToolChange('transform');
         }
         if(e.key.toLowerCase() === 'p') {
-            setActiveTool('line');
+            handleToolChange('line');
         }
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
             e.preventDefault();
@@ -793,6 +829,10 @@ function ProSegmentAIContent() {
                 )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
                 </DropdownMenuContent>
             </DropdownMenu>
+            <Button variant={isVoiceEnabled ? "secondary" : "outline"} size="sm" onClick={() => setIsVoiceEnabled(p => !p)}>
+                {isVoiceEnabled ? <Volume2 className="mr-2 h-4 w-4"/> : <VolumeX className="mr-2 h-4 w-4"/>}
+                Voice-{isVoiceEnabled ? 'ON' : 'OFF'}
+            </Button>
           </div>
       </header>
        <main 
@@ -866,7 +906,7 @@ function ProSegmentAIContent() {
       >
         <ToolPanel
           activeTool={activeTool}
-          setActiveTool={setActiveTool}
+          setActiveTool={handleToolChange}
           showHotkeys={showHotkeyLabels}
           showHorizontalRuler={showHorizontalRuler}
           onToggleHorizontalRuler={() => setShowHorizontalRuler(p => !p)}
@@ -1045,6 +1085,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
