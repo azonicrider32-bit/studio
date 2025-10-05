@@ -10,6 +10,18 @@ This document provides an exhaustive, centralized snapshot of the source code fo
 
 ---
 
+## Table of Contents
+
+*   [2. Core Application Structure](#2-core-application-structure)
+    *   [`src/app/page.tsx`](#srcapppagetsx)
+    *   [`src/components/pro-segment-ai.tsx`](#srccomponentspro-segment-aitsx)
+*   [3. Core Logic & Engines](#3-core-logic--engines)
+    *   [`src/lib/selection-engine.ts`](#srclibselection-enginets)
+*   [4. Data Structures & Types](#4-data-structures--types)
+    *   [`src/lib/types.ts`](#srclibtypests)
+
+---
+
 ## 2. Core Application Structure
 
 ### `src/app/page.tsx`
@@ -547,7 +559,7 @@ function ProSegmentAIContent() {
             if (!engine) return layer;
             const newBounds = engine.getBoundsForPixels(newPixels);
             const newImageData = layer.subType === 'pixel' ? engine.createImageDataForLayer(newPixels, newBounds) : undefined;
-            return { ...layer, pixels: newPixels, bounds: newBounds, imageData: newImageData };
+            return { ...l, pixels: newPixels, bounds: newBounds, imageData: newImageData };
           }
         }
         return layer;
@@ -719,18 +731,29 @@ function ProSegmentAIContent() {
 
   const handleShelfClick = (panelId: RightPanel, clickType: 'single' | 'double') => {
     setActivePanels(currentPanels => {
-      const isTop = currentPanels[0] === panelId;
-      const isBottom = currentPanels[1] === panelId;
-  
-      if (clickType === 'single') {
-        if (isTop) return currentPanels.length > 1 ? [currentPanels[1]] : []; // Close top
-        if (isBottom) return [panelId, currentPanels[0]]; // Move from bottom to top
-        return [panelId, currentPanels[0]].filter(Boolean).slice(0, 2) as RightPanel[]; // Open at top
-      } else { // double click
-        if (isBottom) return [currentPanels[0]]; // Close bottom
-        if (isTop) return [undefined, panelId].filter(Boolean) as RightPanel[]; // Move from top to bottom
-        return [currentPanels[0], panelId].filter(Boolean).slice(0, 2) as RightPanel[]; // Open at bottom
-      }
+        const topPanel = currentPanels[0];
+        const bottomPanel = currentPanels[1];
+
+        // Panel is already open
+        if (topPanel === panelId && clickType === 'single') {
+            return bottomPanel ? [bottomPanel] : [];
+        }
+        if (bottomPanel === panelId && clickType === 'double') {
+            return [topPanel];
+        }
+        if (topPanel === panelId && clickType === 'double') {
+             return bottomPanel ? [bottomPanel, topPanel] : [undefined, topPanel] as RightPanel[];
+        }
+        if (bottomPanel === panelId && clickType === 'single') {
+             return [bottomPanel, topPanel];
+        }
+
+        // Panel is not open, add it
+        if (clickType === 'single') {
+            return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
+        } else { // double click
+            return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
+        }
     });
   };
 
@@ -1159,7 +1182,7 @@ function ProSegmentAIContent() {
                 instructionLayers={instructionLayers}
                 onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
                 onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
-                onGenerate={handleGenerate}
+                onGenerate={onGenerate}
                 isGenerating={isGenerating}
                 customPrompt={customPrompt}
                 setCustomPrompt={setCustomPrompt}
@@ -1737,7 +1760,7 @@ export class SelectionEngine {
   generateSplinePath(points: [number, number][], closed: boolean, step = 0.1): [number, number][] {
       if (points.length < 2) return points;
 
-      const tension = this.lassoSettings.curveStrength;
+      const tension = this.lassoSettings.curveTension;
       if (tension === 0) return points; // Straight lines
 
       const path: [number, number][] = [];
