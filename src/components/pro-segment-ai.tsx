@@ -664,7 +664,7 @@ function ProSegmentAIContent() {
 
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
-      <main className="absolute inset-y-0 right-0 pt-12" style={{ left: `calc(${sidebarWidthVar} + 4rem)`}}>
+      <main className="absolute inset-y-0 right-0 pt-12" style={{ left: 0 }}>
           <ImageCanvas 
             key={activeWorkspace.id}
             imageUrl={activeWorkspace.imageUrl}
@@ -675,7 +675,7 @@ function ProSegmentAIContent() {
             activeLayerId={activeWorkspace.activeLayerId}
             onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
             segmentationMask={activeWorkspace.segmentationMask}
-            setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({ ...ws, segmentationMask: mask }))}
+            setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask }))}
             activeTool={activeTool}
             lassoSettings={lassoSettings}
             magicWandSettings={magicWandSettings}
@@ -727,6 +727,12 @@ function ProSegmentAIContent() {
 
       <div className="absolute left-0 top-12 h-[calc(100vh-3rem)]">
         <Sidebar collapsible="icon">
+          <SidebarHeader>
+              <div className="flex items-center gap-2">
+                  <Settings2 className="w-5 h-5"/>
+                  <span className="font-semibold">Settings</span>
+              </div>
+          </SidebarHeader>
           <SidebarContent>
               {renderLeftPanelContent()}
           </SidebarContent>
@@ -1033,6 +1039,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
