@@ -60,7 +60,7 @@ const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boo
     const content = (layer.imageData || (layer.type === 'background' && imageUrl)) ? (
         <canvas ref={canvasRef} className="w-full h-full" />
     ) : (
-        <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+        <div className="w-full h-full bg-transparent flex items-center justify-center text-xs text-muted-foreground">
             ...
         </div>
     );
