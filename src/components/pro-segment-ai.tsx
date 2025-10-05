@@ -64,7 +64,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { ImageCanvas } from "./image-canvas"
-import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
+import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings, TransformSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
 import { LayerStripPanel } from "./panels/layer-strip-panel"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
@@ -412,6 +412,17 @@ function ProSegmentAIContent() {
     },
     falloff: 50,
   });
+  const [transformSettings, setTransformSettings] = React.useState<TransformSettings>({
+    scope: 'layer',
+    x: 0,
+    y: 0,
+    scaleX: 100,
+    scaleY: 100,
+    rotation: 0,
+    skewX: 0,
+    skewY: 0,
+    maintainAspectRatio: true,
+  });
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
@@ -545,6 +556,10 @@ function ProSegmentAIContent() {
   
   const handleCloneStampSettingsChange = (newSettings: Partial<CloneStampSettings>) => {
     setCloneStampSettings(prev => ({ ...prev, ...newSettings }));
+  };
+  
+  const handleTransformSettingsChange = (newSettings: Partial<TransformSettings>) => {
+    setTransformSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   const handleNegativeMagicWandSettingsChange = (newSettings: Partial<MagicWandSettings>) => {
@@ -743,6 +758,18 @@ function ProSegmentAIContent() {
     }
   }
 
+  const handleAiToolClick = (tool: AITool) => {
+      setActiveTool('brush');
+      
+      const newLayer: InstructionLayer = {
+        id: `instr-${Date.now()}`,
+        color: tool.color,
+        sketch: '',
+        prompt: tool.prompt,
+      };
+      setInstructionLayers(prev => [...prev, newLayer]);
+  };
+  
   const handleBlemishRemoverSelection = async (selectionMaskUri: string, sketchLayer: Layer) => {
     if (!activeWorkspace?.imageUrl) {
       toast({ title: 'No Image', description: 'Please select an image first.', variant: 'destructive' });
@@ -1041,7 +1068,7 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingsChange={handleMagicWandSettingsChange}
+              onMagicWandSettingChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
@@ -1062,7 +1089,6 @@ function ProSegmentAIContent() {
               showVerticalRuler={showVerticalRuler}
               showGuides={showGuides}
               globalSettings={globalSettings}
-              onBlemishRemoverSelection={handleBlemishRemoverSelection}
               />
           </div>
       </main>
@@ -1085,12 +1111,13 @@ function ProSegmentAIContent() {
                 onLassoSettingsChange={handleLassoSettingsChange}
                 cloneStampSettings={cloneStampSettings}
                 onCloneStampSettingsChange={handleCloneStampSettingsChange}
+                transformSettings={transformSettings}
+                onTransformSettingsChange={setTransformSettings}
                 activeTool={activeTool}
                 showHotkeys={showHotkeyLabels}
                 onShowHotkeysChange={setShowHotkeyLabels}
                 globalSettings={globalSettings}
                 onGlobalSettingsChange={setGlobalSettings}
-                onAiToolClick={(tool: AITool) => {}}
                 instructionLayers={instructionLayers}
                 onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
                 onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
@@ -1113,7 +1140,7 @@ function ProSegmentAIContent() {
           activeTool={activeTool}
           setActiveTool={handleToolChange}
           showHotkeys={showHotkeyLabels}
-          onAiToolClick={(tool: AITool) => {}}
+          onAiToolClick={handleAiToolClick}
         />
       </div>
       
@@ -1247,3 +1274,4 @@ export function ProSegmentAI() {
     
 
     
+

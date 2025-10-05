@@ -23,6 +23,7 @@ import {
   X,
   Replace,
   SlidersHorizontal,
+  Move,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -30,7 +31,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
-import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings, AITool } from "@/lib/types"
+import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings, AITool, TransformSettings } from "@/lib/types"
 import { Button } from "../ui/button"
 import { useSidebar } from "../ui/sidebar"
 import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
@@ -38,6 +39,7 @@ import { LassoCompactSettings } from "./lasso-compact-settings"
 import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
 import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
+import { TransformPanel } from "./transform-panel"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -46,6 +48,8 @@ interface ToolSettingsPanelProps {
   onLassoSettingsChange: (settings: Partial<LassoSettings>) => void
   cloneStampSettings: CloneStampSettings
   onCloneStampSettingsChange: (settings: Partial<CloneStampSettings>) => void
+  transformSettings: TransformSettings;
+  onTransformSettingsChange: (settings: Partial<TransformSettings>) => void;
   activeTool: Tool
   showHotkeys: boolean
   onShowHotkeysChange: (value: boolean) => void
@@ -56,7 +60,6 @@ interface ToolSettingsPanelProps {
   onInstructionChange: (id: string, prompt: string) => void;
   onLayerDelete: (id: string) => void;
   onGenerate: (prompt?: string) => void;
-  onAiToolClick: (tool: AITool) => void;
   isGenerating: boolean;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
@@ -72,6 +75,8 @@ export function ToolSettingsPanel({
     onLassoSettingsChange,
     cloneStampSettings,
     onCloneStampSettingsChange,
+    transformSettings,
+    onTransformSettingsChange,
     activeTool,
     showHotkeys,
     onShowHotkeysChange,
@@ -82,7 +87,6 @@ export function ToolSettingsPanel({
     onInstructionChange,
     onLayerDelete,
     onGenerate,
-    onAiToolClick,
     isGenerating,
     customPrompt,
     setCustomPrompt,
@@ -221,6 +225,7 @@ export function ToolSettingsPanel({
       case 'line':
         return <Lasso className="w-4 h-4" />;
       case 'clone': return <Replace className="w-4 h-4" />;
+      case 'transform': return <Move className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
       default: return isAiToolActive ? <BrainCircuit className="w-4 h-4" /> : null;
     }
@@ -234,7 +239,6 @@ export function ToolSettingsPanel({
             onInstructionChange={onInstructionChange}
             onLayerDelete={onLayerDelete}
             onGenerate={onGenerate}
-            onAiToolClick={onAiToolClick}
             isGenerating={isGenerating}
             customPrompt={customPrompt}
             setCustomPrompt={setCustomPrompt}
@@ -256,7 +260,12 @@ export function ToolSettingsPanel({
         <Separator />
          
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {activeTool === 'lasso' || activeTool === 'line' ? (
+          {activeTool === 'transform' ? (
+              <TransformPanel
+                  settings={transformSettings}
+                  onSettingsChange={onTransformSettingsChange}
+              />
+          ) : activeTool === 'lasso' || activeTool === 'line' ? (
              <div className="space-y-4 px-2">
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -336,7 +345,7 @@ export function ToolSettingsPanel({
                 onSettingsChange={onCloneStampSettingsChange} 
             />
           ) : activeTool === 'settings' ? (
-            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />
+            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onGlobalSettingsChange={onGlobalSettingsChange} />
           ) : (
              <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
           )}

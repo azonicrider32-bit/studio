@@ -45,7 +45,7 @@ export interface LassoSettings {
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number; // 0-1, for Catmull-Rom tension
-    curveTension: number; // For Catmull-Rom, 0=standard, 0.5=cardinal
+    curveTension: number;
     directionalStrength: number;
     cursorInfluence: number;
     traceInfluence: number;
@@ -119,6 +119,18 @@ export interface MagicWandSettings {
 export interface GlobalSettings {
     snapEnabled: boolean;
     snapRadius: number;
+}
+
+export interface TransformSettings {
+    scope: 'layer' | 'visible' | 'all';
+    x: number;
+    y: number;
+    scaleX: number;
+    scaleY: number;
+    rotation: number;
+    skewX: number;
+    skewY: number;
+    maintainAspectRatio: boolean;
 }
 
 
