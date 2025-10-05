@@ -65,7 +65,7 @@ import {
 import { GlobalSettingsPanel } from "./panels/global-settings-panel"
 import { ImageCanvas } from "./image-canvas"
 import { InpaintingPanel } from "./panels/inpainting-panel"
-import { LassoSettings, Layer, MagicWandSettings, FeatherSettings } from "@/lib/types"
+import { LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
 import { LayerStripPanel } from "./panels/layer-strip-panel"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
@@ -90,6 +90,7 @@ import { ProgressiveHover } from "./ui/progressive-hover"
 import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
 import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
 import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
+import { CloneStampPanel } from "./panels/clone-stamp-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -131,7 +132,7 @@ const createNewWorkspace = (id: string, name: string, imageUrl?: string): Worksp
 
 
 function ProSegmentAIContent() {
-  const [activeTool, setActiveTool] = React.useState<Tool>("line")
+  const [activeTool, setActiveTool] = React.useState<Tool>("clone")
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
   const [isRightPanelOpen, setIsRightPanelOpen] = React.useState(true);
   const isResizingRef = React.useRef(false);
@@ -311,6 +312,12 @@ function ProSegmentAIContent() {
       colorAwareProcessing: { enabled: true, haloPreventionStrength: 0.9, colorContextRadius: 10 }
     }
   });
+  const [cloneStampSettings, setCloneStampSettings] = React.useState<CloneStampSettings>({
+    brushSize: 50,
+    opacity: 100,
+    rotationStep: 5,
+    sourceLayer: 'current',
+  });
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
@@ -441,6 +448,10 @@ function ProSegmentAIContent() {
   const handleMagicWandSettingsChange = (newSettings: Partial<MagicWandSettings>) => {
     setMagicWandSettings(prev => ({ ...prev, ...newSettings }));
   };
+  
+  const handleCloneStampSettingsChange = (newSettings: Partial<CloneStampSettings>) => {
+    setCloneStampSettings(prev => ({ ...prev, ...newSettings }));
+  };
 
   const handleNegativeMagicWandSettingsChange = (newSettings: Partial<MagicWandSettings>) => {
     setNegativeMagicWandSettings(prev => ({ ...prev, ...newSettings }));
@@ -475,6 +486,9 @@ function ProSegmentAIContent() {
         }
         if(e.key.toLowerCase() === 'p') {
             handleToolChange('line');
+        }
+        if (e.key.toLowerCase() === 'c') {
+            handleToolChange('clone');
         }
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
             e.preventDefault();
@@ -659,6 +673,11 @@ function ProSegmentAIContent() {
                   lassoSettings={lassoSettings}
                   onLassoSettingsChange={handleLassoSettingsChange}
                   activeTool={activeTool}
+                />
+      case 'clone':
+        return <CloneStampPanel 
+                  settings={cloneStampSettings}
+                  onSettingsChange={handleCloneStampSettingsChange}
                 />
       case 'settings':
         return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} />;
@@ -880,7 +899,7 @@ function ProSegmentAIContent() {
               clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
               onMagicWandSettingsChange={handleMagicWandSettingsChange}
-              onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+              onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
               canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
               getCanvasRef={canvasRef}
@@ -1104,6 +1123,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 

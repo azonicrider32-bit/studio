@@ -51,6 +51,7 @@ export interface CloneStampSettings {
     brushSize: number;
     opacity: number;
     rotationStep: number;
+    sourceLayer: 'current' | 'all';
 }
 
 export interface MagicWandSettings {
