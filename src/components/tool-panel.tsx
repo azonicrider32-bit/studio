@@ -125,12 +125,6 @@ interface ToolPanelProps {
   activeTool: Tool;
   setActiveTool: (tool: Tool) => void;
   showHotkeys: boolean;
-  showHorizontalRuler: boolean;
-  onToggleHorizontalRuler: () => void;
-  showVerticalRuler: boolean;
-  onToggleVerticalRuler: () => void;
-  showGuides: boolean;
-  onToggleGuides: () => void;
 }
 
 const ToolButtonWithProgressiveHover = ({
@@ -172,12 +166,6 @@ export function ToolPanel({
   activeTool,
   setActiveTool,
   showHotkeys,
-  showHorizontalRuler,
-  onToggleHorizontalRuler,
-  showVerticalRuler,
-  onToggleVerticalRuler,
-  showGuides,
-  onToggleGuides
 }: ToolPanelProps) {
   
   return (
@@ -199,31 +187,6 @@ export function ToolPanel({
                 showHotkey={showHotkeys}
               />
             ))}
-             <Separator className="bg-border/10 my-2"/>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant={showHorizontalRuler ? "secondary" : "ghost"} size="icon" className="h-10 w-10" onClick={onToggleHorizontalRuler}>
-                        <MoveHorizontal className="w-5 h-5"/>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right"><p>Toggle Horizontal Ruler</p></TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant={showVerticalRuler ? "secondary" : "ghost"} size="icon" className="h-10 w-10" onClick={onToggleVerticalRuler}>
-                        <MoveVertical className="w-5 h-5"/>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right"><p>Toggle Vertical Ruler</p></TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant={showGuides ? "secondary" : "ghost"} size="icon" className="h-10 w-10" onClick={onToggleGuides}>
-                        <Ruler className="w-5 h-5"/>
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right"><p>Toggle Guides</p></TooltipContent>
-              </Tooltip>
         </TooltipProvider>
       </div>
       <div className="flex flex-col items-center gap-2">

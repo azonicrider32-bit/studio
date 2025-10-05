@@ -314,7 +314,8 @@ function ProSegmentAIContent() {
     fillPath: false,
     snapRadius: 20,
     snapThreshold: 0.3,
-    curveStrength: 0.05,
+    curveStrength: 0.5,
+    curveTension: 0.5,
     directionalStrength: 0.2,
     cursorInfluence: 0.1,
     traceInfluence: 0.2,
@@ -852,6 +853,7 @@ function ProSegmentAIContent() {
                   globalSettings={globalSettings}
                   onGlobalSettingsChange={setGlobalSettings}
                   onBlemishRemoverSelection={handleBlemishRemoverSelection}
+                  onToolChange={handleToolChange}
                 />
       case 'clone':
         return <CloneStampPanel 
@@ -917,6 +919,40 @@ function ProSegmentAIContent() {
           <div className="flex items-center gap-2 ml-auto">
             <TooltipProvider>
               <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant={showHorizontalRuler || showVerticalRuler ? "secondary" : "ghost"} 
+                    size="icon" 
+                    className="h-8 w-8" 
+                    onClick={() => {
+                        const newState = !(showHorizontalRuler && showVerticalRuler);
+                        setShowHorizontalRuler(newState);
+                        setShowVerticalRuler(newState);
+                    }}
+                  >
+                    <Ruler />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Toggle Rulers</p></TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant={showGuides ? "secondary" : "ghost"} size="icon" className="h-8 w-8" onClick={() => setShowGuides(p => !p)}>
+                    <MoveHorizontal className="w-4 h-4 absolute rotate-90" /><MoveVertical className="w-4 h-4 absolute" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Toggle Guides</p></TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant={globalSettings.snapEnabled ? "secondary" : "outline"} size="icon" className="h-8 w-8" onClick={() => setGlobalSettings(s => ({...s, snapEnabled: !s.snapEnabled}))}>
+                    <Magnet />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Toggle Snapping</p></TooltipContent>
+              </Tooltip>
+              <Separator orientation="vertical" className="h-6 mx-2" />
+               <Tooltip>
                 <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><ArrowBigUpDash /></Button></TooltipTrigger>
                 <TooltipContent><p>Fit to Height</p></TooltipContent>
               </Tooltip>
@@ -970,14 +1006,6 @@ function ProSegmentAIContent() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant={globalSettings.snapEnabled ? "secondary" : "outline"} size="icon" className="h-8 w-8" onClick={() => setGlobalSettings(s => ({...s, snapEnabled: !s.snapEnabled}))}>
-                    <Magnet />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Toggle Snapping</p></TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
                   <Button variant={isSttEnabled ? "secondary" : "outline"} size="icon" className="h-8 w-8" onClick={() => setIsSttEnabled(p => !p)}>
                     <Ear />
                   </Button>
@@ -1020,8 +1048,8 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingsChange={handleMagicWandSettingsChange}
-              onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+              onMagicWandSettingChange={handleMagicWandSettingsChange}
+              onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
@@ -1040,6 +1068,7 @@ function ProSegmentAIContent() {
               showHorizontalRuler={showHorizontalRuler}
               showVerticalRuler={showVerticalRuler}
               showGuides={showGuides}
+              globalSettings={globalSettings}
               />
           </div>
       </main>
@@ -1070,12 +1099,6 @@ function ProSegmentAIContent() {
           activeTool={activeTool}
           setActiveTool={handleToolChange}
           showHotkeys={showHotkeyLabels}
-          showHorizontalRuler={showHorizontalRuler}
-          onToggleHorizontalRuler={() => setShowHorizontalRuler(p => !p)}
-          showVerticalRuler={showVerticalRuler}
-          onToggleVerticalRuler={() => setShowVerticalRuler(p => !p)}
-          showGuides={showGuides}
-          onToggleGuides={() => setShowGuides(p => !p)}
         />
       </div>
       
