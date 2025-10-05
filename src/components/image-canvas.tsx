@@ -883,6 +883,55 @@ const drawLayers = React.useCallback(() => {
     }
   };
 
+  const updateCursorStyle = (pos: {x: number, y: number}) => {
+    const mainCanvas = canvasRef.current;
+    const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
+    if (!mainCtx) return 'crosshair';
+
+    const cursorSize = 24;
+    const half = cursorSize / 2;
+    const dotRadius = 1;
+    const circleRadius = 8;
+    
+    const samplePoints = [
+      { id: 'top', x: pos.x, y: pos.y - circleRadius },
+      { id: 'right', x: pos.x + circleRadius, y: pos.y },
+      { id: 'bottom', x: pos.x, y: pos.y + circleRadius },
+      { id: 'left', x: pos.x - circleRadius, y: pos.y },
+    ];
+    
+    const quadrantColors = samplePoints.map(p => {
+        try {
+            const pixel = mainCtx.getImageData(Math.round(p.x), Math.round(p.y), 1, 1).data;
+            const luminance = (0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]) / 255;
+            return luminance > 0.5 ? 'black' : 'white';
+        } catch (e) {
+            return 'grey'; // Return a default color if sampling is outside canvas
+        }
+    });
+
+    const svg = `
+      <svg width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
+          </filter>
+        </defs>
+        <g filter="url(#blur)">
+          <path d="M ${half} ${half} L 0 ${half} A ${half} ${half} 0 0 1 ${half} 0 Z" fill="${quadrantColors[0]}"/>
+          <path d="M ${half} ${half} L ${half} 0 A ${half} ${half} 0 0 1 ${cursorSize} ${half} Z" fill="${quadrantColors[1]}"/>
+          <path d="M ${half} ${half} L ${cursorSize} ${half} A ${half} ${half} 0 0 1 ${half} ${cursorSize} Z" fill="${quadrantColors[2]}"/>
+          <path d="M ${half} ${half} L ${half} ${cursorSize} A ${half} ${half} 0 0 1 0 ${half} Z" fill="${quadrantColors[3]}"/>
+        </g>
+        <circle cx="${half}" cy="${half - circleRadius}" r="${dotRadius}" fill="${quadrantColors[0]}" />
+        <circle cx="${half + circleRadius}" cy="${half}" r="${dotRadius}" fill="${quadrantColors[1]}" />
+        <circle cx="${half}" cy="${half + circleRadius}" r="${dotRadius}" fill="${quadrantColors[2]}" />
+        <circle cx="${half - circleRadius}" cy="${half}" r="${dotRadius}" fill="${quadrantColors[3]}" />
+      </svg>
+    `;
+
+    setCursorStyle(`url("data:image/svg+xml;base64,${btoa(svg)}") ${half} ${half}, crosshair`);
+  }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
@@ -907,50 +956,13 @@ const drawLayers = React.useCallback(() => {
     
     const pos = getMousePos(canvas, e);
     setCanvasMousePos(pos);
+    updateCursorStyle(pos);
     
     if (isCloning && activeTool === 'clone') {
         stampClone(pos.x, pos.y);
     }
     
     if (!engine) return;
-
-    // Dynamic cursor update
-    const mainCanvas = canvasRef.current;
-    const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
-    if(mainCtx) {
-        const R = 8; // cursor radius
-        const startX = Math.max(0, Math.floor(pos.x - R));
-        const startY = Math.max(0, Math.floor(pos.y - R));
-        const width = Math.min(mainCanvas.width - startX, 2 * R);
-        const height = Math.min(mainCanvas.height - startY, 2 * R);
-        
-        if (width > 0 && height > 0) {
-          const imageData = mainCtx.getImageData(startX, startY, width, height);
-          let r = 0, g = 0, b = 0, count = 0;
-          for (let i = 0; i < imageData.data.length; i += 4) {
-              r += imageData.data[i];
-              g += imageData.data[i + 1];
-              b += imageData.data[i + 2];
-              count++;
-          }
-          const avgR = r / count;
-          const avgG = g / count;
-          const avgB = b / count;
-          const luminance = (0.299 * avgR + 0.587 * avgG + 0.114 * avgB) / 255;
-          const contrastColor = luminance > 0.5 ? 'black' : 'white';
-          
-          const circleRadius = 8;
-          const dotRadius = 1;
-          const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="${circleRadius}" stroke="${contrastColor}" stroke-width="2" stroke-opacity="0.5" fill="none" />
-              <circle cx="12" cy="${12 - circleRadius/2}" r="${dotRadius}" fill="${contrastColor}" />
-              <circle cx="12" cy="${12 + circleRadius/2}" r="${dotRadius}" fill="${contrastColor}" />
-              <circle cx="${12 - circleRadius/2}" cy="12" r="${dotRadius}" fill="${contrastColor}" />
-              <circle cx="${12 + circleRadius/2}" cy="12" r="${dotRadius}" fill="${contrastColor}" />
-          </svg>`;
-          setCursorStyle(`url("data:image/svg+xml;base64,${btoa(svg)}") 12 12, crosshair`);
-        }
-    }
 
     if (activeTool === 'lasso') {
       if (engine.isDrawingLasso) {
@@ -1179,6 +1191,7 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
+
 
 
 
