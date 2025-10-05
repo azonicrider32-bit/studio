@@ -25,8 +25,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/t
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
 import { useSidebar, SidebarTrigger } from "./ui/sidebar"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { cn } from "@/lib/utils"
+import { ProgressiveHover } from "./ui/progressive-hover"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
 
@@ -133,88 +132,12 @@ const ToolButtonWithProgressiveHover = ({
   onClick: () => void;
   showHotkey: boolean;
 }) => {
-  const [popoverOpen, setPopoverOpen] = React.useState(false);
-  const [detailLevel, setDetailLevel] = React.useState(-1); // -1: hidden, 0: name, 1: summary, 2: detailed
-
-  const summaryTimer = React.useRef<NodeJS.Timeout>();
-  const detailTimer = React.useRef<NodeJS.Timeout>();
-  const hoverCheckTimer = React.useRef<NodeJS.Timeout>();
-  const lastMousePosition = React.useRef({ x: 0, y: 0 });
-
-  const clearAllTimers = () => {
-    clearTimeout(summaryTimer.current);
-    clearTimeout(detailTimer.current);
-    clearTimeout(hoverCheckTimer.current);
-  };
-  
-  const handleMouseEnter = (e: React.MouseEvent) => {
-    lastMousePosition.current = { x: e.clientX, y: e.clientY };
-    let previousPosition = { ...lastMousePosition.current };
-    
-    const checkHoverStop = () => {
-        const dx = Math.abs(lastMousePosition.current.x - previousPosition.x);
-        const dy = Math.abs(lastMousePosition.current.y - previousPosition.y);
-
-        if (dx < 2 && dy < 2) {
-            // Mouse has stopped
-            clearAllTimers();
-            setDetailLevel(0); // Show name immediately
-            setPopoverOpen(true);
-
-            summaryTimer.current = setTimeout(() => {
-                setDetailLevel(1);
-            }, 1500); // 1.5 seconds for summary
-
-            if (tool.details) {
-                detailTimer.current = setTimeout(() => {
-                    setDetailLevel(2);
-                }, 4000); // 4 seconds for detailed view
-            }
-        } else {
-            // Mouse is still moving, reset
-            previousPosition = { ...lastMousePosition.current };
-            clearAllTimers();
-            setPopoverOpen(false);
-            setDetailLevel(-1);
-            hoverCheckTimer.current = setTimeout(checkHoverStop, 100);
-        }
-    };
-    hoverCheckTimer.current = setTimeout(checkHoverStop, 100);
-  };
-
-  const handleMouseLeave = () => {
-    clearAllTimers();
-    setPopoverOpen(false);
-    setDetailLevel(-1);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    lastMousePosition.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const renderPopoverContent = () => {
-    if (detailLevel < 0) return null;
-    
-    return (
-        <div className="space-y-2">
-            <p className="font-semibold text-foreground">{tool.tooltip}</p>
-            {detailLevel >= 1 && (
-                <p className="text-sm text-muted-foreground">{tool.summary}</p>
-            )}
-            {detailLevel >= 2 && tool.details && (
-                <p className="text-xs text-muted-foreground/80">{tool.details}</p>
-            )}
-        </div>
-    );
-  };
-
   return (
-    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-      <PopoverTrigger asChild 
-        onMouseEnter={handleMouseEnter} 
-        onMouseLeave={handleMouseLeave}
-        onMouseMove={handleMouseMove}
-      >
+    <ProgressiveHover
+      initialContent={tool.tooltip}
+      summaryContent={tool.summary}
+      detailedContent={tool.details}
+    >
         <Button
           variant={"ghost"}
           size="icon"
@@ -228,11 +151,7 @@ const ToolButtonWithProgressiveHover = ({
           </div>
           {showHotkey && <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">{tool.shortcut}</span>}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent side="right" align="start" className="w-80">
-        {renderPopoverContent()}
-      </PopoverContent>
-    </Popover>
+    </ProgressiveHover>
   );
 };
 
