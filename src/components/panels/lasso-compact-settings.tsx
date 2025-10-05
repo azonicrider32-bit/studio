@@ -80,7 +80,7 @@ const VerticalLassoSlider = ({
 };
 
 
-export function LassoCompactSettings({ settings, onSettingsChange }: { settings: LassoSettings, onSettingsChange: (s: Partial<LassoSettings>) => void }) {
+export function LassoCompactSettings({ settings, onLassoSettingsChange }: { settings: LassoSettings, onLassoSettingsChange: (s: Partial<LassoSettings>) => void }) {
   if (settings.drawMode !== 'magic') {
     return (
       <div className="p-2 text-center text-xs text-muted-foreground">
