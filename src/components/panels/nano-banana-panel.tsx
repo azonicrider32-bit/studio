@@ -90,12 +90,11 @@ export function NanoBananaPanel({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <TabsTrigger value={value} className="group flex-1 flex items-center justify-center gap-2 data-[state=active]:w-auto data-[state=inactive]:w-10 data-[state=inactive]:hover:w-auto transition-all duration-300">
-            <Icon className="h-4 w-4 shrink-0" />
-            <span className="hidden group-hover:inline group-data-[state=active]:inline whitespace-nowrap">{children}</span>
+          <TabsTrigger value={value} className="flex-1">
+            <Icon className="h-5 w-5" />
           </TabsTrigger>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="block md:hidden">
+        <TooltipContent side="bottom">
           <p>{children}</p>
         </TooltipContent>
       </Tooltip>
@@ -116,12 +115,20 @@ export function NanoBananaPanel({
         <TabsContent value="instruct" className="flex-1 flex flex-col min-h-0 -mx-4 mt-4">
            <div className="space-y-2 px-4">
               <Label className="flex items-center gap-2 text-xs text-muted-foreground">One-Click Actions</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {oneClickPrompts.map(p => (
-                  <Button key={p.id} variant="outline" size="sm" onClick={() => onAiToolClick(p)} disabled={isGenerating}>
-                    <p.icon className="w-4 h-4 mr-2"/>
-                    {p.label}
-                  </Button>
+                  <TooltipProvider key={p.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={() => onAiToolClick(p)} disabled={isGenerating}>
+                          <p.icon className="w-4 h-4"/>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{p.label}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
           </div>
