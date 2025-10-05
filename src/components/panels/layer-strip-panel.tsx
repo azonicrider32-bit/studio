@@ -25,25 +25,6 @@ const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boo
         
         ctx.clearRect(0, 0, thumbnailSize, thumbnailSize);
 
-        // Draw checkerboard for transparency
-        const checkerSize = 6;
-        ctx.fillStyle = '#ccc';
-        for (let y = 0; y < thumbnailSize; y += checkerSize) {
-            for (let x = 0; x < thumbnailSize; x += checkerSize) {
-                if ((x / checkerSize + y / checkerSize) % 2 === 0) {
-                    ctx.fillRect(x, y, checkerSize, checkerSize);
-                }
-            }
-        }
-        ctx.fillStyle = '#999';
-         for (let y = 0; y < thumbnailSize; y += checkerSize) {
-            for (let x = 0; x < thumbnailSize; x += checkerSize) {
-                if ((x / checkerSize + y / checkerSize) % 2 !== 0) {
-                    ctx.fillRect(x, y, checkerSize, checkerSize);
-                }
-            }
-        }
-        
         if (layer.type === 'background' && imageUrl) {
              const img = new window.Image();
              img.crossOrigin = "anonymous";
@@ -86,7 +67,7 @@ const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boo
     return (
         <div
             className={cn(
-                "w-12 h-12 rounded-md overflow-hidden border-2 transition-all cursor-pointer",
+                "w-12 h-12 rounded-md overflow-hidden border-2 transition-all cursor-pointer bg-transparent",
                 isActive ? "border-primary" : "border-border",
                 isHovered && !isActive && "border-accent"
             )}
