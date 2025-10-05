@@ -212,9 +212,13 @@ export function ImageCanvas({
   const lastPreviewTimeRef = React.useRef(0);
   const wandPreviewTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const lastMousePosRef = React.useRef<{x: number, y: number} | null>(null);
+  
+  // Animated Cursor state
   const [cursorStyle, setCursorStyle] = React.useState('default');
+  const cursorColorsRef = React.useRef<number[]>([128, 128, 128, 128]);
+  const targetCursorColorsRef = React.useRef<number[]>([128, 128, 128, 128]);
+  const animationFrameRef = React.useRef<number>();
   const lastCursorUpdateTimeRef = React.useRef(0);
-  const cursorUpdateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
 
   const { toast } = useToast();
@@ -382,7 +386,7 @@ const drawLayers = React.useCallback(() => {
           // Vertical guide
           overlayCtx.beginPath();
           overlayCtx.moveTo(canvasMousePos.x, 0);
-          overlayCtx.lineTo(canvasMousePos.x, overlayCanvas.height);
+          overlayCtx.lineTo(canvasMousePos.x, canvasMousePos.y);
           overlayCtx.stroke();
           
           overlayCtx.restore();
@@ -885,42 +889,14 @@ const drawLayers = React.useCallback(() => {
     }
   };
 
-  const _updateCursorStyle = (pos: {x: number, y: number}) => {
-    const mainCanvas = canvasRef.current;
-    const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
-    if (!mainCtx) return; // Can't update if no context
-
+  const _generateCursorSVG = (colors: number[]) => {
     const cursorSize = 32;
     const half = cursorSize / 2;
-    const dotRadius = 1.5;
     const circleRadius = 10;
-    const rotation = -90 * (Math.PI / 180); // Rotate the circle visual
-    const dotRotation = -45 * (Math.PI / 180); // Keep dots diagonal
+    const rotation = -90 * (Math.PI / 180); // Rotate circle
+    const dotRotation = -45 * (Math.PI / 180); // Diagonal dots
 
-    // Sample points for dots (diagonal)
-    const samplePoints = [
-        { id: 'top-left', x: pos.x + circleRadius * Math.cos(dotRotation - Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation - Math.PI / 2) },
-        { id: 'top-right', x: pos.x + circleRadius * Math.cos(dotRotation), y: pos.y + circleRadius * Math.sin(dotRotation) },
-        { id: 'bottom-right', x: pos.x + circleRadius * Math.cos(dotRotation + Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation + Math.PI / 2) },
-        { id: 'bottom-left', x: pos.x + circleRadius * Math.cos(dotRotation + Math.PI), y: pos.y + circleRadius * Math.sin(dotRotation + Math.PI) },
-    ].map(p => ({
-        ...p,
-        cx: half + (p.x-pos.x),
-        cy: half + (p.y-pos.y)
-    }));
-    
-    const quadrantData = samplePoints.map(p => {
-        try {
-            const pixel = mainCtx.getImageData(Math.round(p.x), Math.round(p.y), 1, 1).data;
-            // Inverse luminance for contrast
-            const luminance = (0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]);
-            return 255 - luminance;
-        } catch (e) {
-            return 128; // Default grey if sampling outside canvas
-        }
-    });
-
-    const quadrantColors = quadrantData.map(v => `rgb(${v}, ${v}, ${v})`);
+    const quadrantColors = colors.map(v => `rgb(${v}, ${v}, ${v})`);
 
     const svg = `
       <svg width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}" xmlns="http://www.w3.org/2000/svg">
@@ -936,35 +912,71 @@ const drawLayers = React.useCallback(() => {
           <path d="M ${half-circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half-circleRadius}" fill="none" stroke="${quadrantColors[3]}" stroke-width="2"/>
         </g>
         <g opacity="0.5" filter="url(#blur)">
-            <circle cx="${samplePoints[0].cx}" cy="${samplePoints[0].cy}" r="${dotRadius}" fill="${quadrantColors[0]}" />
-            <circle cx="${samplePoints[1].cx}" cy="${samplePoints[1].cy}" r="${dotRadius}" fill="${quadrantColors[1]}" />
-            <circle cx="${samplePoints[2].cx}" cy="${samplePoints[2].cy}" r="${dotRadius}" fill="${quadrantColors[2]}" />
-            <circle cx="${samplePoints[3].cx}" cy="${samplePoints[3].cy}" r="${dotRadius}" fill="${quadrantColors[3]}" />
+            <circle cx="${half + circleRadius * Math.cos(dotRotation - Math.PI / 2)}" cy="${half + circleRadius * Math.sin(dotRotation - Math.PI / 2)}" r="1.5" fill="${quadrantColors[0]}" />
+            <circle cx="${half + circleRadius * Math.cos(dotRotation)}" cy="${half + circleRadius * Math.sin(dotRotation)}" r="1.5" fill="${quadrantColors[1]}" />
+            <circle cx="${half + circleRadius * Math.cos(dotRotation + Math.PI / 2)}" cy="${half + circleRadius * Math.sin(dotRotation + Math.PI / 2)}" r="1.5" fill="${quadrantColors[2]}" />
+            <circle cx="${half + circleRadius * Math.cos(dotRotation + Math.PI)}" cy="${half + circleRadius * Math.sin(dotRotation + Math.PI)}" r="1.5" fill="${quadrantColors[3]}" />
         </g>
       </svg>
     `;
+    return `url("data:image/svg+xml;base64,${btoa(svg)}") ${half} ${half}, crosshair`;
+  }
+  
+  const _updateCursorStyle = (pos: {x: number, y: number}) => {
+    const mainCanvas = canvasRef.current;
+    const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
+    if (!mainCtx) return;
 
-    setCursorStyle(`url("data:image/svg+xml;base64,${btoa(svg)}") ${half} ${half}, crosshair`);
+    const circleRadius = 10;
+    const dotRotation = -45 * (Math.PI / 180);
+
+    const samplePoints = [
+        { x: pos.x + circleRadius * Math.cos(dotRotation - Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation - Math.PI / 2) },
+        { x: pos.x + circleRadius * Math.cos(dotRotation), y: pos.y + circleRadius * Math.sin(dotRotation) },
+        { x: pos.x + circleRadius * Math.cos(dotRotation + Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation + Math.PI / 2) },
+        { x: pos.x + circleRadius * Math.cos(dotRotation + Math.PI), y: pos.y + circleRadius * Math.sin(dotRotation + Math.PI) },
+    ];
+    
+    targetCursorColorsRef.current = samplePoints.map(p => {
+        try {
+            const pixel = mainCtx.getImageData(Math.round(p.x), Math.round(p.y), 1, 1).data;
+            const luminance = (0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]);
+            return 255 - luminance;
+        } catch (e) {
+            return 128;
+        }
+    });
+
+    // Start animation loop if not already running
+    if (!animationFrameRef.current) {
+        animateCursor();
+    }
   }
 
-  const throttledUpdateCursorStyle = (pos: {x: number, y: number}) => {
-    const now = Date.now();
-    const throttleDelay = 50; // Update at most every 50ms (20 FPS)
+  const animateCursor = () => {
+    const currentColors = cursorColorsRef.current;
+    const targetColors = targetCursorColorsRef.current;
+    const lerpFactor = 0.1; // Animation speed
 
-    if (now - lastCursorUpdateTimeRef.current > throttleDelay) {
-      _updateCursorStyle(pos);
-      lastCursorUpdateTimeRef.current = now;
+    let needsUpdate = false;
+    const newColors = currentColors.map((c, i) => {
+        const diff = targetColors[i] - c;
+        if (Math.abs(diff) < 0.5) {
+            return targetColors[i];
+        }
+        needsUpdate = true;
+        return c + diff * lerpFactor;
+    });
+
+    cursorColorsRef.current = newColors;
+    setCursorStyle(_generateCursorSVG(newColors));
+
+    if (needsUpdate) {
+        animationFrameRef.current = requestAnimationFrame(animateCursor);
     } else {
-      if (cursorUpdateTimeoutRef.current) {
-        clearTimeout(cursorUpdateTimeoutRef.current);
-      }
-      cursorUpdateTimeoutRef.current = setTimeout(() => {
-        _updateCursorStyle(pos);
-        lastCursorUpdateTimeRef.current = Date.now();
-      }, throttleDelay - (now - lastCursorUpdateTimeRef.current));
+        animationFrameRef.current = undefined;
     }
-  };
-
+  }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
@@ -989,7 +1001,12 @@ const drawLayers = React.useCallback(() => {
     
     const pos = getMousePos(canvas, e);
     setCanvasMousePos(pos);
-    throttledUpdateCursorStyle(pos);
+    
+    const now = Date.now();
+    if (now - lastCursorUpdateTimeRef.current > 50) { // Throttle updates
+      _updateCursorStyle(pos);
+      lastCursorUpdateTimeRef.current = now;
+    }
     
     if (isCloning && activeTool === 'clone') {
         stampClone(pos.x, pos.y);
@@ -1019,6 +1036,10 @@ const drawLayers = React.useCallback(() => {
     setIsPanning(false);
     setIsCloning(false);
     lastStampPosRef.current = null;
+    if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = undefined;
+    }
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
