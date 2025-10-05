@@ -24,6 +24,8 @@ const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boo
         canvas.height = thumbnailSize;
         
         ctx.clearRect(0, 0, thumbnailSize, thumbnailSize);
+        ctx.fillStyle = '#666';
+        ctx.fillRect(0,0,thumbnailSize, thumbnailSize);
 
         if (layer.type === 'background' && imageUrl) {
              const img = new window.Image();
@@ -68,8 +70,8 @@ const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boo
         <div
             className={cn(
                 "w-12 h-12 rounded-md overflow-hidden border-2 transition-all cursor-pointer bg-transparent",
-                isActive ? "border-primary" : "border-border",
-                isHovered && !isActive && "border-accent"
+                isActive ? "border-foreground" : "border-border",
+                isHovered && !isActive && "border-foreground/50"
             )}
         >
             {content}

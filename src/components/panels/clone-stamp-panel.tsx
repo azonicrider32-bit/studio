@@ -61,7 +61,7 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
-        <TabsContent value="general" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4">
+        <TabsContent value="general" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
           <div className="space-y-2">
             <Label htmlFor="brush-size">Brush Size: {settings.brushSize}px</Label>
             <Slider
@@ -181,7 +181,7 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
             <p className="text-xs text-muted-foreground">Choose whether to sample pixels from only the active layer or all visible layers combined.</p>
           </div>
         </TabsContent>
-        <TabsContent value="advanced" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4">
+        <TabsContent value="advanced" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
             <div className="space-y-2">
               <Label htmlFor="blend-mode">Target Tones</Label>
               <Select value={settings.blendMode} onValueChange={(v) => onSettingsChange({blendMode: v as any})}>
@@ -237,10 +237,23 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
           <h4 className="font-semibold text-sm flex items-center gap-2"><HelpCircle className="w-4 h-4"/>How It Works</h4>
           <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
               <li><span className="font-bold">Alt + Click:</span> Set the source point to clone from.</li>
-              <li><span className="font-bold">Scroll Wheel:</span> Rotate the clone source preview.</li>
+              <li><span className="font-bold">Scroll Wheel:</span> Adjusts angle.</li>
+              <li><span className="font-bold">Shift + Scroll:</span> Adjusts brush size.</li>
+              <li><span className="font-bold">Ctrl + Scroll:</span> Adjusts edge softness.</li>
+              <li><span className="font-bold">Alt + Scroll:</span> Adjusts opacity.</li>
               <li><span className="font-bold">Click + Drag:</span> Paint with the cloned pixels.</li>
           </ul>
       </div>
+      
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
 
     </div>
   )
