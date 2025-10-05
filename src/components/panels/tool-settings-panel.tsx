@@ -36,6 +36,7 @@ import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings, A
 import { Button } from "../ui/button"
 import { useSidebar } from "../ui/sidebar"
 import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
+import { MagicWandPanel } from "./magic-wand-panel"
 import { LassoCompactSettings } from "./lasso-compact-settings"
 import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
@@ -46,6 +47,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
   onMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void
+  negativeMagicWandSettings: MagicWandSettings
+  onNegativeMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void
   lassoSettings: LassoSettings
   onLassoSettingsChange: (settings: Partial<LassoSettings>) => void
   cloneStampSettings: CloneStampSettings
@@ -65,6 +68,8 @@ interface ToolSettingsPanelProps {
   isGenerating: boolean;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
+  canvas: HTMLCanvasElement | null;
+  mousePos: { x: number, y: number } | null;
 }
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
@@ -73,6 +78,8 @@ type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" |
 export function ToolSettingsPanel({ 
     magicWandSettings, 
     onMagicWandSettingsChange,
+    negativeMagicWandSettings,
+    onNegativeMagicWandSettingsChange,
     lassoSettings,
     onLassoSettingsChange,
     cloneStampSettings,
@@ -92,6 +99,8 @@ export function ToolSettingsPanel({
     isGenerating,
     customPrompt,
     setCustomPrompt,
+    canvas,
+    mousePos
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -304,6 +313,15 @@ export function ToolSettingsPanel({
               <TransformPanel
                   settings={transformSettings}
                   onSettingsChange={onTransformSettingsChange}
+              />
+          ) : activeTool === 'magic-wand' ? (
+              <MagicWandPanel 
+                settings={magicWandSettings} 
+                onSettingsChange={onMagicWandSettingsChange}
+                exclusionSettings={negativeMagicWandSettings}
+                onExclusionSettingsChange={onNegativeMagicWandSettingsChange}
+                canvas={canvas}
+                mousePos={mousePos}
               />
           ) : activeTool === 'lasso' || activeTool === 'line' ? (
              <div className="space-y-4 px-2">
