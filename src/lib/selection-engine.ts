@@ -230,7 +230,7 @@ export class SelectionEngine {
     }
     
     const finalPath = this.lassoSettings.drawMode === 'free' ? 
-        this.generateBezierSpline(pathPoints) :
+        this.generateSplinePath(pathPoints, false, 0.05) : // Use a smaller step for free draw
         this.generateSplinePath(pathPoints, closed);
 
     let pixels = new Set<number>();
@@ -388,7 +388,6 @@ export class SelectionEngine {
 
     let rawPath = [...this.lassoNodes, ...this.lassoPreviewPath];
     
-    // If not in magic mode, apply spline smoothing
     if (this.lassoSettings.drawMode !== 'magic' && this.lassoSettings.curveStrength > 0 && this.lassoNodes.length > 1) {
         let pathForSpline = [...this.lassoNodes];
         if (this.lassoCurrentPos) {
@@ -413,91 +412,49 @@ export class SelectionEngine {
     return rawPath;
   }
 
-    generateBezierSpline(points: [number, number][]): [number, number][] {
-        if (points.length < 2) return points;
+  generateSplinePath(points: [number, number][], closed: boolean, step = 0.1): [number, number][] {
+      if (points.length < 2) return points;
 
-        const tension = this.lassoSettings.curveStrength;
-        if (tension === 0) return points; // Straight lines
+      const tension = this.lassoSettings.curveStrength;
+      if (tension === 0) return points; // Straight lines
 
-        const path: [number, number][] = [];
-        path.push(points[0]);
+      const path: [number, number][] = [];
+      const numSegments = Math.floor(1 / step);
 
-        for (let i = 0; i < points.length - 1; i++) {
-            const p0 = points[i - 1] || points[i];
-            const p1 = points[i];
-            const p2 = points[i + 1];
-            const p3 = points[i + 2] || p2;
+      let p = [...points];
+      if (closed && p.length > 2) {
+          p.unshift(points[points.length - 1]);
+          p.push(points[1]);
+      } else {
+          p.unshift(points[0]);
+          p.push(points[points.length - 1]);
+      }
 
-            for (let t = 0; t < 1; t += 0.1) {
-                const t2 = t * t;
-                const t3 = t2 * t;
+      for (let i = 1; i < p.length - 2; i++) {
+          const p0 = p[i - 1];
+          const p1 = p[i];
+          const p2 = p[i + 1];
+          const p3 = p[i + 2];
 
-                const c1 = -tension * t3 + 2 * tension * t2 - tension * t;
-                const c2 = (2 - tension) * t3 + (tension - 3) * t2 + 1;
-                const c3 = (tension - 2) * t3 + (3 - 2 * tension) * t2 + tension * t;
-                const c4 = tension * t3 - tension * t2;
+          for (let j = 0; j <= numSegments; j++) {
+              const t = j / numSegments;
+              const t2 = t * t;
+              const t3 = t2 * t;
 
-                const x = c1 * p0[0] + c2 * p1[0] + c3 * p2[0] + c4 * p3[0];
-                const y = c1 * p0[1] + c2 * p1[1] + c3 * p2[1] + c4 * p3[1];
-                path.push([x, y]);
-            }
-        }
-        path.push(points[points.length - 1]);
-        return path;
-    }
+              // Catmull-Rom spline formula
+              const c1 = -tension * t3 + 2 * tension * t2 - tension * t;
+              const c2 = (2 - tension) * t3 + (tension - 3) * t2 + 1;
+              const c3 = (tension - 2) * t3 + (3 - 2 * tension) * t2 + tension * t;
+              const c4 = tension * t3 - tension * t2;
 
-    generateSplinePath(points: [number, number][], closed: boolean): [number, number][] {
-        if (points.length < 2) return points;
+              const x = c1 * p0[0] + c2 * p1[0] + c3 * p2[0] + c4 * p3[0];
+              const y = c1 * p0[1] + c2 * p1[1] + c3 * p2[1] + c4 * p3[1];
+              path.push([x, y]);
+          }
+      }
 
-        const tension = this.lassoSettings.curveStrength;
-        if (tension === 0) return points; // Straight lines
-
-        const path: [number, number][] = [];
-        const numSegments = 16; // Number of line segments between each control point
-
-        let p = [...points];
-        if (closed && p.length > 2) {
-            // Add wrapping points for a closed loop
-            p.unshift(points[points.length - 1]);
-            p.push(points[1]);
-        } else {
-            // Add dummy points for open loop ends
-            p.unshift(points[0]);
-            p.push(points[points.length - 1]);
-        }
-
-        const startI = 1;
-        const endI = p.length - 2;
-
-        for (let i = startI; i < endI; i++) {
-            const p0 = p[i - 1];
-            const p1 = p[i];
-            const p2 = p[i + 1];
-            const p3 = (i + 2 < p.length) ? p[i + 2] : p2;
-
-            for (let j = 0; j < numSegments; j++) {
-                const t = j / numSegments;
-                const t2 = t * t;
-                const t3 = t2 * t;
-
-                const c1 = -tension * t3 + 2 * tension * t2 - tension * t;
-                const c2 = (2 - tension) * t3 + (tension - 3) * t2 + 1;
-                const c3 = (tension - 2) * t3 + (3 - 2 * tension) * t2 + tension * t;
-                const c4 = tension * t3 - tension * t2;
-
-                const x = c1 * p0[0] + c2 * p1[0] + c3 * p2[0] + c4 * p3[0];
-                const y = c1 * p0[1] + c2 * p1[1] + c3 * p2[1] + c4 * p3[1];
-                path.push([x, y]);
-            }
-        }
-        if (!closed) {
-            path.push(points[points.length - 1]);
-        } else if (points.length > 0) {
-            path.push(points[0]);
-        }
-        
-        return path;
-    }
+      return path;
+  }
   
   findEdgePath(p1: [number, number], p2: [number, number], mouseTrace: [number, number][], withFuturePath = true): { path: [number, number][], futurePath: [number, number][] } {
     if (this.lassoSettings.drawMode !== 'magic' || !this.edgeMap) {
@@ -1375,9 +1332,7 @@ export class SelectionEngine {
           pathPoints.push(this.linePreviewPos);
         }
     
-        const finalPath = this.lassoSettings.drawMode === 'free' ?
-            this.generateBezierSpline(pathPoints) :
-            this.generateSplinePath(pathPoints, false);
+        const finalPath = this.generateSplinePath(pathPoints, false);
             
         drawPath(finalPath, 'hsl(var(--primary))', 2);
         
