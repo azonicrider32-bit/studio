@@ -687,31 +687,29 @@ function ProSegmentAIContent() {
   }
 
   const handleShelfClick = (panelId: RightPanel, clickType: 'single' | 'double') => {
-    setActivePanels(currentPanels => {
-        const topPanel = currentPanels[0];
-        const bottomPanel = currentPanels[1];
+      setActivePanels(currentPanels => {
+          let [topPanel, bottomPanel] = currentPanels;
 
-        // Panel is already open
-        if (topPanel === panelId && clickType === 'single') {
-            return bottomPanel ? [bottomPanel] : [];
-        }
-        if (bottomPanel === panelId && clickType === 'double') {
-            return [topPanel];
-        }
-        if (topPanel === panelId && clickType === 'double') {
-             return bottomPanel ? [bottomPanel, topPanel] : [undefined, topPanel] as RightPanel[];
-        }
-        if (bottomPanel === panelId && clickType === 'single') {
-             return [bottomPanel, topPanel];
-        }
-
-        // Panel is not open, add it
-        if (clickType === 'single') {
-            return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
-        } else { // double click
-            return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
-        }
-    });
+          if (clickType === 'single') {
+              if (topPanel === panelId) { // Clicked open top panel: close it
+                  return bottomPanel ? [bottomPanel] : [];
+              }
+              if (bottomPanel === panelId) { // Clicked open bottom panel: move to top
+                  return [bottomPanel, topPanel].filter(Boolean) as RightPanel[];
+              }
+              // Not open: open at top
+              return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
+          } else { // Double click
+              if (bottomPanel === panelId) { // Clicked open bottom panel: close it
+                  return [topPanel];
+              }
+              if (topPanel === panelId) { // Clicked open top panel: move to bottom
+                   return [bottomPanel, topPanel].filter(Boolean) as RightPanel[];
+              }
+              // Not open: open at bottom
+              return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
+          }
+      });
   };
 
   React.useEffect(() => {

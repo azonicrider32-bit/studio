@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -125,7 +124,7 @@ export function ToolPanel({
   showHotkeys,
   onAiToolClick,
 }: ToolPanelProps) {
-  const [activeToolbar, setActiveToolbar] = React.useState<'manual' | 'ai'>('ai');
+  const [activeToolbar, setActiveToolbar] = React.useState<'manual' | 'ai'>('manual');
   
   return (
     <div className="h-full flex-shrink-0 w-16 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
