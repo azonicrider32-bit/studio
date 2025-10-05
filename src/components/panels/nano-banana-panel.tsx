@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "../ui/card";
-import { Wand2, Mic, Trash2, Sparkles, Plus, Palette, BrainCircuit, ImageUp, Sparkle, Camera, Aperture, Wind, Flame, Zap } from "lucide-react";
+import { Wand2, Mic, Trash2, Sparkles, Plus, Palette, BrainCircuit, ImageUp, Sparkle, Camera, Aperture, Wind, Flame, Zap, PanelTop, MessageSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "../ui/label";
 import { AITool } from "@/lib/types";
@@ -32,55 +32,12 @@ interface NanoBananaPanelProps {
   setCustomPrompt: (prompt: string) => void;
 }
 
-export const oneClickPrompts: AITool[] = [
-  {
-    id: "blemish-remover",
-    label: "Blemish Remover",
-    prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the blemish or object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill.",
-    icon: Sparkles,
-    color: "#ff00ff", // Magenta
-    lineStyle: "dashed",
-  },
-  {
-    id: "remove-object",
-    label: "Remove Object",
-    prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill.",
-    icon: Trash2,
-    color: "#ff8800", // Orange
-    lineStyle: "solid",
-  },
-  {
-    id: "add-object",
-    label: "Add Object",
-    prompt: "Add a small bird to the selected area. It should be sitting naturally and match the lighting of the scene.",
-    icon: Plus,
-    color: "#00aaff", // Light Blue
-    lineStyle: "solid",
-  },
-  {
-    id: "change-color",
-    label: "Change Color",
-    prompt: "Change the color of the selected object to a vibrant, realistic blue. Maintain the original texture, shadows, and highlights of the object, ensuring only the color is altered.",
-    icon: Palette,
-    color: "#00ff88", // Mint Green
-    lineStyle: "solid",
-  },
-];
-
-const sfxTools: AITool[] = [
-    { id: "add-smoke", label: "Smoke", prompt: "Add realistic wisps of smoke in the sketched area.", icon: Wind, color: "#cccccc", lineStyle: "dashed" },
-    { id: "add-fire", label: "Fire", prompt: "Generate realistic flames within the sketched area, paying attention to the environment's lighting.", icon: Flame, color: "#ff4500", lineStyle: "solid" },
-    { id: "add-sparks", label: "Sparks", prompt: "Create a shower of glowing sparks originating from the sketched area.", icon: Sparkle, color: "#ffd700", lineStyle: "solid" },
-    { id: "add-lightning", label: "Lightning", prompt: "Generate a bolt of lightning along the sketched path.", icon: Zap, color: "#9400d3", lineStyle: "solid" },
-]
-
 
 export function NanoBananaPanel({
   instructionLayers,
   onInstructionChange,
   onLayerDelete,
   onGenerate,
-  onAiToolClick,
   isGenerating,
   customPrompt,
   setCustomPrompt,
@@ -90,7 +47,7 @@ export function NanoBananaPanel({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <TabsTrigger value={value} className="flex-1">
+          <TabsTrigger value={value} className="flex-1 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
             <Icon className="h-5 w-5" />
           </TabsTrigger>
         </TooltipTrigger>
@@ -102,43 +59,23 @@ export function NanoBananaPanel({
   );
 
   return (
-    <div className="p-4 space-y-4 h-full flex flex-col">
+    <div className="p-2 space-y-4 h-full flex flex-col">
       <Tabs defaultValue="instruct" className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid grid-cols-5">
-          <AITabTrigger value="instruct" icon={Sparkle}>Instruct</AITabTrigger>
+          <AITabTrigger value="instruct" icon={MessageSquare}>Instruct</AITabTrigger>
           <AITabTrigger value="photography" icon={Camera}>Photo</AITabTrigger>
           <AITabTrigger value="sfx" icon={Wind}>SFX</AITabTrigger>
           <AITabTrigger value="lighting" icon={Zap}>Lighting</AITabTrigger>
           <AITabTrigger value="inpaint" icon={ImageUp}>Inpaint</AITabTrigger>
         </TabsList>
 
-        <TabsContent value="instruct" className="flex-1 flex flex-col min-h-0 -mx-4 mt-4">
-           <div className="space-y-2 px-4">
-              <Label className="flex items-center gap-2 text-xs text-muted-foreground">One-Click Actions</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {oneClickPrompts.map(p => (
-                  <TooltipProvider key={p.id}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" onClick={() => onAiToolClick(p)} disabled={isGenerating}>
-                          <p.icon className="w-4 h-4"/>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{p.label}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ))}
-              </div>
-          </div>
-          <Separator className="my-4"/>
-           <ScrollArea className="flex-1 px-4">
+        <TabsContent value="instruct" className="flex-1 flex flex-col min-h-0 -mx-2 mt-4">
+           <ScrollArea className="flex-1 px-2">
             <div className="space-y-3">
               {instructionLayers.length === 0 ? (
                 <div className="text-center text-muted-foreground text-sm py-8">
-                  <p>Start drawing on the canvas or use a one-click tool to create an instruction layer.</p>
-                  <p className="text-xs mt-2">Press <span className="font-mono bg-muted px-1.5 py-0.5 rounded">Shift</span> to switch colors for new instructions.</p>
+                  <p>Start by selecting an AI tool and drawing on the canvas.</p>
+                  <p className="text-xs mt-2">The AI's instructions will appear here for you to edit and approve.</p>
                 </div>
               ) : (
                 instructionLayers.map((layer) => (
@@ -229,15 +166,9 @@ export function NanoBananaPanel({
                 </TabsContent>
             </Tabs>
         </TabsContent>
-
         <TabsContent value="sfx" className="mt-4 space-y-4">
-             <div className="grid grid-cols-2 gap-2">
-                {sfxTools.map(tool => (
-                    <Button key={tool.id} variant="outline" size="sm" onClick={() => onAiToolClick(tool)} disabled={isGenerating}>
-                        <tool.icon className="w-4 h-4 mr-2"/>
-                        {tool.label}
-                    </Button>
-                ))}
+             <div className="text-center text-muted-foreground text-sm py-8">
+                SFX tools will be available here.
              </div>
         </TabsContent>
         

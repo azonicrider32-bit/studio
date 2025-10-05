@@ -210,6 +210,9 @@ export function ToolSettingsPanel({
         </div>
     );
   }
+  
+  const isAiToolActive = ['banana', 'blemish-remover', 'remove-object', 'add-object', 'change-color'].includes(activeTool);
+
 
   const getActiveToolIcon = () => {
     switch(activeTool) {
@@ -219,12 +222,12 @@ export function ToolSettingsPanel({
         return <Lasso className="w-4 h-4" />;
       case 'clone': return <Replace className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
-      default: return null;
+      default: return isAiToolActive ? <BrainCircuit className="w-4 h-4" /> : null;
     }
   };
 
   const renderLeftPanelContent = () => {
-    if (activeTool === 'banana') {
+    if (isAiToolActive) {
       return (
           <NanoBananaPanel 
             instructionLayers={instructionLayers}
@@ -338,7 +341,7 @@ export function ToolSettingsPanel({
              <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
           )}
         </div>
-        {activeTool !== 'settings' && activeTool !== 'banana' && currentToolInfo && (
+        {activeTool !== 'settings' && !isAiToolActive && currentToolInfo && (
             <div className="px-2 pb-2">
               <Separator className="mb-2"/>
               <div className="bg-muted/50 rounded-md p-2 text-center text-xs text-muted-foreground">
