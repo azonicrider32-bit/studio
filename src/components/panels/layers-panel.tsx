@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -215,19 +216,6 @@ export function LayersPanel({
   };
   
   const renderWorkspaceLayers = (workspace: {id: string, name: string, layers: Layer[]}) => {
-    const layerTree = workspace.layers.reduce((acc, layer) => {
-        const layerMap = new Map(workspace.layers.map(l => [l.id, { ...l, children: [] as Layer[] }]));
-        if (layer.parentId && layerMap.has(layer.parentId)) {
-            const parent = layerMap.get(layer.parentId);
-            if(parent) {
-                (parent.children as Layer[]).push(layer as Layer);
-            }
-        } else {
-            acc.push({ parent: layer as (Layer & {children: Layer[]}), children: (layerMap.get(layer.id)?.children || []) });
-        }
-        return acc;
-    }, [] as { parent: Layer & {children: Layer[]}, children: Layer[] }[]);
-
     const backgroundLayer = workspace.layers.find(l => l.type === 'background');
     const regularLayers = workspace.layers.filter(l => l.type !== 'background' && !l.parentId);
 
@@ -267,12 +255,14 @@ export function LayersPanel({
                         )}
                     </div>
                 )}
-                <div className="pl-8 py-1">
-                    <button className="flex items-center w-full text-left gap-2 p-1 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors border-2 border-dashed border-transparent hover:border-accent">
-                      <Plus className="h-4 w-4" />
-                      <span className="text-xs">Add Modifier/Mask</span>
-                    </button>
-                </div>
+                {parent.type === 'segmentation' && (
+                    <div className="pl-8 py-1">
+                        <button className="flex items-center w-full text-left gap-2 p-1 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors border-2 border-dashed border-transparent hover:border-accent">
+                          <Plus className="h-4 w-4" />
+                          <span className="text-xs">Add Modifier/Mask</span>
+                        </button>
+                    </div>
+                )}
             </React.Fragment>
           ))}
           {backgroundLayer && renderLayer(backgroundLayer)}

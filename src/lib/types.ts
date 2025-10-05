@@ -167,7 +167,7 @@ export const UploadAssetInputSchema = z.object({
   fileDataUri: z
     .string()
     .describe(
-      "The file content as a data URI. Must include a MIME type and use Base64 encoding. Format: 'data:<mimetype>;base64,<encoded_data>'."
+      "The file content as a data URI. Must include a MIME type and use Base64 encoding. Format: 'data:<mimetype>;base64,<encoded_data>'"
     ),
 });
 export type UploadAssetInput = z.infer<typeof UploadAssetInputSchema>;

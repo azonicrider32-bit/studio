@@ -64,7 +64,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { ImageCanvas } from "./image-canvas"
-import { LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
+import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
 import { LayerStripPanel } from "./panels/layer-strip-panel"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
@@ -716,7 +716,7 @@ function ProSegmentAIContent() {
                                 return { ...l, parentId: targetId, subType: 'mask' as const };
                             }
                             return l;
-                        }).filter(l => l.id !== draggedId);
+                        });
                         
                         const targetLayerIndex = newLayers.findIndex(l => l.id === targetId);
 
@@ -728,11 +728,6 @@ function ProSegmentAIContent() {
                             const existingModifiers = targetLayer.modifiers || [];
 
                             newLayers[targetLayerIndex] = { ...targetLayer, modifiers: [...existingModifiers, draggedLayerWithParent] };
-                            
-                            const draggedIndexInMain = newLayers.findIndex(l => l.id === draggedId);
-                            if (draggedIndexInMain > -1) {
-                               newLayers[draggedIndexInMain] = draggedLayerWithParent;
-                            }
                         }
 
                         return { ...ws, layers: newLayers };
@@ -748,7 +743,7 @@ function ProSegmentAIContent() {
     }
   }
 
-  const handleBlemishRemoverSelection = async (selectionMaskUri: string) => {
+  const handleBlemishRemoverSelection = async (selectionMaskUri: string, sketchLayer: Layer) => {
     if (!activeWorkspace?.imageUrl) {
       toast({ title: 'No Image', description: 'Please select an image first.', variant: 'destructive' });
       return;
@@ -805,6 +800,7 @@ function ProSegmentAIContent() {
         bounds,
         imageData: finalImageData,
         closed: false,
+        modifiers: [sketchLayer],
       };
 
       addLayer(newLayer);
@@ -1066,6 +1062,7 @@ function ProSegmentAIContent() {
               showVerticalRuler={showVerticalRuler}
               showGuides={showGuides}
               globalSettings={globalSettings}
+              onBlemishRemoverSelection={handleBlemishRemoverSelection}
               />
           </div>
       </main>
@@ -1093,8 +1090,7 @@ function ProSegmentAIContent() {
                 onShowHotkeysChange={setShowHotkeyLabels}
                 globalSettings={globalSettings}
                 onGlobalSettingsChange={setGlobalSettings}
-                onBlemishRemoverSelection={handleBlemishRemoverSelection}
-                onToolChange={handleToolChange}
+                onAiToolClick={(tool: AITool) => {}}
                 instructionLayers={instructionLayers}
                 onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
                 onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
@@ -1117,6 +1113,7 @@ function ProSegmentAIContent() {
           activeTool={activeTool}
           setActiveTool={handleToolChange}
           showHotkeys={showHotkeyLabels}
+          onAiToolClick={(tool: AITool) => {}}
         />
       </div>
       
