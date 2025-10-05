@@ -5,9 +5,10 @@ import * as React from "react"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Replace, Layers, Copy } from "lucide-react"
+import { Replace, Layers, Copy, RotateCcw, FlipHorizontal, FlipVertical } from "lucide-react"
 import { CloneStampSettings } from "@/lib/types"
 import { Button } from "../ui/button"
+import { Input } from "../ui/input"
 
 interface CloneStampPanelProps {
   settings: CloneStampSettings;
@@ -15,6 +16,13 @@ interface CloneStampPanelProps {
 }
 
 export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelProps) {
+
+  const handleAngleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newAngle = parseInt(e.target.value, 10);
+    if (!isNaN(newAngle)) {
+        onSettingsChange({ angle: (newAngle % 360 + 360) % 360 });
+    }
+  }
 
   return (
     <div className="p-4 space-y-6">
@@ -54,18 +62,43 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
             onValueChange={(value) => onSettingsChange({ opacity: value[0] })}
           />
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="rotation-step">Rotation Step: {settings.rotationStep}°</Label>
-          <Slider
-            id="rotation-step"
-            min={1}
-            max={45}
-            step={1}
-            value={[settings.rotationStep]}
-            onValueChange={(value) => onSettingsChange({ rotationStep: value[0] })}
-          />
-        </div>
+      </div>
+
+      <Separator />
+      
+      <div className="space-y-4">
+          <h4 className="font-semibold text-sm">Rotation</h4>
+          <div className="space-y-2">
+            <Label htmlFor="rotation-step">Scroll Step: {settings.rotationStep}°</Label>
+            <Slider
+                id="rotation-step"
+                min={1}
+                max={45}
+                step={1}
+                value={[settings.rotationStep]}
+                onValueChange={(value) => onSettingsChange({ rotationStep: value[0] })}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+                <Input
+                    type="number"
+                    value={settings.angle}
+                    onChange={handleAngleChange}
+                    className="pr-8"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">°</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => onSettingsChange({ angle: 0 })}>
+                <RotateCcw className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipX: !settings.flipX })} data-state={settings.flipX ? 'on' : 'off'} className="data-[state=on]:bg-accent">
+                <FlipHorizontal className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipY: !settings.flipY })} data-state={settings.flipY ? 'on' : 'off'} className="data-[state=on]:bg-accent">
+                <FlipVertical className="w-4 h-4" />
+            </Button>
+          </div>
       </div>
 
       <Separator />

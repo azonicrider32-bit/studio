@@ -52,6 +52,9 @@ export interface CloneStampSettings {
     opacity: number;
     rotationStep: number;
     sourceLayer: 'current' | 'all';
+    angle: number;
+    flipX: boolean;
+    flipY: boolean;
 }
 
 export interface MagicWandSettings {

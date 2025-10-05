@@ -317,6 +317,9 @@ function ProSegmentAIContent() {
     opacity: 100,
     rotationStep: 5,
     sourceLayer: 'current',
+    angle: 0,
+    flipX: false,
+    flipY: false,
   });
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
@@ -1123,6 +1126,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
