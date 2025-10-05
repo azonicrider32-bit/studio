@@ -21,6 +21,7 @@ import {
   Hand,
   Info,
   X,
+  Sparkles,
 } from "lucide-react"
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
@@ -29,10 +30,17 @@ import { Separator } from "./ui/separator"
 import { useSidebar, SidebarTrigger } from "./ui/sidebar"
 import { ProgressiveHover } from "./ui/progressive-hover"
 import { BananaIcon } from "./icons/banana-icon"
+import { AITool, Tool } from "@/lib/types"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana";
-
-const toolDetails = {
+const toolDetails: Record<Tool, {
+    id: Tool;
+    icon: React.ElementType;
+    tooltip: string;
+    shortcut: string;
+    summary: string;
+    details: string;
+    disabled?: boolean;
+}> = {
   transform: {
     id: "transform",
     icon: Move,
@@ -107,24 +115,31 @@ const toolDetails = {
     summary: "Visually instruct the AI to perform edits.",
     details: "Draw and write directly on the canvas to tell the AI what to change. Use Shift to create new colored instruction layers.",
   },
+   'blemish-remover': {
+    id: "blemish-remover",
+    icon: Sparkles,
+    tooltip: "Blemish Remover",
+    shortcut: "J",
+    summary: "Quickly remove small imperfections.",
+    details: "Click and drag over an area to automatically select, inpaint, and replace it.",
+  },
+  settings: {
+    id: "settings",
+    icon: Settings2,
+    tooltip: "Global Settings",
+    shortcut: "",
+    summary: "Configure application-wide preferences for UI, performance, and more.",
+    details: "Access global settings for the entire application, including theme customization, hotkey management, and performance options."
+  }
 };
 
-const tools: (typeof toolDetails)[keyof typeof toolDetails][] = [
-    toolDetails.transform,
-    toolDetails["magic-wand"],
-    toolDetails.lasso,
-    toolDetails.line,
-    toolDetails.brush,
-    toolDetails.eraser,
-    toolDetails.pan,
-    toolDetails.clone,
-    toolDetails.banana,
-]
+const tools = Object.values(toolDetails).filter(t => t.id !== 'settings');
 
 interface ToolPanelProps {
   activeTool: Tool;
   setActiveTool: (tool: Tool) => void;
   showHotkeys: boolean;
+  onAiToolClick: (tool: AITool) => void;
 }
 
 const ToolButtonWithProgressiveHover = ({
@@ -155,7 +170,7 @@ const ToolButtonWithProgressiveHover = ({
           <div className="ps-tool-icon">
             <tool.icon className="h-6 w-6 ps-tool-icon__icon" />
           </div>
-          {showHotkey && <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">{tool.shortcut}</span>}
+          {showHotkey && tool.shortcut && <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">{tool.shortcut}</span>}
         </Button>
     </ProgressiveHover>
   );

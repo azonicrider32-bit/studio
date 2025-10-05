@@ -36,14 +36,14 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
-import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
+import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings, AITool } from "@/lib/types"
 import { Button } from "../ui/button"
 import { useSidebar } from "../ui/sidebar"
 import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
 import { LassoCompactSettings } from "./lasso-compact-settings"
 import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
-import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
+import { NanoBananaPanel, InstructionLayer, oneClickPrompts } from "./nano-banana-panel"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -62,12 +62,13 @@ interface ToolSettingsPanelProps {
   onInstructionChange: (id: string, prompt: string) => void;
   onLayerDelete: (id: string) => void;
   onGenerate: (prompt?: string) => void;
+  onAiToolClick: (tool: AITool) => void;
   isGenerating: boolean;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
 }
 
-type Tool = "magic-wand" | "lasso" | "line" | "clone" | "settings" | "banana" | "blemish-remover" | "transform" | "pan" | "brush" | "eraser";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 
 
 export function ToolSettingsPanel({ 
@@ -87,6 +88,7 @@ export function ToolSettingsPanel({
     onInstructionChange,
     onLayerDelete,
     onGenerate,
+    onAiToolClick,
     isGenerating,
     customPrompt,
     setCustomPrompt,
@@ -235,6 +237,7 @@ export function ToolSettingsPanel({
             onInstructionChange={onInstructionChange}
             onLayerDelete={onLayerDelete}
             onGenerate={onGenerate}
+            onAiToolClick={onAiToolClick}
             isGenerating={isGenerating}
             customPrompt={customPrompt}
             setCustomPrompt={setCustomPrompt}

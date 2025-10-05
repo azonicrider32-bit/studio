@@ -11,6 +11,7 @@ import { BananaIcon } from "../icons/banana-icon";
 import { Wand2, Mic, Trash2, Sparkles, Plus, Palette } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "../ui/label";
+import { AITool } from "@/lib/types";
 
 export interface InstructionLayer {
   id: string;
@@ -24,35 +25,44 @@ interface NanoBananaPanelProps {
   onInstructionChange: (id: string, prompt: string) => void;
   onLayerDelete: (id: string) => void;
   onGenerate: (prompt?: string) => void;
+  onAiToolClick: (tool: AITool) => void;
   isGenerating: boolean;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
 }
 
-const oneClickPrompts = [
+export const oneClickPrompts: AITool[] = [
   {
     id: "blemish-remover",
     label: "Blemish Remover",
     prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the blemish or object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill.",
     icon: Sparkles,
+    color: "#ff00ff", // Magenta
+    lineStyle: "dashed",
   },
   {
     id: "remove-object",
     label: "Remove Object",
     prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill.",
     icon: Trash2,
+    color: "#ff8800", // Orange
+    lineStyle: "solid",
   },
   {
     id: "add-object",
     label: "Add Object",
     prompt: "Add a small bird to the selected area. It should be sitting naturally and match the lighting of the scene.",
     icon: Plus,
+    color: "#00aaff", // Light Blue
+    lineStyle: "solid",
   },
   {
     id: "change-color",
     label: "Change Color",
     prompt: "Change the color of the selected object to a vibrant, realistic blue. Maintain the original texture, shadows, and highlights of the object, ensuring only the color is altered.",
     icon: Palette,
+    color: "#00ff88", // Mint Green
+    lineStyle: "solid",
   },
 ];
 
@@ -62,6 +72,7 @@ export function NanoBananaPanel({
   onInstructionChange,
   onLayerDelete,
   onGenerate,
+  onAiToolClick,
   isGenerating,
   customPrompt,
   setCustomPrompt,
@@ -127,7 +138,7 @@ export function NanoBananaPanel({
                 <Label className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary"/> One-Click Actions</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {oneClickPrompts.map(p => (
-                    <Button key={p.id} variant="outline" size="sm" onClick={() => onGenerate(p.prompt)} disabled={isGenerating}>
+                    <Button key={p.id} variant="outline" size="sm" onClick={() => onAiToolClick(p)} disabled={isGenerating}>
                       <p.icon className="w-4 h-4 mr-2"/>
                       {p.label}
                     </Button>

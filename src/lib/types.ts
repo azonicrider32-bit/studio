@@ -2,6 +2,17 @@
 
 import { z } from 'zod';
 
+export type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
+
+export interface AITool {
+    id: string;
+    label: string;
+    prompt: string;
+    icon: React.ElementType;
+    color: string;
+    lineStyle: 'solid' | 'dashed';
+}
+
 export interface Layer {
     id: string;
     name: string;
