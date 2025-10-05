@@ -165,6 +165,44 @@ export function ToolSettingsPanel({
     
     const currentToolInfo = toolInfo[activeTool as keyof typeof toolInfo];
 
+  const handlePresetChange = (preset: 'default' | 'precise' | 'loose') => {
+    let newSettings: Partial<LassoSettings> = {};
+    switch(preset) {
+        case 'precise':
+            newSettings = {
+                snapRadius: 10,
+                snapThreshold: 0.5,
+                directionalStrength: 0.8,
+                cursorInfluence: 0.05,
+                traceInfluence: 0.1,
+                colorInfluence: 0.3,
+            };
+            break;
+        case 'loose':
+             newSettings = {
+                snapRadius: 40,
+                snapThreshold: 0.2,
+                directionalStrength: 0.1,
+                cursorInfluence: 0.5,
+                traceInfluence: 0.5,
+                colorInfluence: 0.0,
+            };
+            break;
+        case 'default':
+        default:
+             newSettings = {
+                snapRadius: 20,
+                snapThreshold: 0.3,
+                directionalStrength: 0.2,
+                cursorInfluence: 0.1,
+                traceInfluence: 0.2,
+                colorInfluence: 0.0,
+            };
+            break;
+    }
+    onLassoSettingsChange(newSettings);
+  };
+
 
   if (sidebarState === 'collapsed') {
     switch (activeTool) {
@@ -300,6 +338,14 @@ export function ToolSettingsPanel({
                             ))}
                         </SelectContent>
                     </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label>Presets</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handlePresetChange('default')}>Default</Button>
+                        <Button variant="outline" size="sm" onClick={() => handlePresetChange('precise')}>Precise</Button>
+                        <Button variant="outline" size="sm" onClick={() => handlePresetChange('loose')}>Loose</Button>
+                    </div>
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="curve-tension" className="flex items-center gap-2">Curve Tension: {lassoSettings.curveTension.toFixed(2)}</Label>
