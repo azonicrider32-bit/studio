@@ -53,13 +53,17 @@ interface ToolSettingsPanelProps {
   onLassoSettingsChange: (settings: Partial<LassoSettings>) => void
   cloneStampSettings: CloneStampSettings
   onCloneStampSettingsChange: (settings: Partial<CloneStampSettings>) => void
-  activeTool: 'magic-wand' | 'lasso' | 'line' | 'clone' | 'settings' | 'banana' | 'blemish-remover'
+  activeTool: Tool
   showHotkeys: boolean
   onShowHotkeysChange: (value: boolean) => void
   globalSettings: GlobalSettings;
   onGlobalSettingsChange: (settings: Partial<GlobalSettings>) => void;
   onBlemishRemoverSelection: (selectionMask: string) => void;
+  onToolChange: (tool: Tool) => void;
 }
+
+type Tool = "magic-wand" | "lasso" | "line" | "clone" | "settings" | "banana" | "blemish-remover" | "transform" | "pan" | "brush" | "eraser";
+
 
 export function ToolSettingsPanel({ 
     magicWandSettings, 
@@ -73,7 +77,8 @@ export function ToolSettingsPanel({
     onShowHotkeysChange,
     globalSettings,
     onGlobalSettingsChange,
-    onBlemishRemoverSelection
+    onBlemishRemoverSelection,
+    onToolChange
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -126,7 +131,7 @@ export function ToolSettingsPanel({
         }
     };
     
-    const currentToolInfo = toolInfo[activeTool];
+    const currentToolInfo = toolInfo[activeTool as keyof typeof toolInfo];
 
 
   if (sidebarState === 'collapsed') {
@@ -613,14 +618,26 @@ export function ToolSettingsPanel({
               </Select>
             </div>
              <div className="space-y-2">
-              <Label htmlFor="curve-strength" className="flex items-center gap-2">Curve Strength: {lassoSettings.curveStrength.toFixed(2)}</Label>
-              <Slider 
-                  id="curve-strength"
-                  min={0} max={1} step={0.05}
-                  value={[lassoSettings.curveStrength]}
-                  onValueChange={(v) => onLassoSettingsChange({ curveStrength: v[0]})}
-              />
+                <Label htmlFor="curve-strength" className="flex items-center gap-2">Curve Strength: {lassoSettings.curveStrength.toFixed(2)}</Label>
+                <Slider 
+                    id="curve-strength"
+                    min={0} max={1} step={0.05}
+                    value={[lassoSettings.curveStrength]}
+                    onValueChange={(v) => onLassoSettingsChange({ curveStrength: v[0]})}
+                />
             </div>
+             {lassoSettings.drawMode === 'free' && (
+                <div className="space-y-2">
+                    <Label htmlFor="curve-tension" className="flex items-center gap-2">Curve Tension: {lassoSettings.curveTension.toFixed(2)}</Label>
+                    <Slider 
+                        id="curve-tension"
+                        min={0} max={1} step={0.05}
+                        value={[lassoSettings.curveTension]}
+                        onValueChange={(v) => onLassoSettingsChange({ curveTension: v[0]})}
+                    />
+                    <p className="text-xs text-muted-foreground">0 = standard (smooth), 1 = tight.</p>
+                </div>
+            )}
             <div className="flex items-center justify-between">
                 <Label htmlFor="fill-path" className="flex items-center gap-2">Fill Path</Label>
                 <Switch
@@ -671,7 +688,7 @@ export function ToolSettingsPanel({
             <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />
         )}
       </div>
-      {activeTool !== 'settings' && (
+      {activeTool !== 'settings' && currentToolInfo && (
           <div className="px-2 pb-2">
             <Separator className="mb-2"/>
             <div className="bg-muted/50 rounded-md p-2 text-center text-xs text-muted-foreground">

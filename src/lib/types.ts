@@ -30,9 +30,11 @@ export interface LassoSettings {
     useAiEnhancement: boolean;
     showMouseTrace: boolean;
     showAllMasks: boolean;
+    fillPath: boolean;
     snapRadius: number;
     snapThreshold: number;
     curveStrength: number; // 0-1, for Catmull-Rom tension
+    curveTension: number; // For Catmull-Rom, 0=standard, 0.5=cardinal
     directionalStrength: number;
     cursorInfluence: number;
     traceInfluence: number;
@@ -50,7 +52,6 @@ export interface LassoSettings {
         minDistance: number; // px
         maxDistance: number; // px
     };
-    fillPath: boolean;
 }
 
 export interface CloneStampSettings {
