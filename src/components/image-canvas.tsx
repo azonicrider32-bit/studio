@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Image from "next/image";
@@ -891,7 +892,7 @@ const drawLayers = React.useCallback(() => {
     const half = cursorSize / 2;
     const dotRadius = 1.5;
     const circleRadius = 10;
-    const rotation = -45 * (Math.PI / 180); // 45 degrees counter-clockwise
+    const rotation = -45 * (Math.PI / 180);
 
     const samplePoints = [
         { id: 'top-left', x: pos.x + circleRadius * Math.cos(rotation - Math.PI / 2), y: pos.y + circleRadius * Math.sin(rotation - Math.PI / 2) },
@@ -922,16 +923,17 @@ const drawLayers = React.useCallback(() => {
             <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
           </filter>
         </defs>
-        <g opacity="0.5">
+        <g opacity="0.5" transform="rotate(-90 ${half} ${half})">
           <path d="M ${half} ${half-circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half+circleRadius} ${half}" fill="none" stroke="rgb(${quadrantData[0]}, ${quadrantData[0]}, ${quadrantData[0]})" stroke-width="2"/>
           <path d="M ${half+circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half+circleRadius}" fill="none" stroke="rgb(${quadrantData[1]}, ${quadrantData[1]}, ${quadrantData[1]})" stroke-width="2"/>
           <path d="M ${half} ${half+circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half-circleRadius} ${half}" fill="none" stroke="rgb(${quadrantData[2]}, ${quadrantData[2]}, ${quadrantData[2]})" stroke-width="2"/>
           <path d="M ${half-circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half-circleRadius}" fill="none" stroke="rgb(${quadrantData[3]}, ${quadrantData[3]}, ${quadrantData[3]})" stroke-width="2"/>
-          
-          <circle cx="${samplePoints[0].cx}" cy="${samplePoints[0].cy}" r="${dotRadius}" fill="rgb(${quadrantData[0]}, ${quadrantData[0]}, ${quadrantData[0]})" />
-          <circle cx="${samplePoints[1].cx}" cy="${samplePoints[1].cy}" r="${dotRadius}" fill="rgb(${quadrantData[1]}, ${quadrantData[1]}, ${quadrantData[1]})" />
-          <circle cx="${samplePoints[2].cx}" cy="${samplePoints[2].cy}" r="${dotRadius}" fill="rgb(${quadrantData[2]}, ${quadrantData[2]}, ${quadrantData[2]})" />
-          <circle cx="${samplePoints[3].cx}" cy="${samplePoints[3].cy}" r="${dotRadius}" fill="rgb(${quadrantData[3]}, ${quadrantData[3]}, ${quadrantData[3]})" />
+        </g>
+        <g opacity="0.5" filter="url(#blur)">
+            <circle cx="${samplePoints[0].cx}" cy="${samplePoints[0].cy}" r="${dotRadius}" fill="rgb(${quadrantData[0]}, ${quadrantData[0]}, ${quadrantData[0]})" />
+            <circle cx="${samplePoints[1].cx}" cy="${samplePoints[1].cy}" r="${dotRadius}" fill="rgb(${quadrantData[1]}, ${quadrantData[1]}, ${quadrantData[1]})" />
+            <circle cx="${samplePoints[2].cx}" cy="${samplePoints[2].cy}" r="${dotRadius}" fill="rgb(${quadrantData[2]}, ${quadrantData[2]}, ${quadrantData[2]})" />
+            <circle cx="${samplePoints[3].cx}" cy="${samplePoints[3].cy}" r="${dotRadius}" fill="rgb(${quadrantData[3]}, ${quadrantData[3]}, ${quadrantData[3]})" />
         </g>
       </svg>
     `;
@@ -1086,7 +1088,7 @@ const drawLayers = React.useCallback(() => {
         });
 
         if (changed) {
-            onMagicWandSettingChange({ tolerances: newTolerances });
+            onMagicWandSettingsChange({ tolerances: newTolerances });
         }
     }
   };
@@ -1203,5 +1205,7 @@ const drawLayers = React.useCallback(() => {
 
 
 
+
+    
 
     
