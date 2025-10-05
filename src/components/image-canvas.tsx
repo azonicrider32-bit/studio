@@ -208,11 +208,13 @@ export function ImageCanvas({
   const lastStampPosRef = React.useRef<{ x: number, y: number } | null>(null);
 
 
-  // Refs for throttling wand preview
+  // Refs for throttling
   const lastPreviewTimeRef = React.useRef(0);
   const wandPreviewTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const lastMousePosRef = React.useRef<{x: number, y: number} | null>(null);
   const [cursorStyle, setCursorStyle] = React.useState('default');
+  const lastCursorUpdateTimeRef = React.useRef(0);
+  const cursorUpdateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
 
   const { toast } = useToast();
@@ -883,38 +885,42 @@ const drawLayers = React.useCallback(() => {
     }
   };
 
-  const updateCursorStyle = (pos: {x: number, y: number}) => {
+  const _updateCursorStyle = (pos: {x: number, y: number}) => {
     const mainCanvas = canvasRef.current;
     const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
-    if (!mainCtx) return 'crosshair';
+    if (!mainCtx) return; // Can't update if no context
 
     const cursorSize = 32;
     const half = cursorSize / 2;
     const dotRadius = 1.5;
     const circleRadius = 10;
-    const rotation = -45 * (Math.PI / 180);
+    const rotation = -90 * (Math.PI / 180); // Rotate the circle visual
+    const dotRotation = -45 * (Math.PI / 180); // Keep dots diagonal
 
+    // Sample points for dots (diagonal)
     const samplePoints = [
-        { id: 'top-left', x: pos.x + circleRadius * Math.cos(rotation - Math.PI / 2), y: pos.y + circleRadius * Math.sin(rotation - Math.PI / 2) },
-        { id: 'top-right', x: pos.x + circleRadius * Math.cos(rotation), y: pos.y + circleRadius * Math.sin(rotation) },
-        { id: 'bottom-right', x: pos.x + circleRadius * Math.cos(rotation + Math.PI / 2), y: pos.y + circleRadius * Math.sin(rotation + Math.PI / 2) },
-        { id: 'bottom-left', x: pos.x + circleRadius * Math.cos(rotation + Math.PI), y: pos.y + circleRadius * Math.sin(rotation + Math.PI) },
+        { id: 'top-left', x: pos.x + circleRadius * Math.cos(dotRotation - Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation - Math.PI / 2) },
+        { id: 'top-right', x: pos.x + circleRadius * Math.cos(dotRotation), y: pos.y + circleRadius * Math.sin(dotRotation) },
+        { id: 'bottom-right', x: pos.x + circleRadius * Math.cos(dotRotation + Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation + Math.PI / 2) },
+        { id: 'bottom-left', x: pos.x + circleRadius * Math.cos(dotRotation + Math.PI), y: pos.y + circleRadius * Math.sin(dotRotation + Math.PI) },
     ].map(p => ({
         ...p,
         cx: half + (p.x-pos.x),
         cy: half + (p.y-pos.y)
     }));
-
-
+    
     const quadrantData = samplePoints.map(p => {
         try {
             const pixel = mainCtx.getImageData(Math.round(p.x), Math.round(p.y), 1, 1).data;
+            // Inverse luminance for contrast
             const luminance = (0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]);
             return 255 - luminance;
         } catch (e) {
-            return 128; // Return a default grey if sampling is outside canvas
+            return 128; // Default grey if sampling outside canvas
         }
     });
+
+    const quadrantColors = quadrantData.map(v => `rgb(${v}, ${v}, ${v})`);
 
     const svg = `
       <svg width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}" xmlns="http://www.w3.org/2000/svg">
@@ -923,23 +929,42 @@ const drawLayers = React.useCallback(() => {
             <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
           </filter>
         </defs>
-        <g opacity="0.5" transform="rotate(-90 ${half} ${half})">
-          <path d="M ${half} ${half-circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half+circleRadius} ${half}" fill="none" stroke="rgb(${quadrantData[0]}, ${quadrantData[0]}, ${quadrantData[0]})" stroke-width="2"/>
-          <path d="M ${half+circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half+circleRadius}" fill="none" stroke="rgb(${quadrantData[1]}, ${quadrantData[1]}, ${quadrantData[1]})" stroke-width="2"/>
-          <path d="M ${half} ${half+circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half-circleRadius} ${half}" fill="none" stroke="rgb(${quadrantData[2]}, ${quadrantData[2]}, ${quadrantData[2]})" stroke-width="2"/>
-          <path d="M ${half-circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half-circleRadius}" fill="none" stroke="rgb(${quadrantData[3]}, ${quadrantData[3]}, ${quadrantData[3]})" stroke-width="2"/>
+        <g opacity="0.5" transform="rotate(${rotation * 180 / Math.PI} ${half} ${half})">
+          <path d="M ${half} ${half-circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half+circleRadius} ${half}" fill="none" stroke="${quadrantColors[0]}" stroke-width="2"/>
+          <path d="M ${half+circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half+circleRadius}" fill="none" stroke="${quadrantColors[1]}" stroke-width="2"/>
+          <path d="M ${half} ${half+circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half-circleRadius} ${half}" fill="none" stroke="${quadrantColors[2]}" stroke-width="2"/>
+          <path d="M ${half-circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half-circleRadius}" fill="none" stroke="${quadrantColors[3]}" stroke-width="2"/>
         </g>
         <g opacity="0.5" filter="url(#blur)">
-            <circle cx="${samplePoints[0].cx}" cy="${samplePoints[0].cy}" r="${dotRadius}" fill="rgb(${quadrantData[0]}, ${quadrantData[0]}, ${quadrantData[0]})" />
-            <circle cx="${samplePoints[1].cx}" cy="${samplePoints[1].cy}" r="${dotRadius}" fill="rgb(${quadrantData[1]}, ${quadrantData[1]}, ${quadrantData[1]})" />
-            <circle cx="${samplePoints[2].cx}" cy="${samplePoints[2].cy}" r="${dotRadius}" fill="rgb(${quadrantData[2]}, ${quadrantData[2]}, ${quadrantData[2]})" />
-            <circle cx="${samplePoints[3].cx}" cy="${samplePoints[3].cy}" r="${dotRadius}" fill="rgb(${quadrantData[3]}, ${quadrantData[3]}, ${quadrantData[3]})" />
+            <circle cx="${samplePoints[0].cx}" cy="${samplePoints[0].cy}" r="${dotRadius}" fill="${quadrantColors[0]}" />
+            <circle cx="${samplePoints[1].cx}" cy="${samplePoints[1].cy}" r="${dotRadius}" fill="${quadrantColors[1]}" />
+            <circle cx="${samplePoints[2].cx}" cy="${samplePoints[2].cy}" r="${dotRadius}" fill="${quadrantColors[2]}" />
+            <circle cx="${samplePoints[3].cx}" cy="${samplePoints[3].cy}" r="${dotRadius}" fill="${quadrantColors[3]}" />
         </g>
       </svg>
     `;
 
     setCursorStyle(`url("data:image/svg+xml;base64,${btoa(svg)}") ${half} ${half}, crosshair`);
   }
+
+  const throttledUpdateCursorStyle = (pos: {x: number, y: number}) => {
+    const now = Date.now();
+    const throttleDelay = 50; // Update at most every 50ms (20 FPS)
+
+    if (now - lastCursorUpdateTimeRef.current > throttleDelay) {
+      _updateCursorStyle(pos);
+      lastCursorUpdateTimeRef.current = now;
+    } else {
+      if (cursorUpdateTimeoutRef.current) {
+        clearTimeout(cursorUpdateTimeoutRef.current);
+      }
+      cursorUpdateTimeoutRef.current = setTimeout(() => {
+        _updateCursorStyle(pos);
+        lastCursorUpdateTimeRef.current = Date.now();
+      }, throttleDelay - (now - lastCursorUpdateTimeRef.current));
+    }
+  };
+
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
@@ -964,7 +989,7 @@ const drawLayers = React.useCallback(() => {
     
     const pos = getMousePos(canvas, e);
     setCanvasMousePos(pos);
-    updateCursorStyle(pos);
+    throttledUpdateCursorStyle(pos);
     
     if (isCloning && activeTool === 'clone') {
         stampClone(pos.x, pos.y);
@@ -1205,6 +1230,8 @@ const drawLayers = React.useCallback(() => {
 
 
 
+
+    
 
     
 
