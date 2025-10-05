@@ -109,7 +109,16 @@ To maximize utility, the system should offer two primary modes for mask definiti
 1.  **User-Drawn Sketch (Manual):** Direct transmission of the user-drawn sketch layer, utilizing the alpha channel for mask definition.
 2.  **AI-Generated Mask (Assisted):** Leveraging Gemini’s underlying object detection and segmentation capabilities 24, or utilizing the pre-existing `MASK_MODE_BACKGROUND` feature available through Vertex AI 10, to automatically select complex regions (e.g., a background, or a primary object) for immediate editing.
 
-### C. Managing Artifacts and Boundary Conditions
+### C. Core Image Handling Strategy: A Hybrid Approach
+
+To ensure both maximum performance during real-time editing and maximum efficiency for data transfer and storage, the application will adopt a hybrid image handling strategy.
+
+1.  **In-Memory Editing (Raw Pixel Data):** For all on-canvas operations (e.g., Magic Wand selections, brush work, real-time path manipulation), the application and its `SelectionEngine` will operate on uncompressed, raw `ImageData`. This provides immediate, low-latency access to pixel data, which is critical for a responsive and fluid user experience. Any compression/decompression during these high-frequency operations would introduce unacceptable lag.
+2.  **Data Transfer & Storage (Lossless WebP):** Whenever an image asset—such as a user-drawn mask overlay, a generated layer, or a source image—needs to be sent to a backend service (like the Nano Banana AI flow) or saved, it will be encoded into the **Lossless WebP** format. This leverages WebP's superior compression (especially for images with transparency) to reduce payload size, decrease API costs, and speed up network transfers.
+
+This dual approach guarantees that real-time tools feel instantaneous while backend operations are optimized for efficiency and cost.
+
+### D. Managing Artifacts and Boundary Conditions
 
 The architectural response to diffusion model limitations must specifically address boundary artifacts. Cross-attention leakage is a common failure mode where latent representations bleed across the mask boundary, leading to ghosting or inconsistent texture generation.20
 
