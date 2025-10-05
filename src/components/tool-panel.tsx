@@ -95,7 +95,7 @@ const toolDetails = {
     shortcut: "C",
     summary: "Paint with pixels from another part of the image.",
     details: "The Clone Stamp tool allows you to duplicate part of an image. Alt-click to define a source point, then click and drag to paint with the sampled pixels.",
-    disabled: true,
+    disabled: false,
   },
 };
 

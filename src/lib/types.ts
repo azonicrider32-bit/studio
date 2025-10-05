@@ -47,6 +47,12 @@ export interface LassoSettings {
     useColorAwareness: boolean;
 }
 
+export interface CloneStampSettings {
+    brushSize: number;
+    opacity: number;
+    rotationStep: number;
+}
+
 export interface MagicWandSettings {
     tolerances: {
         r: number; g: number; b: number;
