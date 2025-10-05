@@ -586,6 +586,7 @@ function ProSegmentAIContent() {
                 onToggleLock={toggleLayerLock}
                 onToggleMask={toggleLayerMask}
                 onDeleteLayer={deleteLayer}
+                onAddLayer={() => {}}
                 draggedLayerId={null} 
                 setDraggedLayerId={() => {}}
                 dropTargetId={null}
@@ -930,6 +931,7 @@ function ProSegmentAIContent() {
                 hoveredLayerId={hoveredLayerId}
                 onLayerSelect={(id) => setActiveWorkspaceState(ws => ({...ws, activeLayerId: id}))}
                 onHoverLayer={setHoveredLayerId}
+                onAddLayer={() => {}}
                 imageUrl={activeWorkspace.imageUrl}
             />}
       </div>
