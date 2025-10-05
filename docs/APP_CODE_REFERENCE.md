@@ -8,8 +8,6 @@
 
 This document provides an exhaustive, centralized snapshot of the source code for all major components and systems within the ProSegment AI application. It is intended to serve as a technical reference for the current state of the implementation, allowing for direct comparison with architectural blueprints and design documents.
 
----
-
 ## Table of Contents
 
 *   [2. Core Application Structure](#2-core-application-structure)
@@ -428,7 +426,6 @@ function ProSegmentAIContent() {
   // ... For brevity, the full function bodies are shown below without redundant comments.
 
   const [hoveredZoom, setHoveredZoom] = React.useState<'A' | 'B' | null>(null);
-  const [isSplitView, setIsSplitView] = React.useState(false);
   const activeWorkspaceIndex = workspaces.findIndex(ws => ws.id === activeWorkspaceId);
   const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
     antiAlias: {
@@ -852,7 +849,7 @@ This class is the powerhouse of the application, containing the core algorithms 
 - **Magic Wand Algorithm:** Implements the `magicWand` method, a flood-fill algorithm that finds contiguous pixels based on color similarity. It's highly configurable through the `MagicWandSettings`.
 - **Intelligent Lasso Pathfinding:** The `findEdgePath` method is the core of the "Magic Snap" feature. It uses an A* (or similar) pathfinding algorithm on a pre-computed `edgeMap` to find the optimal path between two points that follows the strongest edges.
 - **Selection & Layer Creation:** Contains helper methods like `pathToSelection` (which converts a closed vector path into a pixel set) and `createLayerFromPixels` (which generates a new `Layer` object from a selection).
-- **Rendering Logic:** Provides methods like `renderSelection` to draw the highlights, marching ants, and tool-specific previews (like the lasso path) onto the overlay canvas.
+- **Rendering Logic:** Provides methods like `renderSelection` to draw the highlights, "marching ants" borders, and tool-specific previews (like the lasso path) onto the overlay canvas.
 
 ```typescript
 import { LassoSettings, MagicWandSettings, Segment, Layer } from "./types";
@@ -1079,13 +1076,15 @@ export class SelectionEngine {
 
 ### `src/lib/types.ts`
 
-This file defines all the core data structures used throughout the application, such as `Layer`, `LassoSettings`, and `MagicWandSettings`.
+This file defines all the core data structures and TypeScript types used throughout the application. It ensures type safety and provides a single source of truth for the shape of our data, such as layers, tool settings, and AI-related inputs/outputs.
 
 ```typescript
 import { z } from 'zod';
 
+// Defines the set of all available tools in the application.
 export type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 
+// Represents a one-click AI action, defining its UI and generative prompt.
 export interface AITool {
     id: string;
     label: string;
@@ -1096,42 +1095,44 @@ export interface AITool {
     isOneClick?: boolean;
 }
 
+// The core data structure for a single layer in the layer stack.
 export interface Layer {
-    id: string;
-    name: string;
-    type: 'segmentation' | 'background' | 'adjustment';
-    subType?: 'pixel' | 'mask' | 'path';
-    parentId?: string | null;
-    visible: boolean;
-    locked: boolean;
-    pixels: Set<number>;
-    path?: [number, number][];
-    stroke?: string;
-    strokeWidth?: number;
-    fill?: string;
-    closed: boolean;
-    imageData?: ImageData;
-    maskVisible?: boolean;
-    highlightColor?: string; // e.g., 'hsl(210, 40%, 96.1%)'
-    highlightOpacity?: number; // 0-1
+    id: string; // Unique identifier
+    name: string; // Display name in the layers panel
+    type: 'segmentation' | 'background' | 'adjustment'; // The fundamental type of the layer
+    subType?: 'pixel' | 'mask' | 'path'; // Specifies if it holds pixels, is a mask, or is a vector path
+    parentId?: string | null; // If it's a child (e.g., a mask), this links to its parent layer
+    visible: boolean; // Is the layer visible on the canvas?
+    locked: boolean; // Is the layer locked from editing?
+    pixels: Set<number>; // A set of pixel indices that belong to this layer's selection
+    path?: [number, number][]; // An array of [x, y] coordinates for vector paths
+    stroke?: string; // Stroke color for vector paths
+    strokeWidth?: number; // Stroke width for vector paths
+    fill?: string; // Fill color for vector paths
+    closed: boolean; // Is the vector path closed?
+    imageData?: ImageData; // The actual pixel data for pixel-based layers
+    maskVisible?: boolean; // Is the colored highlight/mask overlay visible?
+    highlightColor?: string;
+    highlightOpacity?: number;
     highlightTexture?: 'solid' | 'checkerboard' | 'lines';
-    modifiers?: Layer[];
-    bounds: { x: number; y: number; width: number; height: number };
+    modifiers?: Layer[]; // An array of child layers acting as modifiers (e.g., masks)
+    bounds: { x: number; y: number; width: number; height: number }; // The bounding box of the layer content
 }
 
+// Defines all configurable settings for the Intelligent Lasso tool.
 export interface LassoSettings {
     drawMode: 'magic' | 'polygon' | 'free';
     useAiEnhancement: boolean;
     showMouseTrace: boolean;
     showAllMasks: boolean;
     fillPath: boolean;
-    snapRadius: number;
-    snapThreshold: number;
-    curveStrength: number; // 0-1, for Catmull-Rom tension
+    snapRadius: number; // How close to an edge the cursor must be to snap.
+    snapThreshold: number; // How strong an edge must be to be considered for snapping.
+    curveStrength: number; // Controls the "curviness" of the path in polygon mode.
     curveTension: number;
-    directionalStrength: number;
-    cursorInfluence: number;
-    traceInfluence: number;
+    directionalStrength: number; // How much the path prefers to continue in its current direction.
+    cursorInfluence: number; // How strongly the path is pulled towards the user's cursor.
+    traceInfluence: number; // How much the path is influenced by the recent mouse trace.
     colorInfluence: number;
     snapRadiusEnabled: boolean;
     snapThresholdEnabled: boolean;
@@ -1142,18 +1143,19 @@ export interface LassoSettings {
     colorInfluenceEnabled: boolean;
     useColorAwareness: boolean;
     freeDraw: {
-        dropInterval: number; // ms
-        minDistance: number; // px
-        maxDistance: number; // px
+        dropInterval: number; // Time in ms between automatic node drops.
+        minDistance: number; // Minimum pixel distance to drop a new node.
+        maxDistance: number; // Maximum pixel distance to drop a new node.
     };
 }
 
+// Defines all settings for the Clone Stamp tool.
 export interface CloneStampSettings {
     brushSize: number;
     opacity: number;
-    softness: number;
+    softness: number; // Feathering of the brush edge.
     rotationStep: number;
-    sourceLayer: 'current' | 'all';
+    sourceLayer: 'current' | 'all'; // Sample from the current layer or all visible layers.
     angle: number;
     flipX: boolean;
     flipY: boolean;
@@ -1163,25 +1165,26 @@ export interface CloneStampSettings {
         values: MagicWandSettings['tolerances'];
         enabled: Set<keyof MagicWandSettings['tolerances']>;
     };
-    falloff: number; // 0-100%
+    falloff: number;
 }
 
+// Defines all settings for the Magic Wand tool.
 export interface MagicWandSettings {
     tolerances: {
         r: number; g: number; b: number;
         h: number; s: number; v: number;
         l: number; a: number; b_lab: number;
     };
-    contiguous: boolean;
+    contiguous: boolean; // Should the selection only include physically connected pixels?
     useAiAssist: boolean;
     createAsMask: boolean;
     showAllMasks: boolean;
-    ignoreExistingSegments: boolean;
-    enabledTolerances: Set<keyof MagicWandSettings['tolerances']>;
-    scrollAdjustTolerances: Set<keyof MagicWandSettings['tolerances']>;
-    searchRadius: number;
+    ignoreExistingSegments: boolean; // If true, can select pixels already in another layer.
+    enabledTolerances: Set<keyof MagicWandSettings['tolerances']>; // Which color channels to consider.
+    scrollAdjustTolerances: Set<keyof MagicWandSettings['tolerances']>; // Which tolerances are adjusted by scrolling.
+    searchRadius: number; // For 'average' or 'dominant' sample modes.
     sampleMode: 'point' | 'average' | 'dominant';
-    seedColor?: { [key: string]: number };
+    seedColor?: { [key: string]: number }; // The initial color sampled.
     useAntiAlias: boolean;
     useFeather: boolean;
     highlightColorMode: 'fixed' | 'random' | 'contrast';
@@ -1199,13 +1202,15 @@ export interface MagicWandSettings {
     debounceDelay: number;
 }
 
+// Defines global application settings.
 export interface GlobalSettings {
     snapEnabled: boolean;
     snapRadius: number;
 }
 
+// Defines all settings for the Transform tool.
 export interface TransformSettings {
-    scope: 'layer' | 'visible' | 'all';
+    scope: 'layer' | 'visible' | 'all'; // What the transformation applies to.
     x: number;
     y: number;
     scaleX: number;
@@ -1216,13 +1221,14 @@ export interface TransformSettings {
     maintainAspectRatio: boolean;
 }
 
-
+// Represents a temporary selection of pixels before it becomes a layer.
 export interface Segment {
     id: number;
     pixels: Set<number>;
     bounds: { x: number; y: number; width: number; height: number };
 }
 
+// Defines all settings for the Feather/Edge Refinement panel.
 export interface FeatherSettings {
   antiAlias: {
     enabled: boolean;
@@ -1256,6 +1262,7 @@ export interface FeatherSettings {
   };
 }
 
+// Zod schema for validating asset uploads to the AI flow.
 export const UploadAssetInputSchema = z.object({
   userId: z.string().describe('The ID of the user uploading the asset.'),
   fileName: z.string().describe('The name of the file to be uploaded.'),
@@ -1267,6 +1274,7 @@ export const UploadAssetInputSchema = z.object({
 });
 export type UploadAssetInput = z.infer<typeof UploadAssetInputSchema>;
 
+// Zod schema for the output of the asset upload flow.
 export const UploadAssetOutputSchema = z.object({
   downloadURL: z.string().optional().describe('The public URL to access the uploaded file.'),
   gcsPath: z.string().optional().describe('The path to the file in Google Cloud Storage.'),
