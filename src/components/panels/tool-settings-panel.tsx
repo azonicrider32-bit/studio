@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -30,7 +29,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
-import { MagicWandSettings, LassoSettings, CloneStampSettings } from "@/lib/types"
+import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Button } from "../ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
@@ -56,6 +55,8 @@ interface ToolSettingsPanelProps {
   activeTool: 'magic-wand' | 'lasso' | 'line' | 'clone' | 'settings' | 'banana'
   showHotkeys: boolean
   onShowHotkeysChange: (value: boolean) => void
+  globalSettings: GlobalSettings;
+  onGlobalSettingsChange: (settings: Partial<GlobalSettings>) => void;
 }
 
 export function ToolSettingsPanel({ 
@@ -68,6 +69,8 @@ export function ToolSettingsPanel({
     activeTool,
     showHotkeys,
     onShowHotkeysChange,
+    globalSettings,
+    onGlobalSettingsChange
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -441,7 +444,7 @@ export function ToolSettingsPanel({
               </TabsContent>
           </Tabs>
         )}
-        {(activeTool === 'lasso' || activeTool === 'line') && (
+        {activeTool === 'lasso' && (
           <Tabs defaultValue="general" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="general">General</TabsTrigger>
@@ -554,8 +557,62 @@ export function ToolSettingsPanel({
                   </div>
                  </div>
               </TabsContent>
-
           </Tabs>
+        )}
+        {activeTool === 'line' && (
+          <div className="px-2 space-y-6">
+            <div className="space-y-2">
+              <Label>Draw Mode</Label>
+              <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
+                  <SelectTrigger id="line-draw-mode">
+                      <div className="flex items-center gap-2">
+                          {currentMode && <currentMode.icon className="h-4 w-4" />}
+                          <SelectValue placeholder="Select mode..." />
+                      </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                      {DRAW_MODES.filter(m => m.id !== 'magic').map(mode => (
+                          <SelectItem key={mode.id} value={mode.id}>
+                              <div className="flex items-center gap-2">
+                                  <mode.icon className="h-4 w-4" />
+                                  <span>{mode.label}</span>
+                              </div>
+                          </SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="curve-strength" className="flex items-center gap-2">Curve Strength: {lassoSettings.curveStrength.toFixed(2)}</Label>
+              <Slider 
+                  id="curve-strength"
+                  min={0} max={1} step={0.05}
+                  value={[lassoSettings.curveStrength]}
+                  onValueChange={(v) => onLassoSettingsChange({ curveStrength: v[0]})}
+              />
+            </div>
+            {lassoSettings.drawMode === 'free' && (
+              <Accordion type="single" collapsible defaultValue="free-draw-settings">
+                <AccordionItem value="free-draw-settings">
+                  <AccordionTrigger>Free Draw Settings</AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label>Drop Interval: {lassoSettings.freeDraw?.dropInterval}ms</Label>
+                      <Slider min={10} max={1000} step={10} value={[lassoSettings.freeDraw?.dropInterval || 100]} onValueChange={(v) => onLassoSettingsChange({ freeDraw: {...lassoSettings.freeDraw, dropInterval: v[0]}})} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Min Distance: {lassoSettings.freeDraw?.minDistance}px</Label>
+                      <Slider min={1} max={50} step={1} value={[lassoSettings.freeDraw?.minDistance || 5]} onValueChange={(v) => onLassoSettingsChange({ freeDraw: {...lassoSettings.freeDraw, minDistance: v[0]}})} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Max Distance: {lassoSettings.freeDraw?.maxDistance}px</Label>
+                      <Slider min={5} max={200} step={5} value={[lassoSettings.freeDraw?.maxDistance || 20]} onValueChange={(v) => onLassoSettingsChange({ freeDraw: {...lassoSettings.freeDraw, maxDistance: v[0]}})} />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
+          </div>
         )}
         {activeTool === 'clone' && (
             <CloneStampPanel 
@@ -573,7 +630,7 @@ export function ToolSettingsPanel({
             />
         )}
          {activeTool === 'settings' && (
-            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} />
+            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={setShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />
         )}
       </div>
       {activeTool !== 'settings' && (
