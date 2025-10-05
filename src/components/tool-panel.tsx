@@ -134,16 +134,14 @@ const ToolButtonWithProgressiveHover = ({
   showHotkey: boolean;
 }) => {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
-  const [detailLevel, setDetailLevel] = React.useState(0); // 0: name, 1: summary, 2: detailed
+  const [detailLevel, setDetailLevel] = React.useState(-1); // -1: hidden, 0: name, 1: summary, 2: detailed
 
-  const nameTimer = React.useRef<NodeJS.Timeout>();
   const summaryTimer = React.useRef<NodeJS.Timeout>();
   const detailTimer = React.useRef<NodeJS.Timeout>();
   const hoverCheckTimer = React.useRef<NodeJS.Timeout>();
   const lastMousePosition = React.useRef({ x: 0, y: 0 });
 
   const clearAllTimers = () => {
-    clearTimeout(nameTimer.current);
     clearTimeout(summaryTimer.current);
     clearTimeout(detailTimer.current);
     clearTimeout(hoverCheckTimer.current);
@@ -160,27 +158,24 @@ const ToolButtonWithProgressiveHover = ({
         if (dx < 2 && dy < 2) {
             // Mouse has stopped
             clearAllTimers();
-            nameTimer.current = setTimeout(() => {
-                setDetailLevel(0);
-                setPopoverOpen(true);
-            }, 300); // Quick delay for the name
+            setDetailLevel(0); // Show name immediately
+            setPopoverOpen(true);
 
             summaryTimer.current = setTimeout(() => {
                 setDetailLevel(1);
-                setPopoverOpen(true);
             }, 1500); // 1.5 seconds for summary
 
             if (tool.details) {
                 detailTimer.current = setTimeout(() => {
                     setDetailLevel(2);
-                    setPopoverOpen(true);
                 }, 4000); // 4 seconds for detailed view
             }
         } else {
             // Mouse is still moving, reset
             previousPosition = { ...lastMousePosition.current };
             clearAllTimers();
-            setPopoverOpen(false); // Close popover if mouse moves
+            setPopoverOpen(false);
+            setDetailLevel(-1);
             hoverCheckTimer.current = setTimeout(checkHoverStop, 100);
         }
     };
@@ -190,7 +185,7 @@ const ToolButtonWithProgressiveHover = ({
   const handleMouseLeave = () => {
     clearAllTimers();
     setPopoverOpen(false);
-    setDetailLevel(0);
+    setDetailLevel(-1);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -198,25 +193,19 @@ const ToolButtonWithProgressiveHover = ({
   };
 
   const renderPopoverContent = () => {
-    switch (detailLevel) {
-      case 0:
-        return <p className="font-semibold text-foreground">{tool.tooltip}</p>;
-      case 1:
-        return (
-          <div className="space-y-1">
-            <p className="font-semibold text-foreground">{tool.summary}</p>
-          </div>
-        );
-      case 2:
-        return (
-          <div className="space-y-2">
-            <p className="font-semibold text-foreground">{tool.summary}</p>
-            <p className="text-sm text-muted-foreground">{tool.details}</p>
-          </div>
-        );
-      default:
-        return null;
-    }
+    if (detailLevel < 0) return null;
+    
+    return (
+        <div className="space-y-2">
+            <p className="font-semibold text-foreground">{tool.tooltip}</p>
+            {detailLevel >= 1 && (
+                <p className="text-sm text-muted-foreground">{tool.summary}</p>
+            )}
+            {detailLevel >= 2 && tool.details && (
+                <p className="text-xs text-muted-foreground/80">{tool.details}</p>
+            )}
+        </div>
+    );
   };
 
   return (
