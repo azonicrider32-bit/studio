@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -52,11 +53,12 @@ interface ToolSettingsPanelProps {
   onLassoSettingsChange: (settings: Partial<LassoSettings>) => void
   cloneStampSettings: CloneStampSettings
   onCloneStampSettingsChange: (settings: Partial<CloneStampSettings>) => void
-  activeTool: 'magic-wand' | 'lasso' | 'line' | 'clone' | 'settings' | 'banana'
+  activeTool: 'magic-wand' | 'lasso' | 'line' | 'clone' | 'settings' | 'banana' | 'blemish-remover'
   showHotkeys: boolean
   onShowHotkeysChange: (value: boolean) => void
   globalSettings: GlobalSettings;
   onGlobalSettingsChange: (settings: Partial<GlobalSettings>) => void;
+  onBlemishRemoverSelection: (selectionMask: string) => void;
 }
 
 export function ToolSettingsPanel({ 
@@ -70,7 +72,8 @@ export function ToolSettingsPanel({
     showHotkeys,
     onShowHotkeysChange,
     globalSettings,
-    onGlobalSettingsChange
+    onGlobalSettingsChange,
+    onBlemishRemoverSelection
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -93,12 +96,12 @@ export function ToolSettingsPanel({
         },
         'lasso': {
             title: 'Intelligent Lasso Tool',
-            description: 'The Lasso tool allows for creating freehand selections. In Magic Snap mode, the path will intelligently cling to object edges. In Polygon mode, you can create straight-edged selections by clicking points.',
+            description: 'The Lasso tool allows for creating freehand selections. In Magic Snap mode, the path will intelligently cling to object edges. Other modes like Polygon and Free Draw are available.',
             shortcut: 'L'
         },
         'line': {
             title: 'Line Tool',
-            description: 'The Line tool creates straight or curved paths by placing anchor points. It is ideal for precise, geometric selections or for creating vector paths.',
+            description: 'The Line tool creates straight or curved paths by placing anchor points. It is ideal for precise, geometric selections or for creating vector paths. Press Enter to complete the path.',
             shortcut: 'P'
         },
         'clone': {
@@ -110,6 +113,11 @@ export function ToolSettingsPanel({
             title: 'Nano Banana Tool',
             description: 'Visually instruct the AI to perform edits by drawing and writing directly on the canvas.',
             shortcut: 'N'
+        },
+        'blemish-remover': {
+            title: 'Blemish Remover',
+            description: 'Quickly remove small imperfections. Click and drag over an area to automatically select, inpaint, and replace it.',
+            shortcut: 'J' // Common hotkey for healing/spot removal tools
         },
         'settings': {
             title: 'Global Settings',
@@ -180,6 +188,7 @@ export function ToolSettingsPanel({
         return <Lasso className="w-4 h-4" />;
       case 'clone': return <Replace className="w-4 h-4" />;
       case 'banana': return <BananaIcon className="w-4 h-4" />;
+      case 'blemish-remover': return <Sparkles className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
       default: return null;
     }
@@ -196,7 +205,28 @@ export function ToolSettingsPanel({
             <Info className="w-4 h-4" />
         </Button>
       </div>
-      <Separator />
+       <Separator />
+       <div className="px-2">
+        <Label className="text-xs text-muted-foreground">AI Presets</Label>
+        <div className="flex items-center gap-2 mt-1 border p-1 rounded-md">
+           <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button 
+                        variant={activeTool === 'blemish-remover' ? "secondary" : "ghost"}
+                        size="icon" 
+                        onClick={() => onToolChange('blemish-remover')}
+                    >
+                        <Sparkles className="w-4 h-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Blemish Remover (J)</p>
+                </TooltipContent>
+              </Tooltip>
+           </TooltipProvider>
+        </div>
+       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         {activeTool === 'magic-wand' && (
@@ -444,7 +474,7 @@ export function ToolSettingsPanel({
               </TabsContent>
           </Tabs>
         )}
-        {activeTool === 'lasso' && (
+        {(activeTool === 'lasso' || activeTool === 'blemish-remover') && (
           <Tabs defaultValue="general" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="general">General</TabsTrigger>
@@ -591,6 +621,14 @@ export function ToolSettingsPanel({
                   onValueChange={(v) => onLassoSettingsChange({ curveStrength: v[0]})}
               />
             </div>
+            <div className="flex items-center justify-between">
+                <Label htmlFor="fill-path" className="flex items-center gap-2">Fill Path</Label>
+                <Switch
+                    id="fill-path"
+                    checked={lassoSettings.fillPath}
+                    onCheckedChange={(checked) => onLassoSettingsChange({ fillPath: checked })}
+                />
+            </div>
             {lassoSettings.drawMode === 'free' && (
               <Accordion type="single" collapsible defaultValue="free-draw-settings">
                 <AccordionItem value="free-draw-settings">
@@ -630,7 +668,7 @@ export function ToolSettingsPanel({
             />
         )}
          {activeTool === 'settings' && (
-            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={setShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />
+            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />
         )}
       </div>
       {activeTool !== 'settings' && (

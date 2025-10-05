@@ -93,8 +93,10 @@ import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
 import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
 import { CloneStampPanel } from "./panels/clone-stamp-panel"
 import { NanoBananaPanel, InstructionLayer } from "./panels/nano-banana-panel"
+import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
+import { handleApiError } from "@/lib/error-handling"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
 
 interface WorkspaceState {
@@ -119,6 +121,7 @@ const createNewWorkspace = (id: string, name: string, imageUrl?: string): Worksp
     pixels: new Set(),
     bounds: { x: 0, y: 0, width: 0, height: 0 },
     modifiers: [],
+    closed: false,
   };
   return {
     id,
@@ -308,6 +311,7 @@ function ProSegmentAIContent() {
     useAiEnhancement: false,
     showMouseTrace: true,
     showAllMasks: true,
+    fillPath: false,
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.05,
@@ -705,6 +709,7 @@ function ProSegmentAIContent() {
                 dropTargetId={null}
                 setDropTargetId={() => {}}
                 onDrop={(draggedId, targetId) => {
+                    if (!activeWorkspace) return;
                     const draggedLayer = activeWorkspace.layers.find(l => l.id === draggedId);
                     if (!draggedLayer || draggedId === targetId || draggedLayer.parentId === targetId) return;
 
@@ -758,11 +763,82 @@ function ProSegmentAIContent() {
     }
   }
 
+  const handleBlemishRemoverSelection = async (selectionMaskUri: string) => {
+    if (!activeWorkspace?.imageUrl) {
+      toast({ title: 'No Image', description: 'Please select an image first.', variant: 'destructive' });
+      return;
+    }
+    setIsGenerating(true);
+    toast({ title: 'Blemish Remover Active', description: 'AI is analyzing the selected area.' });
+    try {
+      const result = await inpaintWithPrompt({
+        photoDataUri: activeWorkspace.imageUrl,
+        maskDataUri: selectionMaskUri,
+        prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the blemish or object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill."
+      });
+      if (result.error || !result.generatedImageDataUri) {
+        throw new Error(result.error || "Inpainting failed to return an image.");
+      }
+      
+      const originalImage = new Image();
+      originalImage.crossOrigin = "anonymous";
+      originalImage.src = activeWorkspace.imageUrl;
+      await new Promise(resolve => { originalImage.onload = resolve; });
+
+      const generatedImage = new Image();
+      generatedImage.crossOrigin = "anonymous";
+      generatedImage.src = result.generatedImageDataUri;
+      await new Promise(resolve => { generatedImage.onload = resolve; });
+
+      const maskImage = new Image();
+      maskImage.crossOrigin = "anonymous";
+      maskImage.src = selectionMaskUri;
+      await new Promise(resolve => { maskImage.onload = resolve; });
+      
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) throw new Error("Could not create canvas context");
+
+      tempCanvas.width = originalImage.width;
+      tempCanvas.height = originalImage.height;
+
+      tempCtx.drawImage(generatedImage, 0, 0);
+      tempCtx.globalCompositeOperation = 'destination-in';
+      tempCtx.drawImage(maskImage, 0, 0);
+      
+      const finalImageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+      const bounds = selectionEngineRef.current?.getBoundsForPixels(selectionEngineRef.current.getPixelsFromMask(finalImageData)) ?? { x: 0, y: 0, width: 0, height: 0};
+      
+      const newLayer: Layer = {
+        id: `repair-${Date.now()}`,
+        name: 'Blemish Repair',
+        type: 'segmentation',
+        subType: 'pixel',
+        visible: true,
+        locked: false,
+        pixels: new Set(),
+        bounds,
+        imageData: finalImageData,
+        closed: false,
+      };
+
+      addLayer(newLayer);
+      toast({ title: 'Blemish Removed', description: 'The area has been repaired on a new layer.' });
+
+    } catch (error) {
+      handleApiError(error, toast, { title: 'Blemish Remover Failed' });
+    } finally {
+      setIsGenerating(false);
+      if (clearSelectionRef.current) clearSelectionRef.current();
+    }
+  };
+
   const renderLeftPanelContent = () => {
     switch(activeTool) {
       case 'magic-wand':
       case 'lasso':
       case 'line':
+      case 'blemish-remover':
         return <ToolSettingsPanel 
                   magicWandSettings={magicWandSettings}
                   onMagicWandSettingsChange={handleMagicWandSettingsChange}
@@ -775,6 +851,7 @@ function ProSegmentAIContent() {
                   onShowHotkeysChange={setShowHotkeyLabels}
                   globalSettings={globalSettings}
                   onGlobalSettingsChange={setGlobalSettings}
+                  onBlemishRemoverSelection={handleBlemishRemoverSelection}
                 />
       case 'clone':
         return <CloneStampPanel 
