@@ -6,7 +6,7 @@ import { Layer } from '@/lib/types';
 
 export function useSelectionDrag(
   layers: Layer[],
-  setLayers: React.Dispatch<React.SetStateAction<Layer[]>>,
+  setLayers: (layers: Layer[]) => void,
   activeTool: string,
   zoom: number
 ) {
@@ -28,10 +28,15 @@ export function useSelectionDrag(
     return null;
   };
   
-  const getMousePos = (e: MouseEvent<HTMLCanvasElement>) => {
-    const canvas = e.currentTarget;
+  const getMousePos = (e: globalThis.MouseEvent | React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = e.currentTarget as HTMLCanvasElement;
+    if(!canvas) return {x: 0, y: 0};
     const rect = canvas.getBoundingClientRect();
-    const imageAspectRatio = canvas.width / canvas.height;
+    const imageEl = canvas.parentElement?.querySelector('img'); // Assuming image is a sibling
+    if (!imageEl) return { x: 0, y: 0 };
+
+
+    const imageAspectRatio = imageEl.naturalWidth / imageEl.naturalHeight;
     const canvasAspectRatio = rect.width / rect.height;
 
     let renderWidth = rect.width;
@@ -50,13 +55,13 @@ export function useSelectionDrag(
     const clientX = e.clientX - rect.left - xOffset;
     const clientY = e.clientY - rect.top - yOffset;
 
-    const imageX = (clientX / renderWidth) * canvas.width;
-    const imageY = (clientY / renderHeight) * canvas.height;
+    const imageX = (clientX / renderWidth) * imageEl.naturalWidth;
+    const imageY = (clientY / renderHeight) * imageEl.naturalHeight;
 
     return { x: imageX, y: imageY };
   };
 
-  const handleMouseDown = useCallback((e: MouseEvent<HTMLCanvasElement>) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (activeTool !== 'transform' || e.button !== 0) return;
     
     const pos = getMousePos(e);
@@ -74,9 +79,9 @@ export function useSelectionDrag(
       setDraggedLayer(layer);
       e.stopPropagation();
     }
-  }, [activeTool, layers, getMousePos]);
+  }, [activeTool, layers]);
 
-  const handleMouseMove = useCallback((e: MouseEvent<HTMLCanvasElement>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDragging || !dragStart || !draggedLayer) return;
 
     const dx = (e.clientX - dragStart.x) / zoom;
@@ -97,15 +102,15 @@ export function useSelectionDrag(
     e.stopPropagation();
   }, [isDragging, dragStart, zoom, draggedLayer]);
   
-  const handleMouseUp = useCallback((e: MouseEvent<HTMLCanvasElement>) => {
+  const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isDragging && draggedLayer) {
-        setLayers(prev => prev.map(l => l.id === draggedLayer.id ? draggedLayer : l));
+        setLayers(layers.map(l => l.id === draggedLayer.id ? draggedLayer : l));
     }
     setIsDragging(false);
     setDraggedLayerId(null);
     setDragStart(null);
     setDraggedLayer(null);
-  }, [isDragging, draggedLayer, setLayers]);
+  }, [isDragging, draggedLayer, layers, setLayers]);
 
   return {
     draggedLayer: isDragging ? draggedLayer : null,

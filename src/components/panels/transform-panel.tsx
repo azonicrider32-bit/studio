@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -28,6 +29,7 @@ export function TransformPanel({ settings, onSettingsChange }: TransformPanelPro
     if (!isNaN(numValue)) {
         if(settings.maintainAspectRatio) {
             const oldValue = settings[key];
+            if(oldValue === 0) return;
             const ratio = numValue / oldValue;
             const otherKey = key === 'scaleX' ? 'scaleY' : 'scaleX';
             const otherValue = settings[otherKey] * ratio;
@@ -81,18 +83,20 @@ export function TransformPanel({ settings, onSettingsChange }: TransformPanelPro
           <Label htmlFor="scale-w">Scale W (%)</Label>
           <Input id="scale-w" type="number" value={settings.scaleX.toFixed(2)} onChange={(e) => handleScaleChange('scaleX', e.target.value)} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="scale-h">Scale H (%)</Label>
-          <Input id="scale-h" type="number" value={settings.scaleY.toFixed(2)} onChange={(e) => handleScaleChange('scaleY', e.target.value)} />
+        <div className="flex items-center gap-2">
+            <div className="space-y-2 flex-1">
+              <Label htmlFor="scale-h">Scale H (%)</Label>
+              <Input id="scale-h" type="number" value={settings.scaleY.toFixed(2)} onChange={(e) => handleScaleChange('scaleY', e.target.value)} />
+            </div>
+            <Button 
+                variant={settings.maintainAspectRatio ? "secondary" : "outline"} 
+                size="icon" 
+                className="h-10 w-10 mb-px"
+                onClick={() => onSettingsChange({ maintainAspectRatio: !settings.maintainAspectRatio })}
+            >
+              {settings.maintainAspectRatio ? <Link className="h-4 w-4"/> : <Link2Off className="h-4 w-4"/>}
+            </Button>
         </div>
-         <Button 
-            variant={settings.maintainAspectRatio ? "secondary" : "outline"} 
-            size="icon" 
-            className="h-10 w-10 mb-px -ml-2"
-            onClick={() => onSettingsChange({ maintainAspectRatio: !settings.maintainAspectRatio })}
-        >
-          {settings.maintainAspectRatio ? <Link className="h-4 w-4"/> : <Link2Off className="h-4 w-4"/>}
-        </Button>
       </div>
       
        <div className="grid grid-cols-2 gap-4">

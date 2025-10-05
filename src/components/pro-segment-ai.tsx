@@ -44,6 +44,7 @@ import {
   Ear,
   Speech,
   Magnet,
+  Move,
 } from "lucide-react"
 
 import {
@@ -759,15 +760,7 @@ function ProSegmentAIContent() {
   }
 
   const handleAiToolClick = (tool: AITool) => {
-      setActiveTool('brush');
-      
-      const newLayer: InstructionLayer = {
-        id: `instr-${Date.now()}`,
-        color: tool.color,
-        sketch: '',
-        prompt: tool.prompt,
-      };
-      setInstructionLayers(prev => [...prev, newLayer]);
+      setActiveTool(tool.id as Tool);
   };
   
   const handleBlemishRemoverSelection = async (selectionMaskUri: string, sketchLayer: Layer) => {
@@ -1068,8 +1061,8 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingChange={handleMagicWandSettingsChange}
-              onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+              onMagicWandSettingsChange={handleMagicWandSettingsChange}
+              onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
@@ -1274,4 +1267,3 @@ export function ProSegmentAI() {
     
 
     
-

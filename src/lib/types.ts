@@ -11,6 +11,7 @@ export interface AITool {
     icon: React.ElementType;
     color: string;
     lineStyle: 'solid' | 'dashed';
+    isOneClick?: boolean;
 }
 
 export interface Layer {
