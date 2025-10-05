@@ -33,9 +33,9 @@ const uploadAssetFlow = ai.defineFlow(
       const bucket = getStorage().bucket();
 
       // Extract content type and base64 data from data URI
-      const match = fileDataUri.match(/^data:(.+);base64,(.*)$/);
+      const match = fileDataUri.match(/^data:(image\/(?:png|jpeg|webp));base64,(.*)$/);
       if (!match) {
-        throw new Error('Invalid data URI format.');
+        throw new Error('Invalid data URI format. Must be a PNG, JPEG, or WebP image.');
       }
       const contentType = match[1];
       const base64Data = match[2];
