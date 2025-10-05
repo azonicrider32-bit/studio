@@ -83,9 +83,10 @@ import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import { ProgressiveHover } from "./ui/progressive-hover"
 import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
+import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
-type RightPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
+type RightPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
 
 interface WorkspaceState {
   id: string;
@@ -604,6 +605,7 @@ function ProSegmentAIContent() {
         case "chat": return <AiChatPanel />;
         case "color-analysis": return <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>;
         case "pixel-preview": return <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>;
+        case "color-wheel": return <QuaternionColorWheel />;
         default: return null;
     }
   }
@@ -659,12 +661,13 @@ function ProSegmentAIContent() {
     { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)' },
     { id: 'pixel-preview', icon: Scan, label: 'Pixel Preview (P)' },
     { id: 'history', icon: History, label: 'History' },
+    { id: 'color-wheel', icon: Palette, label: 'Color Wheel' },
   ];
 
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
       <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <div 
               className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg"
             >
@@ -1029,6 +1032,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
