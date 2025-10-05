@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Image from "next/image";
@@ -888,45 +887,52 @@ const drawLayers = React.useCallback(() => {
     const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
     if (!mainCtx) return 'crosshair';
 
-    const cursorSize = 24;
+    const cursorSize = 32;
     const half = cursorSize / 2;
-    const dotRadius = 1;
-    const circleRadius = 8;
-    
+    const dotRadius = 1.5;
+    const circleRadius = 10;
+    const rotation = -45 * (Math.PI / 180); // 45 degrees counter-clockwise
+
     const samplePoints = [
-      { id: 'top', x: pos.x, y: pos.y - circleRadius },
-      { id: 'right', x: pos.x + circleRadius, y: pos.y },
-      { id: 'bottom', x: pos.x, y: pos.y + circleRadius },
-      { id: 'left', x: pos.x - circleRadius, y: pos.y },
-    ];
-    
-    const quadrantColors = samplePoints.map(p => {
+        { id: 'top-left', x: pos.x + circleRadius * Math.cos(rotation - Math.PI / 2), y: pos.y + circleRadius * Math.sin(rotation - Math.PI / 2) },
+        { id: 'top-right', x: pos.x + circleRadius * Math.cos(rotation), y: pos.y + circleRadius * Math.sin(rotation) },
+        { id: 'bottom-right', x: pos.x + circleRadius * Math.cos(rotation + Math.PI / 2), y: pos.y + circleRadius * Math.sin(rotation + Math.PI / 2) },
+        { id: 'bottom-left', x: pos.x + circleRadius * Math.cos(rotation + Math.PI), y: pos.y + circleRadius * Math.sin(rotation + Math.PI) },
+    ].map(p => ({
+        ...p,
+        cx: half + (p.x-pos.x),
+        cy: half + (p.y-pos.y)
+    }));
+
+
+    const quadrantData = samplePoints.map(p => {
         try {
             const pixel = mainCtx.getImageData(Math.round(p.x), Math.round(p.y), 1, 1).data;
-            const luminance = (0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]) / 255;
-            return luminance > 0.5 ? 'black' : 'white';
+            const luminance = (0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]);
+            return 255 - luminance;
         } catch (e) {
-            return 'grey'; // Return a default color if sampling is outside canvas
+            return 128; // Return a default grey if sampling is outside canvas
         }
     });
 
     const svg = `
-      <svg width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
           </filter>
         </defs>
-        <g filter="url(#blur)">
-          <path d="M ${half} ${half} L 0 ${half} A ${half} ${half} 0 0 1 ${half} 0 Z" fill="${quadrantColors[0]}"/>
-          <path d="M ${half} ${half} L ${half} 0 A ${half} ${half} 0 0 1 ${cursorSize} ${half} Z" fill="${quadrantColors[1]}"/>
-          <path d="M ${half} ${half} L ${cursorSize} ${half} A ${half} ${half} 0 0 1 ${half} ${cursorSize} Z" fill="${quadrantColors[2]}"/>
-          <path d="M ${half} ${half} L ${half} ${cursorSize} A ${half} ${half} 0 0 1 0 ${half} Z" fill="${quadrantColors[3]}"/>
+        <g opacity="0.5">
+          <path d="M ${half} ${half-circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half+circleRadius} ${half}" fill="none" stroke="rgb(${quadrantData[0]}, ${quadrantData[0]}, ${quadrantData[0]})" stroke-width="2"/>
+          <path d="M ${half+circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half+circleRadius}" fill="none" stroke="rgb(${quadrantData[1]}, ${quadrantData[1]}, ${quadrantData[1]})" stroke-width="2"/>
+          <path d="M ${half} ${half+circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half-circleRadius} ${half}" fill="none" stroke="rgb(${quadrantData[2]}, ${quadrantData[2]}, ${quadrantData[2]})" stroke-width="2"/>
+          <path d="M ${half-circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half-circleRadius}" fill="none" stroke="rgb(${quadrantData[3]}, ${quadrantData[3]}, ${quadrantData[3]})" stroke-width="2"/>
+          
+          <circle cx="${samplePoints[0].cx}" cy="${samplePoints[0].cy}" r="${dotRadius}" fill="rgb(${quadrantData[0]}, ${quadrantData[0]}, ${quadrantData[0]})" />
+          <circle cx="${samplePoints[1].cx}" cy="${samplePoints[1].cy}" r="${dotRadius}" fill="rgb(${quadrantData[1]}, ${quadrantData[1]}, ${quadrantData[1]})" />
+          <circle cx="${samplePoints[2].cx}" cy="${samplePoints[2].cy}" r="${dotRadius}" fill="rgb(${quadrantData[2]}, ${quadrantData[2]}, ${quadrantData[2]})" />
+          <circle cx="${samplePoints[3].cx}" cy="${samplePoints[3].cy}" r="${dotRadius}" fill="rgb(${quadrantData[3]}, ${quadrantData[3]}, ${quadrantData[3]})" />
         </g>
-        <circle cx="${half}" cy="${half - circleRadius}" r="${dotRadius}" fill="${quadrantColors[0]}" />
-        <circle cx="${half + circleRadius}" cy="${half}" r="${dotRadius}" fill="${quadrantColors[1]}" />
-        <circle cx="${half}" cy="${half + circleRadius}" r="${dotRadius}" fill="${quadrantColors[2]}" />
-        <circle cx="${half - circleRadius}" cy="${half}" r="${dotRadius}" fill="${quadrantColors[3]}" />
       </svg>
     `;
 
@@ -1196,3 +1202,6 @@ const drawLayers = React.useCallback(() => {
 
 
 
+
+
+    
