@@ -381,7 +381,7 @@ const drawLayers = React.useCallback(() => {
           // Vertical guide
           overlayCtx.beginPath();
           overlayCtx.moveTo(canvasMousePos.x, 0);
-          overlayCtx.lineTo(canvasMousePos.x, overlayCanvas.y);
+          overlayCtx.lineTo(canvasMousePos.x, overlayCanvas.height);
           overlayCtx.stroke();
           
           overlayCtx.restore();
@@ -1171,6 +1171,7 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
+
 
 
 
