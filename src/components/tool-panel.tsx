@@ -28,8 +28,9 @@ import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
 import { useSidebar, SidebarTrigger } from "./ui/sidebar"
 import { ProgressiveHover } from "./ui/progressive-hover"
+import { BananaIcon } from "./icons/banana-icon"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana";
 
 const toolDetails = {
   transform: {
@@ -98,6 +99,14 @@ const toolDetails = {
     details: "The Clone Stamp tool allows you to duplicate part of an image. Alt-click to define a source point, then click and drag to paint with the sampled pixels.",
     disabled: false,
   },
+  banana: {
+    id: "banana",
+    icon: BananaIcon,
+    tooltip: "Nano Banana Tool",
+    shortcut: "N",
+    summary: "Visually instruct the AI to perform edits.",
+    details: "Draw and write directly on the canvas to tell the AI what to change. Use Shift to create new colored instruction layers.",
+  },
 };
 
 const tools: (typeof toolDetails)[keyof typeof toolDetails][] = [
@@ -109,6 +118,7 @@ const tools: (typeof toolDetails)[keyof typeof toolDetails][] = [
     toolDetails.eraser,
     toolDetails.pan,
     toolDetails.clone,
+    toolDetails.banana,
 ]
 
 interface ToolPanelProps {

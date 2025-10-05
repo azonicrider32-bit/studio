@@ -22,6 +22,7 @@ import {
   Contrast,
   X,
   Replace,
+  SlidersHorizontal,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -42,6 +43,7 @@ import { LassoCompactSettings } from "./lasso-compact-settings"
 import { ProgressiveHover } from "../ui/progressive-hover"
 import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
+import { NanoBananaPanel } from "./nano-banana-panel"
 
 
 interface ToolSettingsPanelProps {
@@ -51,7 +53,7 @@ interface ToolSettingsPanelProps {
   onLassoSettingsChange: (settings: Partial<LassoSettings>) => void
   cloneStampSettings: CloneStampSettings
   onCloneStampSettingsChange: (settings: Partial<CloneStampSettings>) => void
-  activeTool: 'magic-wand' | 'lasso' | 'line' | 'clone' | 'settings'
+  activeTool: 'magic-wand' | 'lasso' | 'line' | 'clone' | 'settings' | 'banana'
   showHotkeys: boolean
   onShowHotkeysChange: (value: boolean) => void
 }
@@ -101,6 +103,11 @@ export function ToolSettingsPanel({
             description: 'The Clone Stamp tool allows you to duplicate part of an image. Alt-click to define a source point, then click and drag to paint with the sampled pixels.',
             shortcut: 'C'
         },
+        'banana': {
+            title: 'Nano Banana Tool',
+            description: 'Visually instruct the AI to perform edits by drawing and writing directly on the canvas.',
+            shortcut: 'N'
+        },
         'settings': {
             title: 'Global Settings',
             description: 'Configure application-wide preferences for UI, performance, and more.',
@@ -122,7 +129,7 @@ export function ToolSettingsPanel({
         case 'line':
              return <LassoCompactSettings 
                       settings={lassoSettings}
-                      onSettingsChange={onLassoSettingsChange}
+                      onLassoSettingsChange={onLassoSettingsChange}
                     />
         case 'clone':
             return <CloneStampCompactSettings 
@@ -169,6 +176,7 @@ export function ToolSettingsPanel({
       case 'line':
         return <Lasso className="w-4 h-4" />;
       case 'clone': return <Replace className="w-4 h-4" />;
+      case 'banana': return <BananaIcon className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
       default: return null;
     }
@@ -553,6 +561,15 @@ export function ToolSettingsPanel({
             <CloneStampPanel 
               settings={cloneStampSettings} 
               onSettingsChange={onCloneStampSettingsChange} 
+            />
+        )}
+        {activeTool === 'banana' && (
+            <NanoBananaPanel 
+                instructionLayers={[]}
+                onInstructionChange={() => {}}
+                onLayerDelete={() => {}}
+                onGenerate={() => {}}
+                isGenerating={false}
             />
         )}
          {activeTool === 'settings' && (

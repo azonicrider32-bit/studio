@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -90,8 +91,9 @@ import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
 import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
 import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
 import { CloneStampPanel } from "./panels/clone-stamp-panel"
+import { NanoBananaPanel, InstructionLayer } from "./panels/nano-banana-panel"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
 
 interface WorkspaceState {
@@ -131,7 +133,7 @@ const createNewWorkspace = (id: string, name: string, imageUrl?: string): Worksp
 
 
 function ProSegmentAIContent() {
-  const [activeTool, setActiveTool] = React.useState<Tool>("clone")
+  const [activeTool, setActiveTool] = React.useState<Tool>("banana")
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
   const [isRightPanelOpen, setIsRightPanelOpen] = React.useState(true);
   const isResizingRef = React.useRef(false);
@@ -172,6 +174,10 @@ function ProSegmentAIContent() {
   const [isTtsEnabled, setIsTtsEnabled] = React.useState(false);
   const [isSttEnabled, setIsSttEnabled] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  // State for Nano Banana Tool
+  const [instructionLayers, setInstructionLayers] = React.useState<InstructionLayer[]>([]);
+  const [isGenerating, setIsGenerating] = React.useState(false);
 
   const speak = React.useCallback(async (text: string) => {
     if (!isTtsEnabled) return;
@@ -502,6 +508,9 @@ function ProSegmentAIContent() {
         if(e.key.toLowerCase() === 'c') {
             handleToolChange('clone');
         }
+        if(e.key.toLowerCase() === 'n') {
+            handleToolChange('banana');
+        }
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
             e.preventDefault();
             handleUndo();
@@ -694,6 +703,14 @@ function ProSegmentAIContent() {
         return <CloneStampPanel 
                   settings={cloneStampSettings}
                   onSettingsChange={handleCloneStampSettingsChange} 
+                />
+      case 'banana':
+        return <NanoBananaPanel 
+                  instructionLayers={instructionLayers}
+                  onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
+                  onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
+                  onGenerate={() => {}}
+                  isGenerating={isGenerating}
                 />
       case 'settings':
         return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} />;
@@ -913,7 +930,7 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingsChange={handleMagicWandSettingsChange}
+              onMagicWandSettingChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
