@@ -54,6 +54,10 @@ These documents detail the user-facing tools for selection, transformation, and 
     *   **Summary:** An in-depth analysis of the computer vision techniques required for high-accuracy geometric correction, covering sparse feature mapping, deep flow architectures, and non-linear warping. It provides the theoretical underpinnings for the "Janus" Alignment Engine.
     *   **Status:** Exhaustive Analysis v1.0
 
+*   ### [🎬 The Hybrid Processing Architecture for High-Performance In-Browser Applications](./HYBRID_VIDEO_PROCESSING_ARCHITECTURE.md)
+    *   **Summary:** A blueprint for achieving desktop-class performance in a web application by strategically partitioning tasks. It details using Web Workers for local parallelism and offloading compute-intensive operations (like AI analysis or rendering) to the cloud.
+    *   **Status:** Architectural Blueprint v1.0
+
 ---
 
 ## 5. Code & Implementation Examples
@@ -63,3 +67,6 @@ This section links to markdown files containing direct code examples and compone
 *   ### [💻 Efficient Segmentation System Code Example](./EFFICIENT_SEGMENTATION_SYSTEM_EXAMPLE.md)
     *   **Summary:** Contains reference code for a high-performance segmentation system, including the full component structure for the `[Workspace]`, `[Compare]`, and other UI elements.
     *   **Status:** Code Reference
+*   ### [💻 ProSegment AI: Complete Application Code Reference](./APP_CODE_REFERENCE.md)
+    *   **Summary:** An exhaustive, centralized snapshot of the complete source code for all major components and systems within the ProSegment AI application.
+    *   **Status:** Live Code Snapshot v1.0
