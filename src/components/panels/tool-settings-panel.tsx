@@ -313,6 +313,65 @@ export function ToolSettingsPanel({
                     <p className="text-xs text-muted-foreground">Smooths the line between nodes. 0 is straight, 1 is max curve. Only for Polygon & Free Draw.</p>
                 </div>
                 
+                {lassoSettings.drawMode === 'magic' && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-sm">Advanced Snap Settings</h4>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="snapRadius">Snap Radius: {lassoSettings.snapRadius.toFixed(0)}px</Label>
+                            <Switch id="snapRadius-enabled" checked={lassoSettings.snapRadiusEnabled} onCheckedChange={(c) => onLassoSettingsChange({ snapRadiusEnabled: c })}/>
+                        </div>
+                        <Slider id="snapRadius" min={1} max={50} step={1} value={[lassoSettings.snapRadius]} onValueChange={v => onLassoSettingsChange({ snapRadius: v[0]})} disabled={!lassoSettings.snapRadiusEnabled}/>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="snapThreshold">Edge Threshold: {lassoSettings.snapThreshold.toFixed(2)}</Label>
+                          <Switch id="snapThreshold-enabled" checked={lassoSettings.snapThresholdEnabled} onCheckedChange={(c) => onLassoSettingsChange({ snapThresholdEnabled: c })}/>
+                        </div>
+                        <Slider id="snapThreshold" min={0} max={1} step={0.05} value={[lassoSettings.snapThreshold]} onValueChange={v => onLassoSettingsChange({ snapThreshold: v[0]})} disabled={!lassoSettings.snapThresholdEnabled}/>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="directionalStrength">Directional Strength: {lassoSettings.directionalStrength.toFixed(2)}</Label>
+                          <Switch id="directionalStrength-enabled" checked={lassoSettings.directionalStrengthEnabled} onCheckedChange={(c) => onLassoSettingsChange({ directionalStrengthEnabled: c })}/>
+                        </div>
+                        <Slider id="directionalStrength" min={0} max={1} step={0.05} value={[lassoSettings.directionalStrength]} onValueChange={v => onLassoSettingsChange({ directionalStrength: v[0]})} disabled={!lassoSettings.directionalStrengthEnabled}/>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                           <Label htmlFor="cursorInfluence">Cursor Influence: {lassoSettings.cursorInfluence.toFixed(2)}</Label>
+                           <Switch id="cursorInfluence-enabled" checked={lassoSettings.cursorInfluenceEnabled} onCheckedChange={(c) => onLassoSettingsChange({ cursorInfluenceEnabled: c })}/>
+                        </div>
+                        <Slider id="cursorInfluence" min={0} max={1} step={0.05} value={[lassoSettings.cursorInfluence]} onValueChange={v => onLassoSettingsChange({ cursorInfluence: v[0]})} disabled={!lassoSettings.cursorInfluenceEnabled}/>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                           <Label htmlFor="traceInfluence">Trace Influence: {lassoSettings.traceInfluence.toFixed(2)}</Label>
+                            <Switch id="traceInfluence-enabled" checked={lassoSettings.traceInfluenceEnabled} onCheckedChange={(c) => onLassoSettingsChange({ traceInfluenceEnabled: c })}/>
+                        </div>
+                        <Slider id="traceInfluence" min={0} max={1} step={0.05} value={[lassoSettings.traceInfluence]} onValueChange={v => onLassoSettingsChange({ traceInfluence: v[0]})} disabled={!lassoSettings.traceInfluenceEnabled}/>
+                      </div>
+
+                       <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                           <Label htmlFor="colorInfluence">Color Influence: {lassoSettings.colorInfluence.toFixed(2)}</Label>
+                            <Switch id="colorInfluence-enabled" checked={lassoSettings.colorInfluenceEnabled} onCheckedChange={(c) => onLassoSettingsChange({ colorInfluenceEnabled: c })}/>
+                        </div>
+                        <Slider id="colorInfluence" min={0} max={1} step={0.05} value={[lassoSettings.colorInfluence]} onValueChange={v => onLassoSettingsChange({ colorInfluence: v[0]})} disabled={!lassoSettings.colorInfluenceEnabled}/>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <Separator />
+
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="useAiEnhancement" className="flex items-center gap-2"><Wand2 className="w-4 h-4 text-primary" />AI Enhancement</Label>
