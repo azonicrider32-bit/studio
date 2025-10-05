@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SelectionEngine } from "@/lib/selection-engine";
 import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-lasso-assisted-path-snapping";
 import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } from "@/ai/flows/magic-wand-assisted-segmentation";
-import { LassoSettings, MagicWandSettings, Segment, Layer, CloneStampSettings } from "@/lib/types";
+import { LassoSettings, MagicWandSettings, Segment, Layer, CloneStampSettings, GlobalSettings } from "@/lib/types";
 import { handleApiError } from "@/lib/error-handling";
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils";
 import { debounce } from "@/lib/utils";
@@ -52,6 +52,7 @@ interface ImageCanvasProps {
   showHorizontalRuler: boolean;
   showVerticalRuler: boolean;
   showGuides: boolean;
+  globalSettings: GlobalSettings;
 }
 
 const HorizontalRuler = ({ width, zoom, panX }: { width: number, zoom: number, panX: number }) => {
@@ -186,6 +187,7 @@ export function ImageCanvas({
   showHorizontalRuler,
   showVerticalRuler,
   showGuides,
+  globalSettings,
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -201,6 +203,7 @@ export function ImageCanvas({
   const [isPanning, setIsPanning] = React.useState(false);
   const lastPanPointRef = React.useRef({ x: 0, y: 0 });
   const lastDropTimeRef = React.useRef(0);
+  const [isFreeDrawing, setIsFreeDrawing] = React.useState(false);
 
   // Clone Stamp State
   const [cloneSource, setCloneSource] = React.useState<{x: number, y: number} | null>(null);
@@ -827,10 +830,13 @@ const drawLayers = React.useCallback(() => {
           lastDropTimeRef.current = Date.now();
           toast({ title: 'Lasso started', description: 'Click to add points. Double-click or Press Enter to complete.' });
         } else if (lassoSettings.drawMode !== 'free') {
-          engine.addLassoNode(lassoMouseTraceRef.current);
+          engine.addLassoNode([]);
           lassoMouseTraceRef.current = [];
         }
       } else if (activeTool === 'line') {
+        if (lassoSettings.drawMode === 'free') {
+            setIsFreeDrawing(true);
+        }
         if (!engine.isDrawingLine) {
           engine.startLine(pos.x, pos.y);
           lastDropTimeRef.current = Date.now();
@@ -893,9 +899,11 @@ const drawLayers = React.useCallback(() => {
     
     if (!engine) return;
     
-    const isFreeDraw = (activeTool === 'lasso' || activeTool === 'line') && lassoSettings.drawMode === 'free';
+    const isFreeDrawLasso = activeTool === 'lasso' && lassoSettings.drawMode === 'free';
+    const isFreeDrawLine = activeTool === 'line' && lassoSettings.drawMode === 'free' && isFreeDrawing;
 
-    if (isFreeDraw && (engine.isDrawingLasso || engine.isDrawingLine)) {
+
+    if (isFreeDrawLasso || isFreeDrawLine) {
         const lastNode = engine.isDrawingLasso ? engine.lassoNodes[engine.lassoNodes.length-1] : engine.lineNodes[engine.lineNodes.length-1];
         if(!lastNode) return;
         
@@ -932,6 +940,7 @@ const drawLayers = React.useCallback(() => {
     drawOverlay(null);
     setIsPanning(false);
     setIsCloning(false);
+    setIsFreeDrawing(false);
     lastStampPosRef.current = null;
   }
 
@@ -945,6 +954,9 @@ const drawLayers = React.useCallback(() => {
     if (activeTool === 'clone') {
       setIsCloning(false);
       lastStampPosRef.current = null;
+    }
+     if (activeTool === 'line' && lassoSettings.drawMode === 'free') {
+        setIsFreeDrawing(false);
     }
   };
 
@@ -1151,4 +1163,5 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
+
 

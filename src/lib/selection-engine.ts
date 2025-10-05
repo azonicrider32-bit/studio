@@ -70,7 +70,8 @@ export class SelectionEngine {
         dropInterval: 100,
         minDistance: 5,
         maxDistance: 20
-    }
+    },
+    fillPath: false,
   };
   magicWandSettings: MagicWandSettings = {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -217,7 +218,7 @@ export class SelectionEngine {
       this.lineNodes.push(this.linePreviewPos);
   }
 
-  endLine(activeLayerId: string | null, closed: boolean): Layer | null {
+  endLine(activeLayerId: string | null, closed: boolean, fill: boolean): Layer | null {
     if (!this.isDrawingLine || this.lineNodes.length < 2) {
       this.cancelLine();
       return null;
@@ -255,7 +256,7 @@ export class SelectionEngine {
       stroke: 'hsl(var(--primary))',
       strokeWidth: 2,
       closed: closed,
-      fill: closed ? 'hsla(var(--primary), 0.2)' : undefined,
+      fill: closed && fill ? 'hsla(var(--primary), 0.2)' : undefined,
     };
     
     this.cancelLine();
@@ -1013,6 +1014,7 @@ export class SelectionEngine {
       highlightColor,
       highlightOpacity,
       highlightTexture,
+      closed: true, // Selections from wand are always closed
     };
     
     if (createAsMask && activeLayerId) {
@@ -1358,3 +1360,4 @@ export class SelectionEngine {
     }
   }
 }
+
