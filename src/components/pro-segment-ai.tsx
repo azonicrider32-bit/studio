@@ -41,6 +41,8 @@ import {
   MoveVertical,
   Volume2,
   VolumeX,
+  Ear,
+  Speech,
 } from "lucide-react"
 
 import {
@@ -167,11 +169,12 @@ function ProSegmentAIContent() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
 
-  const [isVoiceEnabled, setIsVoiceEnabled] = React.useState(false);
+  const [isTtsEnabled, setIsTtsEnabled] = React.useState(false);
+  const [isSttEnabled, setIsSttEnabled] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const speak = React.useCallback(async (text: string) => {
-    if (!isVoiceEnabled) return;
+    if (!isTtsEnabled) return;
 
     try {
       const result = await textToSpeech(text);
@@ -187,7 +190,7 @@ function ProSegmentAIContent() {
     } catch (error) {
       console.error("TTS Error:", error);
     }
-  }, [isVoiceEnabled]);
+  }, [isTtsEnabled]);
   
   React.useEffect(() => {
     // Create audio element once
@@ -830,10 +833,24 @@ function ProSegmentAIContent() {
                 )) : <DropdownMenuItem disabled>No history</DropdownMenuItem>}
                 </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant={isVoiceEnabled ? "secondary" : "outline"} size="sm" onClick={() => setIsVoiceEnabled(p => !p)}>
-                {isVoiceEnabled ? <Volume2 className="mr-2 h-4 w-4"/> : <VolumeX className="mr-2 h-4 w-4"/>}
-                Voice-{isVoiceEnabled ? 'ON' : 'OFF'}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant={isSttEnabled ? "secondary" : "outline"} size="icon" className="h-8 w-8" onClick={() => setIsSttEnabled(p => !p)}>
+                    <Ear />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Enable Voice Commands (Listen)</p></TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant={isTtsEnabled ? "secondary" : "outline"} size="icon" className="h-8 w-8" onClick={() => setIsTtsEnabled(p => !p)}>
+                    <Speech />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Enable AI Voice Feedback (Speak)</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
       </header>
        <main 
@@ -862,7 +879,7 @@ function ProSegmentAIContent() {
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingChange={handleMagicWandSettingsChange}
+              onMagicWandSettingsChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
@@ -1087,6 +1104,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
