@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "../ui/card";
-import { Wand2, Mic, Trash2, Sparkles, Plus, Palette, BrainCircuit, ImageUp, Sparkle } from "lucide-react";
+import { Wand2, Mic, Trash2, Sparkles, Plus, Palette, BrainCircuit, ImageUp, Sparkle, Camera, Aperture, Wind, Flame, Zap } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "../ui/label";
 import { AITool } from "@/lib/types";
+import { Slider } from "../ui/slider";
 
 export interface InstructionLayer {
   id: string;
@@ -65,6 +66,13 @@ export const oneClickPrompts: AITool[] = [
   },
 ];
 
+const sfxTools: AITool[] = [
+    { id: "add-smoke", label: "Smoke", prompt: "Add realistic wisps of smoke in the sketched area.", icon: Wind, color: "#cccccc", lineStyle: "dashed" },
+    { id: "add-fire", label: "Fire", prompt: "Generate realistic flames within the sketched area, paying attention to the environment's lighting.", icon: Flame, color: "#ff4500", lineStyle: "solid" },
+    { id: "add-sparks", label: "Sparks", prompt: "Create a shower of glowing sparks originating from the sketched area.", icon: Sparkle, color: "#ffd700", lineStyle: "solid" },
+    { id: "add-lightning", label: "Lightning", prompt: "Generate a bolt of lightning along the sketched path.", icon: Zap, color: "#9400d3", lineStyle: "solid" },
+]
+
 
 export function NanoBananaPanel({
   instructionLayers,
@@ -82,10 +90,11 @@ export function NanoBananaPanel({
       <Tabs defaultValue="instruct" className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="instruct"><Sparkle className="w-4 h-4 mr-2"/>Instruct</TabsTrigger>
-          <TabsTrigger value="generate"><Plus className="w-4 h-4 mr-2"/>Generate</TabsTrigger>
-          <TabsTrigger value="enhance"><BrainCircuit className="w-4 h-4 mr-2"/>Enhance</TabsTrigger>
+          <TabsTrigger value="photography"><Camera className="w-4 h-4 mr-2"/>Photography</TabsTrigger>
+          <TabsTrigger value="sfx"><Wind className="w-4 h-4 mr-2"/>SFX</TabsTrigger>
           <TabsTrigger value="inpaint"><ImageUp className="w-4 h-4 mr-2"/>Inpainting</TabsTrigger>
         </TabsList>
+
         <TabsContent value="instruct" className="flex-1 flex flex-col min-h-0 -mx-4 mt-4">
            <div className="space-y-2 px-4">
               <Label className="flex items-center gap-2 text-xs text-muted-foreground">One-Click Actions</Label>
@@ -146,12 +155,67 @@ export function NanoBananaPanel({
             </div>
            </ScrollArea>
         </TabsContent>
-        <TabsContent value="generate" className="mt-4 space-y-4 text-center text-muted-foreground text-sm">
-           (Text-to-Image generation will be here)
+
+        <TabsContent value="photography" className="flex-1 flex flex-col min-h-0 mt-4 space-y-4">
+            <Tabs defaultValue="camera-settings" className="flex-1 flex flex-col min-h-0">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="camera-settings">Camera Settings</TabsTrigger>
+                    <TabsTrigger value="camera-env">Camera & Env.</TabsTrigger>
+                </TabsList>
+                <TabsContent value="camera-settings" className="mt-4 space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="aperture-slider" className="flex items-center gap-2"><Aperture className="w-4 h-4"/> Aperture (f-stop)</Label>
+                        <Slider id="aperture-slider" min={1.4} max={22} step={0.1} defaultValue={[5.6]} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="shutter-slider">Shutter Speed</Label>
+                        <Slider id="shutter-slider" min={0} max={10} step={1} defaultValue={[5]} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="iso-slider">ISO</Label>
+                        <Slider id="iso-slider" min={100} max={6400} step={100} defaultValue={[400]} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Focus Area</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                            <Button variant="outline" size="sm">Center</Button>
+                            <Button variant="outline" size="sm">Subject</Button>
+                            <Button variant="outline" size="sm">Background</Button>
+                        </div>
+                    </div>
+                </TabsContent>
+                 <TabsContent value="camera-env" className="mt-4 space-y-4">
+                    <div className="space-y-2">
+                        <Label>Camera Movement</Label>
+                         <div className="grid grid-cols-2 gap-2">
+                            <Button variant="outline" size="sm">Pan Left</Button>
+                            <Button variant="outline" size="sm">Pan Right</Button>
+                            <Button variant="outline" size="sm">Tilt Up</Button>
+                            <Button variant="outline" size="sm">Tilt Down</Button>
+                         </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Environment</Label>
+                         <div className="grid grid-cols-2 gap-2">
+                            <Button variant="outline" size="sm">Add Wind</Button>
+                            <Button variant="outline" size="sm">Add Fog</Button>
+                         </div>
+                    </div>
+                </TabsContent>
+            </Tabs>
         </TabsContent>
-         <TabsContent value="enhance" className="mt-4 space-y-4 text-center text-muted-foreground text-sm">
-           (AI upscaling and enhancement tools will be here)
+
+        <TabsContent value="sfx" className="mt-4 space-y-4">
+             <div className="grid grid-cols-2 gap-2">
+                {sfxTools.map(tool => (
+                    <Button key={tool.id} variant="outline" size="sm" onClick={() => onAiToolClick(tool)} disabled={isGenerating}>
+                        <tool.icon className="w-4 h-4 mr-2"/>
+                        {tool.label}
+                    </Button>
+                ))}
+             </div>
         </TabsContent>
+
          <TabsContent value="inpaint" className="mt-4 space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="inpainting-prompt">Custom Inpainting Prompt</Label>
@@ -178,3 +242,5 @@ export function NanoBananaPanel({
     </div>
   );
 }
+
+    
