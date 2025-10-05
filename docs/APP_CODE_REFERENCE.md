@@ -2,7 +2,7 @@
 
 > **Version**: 1.0
 > **Date**: October 05, 2025
-> **Status**: Live Code Snapshot
+> **Status**: Live Code Snapshot & In-Progress Documentation
 
 ## 1. Introduction
 
@@ -26,7 +26,7 @@ This document provides an exhaustive, centralized snapshot of the source code fo
 
 ### `src/app/page.tsx`
 
-This is the main entry point for the Next.js application.
+This is the main entry point for the Next.js application. It is a simple server component that renders the primary `ProSegmentAI` client component, which contains the entire application logic.
 
 ```tsx
 import { ProSegmentAI } from "@/components/pro-segment-ai";
@@ -40,7 +40,289 @@ export default function Home() {
 
 ### `src/components/pro-segment-ai.tsx`
 
-This is the main, top-level component that orchestrates the entire user interface, including all panels, toolbars, and the central canvas. It manages the application's primary state.
+This is the main, top-level React component that orchestrates the entire user interface and application state. It is the heart of the ProSegment AI application.
+
+#### Component Overview:
+- **State Management:** Utilizes `React.useState` and `React.useCallback` to manage all application-level state, including the active tool, all tool settings (Magic Wand, Lasso, etc.), layers, history (undo/redo), and panel visibility.
+- **Workspace Management:** Implements a multi-workspace system, allowing the user to work on several projects simultaneously, each with its own image, layers, and history stack.
+- **Component Orchestration:** Renders and passes props to all major UI panels, including the `ToolPanel`, `ToolSettingsPanel`, `LayersPanel`, and the central `ImageCanvas`.
+- **Event Handling:** Contains the top-level logic for handling keyboard shortcuts (e.g., Undo/Redo) and global UI interactions like resizing panels.
+- **AI Integration:** Manages the state for the "Nano Banana" visual instruction tool and invokes the Genkit flows for generative AI operations like inpainting.
+
+```tsx
+"use client"
+
+import * as React from "react"
+import {
+  Bot,
+  BrainCircuit,
+  ChevronLeft,
+  ChevronRight,
+  History,
+  Image as ImageIcon,
+  Layers as LayersIcon,
+  MessageSquare,
+  Palette,
+  PanelLeft,
+  Redo2,
+  Replace,
+  Microscope,
+  Settings2,
+  SlidersHorizontal,
+  Split,
+  Undo2,
+  Feather as FeatherIcon,
+  ZoomIn,
+  Plus,
+  X as XIcon,
+  FolderOpen,
+  Download,
+  Cpu,
+  User,
+  Keyboard,
+  ArrowBigUpDash,
+  ArrowBigRightDash,
+  Wand2,
+  Camera,
+  Scissors,
+  PanelRightClose,
+  Ruler,
+  MoveHorizontal,
+  MoveVertical,
+  Volume2,
+  VolumeX,
+  Ear,
+  Speech,
+  Magnet,
+  Move,
+  Balloon,
+} from "lucide-react"
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar"
+import { Button } from "./ui/button"
+import { ColorAnalysisPanel } from "./panels/color-analysis-panel"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu"
+import { ImageCanvas } from "./image-canvas"
+import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings, TransformSettings } from "@/lib/types"
+import { LayersPanel } from "./panels/layers-panel"
+import { LayerStripPanel } from "./panels/layer-strip-panel"
+import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
+import { PlaceHolderImages } from "@/lib/placeholder-images"
+import { SegmentHoverPreview } from "./segment-hover-preview"
+import { SelectionEngine } from "@/lib/selection-engine"
+import { Separator } from "./ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { AiChatPanel } from "./panels/ai-chat-panel"
+import { FeatherPanel } from "./panels/feather-panel"
+import { cn } from "@/lib/utils"
+import { useSelectionDrag } from "@/hooks/use-selection-drag"
+import { useToast } from "@/hooks/use-toast"
+import { ToolPanel } from "./tool-panel"
+import { Slider } from "./ui/slider"
+import { useAuth, useUser } from "@/firebase"
+import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
+import { ToolSettingsPanel } from "./panels/tool-settings-panel"
+import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
+import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
+import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
+import { handleApiError } from "@/lib/error-handling"
+import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
+import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
+
+// Defines the available tools and right-hand-side panels.
+type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
+type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
+
+// Defines the data structure for a single workspace.
+interface WorkspaceState {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  layers: Layer[];
+  history: any[];
+  historyIndex: number;
+  activeLayerId: string | null;
+  segmentationMask: string | null;
+}
+
+// Factory function to create a new, clean workspace state.
+const createNewWorkspace = (id: string, name: string, imageUrl?: string): WorkspaceState => {
+  const backgroundLayer: Layer = {
+    id: `background-${id}`,
+    name: "Background",
+    type: 'background',
+    subType: 'pixel',
+    visible: true,
+    locked: true,
+    pixels: new Set(),
+    bounds: { x: 0, y: 0, width: 0, height: 0 },
+    modifiers: [],
+    closed: false,
+  };
+  return {
+    id,
+    name,
+    imageUrl,
+    layers: [backgroundLayer],
+    history: [],
+    historyIndex: -1,
+    activeLayerId: backgroundLayer.id,
+    segmentationMask: null,
+  };
+};
+
+// A dedicated component for managing and displaying the zoom level controls.
+function ZoomControl({
+  zoomLevel,
+  setZoomLevel,
+  isActive,
+  onClick,
+  label,
+  hotkey
+}: {
+  zoomLevel: number;
+  setZoomLevel: (value: number) => void;
+  isActive: boolean;
+  onClick: () => void;
+  label: string;
+  hotkey: string;
+}) {
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  return (
+    <div className="flex items-center gap-2">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={isActive ? "default" : "ghost"}
+              size="icon"
+              className={cn("h-8 w-8 relative border", isActive && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+              onClick={onClick}
+            >
+              <ZoomIn className="w-4 h-4"/>
+              {hotkey && <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">{hotkey}</span>}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent><p>Activate {label} ({hotkey})</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <div 
+          className="group relative flex items-center"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+      >
+          <Button
+            variant="ghost"
+            className="text-sm font-medium px-2 py-1 text-center h-8"
+            onWheel={(e) => setZoomLevel(Math.max(0.1, Math.min(10, zoomLevel + (e.deltaY > 0 ? -0.1 : 0.1))))}
+          >
+              {(zoomLevel * 100).toFixed(0)}%
+          </Button>
+          <div className={cn(
+              "absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 p-2 bg-background/80 backdrop-blur-sm rounded-md border shadow-lg transition-all duration-200",
+              isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
+          )}>
+              <Slider
+                  value={[zoomLevel]}
+                  onValueChange={(v) => setZoomLevel(v[0])}
+                  min={0.1} max={10} step={0.1}
+                  orientation="vertical"
+                  className="h-24"
+              />
+          </div>
+      </div>
+    </div>
+  )
+}
+
+// The main content component where all state and logic are centralized.
+function ProSegmentAIContent() {
+  // Tool and Panel State
+  const [activeTool, setActiveTool] = React.useState<Tool>("banana")
+  const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
+  const [isRightPanelOpen, setIsRightPanelOpen] = React.useState(true);
+  const isResizingRef = React.useRef(false);
+  const { toast } = useToast()
+  
+  // State for managing which right-hand panels are open and their order.
+  const [activePanels, setActivePanels] = React.useState<RightPanel[]>(['layers']);
+  
+  // Canvas View State (Zoom & Pan)
+  const [zoomA, setZoomA] = React.useState(1.0);
+  const [zoomB, setZoomB] = React.useState(4.0);
+  const [activeZoom, setActiveZoom] = React.useState<'A' | 'B'>('A');
+  const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
+  const [pan, setPan] = React.useState({ x: 0, y: 0 });
+
+  // Workspace and Layer State
+  const [workspaces, setWorkspaces] = React.useState<WorkspaceState[]>([
+    createNewWorkspace("ws-1", "Project 1", PlaceHolderImages[0]?.imageUrl)
+  ]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = React.useState<string>("ws-1");
+  const activeWorkspace = workspaces.find(ws => ws.id === activeWorkspaceId);
+  const [hoveredLayerId, setHoveredLayerId] = React.useState<string | null>(null);
+  
+  // UI State
+  const { state: sidebarState } = useSidebar();
+  const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(false);
+  const [showHorizontalRuler, setShowHorizontalRuler] = React.useState(false);
+  const [showVerticalRuler, setShowVerticalRuler] = React.useState(false);
+  const [showGuides, setShowGuides] = React.useState(false);
+
+  // Firebase and User State
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+
+  // Accessibility and AI Voice State
+  const [isTtsEnabled, setIsTtsEnabled] = React.useState(false);
+  const [isSttEnabled, setIsSttEnabled] = React.useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  // State for AI Tools (Nano Banana)
+  const [instructionLayers, setInstructionLayers] = React.useState<InstructionLayer[]>([]);
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [customPrompt, setCustomPrompt] = React.useState("");
+  
+  // Global Application Settings
+  const [globalSettings, setGlobalSettings] = React.useState<GlobalSettings>({
+    snapEnabled: true,
+    snapRadius: 10,
+  });
+
+  // State for Tool-Specific Settings
+  const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>(/* ...initial settings... */);
+  const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>(/* ...initial settings... */);
+  const [cloneStampSettings, setCloneStampSettings] = React.useState<CloneStampSettings>(/* ...initial settings... */);
+  const [transformSettings, setTransformSettings] = React.useState<TransformSettings>(/* ...initial settings... */);
+  // ... and so on for other tools.
+
+  // Refs for direct access to canvas and selection engine instances
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
+  const getSelectionMaskRef = React.useRef<() => string | undefined>();
+  const clearSelectionRef = React.useRef<() => void>();
+  
+  // ... All the functions (speak, handleToolChange, setActiveWorkspaceState, addLayer, etc.) would be documented here ...
+  // ... For brevity, the full function bodies are shown below without redundant comments.
+
+  // The rest of the component's implementation...
+}
+```
 
 ```tsx
 "use client"
@@ -559,7 +841,7 @@ function ProSegmentAIContent() {
             if (!engine) return layer;
             const newBounds = engine.getBoundsForPixels(newPixels);
             const newImageData = layer.subType === 'pixel' ? engine.createImageDataForLayer(newPixels, newBounds) : undefined;
-            return { ...l, pixels: newPixels, bounds: newBounds, imageData: newImageData };
+            return { ...layer, pixels: newPixels, bounds: newBounds, imageData: newImageData };
           }
         }
         return layer;
@@ -1182,7 +1464,7 @@ function ProSegmentAIContent() {
                 instructionLayers={instructionLayers}
                 onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
                 onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
-                onGenerate={onGenerate}
+                onGenerate={handleGenerate}
                 isGenerating={isGenerating}
                 customPrompt={customPrompt}
                 setCustomPrompt={setCustomPrompt}
