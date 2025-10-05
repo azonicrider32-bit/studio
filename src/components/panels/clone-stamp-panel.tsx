@@ -9,6 +9,7 @@ import { Replace, Layers, Copy, RotateCcw, FlipHorizontal, FlipVertical } from "
 import { CloneStampSettings } from "@/lib/types"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 interface CloneStampPanelProps {
   settings: CloneStampSettings;
@@ -89,15 +90,38 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">°</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => onSettingsChange({ angle: 0 })}>
-                <RotateCcw className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipX: !settings.flipX })} data-state={settings.flipX ? 'on' : 'off'} className="data-[state=on]:bg-accent">
-                <FlipHorizontal className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipY: !settings.flipY })} data-state={settings.flipY ? 'on' : 'off'} className="data-[state=on]:bg-accent">
-                <FlipVertical className="w-4 h-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={() => onSettingsChange({ angle: 0 })}>
+                      <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Reset Rotation</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipX: !settings.flipX })} data-state={settings.flipX ? 'on' : 'off'} className="data-[state=on]:bg-accent">
+                        <FlipHorizontal className="w-4 h-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Flip Horizontal</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipY: !settings.flipY })} data-state={settings.flipY ? 'on' : 'off'} className="data-[state=on]:bg-accent">
+                        <FlipVertical className="w-4 h-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Flip Vertical</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
       </div>
 
