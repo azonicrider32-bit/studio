@@ -796,7 +796,8 @@ function ProSegmentAIContent() {
         className="absolute inset-y-0 right-0 flex flex-col" 
         style={{ 
           top: '3rem',
-          left: '0px',
+          left: `calc(${sidebarWidthVar} + 4rem)`,
+          transition: 'left 0.2s ease-in-out',
         }}
       >
         <div className="flex-1 min-h-0">
@@ -1022,6 +1023,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
