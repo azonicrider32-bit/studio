@@ -168,7 +168,7 @@ export function MagicWandPanel({
                                         max={config.max}
                                         color={config.color}
                                         pixelValue={config.value}
-                                        description={`Adjusts the tolerance for the ${config.label} component.`}
+                                        description={config.description}
                                         isEnabled={settings.enabledTolerances.has(config.id)}
                                         isSelectedForScroll={settings.scrollAdjustTolerances.has(config.id)}
                                         onToggleEnabled={() => handleToggleEnabled(config.id)}
