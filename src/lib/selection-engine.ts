@@ -66,6 +66,11 @@ export class SelectionEngine {
     traceInfluenceEnabled: true,
     colorInfluenceEnabled: false,
     useColorAwareness: false,
+    freeDraw: {
+        dropInterval: 100,
+        minDistance: 5,
+        maxDistance: 20
+    }
   };
   magicWandSettings: MagicWandSettings = {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -91,7 +96,8 @@ export class SelectionEngine {
         colorMode: 'contrast',
         pattern: 'dashed',
         opacity: 1,
-    }
+    },
+    debounceDelay: 200,
   };
    negativeMagicWandSettings: MagicWandSettings = {
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -119,6 +125,7 @@ export class SelectionEngine {
         pattern: 'solid',
         opacity: 1,
     },
+    debounceDelay: 200,
   };
 
 
@@ -216,12 +223,14 @@ export class SelectionEngine {
       return null;
     }
 
-    const path = [...this.lineNodes];
+    const pathPoints = [...this.lineNodes];
     if (this.linePreviewPos) {
-      path.push(this.linePreviewPos);
+      pathPoints.push(this.linePreviewPos);
     }
+
+    const finalPath = this.generateSplinePath(pathPoints, false);
     
-    const bounds = this.getBoundsForPixels(new Set(), path);
+    const bounds = this.getBoundsForPixels(new Set(), finalPath);
 
     const newLayer: Layer = {
       id: `path-${Date.now()}`,
@@ -231,7 +240,7 @@ export class SelectionEngine {
       visible: true,
       locked: false,
       pixels: new Set(),
-      path: path,
+      path: finalPath,
       bounds: bounds,
       stroke: 'hsl(var(--primary))',
       strokeWidth: 2,
@@ -1315,9 +1324,13 @@ export class SelectionEngine {
     }
 
     if (this.isDrawingLine) {
-        const linePath = [...this.lineNodes];
-        if(this.linePreviewPos) linePath.push(this.linePreviewPos);
-        drawPath(linePath, 'hsl(var(--primary))', 2);
+        const pathPoints = [...this.lineNodes];
+        if (this.linePreviewPos) {
+          pathPoints.push(this.linePreviewPos);
+        }
+    
+        const finalPath = this.generateSplinePath(pathPoints, false);
+        drawPath(finalPath, 'hsl(var(--primary))', 2);
         
         this.lineNodes.forEach(([x, y], index) => {
             overlayCtx.beginPath();
