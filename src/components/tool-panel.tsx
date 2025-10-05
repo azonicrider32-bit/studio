@@ -26,7 +26,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
-import { useSidebar } from "./ui/sidebar"
+import { useSidebar, SidebarTrigger } from "./ui/sidebar"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { cn } from "@/lib/utils"
 
@@ -214,6 +214,12 @@ export function ToolPanel({
     <div className="h-full flex-shrink-0 w-16 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
       <div className="flex flex-col items-center gap-2">
         <TooltipProvider>
+            <SidebarTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-12 w-12">
+                <PanelLeft />
+              </Button>
+            </SidebarTrigger>
+            <Separator className="bg-border/10 my-2"/>
             {tools.map((tool) => (
               <ToolButtonWithProgressiveHover
                 key={tool.id}
