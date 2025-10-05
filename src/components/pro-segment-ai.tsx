@@ -890,6 +890,7 @@ function ProSegmentAIContent() {
                 hoveredLayerId={hoveredLayerId}
                 onLayerSelect={(id) => setActiveWorkspaceState(ws => ({...ws, activeLayerId: id}))}
                 onHoverLayer={setHoveredLayerId}
+                imageUrl={activeWorkspace.imageUrl}
             />}
       </div>
 
@@ -1044,6 +1045,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
