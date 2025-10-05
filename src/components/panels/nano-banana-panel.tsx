@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "../ui/card";
 import { BananaIcon } from "../icons/banana-icon";
-import { Wand2, Mic, Trash2, Sparkles, Glasses, Palette } from "lucide-react";
+import { Wand2, Mic, Trash2, Sparkles, Plus, Palette } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "../ui/label";
 
@@ -31,21 +31,27 @@ interface NanoBananaPanelProps {
 
 const oneClickPrompts = [
   {
+    id: "blemish-remover",
+    label: "Blemish Remover",
+    prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the blemish or object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill.",
+    icon: Sparkles,
+  },
+  {
     id: "remove-object",
     label: "Remove Object",
     prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill.",
     icon: Trash2,
   },
   {
-    id: "add-sunglasses",
-    label: "Add Sunglasses",
-    prompt: "Add a pair of stylish, modern sunglasses to the selected person's face. The sunglasses should fit naturally on the face, with realistic reflections on the lenses and appropriate shadows cast on the skin.",
-    icon: Glasses,
+    id: "add-object",
+    label: "Add Object",
+    prompt: "Add a small bird to the selected area. It should be sitting naturally and match the lighting of the scene.",
+    icon: Plus,
   },
   {
-    id: "change-color-red",
-    label: "Change to Red",
-    prompt: "Change the color of the selected object to a vibrant, realistic red. Maintain the original texture, shadows, and highlights of the object, ensuring only the color is altered.",
+    id: "change-color",
+    label: "Change Color",
+    prompt: "Change the color of the selected object to a vibrant, realistic blue. Maintain the original texture, shadows, and highlights of the object, ensuring only the color is altered.",
     icon: Palette,
   },
 ];
