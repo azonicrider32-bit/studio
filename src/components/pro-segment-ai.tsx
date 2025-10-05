@@ -16,7 +16,7 @@ import {
   PanelLeft,
   Redo2,
   Replace,
-  Scan,
+  Microscope,
   Settings2,
   SlidersHorizontal,
   Split,
@@ -694,7 +694,7 @@ function ProSegmentAIContent() {
     { id: 'ai', icon: BrainCircuit, label: 'AI Tools (A)' },
     { id: 'color-analysis', icon: Palette, label: 'Color Analysis (C)' },
     { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)' },
-    { id: 'pixel-preview', icon: Scan, label: 'Pixel Preview (P)' },
+    { id: 'pixel-preview', icon: Microscope, label: 'Pixel Preview (P)' },
     { id: 'history', icon: History, label: 'History' },
     { id: 'color-wheel', icon: Palette, label: 'Color Wheel' },
   ];

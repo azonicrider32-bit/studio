@@ -12,17 +12,15 @@ import {
   Ruler,
   MoveHorizontal,
   MoveVertical,
+  Wand2,
+  Lasso,
+  PenTool,
+  Paintbrush,
+  Eraser,
+  Move,
+  Hand,
 } from "lucide-react"
 
-import {
-  CustomWand2,
-  CustomBrush,
-  CustomEraser,
-  CustomMove,
-  CustomHand,
-  CustomPenTool,
-  MagnetLassoIcon,
-} from "@/components/icons/custom-tool-icons"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
@@ -35,7 +33,7 @@ type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" |
 const toolDetails = {
   transform: {
     id: "transform",
-    icon: CustomMove,
+    icon: Move,
     tooltip: "Transform Tool",
     shortcut: "V",
     summary: "Move, scale, and rotate layers or selections.",
@@ -43,7 +41,7 @@ const toolDetails = {
   },
   "magic-wand": {
     id: "magic-wand",
-    icon: CustomWand2,
+    icon: Wand2,
     tooltip: "Magic Wand",
     shortcut: "W",
     summary: "Select similarly colored pixels.",
@@ -51,7 +49,7 @@ const toolDetails = {
   },
   lasso: {
     id: "lasso",
-    icon: MagnetLassoIcon,
+    icon: Lasso,
     tooltip: "Intelligent Lasso",
     shortcut: "L",
     summary: "Draw a freehand selection with edge-snapping.",
@@ -59,7 +57,7 @@ const toolDetails = {
   },
   line: {
     id: "line",
-    icon: CustomPenTool,
+    icon: PenTool,
     tooltip: "Line Tool",
     shortcut: "P",
     summary: "Create straight or curved path segments.",
@@ -68,7 +66,7 @@ const toolDetails = {
   },
   brush: {
     id: "brush",
-    icon: CustomBrush,
+    icon: Paintbrush,
     tooltip: "Brush Tool",
     shortcut: "B",
     summary: "Paint on a layer or a mask.",
@@ -76,7 +74,7 @@ const toolDetails = {
   },
   eraser: {
     id: "eraser",
-    icon: CustomEraser,
+    icon: Eraser,
     tooltip: "Eraser Tool",
     shortcut: "E",
     summary: "Erase pixels from a layer.",
@@ -84,7 +82,7 @@ const toolDetails = {
   },
   pan: {
     id: "pan",
-    icon: CustomHand,
+    icon: Hand,
     tooltip: "Pan Tool",
     shortcut: "H",
     summary: "Move the canvas view.",
