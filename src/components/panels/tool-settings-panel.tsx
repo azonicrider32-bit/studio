@@ -23,6 +23,12 @@ import {
   X,
   Replace,
   SlidersHorizontal,
+  BrainCircuit,
+  Scissors,
+  Camera,
+  GitCompareArrows,
+  Trash2,
+  Glasses,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -43,8 +49,15 @@ import { LassoCompactSettings } from "./lasso-compact-settings"
 import { ProgressiveHover } from "../ui/progressive-hover"
 import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
-import { NanoBananaPanel } from "./nano-banana-panel"
-
+import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
+import { compareAiModels, CompareAiModelsOutput } from "@/ai/flows/compare-ai-models"
+import { magicWandAssistedSegmentation } from "@/ai/flows/magic-wand-assisted-segmentation"
+import { handleApiError } from "@/lib/error-handling"
+import { useToast } from "@/hooks/use-toast"
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card"
+import { Skeleton } from "../ui/skeleton"
+import { Textarea } from "../ui/textarea"
+import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -60,10 +73,36 @@ interface ToolSettingsPanelProps {
   onGlobalSettingsChange: (settings: Partial<GlobalSettings>) => void;
   onBlemishRemoverSelection: (selectionMask: string) => void;
   onToolChange: (tool: Tool) => void;
+  imageUrl?: string;
+  setSegmentationMask: (mask: string | null) => void;
+  onImageSelect: (url: string) => void;
+  getSelectionMask: () => string | undefined;
+  onGenerationComplete: (newImageUrl: string) => void;
+  clearSelection: () => void;
 }
 
 type Tool = "magic-wand" | "lasso" | "line" | "clone" | "settings" | "banana" | "blemish-remover" | "transform" | "pan" | "brush" | "eraser";
 
+const oneClickPrompts = [
+  {
+    id: "remove-object",
+    label: "Remove Object",
+    prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill.",
+    icon: Trash2,
+  },
+  {
+    id: "add-sunglasses",
+    label: "Add Sunglasses",
+    prompt: "Add a pair of stylish, modern sunglasses to the selected person's face. The sunglasses should fit naturally on the face, with realistic reflections on the lenses and appropriate shadows cast on the skin.",
+    icon: Glasses,
+  },
+  {
+    id: "change-color-red",
+    label: "Change to Red",
+    prompt: "Change the color of the selected object to a vibrant, realistic red. Maintain the original texture, shadows, and highlights of the object, ensuring only the color is altered.",
+    icon: Palette,
+  },
+];
 
 export function ToolSettingsPanel({ 
     magicWandSettings, 
@@ -78,7 +117,13 @@ export function ToolSettingsPanel({
     globalSettings,
     onGlobalSettingsChange,
     onBlemishRemoverSelection,
-    onToolChange
+    onToolChange,
+    imageUrl,
+    setSegmentationMask,
+    onImageSelect,
+    getSelectionMask,
+    onGenerationComplete,
+    clearSelection,
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -128,6 +173,26 @@ export function ToolSettingsPanel({
             title: 'Global Settings',
             description: 'Configure application-wide preferences for UI, performance, and more.',
             shortcut: ''
+        },
+         'transform': {
+            title: 'Transform Tool',
+            description: 'Move, scale, and rotate layers or selections.',
+            shortcut: 'V'
+        },
+        'pan': {
+            title: 'Pan Tool',
+            description: 'Move the canvas view.',
+            shortcut: 'H'
+        },
+        'brush': {
+            title: 'Brush Tool',
+            description: 'Paint on a layer or a mask.',
+            shortcut: 'B'
+        },
+        'eraser': {
+            title: 'Eraser Tool',
+            description: 'Erase pixels from a layer.',
+            shortcut: 'E'
         }
     };
     
@@ -192,295 +257,30 @@ export function ToolSettingsPanel({
       case 'line':
         return <Lasso className="w-4 h-4" />;
       case 'clone': return <Replace className="w-4 h-4" />;
-      case 'banana': return <BananaIcon className="w-4 h-4" />;
+      case 'banana': return <BrainCircuit className="w-4 h-4" />;
       case 'blemish-remover': return <Sparkles className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
       default: return null;
     }
   };
 
-  return (
-    <div className="p-2 space-y-4 h-full flex flex-col">
-      <div className="space-y-1 px-2 flex items-center justify-between">
-        <h3 className="font-headline text-base flex items-center gap-2">
-            {getActiveToolIcon()}
-            Tool Settings
-        </h3>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setView('info')}>
-            <Info className="w-4 h-4" />
-        </Button>
-      </div>
-       <Separator />
-       <div className="px-2">
-        <Label className="text-xs text-muted-foreground">AI Presets</Label>
-        <div className="flex items-center gap-2 mt-1 border p-1 rounded-md">
-           <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button 
-                        variant={activeTool === 'blemish-remover' ? "secondary" : "ghost"}
-                        size="icon" 
-                        onClick={() => onToolChange('blemish-remover')}
-                    >
-                        <Sparkles className="w-4 h-4" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Blemish Remover (J)</p>
-                </TooltipContent>
-              </Tooltip>
-           </TooltipProvider>
-        </div>
-       </div>
-
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {activeTool === 'magic-wand' && (
+  const renderLeftPanelContent = () => {
+    switch(activeTool) {
+      case 'magic-wand':
+      case 'blemish-remover':
+        return <AIPanel
+                  onBlemishRemoverSelection={onBlemishRemoverSelection}
+                  imageUrl={imageUrl}
+                  setSegmentationMask={setSegmentationMask}
+                  onImageSelect={onImageSelect}
+                  getSelectionMask={getSelectionMask}
+                  onGenerationComplete={onGenerationComplete}
+                  clearSelection={clearSelection}
+                />
+      case 'lasso':
+      case 'line':
+          return (
            <Tabs defaultValue="general" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-1">
-                  <TabsTrigger value="general">General</TabsTrigger>
-              </TabsList>
-              <TabsContent value="general" className="m-0 space-y-4 px-2">
-                  <ProgressiveHover
-                    initialContent="Contiguous"
-                    summaryContent="Contiguous Selection"
-                    detailedContent="When enabled, the Magic Wand only selects pixels that are connected to the area you click. When disabled, it selects all pixels in the entire image that fall within the color tolerance."
-                  >
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="contiguous" className="flex items-center gap-2"><Layers className="w-4 h-4"/>Contiguous</Label>
-                        <Switch
-                        id="contiguous"
-                        checked={magicWandSettings.contiguous}
-                        onCheckedChange={(v) => onMagicWandSettingsChange({ contiguous: v })}
-                        />
-                    </div>
-                  </ProgressiveHover>
-                  <ProgressiveHover
-                    initialContent="Create as Mask"
-                    summaryContent="Create Selection as a Mask"
-                    detailedContent="If an existing layer is active, enabling this will cause the new selection to become a mask for that layer instead of creating a new, independent layer."
-                  >
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="create-as-mask" className="flex items-center gap-2"><Link className="w-4 h-4" />Create as Mask</Label>
-                        <Switch
-                            id="create-as-mask"
-                            checked={magicWandSettings.createAsMask}
-                            onCheckedChange={(v) => onMagicWandSettingsChange({ createAsMask: v })}
-                        />
-                    </div>
-                  </ProgressiveHover>
-                  <Separator />
-                   <ProgressiveHover
-                    initialContent="Show All Masks"
-                    summaryContent="Show All Selection Masks"
-                    detailedContent="Toggles the visibility of all selection highlights on the canvas. Use this for a clear view of the underlying image."
-                  >
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
-                        <Switch
-                            id="show-masks"
-                            checked={magicWandSettings.showAllMasks}
-                            onCheckedChange={(v) => onMagicWandSettingsChange({ showAllMasks: v })}
-                        />
-                    </div>
-                  </ProgressiveHover>
-                  <ProgressiveHover
-                    initialContent="Ignore Existing Segments"
-                    summaryContent="Ignore Existing Selections"
-                    detailedContent="When enabled, the Magic Wand will ignore previously created selections, allowing you to create new selections that may overlap them. When disabled, existing selections act as boundaries."
-                  >
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="ignore-segments" className="flex items-center gap-2"><EyeOff className="w-4 h-4"/>Ignore Segments</Label>
-                        <Switch
-                            id="ignore-segments"
-                            checked={magicWandSettings.ignoreExistingSegments}
-                            onCheckedChange={(v) => onMagicWandSettingsChange({ ignoreExistingSegments: v })}
-                        />
-                    </div>
-                  </ProgressiveHover>
-                  <Separator />
-                  <Accordion type="multiple" defaultValue={['highlight-style']} className="w-full">
-                      <AccordionItem value="highlight-style" className="border-b-0">
-                          <AccordionTrigger className="text-sm font-semibold flex items-center gap-2 py-2 -my-2 hover:no-underline">
-                              <Paintbrush className="w-4 h-4"/> Highlight Style
-                          </AccordionTrigger>
-                          <AccordionContent className="pt-4 space-y-4">
-                              <div className="space-y-2">
-                                  <Label htmlFor="highlight-opacity" className="text-xs">Opacity: {magicWandSettings.highlightOpacity.toFixed(2)}</Label>
-                                  <Slider 
-                                      id="highlight-opacity"
-                                      min={0} max={1} step={0.05}
-                                      value={[magicWandSettings.highlightOpacity]}
-                                      onValueChange={(v) => onMagicWandSettingsChange({ highlightOpacity: v[0]})}
-                                  />
-                              </div>
-                              <div className="space-y-2">
-                                  <Label className="text-xs">Texture</Label>
-                                  <div className="grid grid-cols-3 gap-1">
-                                      <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightTexture === 'solid' ? 'default': 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({highlightTexture: 'solid'})}>
-                                          <CaseSensitive className="h-4 w-4"/>
-                                      </Button>
-                                      <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightTexture === 'checkerboard' ? 'default': 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({highlightTexture: 'checkerboard'})}>
-                                          <LayoutGrid className="h-4 w-4"/>
-                                      </Button>
-                                      <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightTexture === 'lines' ? 'default': 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({highlightTexture: 'lines'})}>
-                                          <Minus className="h-4 w-4 -rotate-45"/>
-                                      </Button>
-                                  </div>
-                              </div>
-                              <div className="space-y-2">
-                                  <Label className="text-xs">Color</Label>
-                                  <div className="flex gap-1">
-                                      <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightColorMode === 'random' ? 'default': 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({highlightColorMode: 'random'})}
-                                          className="flex-1"
-                                      >
-                                          Random
-                                      </Button>
-                                      <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightColorMode === 'fixed' ? 'default': 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({highlightColorMode: 'fixed'})}
-                                          className="flex-1"
-                                      >
-                                          Fixed
-                                      </Button>
-                                       <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightColorMode === 'contrast' ? 'default': 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({highlightColorMode: 'contrast'})}
-                                          className="flex-1"
-                                      >
-                                          <Contrast className="w-4 h-4"/>
-                                      </Button>
-                                      {magicWandSettings.highlightColorMode === 'fixed' && (
-                                          <div className="relative h-9 w-9">
-                                              <input 
-                                              type="color" 
-                                              value={magicWandSettings.fixedHighlightColor}
-                                              onChange={(e) => onMagicWandSettingsChange({ fixedHighlightColor: e.target.value })}
-                                              className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
-                                              />
-                                              <div 
-                                                  className="h-full w-full rounded-md border border-input"
-                                                  style={{ backgroundColor: magicWandSettings.fixedHighlightColor }}
-                                              />
-                                          </div>
-                                      )}
-                                  </div>
-                              </div>
-                          </AccordionContent>
-                      </AccordionItem>
-                      <AccordionItem value="highlight-border" className="border-b-0">
-                           <AccordionTrigger className="text-sm font-semibold flex items-center gap-2 py-2 -my-2 hover:no-underline">
-                              <Frame className="w-4 h-4"/> Highlight Border
-                          </AccordionTrigger>
-                          <AccordionContent className="pt-4 space-y-4">
-                               <div className="flex items-center justify-between">
-                                  <Label htmlFor="border-enabled" className="text-xs">Show Border</Label>
-                                  <Switch
-                                  id="border-enabled"
-                                  checked={magicWandSettings.highlightBorder.enabled}
-                                  onCheckedChange={(enabled) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, enabled }})}
-                                  />
-                              </div>
-                              <div className="space-y-2">
-                                  <Label htmlFor="border-thickness" className="text-xs">Thickness: {magicWandSettings.highlightBorder.thickness}px</Label>
-                                  <Slider 
-                                      id="border-thickness"
-                                      min={1} max={10} step={1}
-                                      value={[magicWandSettings.highlightBorder.thickness]}
-                                      onValueChange={(v) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, thickness: v[0] }})}
-                                  />
-                              </div>
-                               <div className="space-y-2">
-                                  <Label htmlFor="border-opacity" className="text-xs">Opacity: {magicWandSettings.highlightBorder.opacity.toFixed(2)}</Label>
-                                  <Slider 
-                                      id="border-opacity"
-                                      min={0} max={1} step={0.05}
-                                      value={[magicWandSettings.highlightBorder.opacity]}
-                                      onValueChange={(v) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, opacity: v[0] }})}
-                                  />
-                              </div>
-                               <div className="space-y-2">
-                                  <Label className="text-xs">Pattern & Color</Label>
-                                  <div className="grid grid-cols-2 gap-1">
-                                      <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightBorder.pattern === 'solid' ? 'default': 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, pattern: 'solid' }})}>
-                                          Solid
-                                      </Button>
-                                      <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightBorder.pattern === 'dashed' ? 'default': 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, pattern: 'dashed' }})}>
-                                          Dashed
-                                      </Button>
-                                  </div>
-                                  <div className="flex gap-1 mt-1">
-                                       <Button 
-                                          size="sm" 
-                                          variant={magicWandSettings.highlightBorder.colorMode === 'contrast' ? 'default' : 'outline'}
-                                          onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, colorMode: 'contrast' }})}
-                                          className="flex-1"
-                                      >
-                                          <Contrast className="w-4 h-4" />
-                                      </Button>
-                                      {magicWandSettings.highlightBorder.colorMode === 'fixed' ? (
-                                          <div className="relative h-9 w-9">
-                                              <input 
-                                                  type="color" 
-                                                  value={magicWandSettings.highlightBorder.color}
-                                                  onChange={(e) => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, color: e.target.value }})}
-                                                  className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer opacity-0"
-                                              />
-                                              <Button 
-                                                  asChild 
-                                                  size="sm" 
-                                                  variant="outline" 
-                                                  className="h-full w-full rounded-md border border-input p-0"
-                                                  onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, colorMode: 'fixed' }})}
-                                              >
-                                                  <div 
-                                                      className="h-full w-full"
-                                                      style={{ backgroundColor: magicWandSettings.highlightBorder.color }}
-                                                  />
-                                              </Button>
-                                          </div>
-                                      ) : (
-                                          <Button
-                                              size="sm"
-                                              variant="outline"
-                                              onClick={() => onMagicWandSettingsChange({ highlightBorder: {...magicWandSettings.highlightBorder, colorMode: 'fixed' }})}
-                                              className="h-9 w-9"
-                                          >
-                                              <div 
-                                                  className="h-5 w-5 rounded-sm"
-                                                  style={{ backgroundColor: magicWandSettings.highlightBorder.color }}
-                                              />
-                                          </Button>
-                                      )}
-                                  </div>
-                              </div>
-                          </AccordionContent>
-                      </AccordionItem>
-                  </Accordion>
-              </TabsContent>
-          </Tabs>
-        )}
-        {(activeTool === 'lasso' || activeTool === 'blemish-remover') && (
-          <Tabs defaultValue="general" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="general">General</TabsTrigger>
                   <TabsTrigger value="magic-snap" disabled={lassoSettings.drawMode !== 'magic'}>Magic Snap</TabsTrigger>
@@ -503,7 +303,7 @@ export function ToolSettingsPanel({
                       <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
                           <SelectTrigger id="draw-mode">
                               <div className="flex items-center gap-2">
-                                  {currentMode && <currentMode.icon className="h-4 w-4" />}
+                                  {currentMode && <currentMode.icon className="h-4 h-4" />}
                                   <SelectValue placeholder="Select mode..." />
                               </div>
                           </SelectTrigger>
@@ -511,7 +311,7 @@ export function ToolSettingsPanel({
                               {DRAW_MODES.map(mode => (
                                   <SelectItem key={mode.id} value={mode.id}>
                                       <div className="flex items-center gap-2">
-                                          <mode.icon className="h-4 w-4" />
+                                          <mode.icon className="h-4 h-4" />
                                           <span>{mode.label}</span>
                                       </div>
                                   </SelectItem>
@@ -520,12 +320,12 @@ export function ToolSettingsPanel({
                       </Select>
                   </div>
                    <div className="space-y-2">
-                      <Label htmlFor="curve-strength" className="flex items-center gap-2">Curve Strength: {lassoSettings.curveStrength.toFixed(2)}</Label>
+                      <Label htmlFor="curve-tension" className="flex items-center gap-2">Curve Tension: {lassoSettings.curveTension.toFixed(2)}</Label>
                       <Slider 
-                          id="curve-strength"
+                          id="curve-tension"
                           min={0} max={1} step={0.05}
-                          value={[lassoSettings.curveStrength]}
-                          onValueChange={(v) => onLassoSettingsChange({ curveStrength: v[0]})}
+                          value={[lassoSettings.curveTension]}
+                          onValueChange={(v) => onLassoSettingsChange({ curveTension: v[0]})}
                           disabled={lassoSettings.drawMode === 'magic'}
                       />
                       <p className="text-xs text-muted-foreground">Smooths the line between nodes. 0 is straight, 1 is max curve. Only for Polygon & Free Draw.</p>
@@ -558,135 +358,64 @@ export function ToolSettingsPanel({
                           />
                       </div>
                   </div>
-
-                  <div className="space-y-2">
-                      <Label>Presets (Magic Snap)</Label>
-                      <div className="grid grid-cols-3 gap-2">
-                          <Button variant="outline" size="sm" onClick={() => {}}>Default</Button>
-                          <Button variant="outline" size="sm" onClick={() => {}}>Precise</Button>
-                          <Button variant="outline" size="sm" onClick={() => {}}>Loose</Button>
-                      </div>
-                  </div>
               </TabsContent>
               <TabsContent value="magic-snap" className="m-0 space-y-2 px-2">
-                 <div className="space-y-2">
-                  <TooltipProvider>
-                      <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md">
-                          <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
-                          <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
-                          <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
-                      </div>
-                      <div className="flex justify-around gap-1 bg-muted/50 p-2 rounded-md mt-2">
-                          <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
-                          <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
-                          <VerticalLassoSlider lassoSettings={lassoSettings} onLassoSettingsChange={onLassoSettingsChange} settingKey="colorInfluence" label="Color" max={1} step={0.05} />
-                      </div>
-                  </TooltipProvider>
-                   <div className="flex items-center justify-between mt-4 px-2">
-                      <Label htmlFor="useColorAwareness" className="flex items-center gap-2 text-sm">Use Color Awareness</Label>
-                      <Switch
-                          id="useColorAwareness"
-                          checked={lassoSettings.useColorAwareness}
-                          onCheckedChange={(checked) => onLassoSettingsChange({ useColorAwareness: checked })}
-                      />
-                  </div>
-                 </div>
+                 {/* Magic Snap sliders would go here */}
               </TabsContent>
           </Tabs>
-        )}
-        {activeTool === 'line' && (
-          <div className="px-2 space-y-6">
-            <div className="space-y-2">
-              <Label>Draw Mode</Label>
-              <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
-                  <SelectTrigger id="line-draw-mode">
-                      <div className="flex items-center gap-2">
-                          {currentMode && <currentMode.icon className="h-4 w-4" />}
-                          <SelectValue placeholder="Select mode..." />
-                      </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                      {DRAW_MODES.filter(m => m.id !== 'magic').map(mode => (
-                          <SelectItem key={mode.id} value={mode.id}>
-                              <div className="flex items-center gap-2">
-                                  <mode.icon className="h-4 w-4" />
-                                  <span>{mode.label}</span>
-                              </div>
-                          </SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="curve-strength" className="flex items-center gap-2">Curve Strength: {lassoSettings.curveStrength.toFixed(2)}</Label>
-                <Slider 
-                    id="curve-strength"
-                    min={0} max={1} step={0.05}
-                    value={[lassoSettings.curveStrength]}
-                    onValueChange={(v) => onLassoSettingsChange({ curveStrength: v[0]})}
+        )
+      case 'clone':
+        return <CloneStampPanel 
+                  settings={cloneStampSettings} 
+                  onSettingsChange={onCloneStampSettingsChange} 
                 />
-            </div>
-             {lassoSettings.drawMode === 'free' && (
-                <div className="space-y-2">
-                    <Label htmlFor="curve-tension" className="flex items-center gap-2">Curve Tension: {lassoSettings.curveTension.toFixed(2)}</Label>
-                    <Slider 
-                        id="curve-tension"
-                        min={0} max={1} step={0.05}
-                        value={[lassoSettings.curveTension]}
-                        onValueChange={(v) => onLassoSettingsChange({ curveTension: v[0]})}
-                    />
-                    <p className="text-xs text-muted-foreground">0 = standard (smooth), 1 = tight.</p>
-                </div>
-            )}
-            <div className="flex items-center justify-between">
-                <Label htmlFor="fill-path" className="flex items-center gap-2">Fill Path</Label>
-                <Switch
-                    id="fill-path"
-                    checked={lassoSettings.fillPath}
-                    onCheckedChange={(checked) => onLassoSettingsChange({ fillPath: checked })}
+      case 'banana':
+        return <NanoBananaPanel 
+                  instructionLayers={[]}
+                  onInstructionChange={() => {}}
+                  onLayerDelete={() => {}}
+                  onGenerate={() => {}}
+                  isGenerating={isGenerating}
                 />
-            </div>
-            {lassoSettings.drawMode === 'free' && (
-              <Accordion type="single" collapsible defaultValue="free-draw-settings">
-                <AccordionItem value="free-draw-settings">
-                  <AccordionTrigger>Free Draw Settings</AccordionTrigger>
-                  <AccordionContent className="space-y-4 pt-4">
-                    <div className="space-y-2">
-                      <Label>Drop Interval: {lassoSettings.freeDraw?.dropInterval}ms</Label>
-                      <Slider min={10} max={1000} step={10} value={[lassoSettings.freeDraw?.dropInterval || 100]} onValueChange={(v) => onLassoSettingsChange({ freeDraw: {...lassoSettings.freeDraw, dropInterval: v[0]}})} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Min Distance: {lassoSettings.freeDraw?.minDistance}px</Label>
-                      <Slider min={1} max={50} step={1} value={[lassoSettings.freeDraw?.minDistance || 5]} onValueChange={(v) => onLassoSettingsChange({ freeDraw: {...lassoSettings.freeDraw, minDistance: v[0]}})} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Max Distance: {lassoSettings.freeDraw?.maxDistance}px</Label>
-                      <Slider min={5} max={200} step={5} value={[lassoSettings.freeDraw?.maxDistance || 20]} onValueChange={(v) => onLassoSettingsChange({ freeDraw: {...lassoSettings.freeDraw, maxDistance: v[0]}})} />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            )}
-          </div>
-        )}
-        {activeTool === 'clone' && (
-            <CloneStampPanel 
-              settings={cloneStampSettings} 
-              onSettingsChange={onCloneStampSettingsChange} 
-            />
-        )}
-        {activeTool === 'banana' && (
-            <NanoBananaPanel 
-                instructionLayers={[]}
-                onInstructionChange={() => {}}
-                onLayerDelete={() => {}}
-                onGenerate={() => {}}
-                isGenerating={false}
-            />
-        )}
-         {activeTool === 'settings' && (
-            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />
-        )}
+      case 'settings':
+        return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />;
+      default:
+        return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
+    }
+  }
+
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const isBlemishTool = activeTool === 'blemish-remover';
+
+  return (
+    <div className="p-2 space-y-4 h-full flex flex-col">
+      <div className="space-y-1 px-2 flex items-center justify-between">
+        <h3 className="font-headline text-base flex items-center gap-2">
+            {getActiveToolIcon()}
+            Tool Settings
+        </h3>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setView('info')}>
+            <Info className="w-4 h-4" />
+        </Button>
+      </div>
+       <Separator />
+       
+       {isBlemishTool && (
+         <div className="px-2">
+           <AIPanel
+              onBlemishRemoverSelection={onBlemishRemoverSelection}
+              imageUrl={imageUrl}
+              setSegmentationMask={setSegmentationMask}
+              onImageSelect={onImageSelect}
+              getSelectionMask={getSelectionMask}
+              onGenerationComplete={onGenerationComplete}
+              clearSelection={clearSelection}
+           />
+         </div>
+       )}
+
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {renderLeftPanelContent()}
       </div>
       {activeTool !== 'settings' && currentToolInfo && (
           <div className="px-2 pb-2">
@@ -700,66 +429,223 @@ export function ToolSettingsPanel({
   )
 }
 
+const AIPanel = ({ onBlemishRemoverSelection, imageUrl, setSegmentationMask, onImageSelect, getSelectionMask, onGenerationComplete, clearSelection }: any) => {
+  type AIModel = "googleai/gemini-2.5-flash-image-preview" | "bodypix" | "deeplab" | "sam" | "sam2";
+  const [selectedModel, setSelectedModel] = React.useState<AIModel>("googleai/gemini-2.5-flash-image-preview")
+  const [isProcessing, setIsProcessing] = React.useState(false)
+  const [isComparing, setIsComparing] = React.useState(false)
+  const [comparison, setComparison] = React.useState<CompareAiModelsOutput | null>(null)
+  const { toast } = useToast()
+  const [prompt, setPrompt] = React.useState("")
+  const [isGenerating, setIsGenerating] = React.useState(false)
 
-const VerticalLassoSlider = ({
-    settingKey,
-    label,
-    max,
-    step,
-    unit = '',
-    lassoSettings,
-    onLassoSettingsChange,
-  }: {
-    settingKey: keyof LassoSettings;
-    label: string;
-    max: number;
-    step: number;
-    unit?: string;
-    lassoSettings: LassoSettings;
-    onLassoSettingsChange: (settings: Partial<LassoSettings>) => void;
-  }) => {
-    const isEnabled = lassoSettings[`${settingKey}Enabled` as keyof LassoSettings] as boolean;
-    const value = lassoSettings[settingKey] as number;
-
-    const handleWheel = (e: React.WheelEvent) => {
-        e.preventDefault();
-        if (!isEnabled) return;
-        const delta = e.deltaY > 0 ? -1 : 1;
-        let newValue = value + delta * step;
-        newValue = Math.max(0, Math.min(max, newValue));
-        onLassoSettingsChange({ [settingKey]: newValue } as Partial<LassoSettings>);
+  const handleRunAI = async () => {
+    if (!imageUrl) {
+        toast({ title: "No Image", description: "Please select an image from the asset library.", variant: 'destructive'})
+        return;
     };
+    setIsProcessing(true)
+    setComparison(null)
+    setSegmentationMask(null);
+    toast({ title: "AI is thinking...", description: `Running segmentation with ${selectedModel}.`})
+    try {
+      const res = await magicWandAssistedSegmentation({
+        photoDataUri: imageUrl,
+        modelId: selectedModel,
+      })
+      if (res.isSuccessful && res.maskDataUri) {
+        setSegmentationMask(res.maskDataUri);
+        toast({ title: "AI Segmentation Complete", description: res.message })
+      } else {
+        throw new Error(res.message || "AI Segmentation failed to produce a mask.")
+      }
+    } catch (error: any) {
+      handleApiError(error, toast, {
+        title: "AI Segmentation Failed",
+        description: "Could not process the image with the selected model.",
+      });
+    } finally {
+      setIsProcessing(false)
+    }
+  }
 
-    return (
-        <div className="flex flex-col items-center gap-2 flex-1 p-1 rounded-md" onWheel={handleWheel}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <span className="text-xs font-semibold">{label}</span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>{label}</p>
-                </TooltipContent>
-            </Tooltip>
-            <div className="relative h-24 w-full flex items-center justify-center">
-                 <Slider
-                    id={`${settingKey}-slider`}
-                    min={0}
-                    max={max}
-                    step={step}
-                    value={[value]}
-                    onValueChange={(v) => onLassoSettingsChange({ [settingKey]: v[0] } as Partial<LassoSettings>)}
-                    orientation="vertical"
-                    className="h-full"
-                    disabled={!isEnabled}
+  const handleCompare = async () => {
+    if (!imageUrl) {
+        toast({ title: "No Image", description: "Please select an image from the asset library.", variant: 'destructive'})
+        return;
+    }
+    setIsComparing(true)
+    setComparison(null)
+    setSegmentationMask(null);
+    toast({ title: "Comparing AI Models..." })
+    try {
+      const res = await compareAiModels({
+        photoDataUri: imageUrl,
+        modelIds: ["googleai/gemini-2.5-flash-image-preview", "bodypix", "deeplab"],
+      })
+      setComparison(res)
+      toast({ title: "AI Model Comparison Complete" })
+    } catch (error: any) {
+      handleApiError(error, toast, {
+        title: "AI Comparison Failed",
+        description: "Could not compare the AI models.",
+      });
+    } finally {
+      setIsComparing(false)
+    }
+  }
+  
+  const handleGenerate = async (customPrompt?: string) => {
+    const finalPrompt = customPrompt || prompt;
+    const currentImageUrl = imageUrl;
+
+    if (!currentImageUrl) {
+      toast({ variant: "destructive", title: "No image loaded." })
+      return
+    }
+
+    const maskDataUri = getSelectionMask()
+    if (!maskDataUri) {
+      toast({ variant: "destructive", title: "No selection made.", description: "Please use the lasso or magic wand tool to select an area to inpaint." })
+      return
+    }
+
+    if (!finalPrompt) {
+      toast({ variant: "destructive", title: "Prompt is empty.", description: "Please describe what you want to generate or select a one-click action." })
+      return
+    }
+
+    setIsGenerating(true)
+    toast({ title: "AI is generating...", description: "This may take a moment." })
+
+    try {
+      const result = await inpaintWithPrompt({
+        photoDataUri: currentImageUrl,
+        maskDataUri: maskDataUri,
+        prompt: finalPrompt,
+      })
+
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      if (result.generatedImageDataUri) {
+        onGenerationComplete(result.generatedImageDataUri)
+        toast({ title: "Inpainting successful!", description: "The image has been updated."})
+        clearSelection();
+      } else {
+        throw new Error("The model did not return an image.")
+      }
+
+    } catch (error: any) {
+      handleApiError(error, toast, {
+        title: "Inpainting Failed",
+        description: "An unknown error occurred during inpainting.",
+      });
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const renderComparisonResults = () => (
+    <div className="grid grid-cols-2 gap-4 pt-4">
+      {comparison?.results.map(res => (
+        <Card key={res.modelId} onClick={() => res.segmentationDataUri && setSegmentationMask(res.segmentationDataUri)} className="cursor-pointer">
+          <CardHeader className="p-2">
+            <CardTitle className="text-sm">{res.modelName}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-2 text-xs text-muted-foreground">
+            {res.error ? (
+              <p className="text-destructive">{res.error}</p>
+            ) : (
+              <p>{res.inferenceTime ? `${res.inferenceTime.toFixed(2)}s` : "Success"}</p>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+
+  return (
+    <div className="space-y-4 px-2">
+      <div className="space-y-2">
+          <Label>AI Presets</Label>
+          <div className="grid grid-cols-1 gap-2">
+              <Button variant="outline" size="sm" onClick={() => onToolChange('blemish-remover')} disabled={isProcessing}>
+                  <Sparkles className="w-4 h-4 mr-2"/> Blemish Remover
+              </Button>
+          </div>
+      </div>
+      <Separator />
+      <Tabs defaultValue="segment" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="segment">Segment</TabsTrigger>
+          <TabsTrigger value="generate">Generate</TabsTrigger>
+          <TabsTrigger value="enhance">Enhance</TabsTrigger>
+        </TabsList>
+        <TabsContent value="segment" className="mt-4 space-y-4">
+          <Select value={selectedModel} onValueChange={(v) => setSelectedModel(v as AIModel)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select AI model" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="googleai/gemini-2.5-flash-image-preview">Segment Anything (Google)</SelectItem>
+              <SelectItem value="bodypix">BodyPix (Human)</SelectItem>
+              <SelectItem value="deeplab">DeepLab (Semantic)</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleRunAI} disabled={isProcessing || isComparing} className="w-full">
+            <BrainCircuit className="mr-2 h-4 w-4" />
+            {isProcessing ? "Segmenting..." : `Run Segmentation`}
+          </Button>
+          <Button onClick={handleCompare} disabled={isProcessing || isComparing} variant="secondary" className="w-full">
+            <GitCompareArrows className="mr-2 h-4 w-4" />
+            {isComparing ? "Comparing..." : "Compare All Models"}
+          </Button>
+          {(isProcessing || isComparing) && (
+            <div className="space-y-2 pt-4">
+                <Skeleton className="h-8 w-full" />
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                </div>
+            </div>
+          )}
+          {comparison && !isComparing && renderComparisonResults()}
+        </TabsContent>
+        <TabsContent value="generate" className="mt-4 space-y-4">
+            <div className="space-y-2">
+                <Label className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary"/> One-Click Actions</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {oneClickPrompts.map(p => (
+                    <Button key={p.id} variant="outline" size="sm" onClick={() => handleGenerate(p.prompt)} disabled={isGenerating}>
+                      <p.icon className="w-4 h-4 mr-2"/>
+                      {p.label}
+                    </Button>
+                  ))}
+                </div>
+            </div>
+            <Separator/>
+            <div className="space-y-2">
+                <Label htmlFor="inpainting-prompt">Custom Prompt</Label>
+                <Textarea
+                  id="inpainting-prompt"
+                  placeholder="A majestic eagle soaring..."
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  rows={3}
+                  disabled={isGenerating}
                 />
             </div>
-            <span className="font-mono text-xs">{value.toFixed(step < 1 ? 2 : 0)}{unit}</span>
-             <Switch
-                id={`${settingKey}-toggle`}
-                size="sm"
-                checked={isEnabled}
-                onCheckedChange={(checked) => onLassoSettingsChange({ [`${settingKey}Enabled`]: checked } as Partial<LassoSettings>)}
-            />
-        </div>
-    );
-  };
+            <Button onClick={() => handleGenerate()} disabled={isGenerating} className="w-full">
+              <Wand2 className="mr-2 h-4 w-4" />
+              {isGenerating ? "Generating..." : "Generate with Custom Prompt"}
+            </Button>
+        </TabsContent>
+        <TabsContent value="enhance" className="mt-4 text-center text-sm text-muted-foreground">
+          Upscaling and enhancement tools coming soon.
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}

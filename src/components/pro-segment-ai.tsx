@@ -65,7 +65,6 @@ import {
 } from "./ui/dropdown-menu"
 import { GlobalSettingsPanel } from "./panels/global-settings-panel"
 import { ImageCanvas } from "./image-canvas"
-import { InpaintingPanel } from "./panels/inpainting-panel"
 import { LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
 import { LayerStripPanel } from "./panels/layer-strip-panel"
@@ -77,7 +76,6 @@ import { Separator } from "./ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { AiChatPanel } from "./panels/ai-chat-panel"
-import { AiModelsPanel } from "./panels/ai-models-panel"
 import { FeatherPanel } from "./panels/feather-panel"
 import { cn } from "@/lib/utils"
 import { useSelectionDrag } from "@/hooks/use-selection-drag"
@@ -97,7 +95,7 @@ import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
 import { handleApiError } from "@/lib/error-handling"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
-type RightPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
+type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
 
 interface WorkspaceState {
   id: string;
@@ -744,18 +742,6 @@ function ProSegmentAIContent() {
                 }}
             /> : null;
         case "assets": return <AdvancedAssetPanel onImageSelect={handleImageSelect} />;
-        case "ai": return (
-          <Tabs defaultValue="segment" className="flex h-full flex-col">
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="segment" className="text-xs gap-1"><Scissors className="w-4 h-4" />Segment</TabsTrigger>
-                <TabsTrigger value="generate" className="text-xs gap-1"><Wand2 className="w-4 h-4"/>Generate</TabsTrigger>
-                <TabsTrigger value="enhance" className="text-xs gap-1"><Camera className="w-4 h-4"/>Enhance</TabsTrigger>
-            </TabsList>
-            <TabsContent value="segment" className="m-0 flex-1"><AiModelsPanel imageUrl={activeWorkspace?.imageUrl} setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))} setImageUrl={handleImageSelect} /></TabsContent>
-            <TabsContent value="generate" className="m-0 flex-1"><InpaintingPanel imageUrl={activeWorkspace?.imageUrl} getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined} onGenerationComplete={(newUrl) => handleImageSelect(newUrl)} clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined} /></TabsContent>
-            <TabsContent value="enhance" className="m-0 flex-1"><div className="p-4 text-center text-sm text-muted-foreground">Upscaling and enhancement tools coming soon.</div></TabsContent>
-          </Tabs>
-        );
         case "chat": return <AiChatPanel />;
         case "color-analysis": return <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>;
         case "pixel-preview": return <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>;
@@ -854,6 +840,12 @@ function ProSegmentAIContent() {
                   onGlobalSettingsChange={setGlobalSettings}
                   onBlemishRemoverSelection={handleBlemishRemoverSelection}
                   onToolChange={handleToolChange}
+                  imageUrl={activeWorkspace?.imageUrl}
+                  setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))}
+                  onImageSelect={handleImageSelect}
+                  getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
+                  onGenerationComplete={(newUrl) => handleImageSelect(newUrl)}
+                  clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
                 />
       case 'clone':
         return <CloneStampPanel 
@@ -889,7 +881,6 @@ function ProSegmentAIContent() {
     { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)' },
     { id: 'feather', icon: FeatherIcon, label: 'Feather & Edges (F)' },
     { id: 'layers', icon: LayersIcon, label: 'Layers (L)' },
-    { id: 'ai', icon: BrainCircuit, label: 'AI Tools (A)' },
     { id: 'color-analysis', icon: Palette, label: 'Color Analysis (C)' },
     { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)' },
     { id: 'pixel-preview', icon: Microscope, label: 'Pixel Preview (P)' },
@@ -1048,7 +1039,7 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingChange={handleMagicWandSettingsChange}
+              onMagicWandSettingsChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
