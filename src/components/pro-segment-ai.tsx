@@ -415,6 +415,38 @@ function ProSegmentAIContent() {
     skewY: 0,
     maintainAspectRatio: true,
   });
+  const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
+    antiAlias: {
+      enabled: true,
+      method: 'gaussian',
+      quality: 'balanced',
+    },
+    smartFeather: {
+      enabled: true,
+      alphaMatting: {
+        enabled: true,
+        method: 'closed-form',
+        quality: 0.85,
+      },
+      backgroundAdaptation: {
+        enabled: true,
+        sampleRadius: 8,
+        adaptationStrength: 0.6,
+        colorThreshold: 20,
+      },
+      gradientTransparency: {
+        enabled: true,
+        gradientRadius: 6,
+        smoothness: 0.7,
+        edgeAware: true,
+      },
+      colorAwareProcessing: {
+        enabled: false,
+        haloPreventionStrength: 0,
+        colorContextRadius: 0,
+      },
+    },
+  });
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
@@ -656,35 +688,29 @@ function ProSegmentAIContent() {
 
   const handleShelfClick = (panelId: RightPanel, clickType: 'single' | 'double') => {
     setActivePanels(currentPanels => {
-      let topPanel = currentPanels[0];
-      let bottomPanel = currentPanels[1];
-  
-      const isTop = topPanel === panelId;
-      const isBottom = bottomPanel === panelId;
-  
-      if (clickType === 'single') {
-        if (isTop) {
-          // Close top panel, bottom moves up if it exists
-          return bottomPanel ? [bottomPanel] : [];
-        } else if (isBottom) {
-          // Move bottom to top
-          return [bottomPanel, topPanel].filter(Boolean) as RightPanel[];
-        } else {
-          // Add to top, move existing top to bottom
-          return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
+        const topPanel = currentPanels[0];
+        const bottomPanel = currentPanels[1];
+
+        // Panel is already open
+        if (topPanel === panelId && clickType === 'single') {
+            return bottomPanel ? [bottomPanel] : [];
         }
-      } else { // Double click
-        if (isBottom) {
-          // Close bottom panel
-          return [topPanel].filter(Boolean) as RightPanel[];
-        } else if (isTop) {
-          // Move top to bottom
-          return [bottomPanel, topPanel].filter(Boolean) as RightPanel[];
-        } else {
-          // Add to bottom
-          return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
+        if (bottomPanel === panelId && clickType === 'double') {
+            return [topPanel];
         }
-      }
+        if (topPanel === panelId && clickType === 'double') {
+             return bottomPanel ? [bottomPanel, topPanel] : [undefined, topPanel] as RightPanel[];
+        }
+        if (bottomPanel === panelId && clickType === 'single') {
+             return [bottomPanel, topPanel];
+        }
+
+        // Panel is not open, add it
+        if (clickType === 'single') {
+            return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
+        } else { // double click
+            return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
+        }
     });
   };
 
@@ -911,6 +937,11 @@ function ProSegmentAIContent() {
     <div className="h-screen w-screen bg-background overflow-hidden relative">
       <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
+            <SidebarTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10">
+                    <PanelLeft />
+                </Button>
+            </SidebarTrigger>
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
                 <p className="font-bold text-lg text-white">Ps</p>
             </div>
@@ -1087,11 +1118,7 @@ function ProSegmentAIContent() {
       >
         <Sidebar collapsible="icon">
           <SidebarHeader>
-            <SidebarTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <ChevronLeft />
-                </Button>
-            </SidebarTrigger>
+            
           </SidebarHeader>
           <SidebarContent>
               <ToolSettingsPanel
@@ -1266,3 +1293,4 @@ export function ProSegmentAI() {
     
 
     
+
