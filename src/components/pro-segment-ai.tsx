@@ -45,6 +45,7 @@ import {
   Speech,
   Magnet,
   Move,
+  Balloon,
 } from "lucide-react"
 
 import {
@@ -663,33 +664,30 @@ function ProSegmentAIContent() {
     }
   }
 
-  const handleShelfClick = (panelId: RightPanel) => {
-    if (!isRightPanelOpen) {
-      setIsRightPanelOpen(true);
-      setActivePanels([panelId]);
-      return;
-    }
-  
+  const handleShelfClick = (panelId: RightPanel, clickType: 'single' | 'double') => {
     setActivePanels(currentPanels => {
-      const existingIndex = currentPanels.indexOf(panelId);
-      
-      if (existingIndex === 0) {
-        const newPanels = currentPanels.slice(1);
-        if (newPanels.length === 0) {
-          setIsRightPanelOpen(false);
+        const topPanel = currentPanels[0];
+        const bottomPanel = currentPanels[1];
+        let newPanels: RightPanel[] = [];
+
+        if (clickType === 'single') {
+            if (topPanel === panelId) { // Clicked top panel again, toggle it off
+                newPanels = bottomPanel ? [bottomPanel] : [];
+            } else { // New panel for top slot
+                newPanels = [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
+            }
+        } else { // Double Click
+            if (bottomPanel === panelId) { // Clicked bottom panel again, toggle it off
+                newPanels = topPanel ? [topPanel] : [];
+            } else { // New panel for bottom slot
+                newPanels = topPanel ? [topPanel, panelId] : [panelId];
+            }
         }
+        
         return newPanels;
-      }
-      
-      if (existingIndex > 0) {
-        return [panelId, ...currentPanels.filter(p => p !== panelId)];
-      }
-      
-      const newPanels = [panelId, ...currentPanels];
-      
-      return newPanels.slice(0, 2);
     });
-  };
+};
+
 
   React.useEffect(() => {
       if (activePanels.length === 0 && isRightPanelOpen) {
@@ -1111,6 +1109,7 @@ function ProSegmentAIContent() {
                 onShowHotkeysChange={setShowHotkeyLabels}
                 globalSettings={globalSettings}
                 onGlobalSettingsChange={setGlobalSettings}
+                // AI Panel Props
                 instructionLayers={instructionLayers}
                 onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
                 onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
@@ -1205,7 +1204,8 @@ function ProSegmentAIContent() {
                         <Button 
                           variant={isActive && isRightPanelOpen ? "secondary" : "ghost"} 
                           size="icon" 
-                          onClick={() => handleShelfClick(id)}>
+                          onClick={() => handleShelfClick(id, 'single')}
+                          onDoubleClick={() => handleShelfClick(id, 'double')}>
                           <Icon className="h-5 w-5"/>
                         </Button>
                       </TooltipTrigger>
