@@ -654,67 +654,27 @@ function ProSegmentAIContent() {
 
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
-      <div 
-        className="absolute left-0 top-12 h-[calc(100vh-3rem)]"
+      <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm"
         style={{
-          width: `calc(${sidebarWidthVar})`,
-          transition: 'width 0.2s ease-in-out'
+          left: `calc(${sidebarWidthVar} + 4rem)`,
+          transition: 'left 0.2s ease-in-out'
         }}
       >
-        <Sidebar collapsible="icon">
-          <SidebarHeader>
-              <div className="flex-1">
-                  {/* Placeholder for future header content */}
-              </div>
-            </SidebarHeader>
-          <SidebarContent>
-              {renderLeftPanelContent()}
-          </SidebarContent>
-        </Sidebar>
-      </div>
-      <div 
-        className="absolute top-12 h-[calc(100vh-3rem)] z-30"
-        style={{
-          left: sidebarWidthVar,
-          transition: 'left 0.2s ease-in-out',
-        }}
-      >
-        <ToolPanel
-          activeTool={activeTool}
-          setActiveTool={setActiveTool}
-          showHotkeys={showHotkeyLabels}
-          showHorizontalRuler={showHorizontalRuler}
-          onToggleHorizontalRuler={() => setShowHorizontalRuler(p => !p)}
-          showVerticalRuler={showVerticalRuler}
-          onToggleVerticalRuler={() => setShowVerticalRuler(p => !p)}
-          showGuides={showGuides}
-          onToggleGuides={() => setShowGuides(p => !p)}
-        />
-      </div>
-      
-       <main 
-        className="absolute inset-y-0 right-0 flex flex-col" 
-        style={{ 
-          left: '0px',
-        }}
-      >
-        <header className="h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm shrink-0"
-          style={{
-            paddingLeft: `calc(${sidebarWidthVar} + 4rem + 1rem)`,
-            transition: 'padding-left 0.2s ease-in-out'
-          }}
-        >
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg"
+            >
+                <Scissors className="w-5 h-5 text-white" />
+            </div>
+             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
+                <Plus className="w-4 h-4" />
+            </Button>
+          </div>
           <div className="flex items-center gap-4 flex-1">
-              <div 
-                className="absolute top-2 left-4 w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg"
-              >
-                  <Scissors className="w-5 h-5 text-white" />
-              </div>
               <WorkspaceTabs 
                   workspaces={workspaces}
                   activeWorkspaceId={activeWorkspaceId}
                   onWorkspaceSelect={setActiveWorkspaceId}
-                  onWorkspaceAdd={handleAddNewWorkspace}
                   onWorkspaceClose={handleCloseWorkspace}
               />
           </div>
@@ -831,7 +791,14 @@ function ProSegmentAIContent() {
                 </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </header>
+      </header>
+       <main 
+        className="absolute inset-y-0 right-0 flex flex-col" 
+        style={{ 
+          top: '3rem',
+          left: '0px',
+        }}
+      >
         <div className="flex-1 min-h-0">
           <ImageCanvas 
               key={activeWorkspace.id}
@@ -871,6 +838,38 @@ function ProSegmentAIContent() {
               />
           </div>
       </main>
+       <div 
+        className="absolute left-0 top-12 h-[calc(100vh-3rem)]"
+        style={{
+          width: `calc(${sidebarWidthVar})`,
+          transition: 'width 0.2s ease-in-out'
+        }}
+      >
+        <Sidebar collapsible="icon">
+          <SidebarContent>
+              {renderLeftPanelContent()}
+          </SidebarContent>
+        </Sidebar>
+      </div>
+      <div 
+        className="absolute top-12 h-[calc(100vh-3rem)] z-30"
+        style={{
+          left: sidebarWidthVar,
+          transition: 'left 0.2s ease-in-out',
+        }}
+      >
+        <ToolPanel
+          activeTool={activeTool}
+          setActiveTool={setActiveTool}
+          showHotkeys={showHotkeyLabels}
+          showHorizontalRuler={showHorizontalRuler}
+          onToggleHorizontalRuler={() => setShowHorizontalRuler(p => !p)}
+          showVerticalRuler={showVerticalRuler}
+          onToggleVerticalRuler={() => setShowVerticalRuler(p => !p)}
+          showGuides={showGuides}
+          onToggleGuides={() => setShowGuides(p => !p)}
+        />
+      </div>
       
       <div className="fixed right-0 top-12 flex h-[calc(100vh-3rem)]">
         <div 
@@ -943,13 +942,11 @@ function WorkspaceTabs({
   workspaces, 
   activeWorkspaceId, 
   onWorkspaceSelect, 
-  onWorkspaceAdd,
   onWorkspaceClose,
 }: {
   workspaces: WorkspaceState[];
   activeWorkspaceId: string;
   onWorkspaceSelect: (id: string) => void;
-  onWorkspaceAdd: () => void;
   onWorkspaceClose: (id: string) => void;
 }) {
   return (
@@ -971,9 +968,6 @@ function WorkspaceTabs({
           </Button>
         </div>
       ))}
-       <Button variant="ghost" size="icon" className="h-8 w-8 ml-1" onClick={onWorkspaceAdd}>
-        <Plus className="w-4 h-4" />
-      </Button>
     </div>
   );
 }
@@ -1028,6 +1022,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
