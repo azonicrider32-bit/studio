@@ -351,41 +351,54 @@ const drawLayers = React.useCallback(() => {
 
     const overlayCtx = overlayCanvas.getContext('2d');
     if (overlayCtx) {
-      engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment, draggedLayer, activeLayerId, activeTool);
-      
-      if (activeTool === 'clone' && ghostPreview && canvasMousePos) {
-          overlayCtx.save();
-          overlayCtx.globalAlpha = 0.5;
-          overlayCtx.drawImage(
-              ghostPreview,
-              canvasMousePos.x - cloneStampSettings.brushSize / 2,
-              canvasMousePos.y - cloneStampSettings.brushSize / 2,
-              cloneStampSettings.brushSize,
-              cloneStampSettings.brushSize
-          );
-          overlayCtx.restore();
-      }
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment, draggedLayer, activeLayerId, activeTool);
+        
+        const layerToTransform = draggedLayer ?? layers.find(l => l.id === activeLayerId);
 
-      if(showGuides && canvasMousePos) {
-          overlayCtx.save();
-          overlayCtx.strokeStyle = 'hsla(var(--primary), 0.5)';
-          overlayCtx.lineWidth = 1;
-          overlayCtx.setLineDash([4, 4]);
+        if (activeTool === 'transform' && layerToTransform && layerToTransform.type !== 'background') {
+            const { x, y, width, height } = layerToTransform.bounds;
+            overlayCtx.save();
+            overlayCtx.strokeStyle = 'hsl(var(--primary))';
+            overlayCtx.lineWidth = 1;
+            overlayCtx.setLineDash([4, 4]);
+            overlayCtx.strokeRect(x, y, width, height);
+            overlayCtx.restore();
+        }
 
-          // Horizontal guide
-          overlayCtx.beginPath();
-          overlayCtx.moveTo(0, canvasMousePos.y);
-          overlayCtx.lineTo(overlayCanvas.width, canvasMousePos.y);
-          overlayCtx.stroke();
+        if (activeTool === 'clone' && ghostPreview && canvasMousePos) {
+            overlayCtx.save();
+            overlayCtx.globalAlpha = 0.5;
+            overlayCtx.drawImage(
+                ghostPreview,
+                canvasMousePos.x - cloneStampSettings.brushSize / 2,
+                canvasMousePos.y - cloneStampSettings.brushSize / 2,
+                cloneStampSettings.brushSize,
+                cloneStampSettings.brushSize
+            );
+            overlayCtx.restore();
+        }
 
-          // Vertical guide
-          overlayCtx.beginPath();
-          overlayCtx.moveTo(canvasMousePos.x, 0);
-          overlayCtx.lineTo(canvasMousePos.x, overlayCanvas.height);
-          overlayCtx.stroke();
-          
-          overlayCtx.restore();
-      }
+        if(showGuides && canvasMousePos) {
+            overlayCtx.save();
+            overlayCtx.strokeStyle = 'hsla(var(--primary), 0.5)';
+            overlayCtx.lineWidth = 1;
+            overlayCtx.setLineDash([4, 4]);
+
+            // Horizontal guide
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(0, canvasMousePos.y);
+            overlayCtx.lineTo(overlayCanvas.width, canvasMousePos.y);
+            overlayCtx.stroke();
+
+            // Vertical guide
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(canvasMousePos.x, 0);
+            overlayCtx.lineTo(canvasMousePos.x, overlayCanvas.height);
+            overlayCtx.stroke();
+            
+            overlayCtx.restore();
+        }
     }
   }, [magicWandSettings, lassoSettings, layers, hoveredSegment, draggedLayer, activeLayerId, activeTool, showGuides, canvasMousePos, ghostPreview, cloneStampSettings]);
 
@@ -1171,6 +1184,7 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
+
 
 
 
