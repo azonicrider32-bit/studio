@@ -37,27 +37,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
 import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Button } from "../ui/button"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
-import { cn } from "@/lib/utils"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { useSidebar } from "../ui/sidebar"
 import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
 import { LassoCompactSettings } from "./lasso-compact-settings"
-import { ProgressiveHover } from "../ui/progressive-hover"
 import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
 import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
-import { compareAiModels, CompareAiModelsOutput } from "@/ai/flows/compare-ai-models"
-import { magicWandAssistedSegmentation } from "@/ai/flows/magic-wand-assisted-segmentation"
-import { handleApiError } from "@/lib/error-handling"
-import { useToast } from "@/hooks/use-toast"
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card"
-import { Skeleton } from "../ui/skeleton"
-import { Textarea } from "../ui/textarea"
-import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -71,38 +57,18 @@ interface ToolSettingsPanelProps {
   onShowHotkeysChange: (value: boolean) => void
   globalSettings: GlobalSettings;
   onGlobalSettingsChange: (settings: Partial<GlobalSettings>) => void;
-  onBlemishRemoverSelection: (selectionMask: string) => void;
-  onToolChange: (tool: Tool) => void;
-  imageUrl?: string;
-  setSegmentationMask: (mask: string | null) => void;
-  onImageSelect: (url: string) => void;
-  getSelectionMask: () => string | undefined;
-  onGenerationComplete: (newImageUrl: string) => void;
-  clearSelection: () => void;
+  // AI Panel Props
+  instructionLayers: InstructionLayer[];
+  onInstructionChange: (id: string, prompt: string) => void;
+  onLayerDelete: (id: string) => void;
+  onGenerate: (prompt?: string) => void;
+  isGenerating: boolean;
+  customPrompt: string;
+  setCustomPrompt: (prompt: string) => void;
 }
 
 type Tool = "magic-wand" | "lasso" | "line" | "clone" | "settings" | "banana" | "blemish-remover" | "transform" | "pan" | "brush" | "eraser";
 
-const oneClickPrompts = [
-  {
-    id: "remove-object",
-    label: "Remove Object",
-    prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill.",
-    icon: Trash2,
-  },
-  {
-    id: "add-sunglasses",
-    label: "Add Sunglasses",
-    prompt: "Add a pair of stylish, modern sunglasses to the selected person's face. The sunglasses should fit naturally on the face, with realistic reflections on the lenses and appropriate shadows cast on the skin.",
-    icon: Glasses,
-  },
-  {
-    id: "change-color-red",
-    label: "Change to Red",
-    prompt: "Change the color of the selected object to a vibrant, realistic red. Maintain the original texture, shadows, and highlights of the object, ensuring only the color is altered.",
-    icon: Palette,
-  },
-];
 
 export function ToolSettingsPanel({ 
     magicWandSettings, 
@@ -116,19 +82,18 @@ export function ToolSettingsPanel({
     onShowHotkeysChange,
     globalSettings,
     onGlobalSettingsChange,
-    onBlemishRemoverSelection,
-    onToolChange,
-    imageUrl,
-    setSegmentationMask,
-    onImageSelect,
-    getSelectionMask,
-    onGenerationComplete,
-    clearSelection,
+    // AI Panel Props
+    instructionLayers,
+    onInstructionChange,
+    onLayerDelete,
+    onGenerate,
+    isGenerating,
+    customPrompt,
+    setCustomPrompt,
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
   
-  const isWand = activeTool === 'magic-wand';
   const { state: sidebarState } = useSidebar();
   
     const DRAW_MODES: { id: LassoSettings['drawMode']; label: string; icon: React.ElementType; description: string}[] = [
@@ -268,15 +233,7 @@ export function ToolSettingsPanel({
     switch(activeTool) {
       case 'magic-wand':
       case 'blemish-remover':
-        return <AIPanel
-                  onBlemishRemoverSelection={onBlemishRemoverSelection}
-                  imageUrl={imageUrl}
-                  setSegmentationMask={setSegmentationMask}
-                  onImageSelect={onImageSelect}
-                  getSelectionMask={getSelectionMask}
-                  onGenerationComplete={onGenerationComplete}
-                  clearSelection={clearSelection}
-                />
+        return <div>Magic Wand / Blemish settings would go here</div>;
       case 'lasso':
       case 'line':
           return (
@@ -371,21 +328,20 @@ export function ToolSettingsPanel({
                 />
       case 'banana':
         return <NanoBananaPanel 
-                  instructionLayers={[]}
-                  onInstructionChange={() => {}}
-                  onLayerDelete={() => {}}
-                  onGenerate={() => {}}
+                  instructionLayers={instructionLayers}
+                  onInstructionChange={onInstructionChange}
+                  onLayerDelete={onLayerDelete}
+                  onGenerate={onGenerate}
                   isGenerating={isGenerating}
+                  customPrompt={customPrompt}
+                  setCustomPrompt={setCustomPrompt}
                 />
       case 'settings':
-        return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />;
+        return <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />;
       default:
         return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
     }
   }
-
-  const [isGenerating, setIsGenerating] = React.useState(false);
-  const isBlemishTool = activeTool === 'blemish-remover';
 
   return (
     <div className="p-2 space-y-4 h-full flex flex-col">
@@ -400,20 +356,6 @@ export function ToolSettingsPanel({
       </div>
        <Separator />
        
-       {isBlemishTool && (
-         <div className="px-2">
-           <AIPanel
-              onBlemishRemoverSelection={onBlemishRemoverSelection}
-              imageUrl={imageUrl}
-              setSegmentationMask={setSegmentationMask}
-              onImageSelect={onImageSelect}
-              getSelectionMask={getSelectionMask}
-              onGenerationComplete={onGenerationComplete}
-              clearSelection={clearSelection}
-           />
-         </div>
-       )}
-
       <div className="flex-1 min-h-0 overflow-y-auto">
         {renderLeftPanelContent()}
       </div>
@@ -425,227 +367,6 @@ export function ToolSettingsPanel({
             </div>
           </div>
       )}
-    </div>
-  )
-}
-
-const AIPanel = ({ onBlemishRemoverSelection, imageUrl, setSegmentationMask, onImageSelect, getSelectionMask, onGenerationComplete, clearSelection }: any) => {
-  type AIModel = "googleai/gemini-2.5-flash-image-preview" | "bodypix" | "deeplab" | "sam" | "sam2";
-  const [selectedModel, setSelectedModel] = React.useState<AIModel>("googleai/gemini-2.5-flash-image-preview")
-  const [isProcessing, setIsProcessing] = React.useState(false)
-  const [isComparing, setIsComparing] = React.useState(false)
-  const [comparison, setComparison] = React.useState<CompareAiModelsOutput | null>(null)
-  const { toast } = useToast()
-  const [prompt, setPrompt] = React.useState("")
-  const [isGenerating, setIsGenerating] = React.useState(false)
-
-  const handleRunAI = async () => {
-    if (!imageUrl) {
-        toast({ title: "No Image", description: "Please select an image from the asset library.", variant: 'destructive'})
-        return;
-    };
-    setIsProcessing(true)
-    setComparison(null)
-    setSegmentationMask(null);
-    toast({ title: "AI is thinking...", description: `Running segmentation with ${selectedModel}.`})
-    try {
-      const res = await magicWandAssistedSegmentation({
-        photoDataUri: imageUrl,
-        modelId: selectedModel,
-      })
-      if (res.isSuccessful && res.maskDataUri) {
-        setSegmentationMask(res.maskDataUri);
-        toast({ title: "AI Segmentation Complete", description: res.message })
-      } else {
-        throw new Error(res.message || "AI Segmentation failed to produce a mask.")
-      }
-    } catch (error: any) {
-      handleApiError(error, toast, {
-        title: "AI Segmentation Failed",
-        description: "Could not process the image with the selected model.",
-      });
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleCompare = async () => {
-    if (!imageUrl) {
-        toast({ title: "No Image", description: "Please select an image from the asset library.", variant: 'destructive'})
-        return;
-    }
-    setIsComparing(true)
-    setComparison(null)
-    setSegmentationMask(null);
-    toast({ title: "Comparing AI Models..." })
-    try {
-      const res = await compareAiModels({
-        photoDataUri: imageUrl,
-        modelIds: ["googleai/gemini-2.5-flash-image-preview", "bodypix", "deeplab"],
-      })
-      setComparison(res)
-      toast({ title: "AI Model Comparison Complete" })
-    } catch (error: any) {
-      handleApiError(error, toast, {
-        title: "AI Comparison Failed",
-        description: "Could not compare the AI models.",
-      });
-    } finally {
-      setIsComparing(false)
-    }
-  }
-  
-  const handleGenerate = async (customPrompt?: string) => {
-    const finalPrompt = customPrompt || prompt;
-    const currentImageUrl = imageUrl;
-
-    if (!currentImageUrl) {
-      toast({ variant: "destructive", title: "No image loaded." })
-      return
-    }
-
-    const maskDataUri = getSelectionMask()
-    if (!maskDataUri) {
-      toast({ variant: "destructive", title: "No selection made.", description: "Please use the lasso or magic wand tool to select an area to inpaint." })
-      return
-    }
-
-    if (!finalPrompt) {
-      toast({ variant: "destructive", title: "Prompt is empty.", description: "Please describe what you want to generate or select a one-click action." })
-      return
-    }
-
-    setIsGenerating(true)
-    toast({ title: "AI is generating...", description: "This may take a moment." })
-
-    try {
-      const result = await inpaintWithPrompt({
-        photoDataUri: currentImageUrl,
-        maskDataUri: maskDataUri,
-        prompt: finalPrompt,
-      })
-
-      if (result.error) {
-        throw new Error(result.error)
-      }
-
-      if (result.generatedImageDataUri) {
-        onGenerationComplete(result.generatedImageDataUri)
-        toast({ title: "Inpainting successful!", description: "The image has been updated."})
-        clearSelection();
-      } else {
-        throw new Error("The model did not return an image.")
-      }
-
-    } catch (error: any) {
-      handleApiError(error, toast, {
-        title: "Inpainting Failed",
-        description: "An unknown error occurred during inpainting.",
-      });
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  const renderComparisonResults = () => (
-    <div className="grid grid-cols-2 gap-4 pt-4">
-      {comparison?.results.map(res => (
-        <Card key={res.modelId} onClick={() => res.segmentationDataUri && setSegmentationMask(res.segmentationDataUri)} className="cursor-pointer">
-          <CardHeader className="p-2">
-            <CardTitle className="text-sm">{res.modelName}</CardTitle>
-          </CardHeader>
-          <CardContent className="p-2 text-xs text-muted-foreground">
-            {res.error ? (
-              <p className="text-destructive">{res.error}</p>
-            ) : (
-              <p>{res.inferenceTime ? `${res.inferenceTime.toFixed(2)}s` : "Success"}</p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  )
-
-  return (
-    <div className="space-y-4 px-2">
-      <div className="space-y-2">
-          <Label>AI Presets</Label>
-          <div className="grid grid-cols-1 gap-2">
-              <Button variant="outline" size="sm" onClick={() => onToolChange('blemish-remover')} disabled={isProcessing}>
-                  <Sparkles className="w-4 h-4 mr-2"/> Blemish Remover
-              </Button>
-          </div>
-      </div>
-      <Separator />
-      <Tabs defaultValue="segment" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="segment">Segment</TabsTrigger>
-          <TabsTrigger value="generate">Generate</TabsTrigger>
-          <TabsTrigger value="enhance">Enhance</TabsTrigger>
-        </TabsList>
-        <TabsContent value="segment" className="mt-4 space-y-4">
-          <Select value={selectedModel} onValueChange={(v) => setSelectedModel(v as AIModel)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select AI model" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="googleai/gemini-2.5-flash-image-preview">Segment Anything (Google)</SelectItem>
-              <SelectItem value="bodypix">BodyPix (Human)</SelectItem>
-              <SelectItem value="deeplab">DeepLab (Semantic)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={handleRunAI} disabled={isProcessing || isComparing} className="w-full">
-            <BrainCircuit className="mr-2 h-4 w-4" />
-            {isProcessing ? "Segmenting..." : `Run Segmentation`}
-          </Button>
-          <Button onClick={handleCompare} disabled={isProcessing || isComparing} variant="secondary" className="w-full">
-            <GitCompareArrows className="mr-2 h-4 w-4" />
-            {isComparing ? "Comparing..." : "Compare All Models"}
-          </Button>
-          {(isProcessing || isComparing) && (
-            <div className="space-y-2 pt-4">
-                <Skeleton className="h-8 w-full" />
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                    <Skeleton className="h-16 w-full" />
-                    <Skeleton className="h-16 w-full" />
-                </div>
-            </div>
-          )}
-          {comparison && !isComparing && renderComparisonResults()}
-        </TabsContent>
-        <TabsContent value="generate" className="mt-4 space-y-4">
-            <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary"/> One-Click Actions</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {oneClickPrompts.map(p => (
-                    <Button key={p.id} variant="outline" size="sm" onClick={() => handleGenerate(p.prompt)} disabled={isGenerating}>
-                      <p.icon className="w-4 h-4 mr-2"/>
-                      {p.label}
-                    </Button>
-                  ))}
-                </div>
-            </div>
-            <Separator/>
-            <div className="space-y-2">
-                <Label htmlFor="inpainting-prompt">Custom Prompt</Label>
-                <Textarea
-                  id="inpainting-prompt"
-                  placeholder="A majestic eagle soaring..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  rows={3}
-                  disabled={isGenerating}
-                />
-            </div>
-            <Button onClick={() => handleGenerate()} disabled={isGenerating} className="w-full">
-              <Wand2 className="mr-2 h-4 w-4" />
-              {isGenerating ? "Generating..." : "Generate with Custom Prompt"}
-            </Button>
-        </TabsContent>
-        <TabsContent value="enhance" className="mt-4 text-center text-sm text-muted-foreground">
-          Upscaling and enhancement tools coming soon.
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

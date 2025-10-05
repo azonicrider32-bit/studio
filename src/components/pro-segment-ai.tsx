@@ -63,7 +63,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
-import { GlobalSettingsPanel } from "./panels/global-settings-panel"
 import { ImageCanvas } from "./image-canvas"
 import { LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
@@ -85,14 +84,12 @@ import { Slider } from "./ui/slider"
 import { useAuth, useUser } from "@/firebase"
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
-import { ProgressiveHover } from "./ui/progressive-hover"
 import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
 import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
 import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
-import { CloneStampPanel } from "./panels/clone-stamp-panel"
-import { NanoBananaPanel, InstructionLayer } from "./panels/nano-banana-panel"
-import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
 import { handleApiError } from "@/lib/error-handling"
+import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
+import { InstructionLayer } from "./panels/nano-banana-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -243,6 +240,7 @@ function ProSegmentAIContent() {
   // State for Nano Banana Tool
   const [instructionLayers, setInstructionLayers] = React.useState<InstructionLayer[]>([]);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [customPrompt, setCustomPrompt] = React.useState("");
   
   const [globalSettings, setGlobalSettings] = React.useState<GlobalSettings>({
     snapEnabled: true,
@@ -820,52 +818,60 @@ function ProSegmentAIContent() {
     }
   };
 
-  const renderLeftPanelContent = () => {
-    switch(activeTool) {
-      case 'magic-wand':
-      case 'lasso':
-      case 'line':
-      case 'blemish-remover':
-        return <ToolSettingsPanel 
-                  magicWandSettings={magicWandSettings}
-                  onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                  lassoSettings={lassoSettings}
-                  onLassoSettingsChange={handleLassoSettingsChange}
-                  cloneStampSettings={cloneStampSettings}
-                  onCloneStampSettingsChange={handleCloneStampSettingsChange}
-                  activeTool={activeTool}
-                  showHotkeys={showHotkeyLabels}
-                  onShowHotkeysChange={setShowHotkeyLabels}
-                  globalSettings={globalSettings}
-                  onGlobalSettingsChange={setGlobalSettings}
-                  onBlemishRemoverSelection={handleBlemishRemoverSelection}
-                  onToolChange={handleToolChange}
-                  imageUrl={activeWorkspace?.imageUrl}
-                  setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask}))}
-                  onImageSelect={handleImageSelect}
-                  getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined}
-                  onGenerationComplete={(newUrl) => handleImageSelect(newUrl)}
-                  clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined}
-                />
-      case 'clone':
-        return <CloneStampPanel 
-                  settings={cloneStampSettings}
-                  onSettingsChange={handleCloneStampSettingsChange} 
-                />
-      case 'banana':
-        return <NanoBananaPanel 
-                  instructionLayers={instructionLayers}
-                  onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
-                  onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
-                  onGenerate={() => {}}
-                  isGenerating={isGenerating}
-                />
-      case 'settings':
-        return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} settings={globalSettings} onSettingsChange={setGlobalSettings} />;
-      default:
-        return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
+  const handleGenerate = async (prompt?: string) => {
+    const finalPrompt = prompt || customPrompt;
+    const currentImageUrl = activeWorkspace?.imageUrl;
+
+    if (!currentImageUrl) {
+      toast({ variant: "destructive", title: "No image loaded." })
+      return
+    }
+
+    const maskDataUri = getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined;
+    if (!maskDataUri) {
+      toast({ variant: "destructive", title: "No selection made.", description: "Please use a selection tool to select an area to inpaint." })
+      return
+    }
+
+    if (!finalPrompt) {
+      toast({ variant: "destructive", title: "Prompt is empty.", description: "Please describe what you want to generate or select a one-click action." })
+      return
+    }
+
+    setIsGenerating(true)
+    toast({ title: "AI is generating...", description: "This may take a moment." })
+
+    try {
+      const result = await inpaintWithPrompt({
+        photoDataUri: currentImageUrl,
+        maskDataUri: maskDataUri,
+        prompt: finalPrompt,
+      })
+
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      if (result.generatedImageDataUri) {
+        handleImageSelect(result.generatedImageDataUri)
+        toast({ title: "Inpainting successful!", description: "The image has been updated."})
+        if (clearSelectionRef.current) {
+          clearSelectionRef.current();
+        }
+      } else {
+        throw new Error("The model did not return an image.")
+      }
+
+    } catch (error: any) {
+      handleApiError(error, toast, {
+        title: "Inpainting Failed",
+        description: "An unknown error occurred during inpainting.",
+      });
+    } finally {
+      setIsGenerating(false)
     }
   }
+
 
   if (!activeWorkspace) {
     return <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">No active workspace.</div>
@@ -1075,7 +1081,28 @@ function ProSegmentAIContent() {
             </SidebarTrigger>
           </SidebarHeader>
           <SidebarContent>
-              {renderLeftPanelContent()}
+              <ToolSettingsPanel
+                magicWandSettings={magicWandSettings}
+                onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                lassoSettings={lassoSettings}
+                onLassoSettingsChange={handleLassoSettingsChange}
+                cloneStampSettings={cloneStampSettings}
+                onCloneStampSettingsChange={handleCloneStampSettingsChange}
+                activeTool={activeTool}
+                showHotkeys={showHotkeyLabels}
+                onShowHotkeysChange={setShowHotkeyLabels}
+                globalSettings={globalSettings}
+                onGlobalSettingsChange={setGlobalSettings}
+                onBlemishRemoverSelection={handleBlemishRemoverSelection}
+                onToolChange={handleToolChange}
+                instructionLayers={instructionLayers}
+                onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
+                onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
+                onGenerate={handleGenerate}
+                isGenerating={isGenerating}
+                customPrompt={customPrompt}
+                setCustomPrompt={setCustomPrompt}
+              />
           </SidebarContent>
         </Sidebar>
       </div>
