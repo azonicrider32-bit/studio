@@ -647,7 +647,7 @@ function ProSegmentAIContent() {
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
       <div 
-        className="absolute left-0 top-0 h-full"
+        className="absolute left-0 top-12 h-[calc(100vh-3rem)]"
         style={{
           width: `calc(${sidebarWidthVar})`,
           transition: 'width 0.2s ease-in-out'
@@ -655,13 +655,8 @@ function ProSegmentAIContent() {
       >
         <Sidebar collapsible="icon">
           <SidebarHeader>
-            <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
-                    <Scissors className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                    <h2 className="font-bold text-foreground text-sm tracking-tight">ProSegment AI</h2>
-                </div>
+            <div className="flex-1">
+                {/* Placeholder for future header content */}
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -670,7 +665,7 @@ function ProSegmentAIContent() {
         </Sidebar>
       </div>
       <div 
-        className="absolute top-0 bottom-0"
+        className="absolute top-12 h-[calc(100vh-3rem)] z-30"
         style={{
           left: `calc(${sidebarWidthVar})`,
           transition: 'left 0.2s ease-in-out'
@@ -690,13 +685,15 @@ function ProSegmentAIContent() {
       </div>
        <header className="absolute top-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
           style={{
-            left: '0px',
+            left: `0px`,
             right: '0px',
-            transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
           }}
         >
         <div className="flex items-center gap-4 flex-1">
-            <div style={{ width: `calc(${sidebarWidthVar} + 4rem)`}} className="transition-all" />
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
+                <Scissors className="w-5 h-5 text-white" />
+            </div>
+            <div style={{ width: `calc(${sidebarWidthVar} + 4rem - 3rem - 1rem)`}} className="transition-all" />
             <WorkspaceTabs 
                 workspaces={workspaces}
                 activeWorkspaceId={activeWorkspaceId}
@@ -822,8 +819,7 @@ function ProSegmentAIContent() {
        <main 
         className="absolute inset-y-0 right-0 pt-12" 
         style={{ 
-          left: `0px`,
-          transition: 'left 0.2s ease-in-out'
+          left: '0px',
         }}
       >
           <ImageCanvas 
@@ -845,7 +841,7 @@ function ProSegmentAIContent() {
             clearSelectionRef={clearSelectionRef}
             onLassoSettingChange={handleLassoSettingsChange}
             onMagicWandSettingsChange={handleMagicWandSettingsChange}
-            onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+            onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
             canvasMousePos={canvasMousePos}
             setCanvasMousePos={setCanvasMousePos}
             getCanvasRef={canvasRef}
@@ -1019,6 +1015,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
