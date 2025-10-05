@@ -20,9 +20,10 @@ export const BananaIcon = React.forwardRef<
     className={cn("lucide lucide-banana", className)}
     {...props}
   >
-    <path d="M4 13.5c3.5-2 8.5-2 12 0 3.5 2 8.5 2 12 0" fill="yellow" stroke="black"/>
-    <path d="M4 13.5c3.5-2 8.5-2 12 0" stroke="black" />
-    <path d="M8.5 12C6 11.5 4.5 10 4 8" stroke="black" />
+    <path d="M4 13.5c3.5-2 8.5-2 12 0" />
+    <path d="m18 13.5 4-4" />
+    <path d="m6 13.5-4-4" />
+    <path d="M8.5 12C6 11.5 4.5 10 4 8" />
   </svg>
 ));
 BananaIcon.displayName = "BananaIcon";

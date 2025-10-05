@@ -131,6 +131,69 @@ const createNewWorkspace = (id: string, name: string, imageUrl?: string): Worksp
   };
 };
 
+function ZoomControl({
+  zoomLevel,
+  setZoomLevel,
+  isActive,
+  onClick,
+  label,
+  hotkey
+}: {
+  zoomLevel: number;
+  setZoomLevel: (value: number) => void;
+  isActive: boolean;
+  onClick: () => void;
+  label: string;
+  hotkey: string;
+}) {
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  return (
+    <div className="flex items-center gap-2">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={isActive ? "default" : "ghost"}
+              size="icon"
+              className={cn("h-8 w-8 relative border", isActive && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
+              onClick={onClick}
+            >
+              <ZoomIn className="w-4 h-4"/>
+              {hotkey && <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">{hotkey}</span>}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent><p>Activate {label} ({hotkey})</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <div 
+          className="group relative flex items-center"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+      >
+          <Button
+            variant="ghost"
+            className="text-sm font-medium px-2 py-1 text-center h-8"
+            onWheel={(e) => setZoomLevel(Math.max(0.1, Math.min(10, zoomLevel + (e.deltaY > 0 ? -0.1 : 0.1))))}
+          >
+              {(zoomLevel * 100).toFixed(0)}%
+          </Button>
+          <div className={cn(
+              "absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 p-2 bg-background/80 backdrop-blur-sm rounded-md border shadow-lg transition-all duration-200",
+              isHovered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
+          )}>
+              <Slider
+                  value={[zoomLevel]}
+                  onValueChange={(v) => setZoomLevel(v[0])}
+                  min={0.1} max={10} step={0.1}
+                  orientation="vertical"
+                  className="h-24"
+              />
+          </div>
+      </div>
+    </div>
+  )
+}
 
 function ProSegmentAIContent() {
   const [activeTool, setActiveTool] = React.useState<Tool>("banana")
@@ -728,19 +791,6 @@ function ProSegmentAIContent() {
 
   const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   
-  const handleHoverZoom = (zoomKey: 'A' | 'B' | null) => {
-    if (hoverTimeoutRef.current.A) clearTimeout(hoverTimeoutRef.current.A);
-    if (hoverTimeoutRef.current.B) clearTimeout(hoverTimeoutRef.current.B);
-
-    if (zoomKey === null) {
-      hoverTimeoutRef.current[activeZoom] = setTimeout(() => {
-        setHoveredZoom(null);
-      }, 300);
-    } else {
-       setHoveredZoom(zoomKey);
-    }
-  }
-  
   const allShelfIcons: {id: RightPanel, icon: React.ElementType, label: string }[] = [
     { id: 'assets', icon: ImageIcon, label: 'Asset Library (O)' },
     { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)' },
@@ -783,83 +833,24 @@ function ProSegmentAIContent() {
                 <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><ArrowBigRightDash /></Button></TooltipTrigger>
                 <TooltipContent><p>Fit to Width</p></TooltipContent>
               </Tooltip>
-              <div className="flex items-center gap-2">
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Button
-                              variant={activeZoom === 'A' ? "default" : "ghost"}
-                              size="icon"
-                              className={cn("h-8 w-8 relative border", activeZoom === 'A' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                              onClick={() => setActiveZoom('A')}
-                          >
-                              <ZoomIn className="w-4 h-4"/>
-                              {showHotkeyLabels && <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">1</span>}
-                          </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Activate Zoom A (1)</TooltipContent>
-                  </Tooltip>
-                  <div 
-                      className="group flex items-center"
-                      onMouseEnter={() => handleHoverZoom('A')}
-                      onMouseLeave={() => handleHoverZoom(null)}
-                  >
-                      <span 
-                          className="text-sm font-medium px-2 py-1 text-center bg-background"
-                          onWheel={(e) => setZoomA(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                      >
-                          {(zoomA * 100).toFixed(0)}%
-                      </span>
-                      <div className={cn(
-                          "overflow-hidden transition-all duration-300 ease-in-out",
-                          hoveredZoom === 'A' ? "w-20 opacity-100" : "w-0 opacity-0"
-                      )}>
-                          <Slider 
-                              value={[zoomA]}
-                              onValueChange={(v) => setZoomA(v[0])}
-                              min={0.1} max={10} step={0.1}
-                          />
-                      </div>
-                  </div>
-              </div>
-              <div className="flex items-center gap-2">
-                  <Tooltip>
-                      <TooltipTrigger asChild>
-                          <Button
-                              variant={activeZoom === 'B' ? "default" : "ghost"}
-                              size="icon"
-                              className={cn("h-8 w-8 relative border", activeZoom === 'B' && 'bg-gradient-to-br from-blue-600 to-blue-800 text-white')}
-                              onClick={() => setActiveZoom('B')}
-                          >
-                              <ZoomIn className="w-4 h-4"/>
-                              {showHotkeyLabels && <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">2</span>}
-                          </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Activate Zoom B (2)</TooltipContent>
-                  </Tooltip>
-                  <div 
-                      className="group flex items-center"
-                      onMouseEnter={() => handleHoverZoom('B')}
-                      onMouseLeave={() => handleHoverZoom(null)}
-                  >
-                      <span 
-                          className="text-sm font-medium px-2 py-1 text-center bg-background"
-                          onWheel={(e) => setZoomB(prev => Math.max(0.1, Math.min(10, prev + (e.deltaY > 0 ? -0.1 : 0.1))))}
-                      >
-                          {(zoomB * 100).toFixed(0)}%
-                      </span>
-                      <div className={cn(
-                          "overflow-hidden transition-all duration-300 ease-in-out",
-                          hoveredZoom === 'B' ? "w-20 opacity-100" : "w-0 opacity-0"
-                      )}>
-                          <Slider 
-                              value={[zoomB]}
-                              onValueChange={(v) => setZoomB(v[0])}
-                              min={0.1} max={10} step={0.1}
-                          />
-                      </div>
-                  </div>
-              </div>
             </TooltipProvider>
+
+            <ZoomControl 
+              zoomLevel={zoomA}
+              setZoomLevel={setZoomA}
+              isActive={activeZoom === 'A'}
+              onClick={() => setActiveZoom('A')}
+              label="Zoom A"
+              hotkey="1"
+            />
+            <ZoomControl 
+              zoomLevel={zoomB}
+              setZoomLevel={setZoomB}
+              isActive={activeZoom === 'B'}
+              onClick={() => setActiveZoom('B')}
+              label="Zoom B"
+              hotkey="2"
+            />
             <Button variant="ghost" size="icon" onClick={() => setIsSplitView(p => !p)}>
                 <Split className={cn("w-5 h-5", isSplitView && "text-primary")} />
             </Button>
@@ -930,8 +921,8 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingChange={handleMagicWandSettingsChange}
-              onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+              onMagicWandSettingsChange={handleMagicWandSettingsChange}
+              onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
