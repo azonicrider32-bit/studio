@@ -619,6 +619,19 @@ function ProSegmentAIContent() {
 
   const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   
+  const handleHoverZoom = (zoomKey: 'A' | 'B' | null) => {
+    if (hoverTimeoutRef.current.A) clearTimeout(hoverTimeoutRef.current.A);
+    if (hoverTimeoutRef.current.B) clearTimeout(hoverTimeoutRef.current.B);
+
+    if (zoomKey === null) {
+      hoverTimeoutRef.current[activeZoom] = setTimeout(() => {
+        setHoveredZoom(null);
+      }, 300);
+    } else {
+       setHoveredZoom(zoomKey);
+    }
+  }
+  
   const allShelfIcons: {id: RightPanel, icon: React.ElementType, label: string }[] = [
     { id: 'assets', icon: ImageIcon, label: 'Asset Library (O)' },
     { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)' },
@@ -634,15 +647,15 @@ function ProSegmentAIContent() {
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
       <div 
-        className="absolute top-0 h-full"
+        className="absolute top-12 h-[calc(100vh-3rem)]"
         style={{
-          left: '0px',
+          left: `0px`,
           width: `calc(${sidebarWidthVar} + 4rem)`,
           transition: 'width 0.2s ease-in-out'
         }}
       >
         <div 
-          className="absolute top-12 h-[calc(100vh-3rem)]"
+          className="absolute top-0 h-full"
           style={{
             left: `calc(${sidebarWidthVar})`,
             transition: 'left 0.2s ease-in-out',
@@ -663,10 +676,6 @@ function ProSegmentAIContent() {
         <div className="absolute left-0 top-0 h-full">
           <Sidebar collapsible="icon">
             <SidebarHeader>
-                <div className="flex items-center gap-2">
-                    <Settings2 className="w-5 h-5"/>
-                    <span className="font-semibold">Settings</span>
-                </div>
             </SidebarHeader>
             <SidebarContent>
                 {renderLeftPanelContent()}
@@ -807,7 +816,7 @@ function ProSegmentAIContent() {
        <main 
         className="absolute inset-y-0 right-0 pt-12" 
         style={{ 
-          left: `calc(${sidebarWidthVar} + 4rem)`,
+          left: '0px',
           transition: 'left 0.2s ease-in-out'
         }}
       >
@@ -859,12 +868,11 @@ function ProSegmentAIContent() {
         >
              {isRightPanelOpen && (
                 <div className="flex-1 flex flex-col min-h-0">
-                    {activePanels.length === 1 && (
+                    {activePanels.length === 1 ? (
                         <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
                             {renderPanelContent(activePanels[0])}
                         </div>
-                    )}
-                    {activePanels.length === 2 && (
+                    ) : activePanels.length === 2 ? (
                         <>
                             <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
                                 {renderPanelContent(activePanels[0])}
@@ -874,7 +882,7 @@ function ProSegmentAIContent() {
                                 {renderPanelContent(activePanels[1])}
                             </div>
                         </>
-                    )}
+                    ) : null}
                 </div>
             )}
         </div>
@@ -1005,6 +1013,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
