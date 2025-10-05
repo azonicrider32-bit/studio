@@ -43,6 +43,7 @@ import {
   VolumeX,
   Ear,
   Speech,
+  Magnet,
 } from "lucide-react"
 
 import {
@@ -65,7 +66,7 @@ import {
 import { GlobalSettingsPanel } from "./panels/global-settings-panel"
 import { ImageCanvas } from "./image-canvas"
 import { InpaintingPanel } from "./panels/inpainting-panel"
-import { LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings } from "@/lib/types"
+import { LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
 import { LayerStripPanel } from "./panels/layer-strip-panel"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
@@ -241,6 +242,12 @@ function ProSegmentAIContent() {
   // State for Nano Banana Tool
   const [instructionLayers, setInstructionLayers] = React.useState<InstructionLayer[]>([]);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  
+  const [globalSettings, setGlobalSettings] = React.useState<GlobalSettings>({
+    snapEnabled: true,
+    snapRadius: 10,
+  });
+
 
   const speak = React.useCallback(async (text: string) => {
     if (!isTtsEnabled) return;
@@ -316,6 +323,11 @@ function ProSegmentAIContent() {
     traceInfluenceEnabled: true,
     colorInfluenceEnabled: false,
     useColorAwareness: false,
+    freeDraw: {
+        dropInterval: 100,
+        minDistance: 5,
+        maxDistance: 20
+    }
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -761,6 +773,8 @@ function ProSegmentAIContent() {
                   activeTool={activeTool}
                   showHotkeys={showHotkeyLabels}
                   onShowHotkeysChange={setShowHotkeyLabels}
+                  globalSettings={globalSettings}
+                  onGlobalSettingsChange={setGlobalSettings}
                 />
       case 'clone':
         return <CloneStampPanel 
@@ -776,7 +790,7 @@ function ProSegmentAIContent() {
                   isGenerating={isGenerating}
                 />
       case 'settings':
-        return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} />;
+        return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} settings={globalSettings} onSettingsChange={setGlobalSettings} />;
       default:
         return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
     }
@@ -877,6 +891,14 @@ function ProSegmentAIContent() {
                 </DropdownMenuContent>
             </DropdownMenu>
             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant={globalSettings.snapEnabled ? "secondary" : "outline"} size="icon" className="h-8 w-8" onClick={() => setGlobalSettings(s => ({...s, snapEnabled: !s.snapEnabled}))}>
+                    <Magnet />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Toggle Snapping</p></TooltipContent>
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant={isSttEnabled ? "secondary" : "outline"} size="icon" className="h-8 w-8" onClick={() => setIsSttEnabled(p => !p)}>

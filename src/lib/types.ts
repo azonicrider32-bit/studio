@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export interface Layer {
@@ -44,6 +45,11 @@ export interface LassoSettings {
     traceInfluenceEnabled: boolean;
     colorInfluenceEnabled: boolean;
     useColorAwareness: boolean;
+    freeDraw: {
+        dropInterval: number; // ms
+        minDistance: number; // px
+        maxDistance: number; // px
+    };
 }
 
 export interface CloneStampSettings {
@@ -95,6 +101,11 @@ export interface MagicWandSettings {
         opacity: number;
     };
     debounceDelay: number;
+}
+
+export interface GlobalSettings {
+    snapEnabled: boolean;
+    snapRadius: number;
 }
 
 

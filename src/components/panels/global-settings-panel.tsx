@@ -10,7 +10,8 @@ import {
   FolderOpen,
   Download,
   Cpu,
-  Keyboard
+  Keyboard,
+  Magnet
 } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -23,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
 import { Slider } from "../ui/slider"
 import { useSidebar } from "../ui/sidebar"
+import { GlobalSettings } from "@/lib/types"
 
 const hotkeys = [
   { tool: 'Transform', key: 'V' },
@@ -42,6 +44,7 @@ const SETTING_TABS = [
     { id: "hotkeys", icon: Keyboard, label: "Hotkeys" },
     { id: "cursor", icon: Brush, label: "Cursor" },
     { id: "theme", icon: Palette, label: "Theme" },
+    { id: "snap", icon: Magnet, label: "Snapping" },
     { id: "performance", icon: Cpu, label: "Performance" },
     { id: "account", icon: User, label: "Account" },
     { id: "projects", icon: FolderOpen, label: "Projects" },
@@ -167,8 +170,45 @@ function CursorSettingsPanel() {
     )
 }
 
+function SnapSettingsPanel({ settings, onSettingsChange }: { settings: GlobalSettings, onSettingsChange: (s: Partial<GlobalSettings>) => void }) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                    <Magnet className="w-5 h-5"/>
+                    Snapping
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                        <Label>Enable Snapping</Label>
+                        <p className="text-xs text-muted-foreground">
+                           Globally enable or disable snapping to nodes and guides.
+                        </p>
+                    </div>
+                    <Switch
+                        checked={settings.snapEnabled}
+                        onCheckedChange={(checked) => onSettingsChange({ snapEnabled: checked })}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="snap-radius">Snap Radius: {settings.snapRadius}px</Label>
+                    <Slider 
+                        id="snap-radius"
+                        min={1} max={50} step={1}
+                        value={[settings.snapRadius]}
+                        onValueChange={(v) => onSettingsChange({ snapRadius: v[0]})}
+                        disabled={!settings.snapEnabled}
+                    />
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
 
-export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange }: { showHotkeys: boolean, onShowHotkeysChange: (value: boolean) => void }) {
+
+export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange, settings, onSettingsChange }: { showHotkeys: boolean, onShowHotkeysChange: (value: boolean) => void, settings: GlobalSettings, onSettingsChange: (s: Partial<GlobalSettings>) => void }) {
   const [activeTab, setActiveTab] = React.useState("hotkeys");
 
   return (
@@ -238,6 +278,9 @@ export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange }: { show
         )}
         {activeTab === 'theme' && (
           <UIAdjusterPanel />
+        )}
+        {activeTab === 'snap' && (
+            <SnapSettingsPanel settings={settings} onSettingsChange={onSettingsChange} />
         )}
         {activeTab === 'performance' && (
             <TelemetryPanel />
