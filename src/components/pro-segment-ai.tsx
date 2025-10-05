@@ -499,23 +499,29 @@ function ProSegmentAIContent() {
       setActivePanels([panelId]);
       return;
     }
-
+  
     setActivePanels(currentPanels => {
       const existingIndex = currentPanels.indexOf(panelId);
-
-      if (existingIndex === 0 && currentPanels.length === 1) {
-          return [];
-      }
-      if (existingIndex === 0 && currentPanels.length > 1) {
-          return currentPanels.slice(1);
-      }
       
-      if (existingIndex > 0) {
-        const newPanels = [panelId, ...currentPanels.filter(p => p !== panelId)];
+      // If clicked panel is already at the top, close it
+      if (existingIndex === 0) {
+        const newPanels = currentPanels.slice(1);
+        if (newPanels.length === 0) {
+          // If no panels left, also close the main container
+          setIsRightPanelOpen(false);
+        }
         return newPanels;
       }
       
+      // If clicked panel exists but not at top, move it to top
+      if (existingIndex > 0) {
+        return [panelId, ...currentPanels.filter(p => p !== panelId)];
+      }
+      
+      // If panel is not open, add it to the top
       const newPanels = [panelId, ...currentPanels];
+      
+      // Keep only the top 2
       return newPanels.slice(0, 2);
     });
   };
@@ -523,6 +529,9 @@ function ProSegmentAIContent() {
   React.useEffect(() => {
       if (activePanels.length === 0 && isRightPanelOpen) {
           setIsRightPanelOpen(false);
+      }
+       if (activePanels.length > 0 && !isRightPanelOpen) {
+          setIsRightPanelOpen(true);
       }
   }, [activePanels, isRightPanelOpen]);
 
@@ -654,19 +663,14 @@ function ProSegmentAIContent() {
 
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
-      <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm"
-        style={{
-          left: `calc(${sidebarWidthVar} + 4rem)`,
-          transition: 'left 0.2s ease-in-out'
-        }}
-      >
-          <div className="flex items-center gap-2">
+      <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center gap-4">
             <div 
               className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg"
             >
-                <Scissors className="w-5 h-5 text-white" />
+                <p className="font-bold text-lg text-white">Ps</p>
             </div>
-             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />
             </Button>
           </div>
@@ -796,8 +800,7 @@ function ProSegmentAIContent() {
         className="absolute inset-y-0 right-0 flex flex-col" 
         style={{ 
           top: '3rem',
-          left: `calc(${sidebarWidthVar} + 4rem)`,
-          transition: 'left 0.2s ease-in-out',
+          left: '0px',
         }}
       >
         <div className="flex-1 min-h-0">
@@ -840,13 +843,16 @@ function ProSegmentAIContent() {
           </div>
       </main>
        <div 
-        className="absolute left-0 top-12 h-[calc(100vh-3rem)]"
-        style={{
-          width: `calc(${sidebarWidthVar})`,
-          transition: 'width 0.2s ease-in-out'
-        }}
+        className="absolute left-0 top-12 h-[calc(100vh-3rem)] z-20"
       >
         <Sidebar collapsible="icon">
+          <SidebarHeader>
+            <SidebarTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <ChevronLeft />
+                </Button>
+            </SidebarTrigger>
+          </SidebarHeader>
           <SidebarContent>
               {renderLeftPanelContent()}
           </SidebarContent>
@@ -881,7 +887,7 @@ function ProSegmentAIContent() {
           style={{ width: isRightPanelOpen ? `${rightPanelWidth}px` : '0px'}}
         >
              {isRightPanelOpen && (
-                <div className="flex-1 flex flex-col min-h-0">
+                 <div className="flex-1 flex flex-col min-h-0">
                     {activePanels.length === 0 ? null :
                      activePanels.length === 1 ? (
                         <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
@@ -1023,6 +1029,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
