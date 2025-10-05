@@ -105,10 +105,11 @@ export function NanoBananaPanel({
   return (
     <div className="p-4 space-y-4 h-full flex flex-col">
       <Tabs defaultValue="instruct" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid grid-cols-4">
+        <TabsList className="grid grid-cols-5">
           <AITabTrigger value="instruct" icon={Sparkle}>Instruct</AITabTrigger>
           <AITabTrigger value="photography" icon={Camera}>Photo</AITabTrigger>
           <AITabTrigger value="sfx" icon={Wind}>SFX</AITabTrigger>
+          <AITabTrigger value="lighting" icon={Zap}>Lighting</AITabTrigger>
           <AITabTrigger value="inpaint" icon={ImageUp}>Inpaint</AITabTrigger>
         </TabsList>
 
@@ -231,6 +232,43 @@ export function NanoBananaPanel({
                     </Button>
                 ))}
              </div>
+        </TabsContent>
+        
+        <TabsContent value="lighting" className="mt-4 space-y-4">
+            <div className="space-y-2">
+                <Label>Quality Presets</Label>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm">Cinematic</Button>
+                    <Button variant="outline" size="sm">IMAX Quality</Button>
+                    <Button variant="outline" size="sm">Studio</Button>
+                    <Button variant="outline" size="sm">Natural</Button>
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>Environment</Label>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm">Outdoor</Button>
+                    <Button variant="outline" size="sm">Indoor</Button>
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>Time of Day</Label>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm">Dawn</Button>
+                    <Button variant="outline" size="sm">Noon</Button>
+                    <Button variant="outline" size="sm">Dusk</Button>
+                    <Button variant="outline" size="sm">Night</Button>
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label>Sun Direction</Label>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm">Front Light</Button>
+                    <Button variant="outline" size="sm">Backlight</Button>
+                    <Button variant="outline" size="sm">Side Light</Button>
+                    <Button variant="outline" size="sm">Top Light</Button>
+                </div>
+            </div>
         </TabsContent>
 
          <TabsContent value="inpaint" className="mt-4 space-y-4">
