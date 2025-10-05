@@ -5,11 +5,14 @@ import * as React from "react"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Replace, Layers, Copy, RotateCcw, FlipHorizontal, FlipVertical, HelpCircle } from "lucide-react"
-import { CloneStampSettings } from "@/lib/types"
+import { Replace, Layers, Copy, RotateCcw, FlipHorizontal, FlipVertical, HelpCircle, Sigma, Droplets, Blend } from "lucide-react"
+import { CloneStampSettings, MagicWandSettings } from "@/lib/types"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { Switch } from "../ui/switch"
 
 interface CloneStampPanelProps {
   settings: CloneStampSettings;
@@ -23,6 +26,20 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
     if (!isNaN(newAngle)) {
         onSettingsChange({ angle: (newAngle % 360 + 360) % 360 });
     }
+  }
+  
+  const handleToggleTolerance = (key: keyof MagicWandSettings['tolerances']) => {
+    const newEnabledTolerances = new Set(settings.tolerances.enabled);
+    if (newEnabledTolerances.has(key)) {
+      newEnabledTolerances.delete(key);
+    } else {
+      newEnabledTolerances.add(key);
+    }
+    onSettingsChange({ tolerances: { ...settings.tolerances, enabled: newEnabledTolerances } });
+  };
+  
+  const handleToleranceValueChange = (key: keyof MagicWandSettings['tolerances'], value: number) => {
+     onSettingsChange({ tolerances: { ...settings.tolerances, values: { ...settings.tolerances.values, [key]: value } } });
   }
 
   return (
@@ -61,6 +78,18 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
             step={1}
             value={[settings.opacity]}
             onValueChange={(value) => onSettingsChange({ opacity: value[0] })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="softness">Edge Softness: {settings.softness}%</Label>
+          <Slider
+            id="softness"
+            min={0}
+            max={100}
+            step={1}
+            value={[settings.softness]}
+            onValueChange={(value) => onSettingsChange({ softness: value[0] })}
           />
         </div>
         
@@ -146,6 +175,66 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
           </div>
           <p className="text-xs text-muted-foreground">Choose whether to sample pixels from only the active layer or all visible layers combined.</p>
         </div>
+
+        <Separator />
+
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="blend-settings">
+            <AccordionTrigger className="text-base font-semibold">
+              <div className="flex items-center gap-2">
+                <Blend className="w-5 h-5"/> Targeting & Blending
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="blend-mode">Target Tones</Label>
+                <Select value={settings.blendMode} onValueChange={(v) => onSettingsChange({blendMode: v as any})}>
+                  <SelectTrigger id="blend-mode"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="lights">Lights Only</SelectItem>
+                    <SelectItem value="mids">Mid-tones Only</SelectItem>
+                    <SelectItem value="darks">Darks Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="advanced-blending" className="flex items-center gap-2">Advanced Blending</Label>
+                <Switch
+                  id="advanced-blending"
+                  checked={settings.useAdvancedBlending}
+                  onCheckedChange={(checked) => onSettingsChange({ useAdvancedBlending: checked })}
+                />
+              </div>
+
+              {settings.useAdvancedBlending && (
+                <div className="p-4 border rounded-lg space-y-4">
+                   <div className="space-y-2">
+                      <Label>Enabled Tolerances:</Label>
+                      <div className="flex flex-wrap gap-1">
+                        {['r','g','b','h','s','v','l','a','b_lab'].map(key => (
+                          <Button key={key} size="sm" variant={settings.tolerances.enabled.has(key as any) ? 'secondary' : 'outline'} onClick={() => handleToggleTolerance(key as any)} className="h-6 text-xs px-2">
+                            {key.toUpperCase()}
+                          </Button>
+                        ))}
+                      </div>
+                   </div>
+                   <Separator/>
+                   <div className="space-y-2">
+                      <Label htmlFor="falloff">Tolerance Falloff: {settings.falloff}%</Label>
+                      <Slider
+                        id="falloff"
+                        min={0} max={100} step={1}
+                        value={[settings.falloff]}
+                        onValueChange={(v) => onSettingsChange({ falloff: v[0]})}
+                      />
+                   </div>
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
         
       <Separator />

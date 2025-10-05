@@ -19,6 +19,8 @@ import {
   Eraser,
   Move,
   Hand,
+  Info,
+  X,
 } from "lucide-react"
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"

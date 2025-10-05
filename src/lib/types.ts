@@ -50,11 +50,19 @@ export interface LassoSettings {
 export interface CloneStampSettings {
     brushSize: number;
     opacity: number;
+    softness: number;
     rotationStep: number;
     sourceLayer: 'current' | 'all';
     angle: number;
     flipX: boolean;
     flipY: boolean;
+    blendMode: 'normal' | 'lights' | 'mids' | 'darks';
+    useAdvancedBlending: boolean;
+    tolerances: {
+        values: MagicWandSettings['tolerances'];
+        enabled: Set<keyof MagicWandSettings['tolerances']>;
+    };
+    falloff: number; // 0-100%
 }
 
 export interface MagicWandSettings {
