@@ -13,6 +13,7 @@ import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } fro
 import { LassoSettings, MagicWandSettings, Segment, Layer, CloneStampSettings } from "@/lib/types";
 import { handleApiError } from "@/lib/error-handling";
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils";
+import { debounce } from "@/lib/utils";
 
 
 interface ImageCanvasProps {
@@ -207,18 +208,8 @@ export function ImageCanvas({
   const [isCloning, setIsCloning] = React.useState(false);
   const lastStampPosRef = React.useRef<{ x: number, y: number } | null>(null);
 
-
-  // Refs for throttling
-  const lastPreviewTimeRef = React.useRef(0);
-  const wandPreviewTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-  const lastMousePosRef = React.useRef<{x: number, y: number} | null>(null);
-  
   // Animated Cursor state
   const [cursorStyle, setCursorStyle] = React.useState('default');
-  const cursorColorsRef = React.useRef<number[]>([128, 128, 128, 128]);
-  const targetCursorColorsRef = React.useRef<number[]>([128, 128, 128, 128]);
-  const animationFrameRef = React.useRef<number>();
-  const lastCursorUpdateTimeRef = React.useRef(0);
 
 
   const { toast } = useToast();
@@ -864,119 +855,10 @@ const drawLayers = React.useCallback(() => {
       drawOverlay(segment as Segment | null);
   }, [drawOverlay, magicWandSettings.useAiAssist]);
 
-  const throttledWandPreview = (x: number, y: number) => {
-    const now = Date.now();
-    const lastExecution = lastPreviewTimeRef.current;
-    const throttleDelay = 200;
-
-    if (now - lastExecution > throttleDelay) {
-      if (!lastMousePosRef.current || lastMousePosRef.current.x !== x || lastMousePosRef.current.y !== y) {
-        triggerWandPreview(x, y);
-        lastPreviewTimeRef.current = now;
-        lastMousePosRef.current = { x, y };
-      }
-    } else {
-      if (wandPreviewTimeoutRef.current) {
-        clearTimeout(wandPreviewTimeoutRef.current);
-      }
-      wandPreviewTimeoutRef.current = setTimeout(() => {
-        if (!lastMousePosRef.current || lastMousePosRef.current.x !== x || lastMousePosRef.current.y !== y) {
-            triggerWandPreview(x, y);
-            lastPreviewTimeRef.current = Date.now();
-            lastMousePosRef.current = { x, y };
-        }
-      }, throttleDelay - (now - lastExecution));
-    }
-  };
-
-  const _generateCursorSVG = (colors: number[]) => {
-    const cursorSize = 32;
-    const half = cursorSize / 2;
-    const circleRadius = 10;
-    const rotation = -45 * (Math.PI / 180); // Rotate circle
-    const dotRotation = 0 * (Math.PI / 180); // Diagonal dots
-
-    const quadrantColors = colors.map(v => `rgb(${v}, ${v}, ${v})`);
-
-    const svg = `
-      <svg width="${cursorSize}" height="${cursorSize}" viewBox="0 0 ${cursorSize} ${cursorSize}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
-          </filter>
-        </defs>
-        <g opacity="0.5" transform="rotate(${rotation * 180 / Math.PI} ${half} ${half})">
-          <path d="M ${half} ${half-circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half+circleRadius} ${half}" fill="none" stroke="${quadrantColors[0]}" stroke-width="2"/>
-          <path d="M ${half+circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half+circleRadius}" fill="none" stroke="${quadrantColors[1]}" stroke-width="2"/>
-          <path d="M ${half} ${half+circleRadius} A ${circleRadius} ${circleRadius} 0 0 1 ${half-circleRadius} ${half}" fill="none" stroke="${quadrantColors[2]}" stroke-width="2"/>
-          <path d="M ${half-circleRadius} ${half} A ${circleRadius} ${circleRadius} 0 0 1 ${half} ${half-circleRadius}" fill="none" stroke="${quadrantColors[3]}" stroke-width="2"/>
-        </g>
-        <g opacity="0.5" filter="url(#blur)">
-            <circle cx="${half + circleRadius * Math.cos(dotRotation - Math.PI / 2)}" cy="${half + circleRadius * Math.sin(dotRotation - Math.PI / 2)}" r="1.5" fill="${quadrantColors[0]}" />
-            <circle cx="${half + circleRadius * Math.cos(dotRotation)}" cy="${half + circleRadius * Math.sin(dotRotation)}" r="1.5" fill="${quadrantColors[1]}" />
-            <circle cx="${half + circleRadius * Math.cos(dotRotation + Math.PI / 2)}" cy="${half + circleRadius * Math.sin(dotRotation + Math.PI / 2)}" r="1.5" fill="${quadrantColors[2]}" />
-            <circle cx="${half + circleRadius * Math.cos(dotRotation + Math.PI)}" cy="${half + circleRadius * Math.sin(dotRotation + Math.PI)}" r="1.5" fill="${quadrantColors[3]}" />
-        </g>
-      </svg>
-    `;
-    return `url("data:image/svg+xml;base64,${btoa(svg)}") ${half} ${half}, crosshair`;
-  }
-  
-  const _updateCursorStyle = (pos: {x: number, y: number}) => {
-    const mainCanvas = canvasRef.current;
-    const mainCtx = mainCanvas?.getContext('2d', { willReadFrequently: true });
-    if (!mainCtx) return;
-
-    const circleRadius = 10;
-    const dotRotation = 0 * (Math.PI / 180);
-
-    const samplePoints = [
-        { x: pos.x + circleRadius * Math.cos(dotRotation - Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation - Math.PI / 2) },
-        { x: pos.x + circleRadius * Math.cos(dotRotation), y: pos.y + circleRadius * Math.sin(dotRotation) },
-        { x: pos.x + circleRadius * Math.cos(dotRotation + Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation + Math.PI / 2) },
-        { x: pos.x + circleRadius * Math.cos(dotRotation + Math.PI), y: pos.y + circleRadius * Math.sin(dotRotation + Math.PI) },
-    ];
-    
-    targetCursorColorsRef.current = samplePoints.map(p => {
-        try {
-            const pixel = mainCtx.getImageData(Math.round(p.x), Math.round(p.y), 1, 1).data;
-            const luminance = (0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]);
-            return 255 - luminance;
-        } catch (e) {
-            return 128;
-        }
-    });
-
-    // Start animation loop if not already running
-    if (!animationFrameRef.current) {
-        animateCursor();
-    }
-  }
-
-  const animateCursor = () => {
-    const currentColors = cursorColorsRef.current;
-    const targetColors = targetCursorColorsRef.current;
-    const lerpFactor = 0.1; // Animation speed
-
-    let needsUpdate = false;
-    const newColors = currentColors.map((c, i) => {
-        const diff = targetColors[i] - c;
-        if (Math.abs(diff) < 0.5) {
-            return targetColors[i];
-        }
-        needsUpdate = true;
-        return c + diff * lerpFactor;
-    });
-
-    cursorColorsRef.current = newColors;
-    setCursorStyle(_generateCursorSVG(newColors));
-
-    if (needsUpdate) {
-        animationFrameRef.current = requestAnimationFrame(animateCursor);
-    } else {
-        animationFrameRef.current = undefined;
-    }
-  }
+  const debouncedWandPreview = React.useMemo(
+    () => debounce(triggerWandPreview, 100),
+    [triggerWandPreview]
+  );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
@@ -1002,12 +884,6 @@ const drawLayers = React.useCallback(() => {
     const pos = getMousePos(canvas, e);
     setCanvasMousePos(pos);
     
-    const now = Date.now();
-    if (now - lastCursorUpdateTimeRef.current > 50) { // Throttle updates
-      _updateCursorStyle(pos);
-      lastCursorUpdateTimeRef.current = now;
-    }
-    
     if (isCloning && activeTool === 'clone') {
         stampClone(pos.x, pos.y);
     }
@@ -1026,7 +902,7 @@ const drawLayers = React.useCallback(() => {
         drawOverlay();
       }
     } else if (activeTool === 'magic-wand') {
-        throttledWandPreview(pos.x, pos.y);
+        debouncedWandPreview(pos.x, pos.y);
     }
   };
   
@@ -1036,10 +912,6 @@ const drawLayers = React.useCallback(() => {
     setIsPanning(false);
     setIsCloning(false);
     lastStampPosRef.current = null;
-    if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = undefined;
-    }
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -1257,4 +1129,5 @@ const drawLayers = React.useCallback(() => {
     
 
     
+
 
