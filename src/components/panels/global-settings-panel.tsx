@@ -20,6 +20,7 @@ import { Button } from "../ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
+import { Slider } from "../ui/slider"
 
 const hotkeys = [
   { tool: 'Transform', key: 'V' },
@@ -82,12 +83,62 @@ function UIAdjusterPanel() {
   )
 }
 
+function CursorSettingsPanel() {
+    const [cursorSize, setCursorSize] = React.useState(32);
+    const [cursorOpacity, setCursorOpacity] = React.useState(50);
+    const [useAnimation, setUseAnimation] = React.useState(true);
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                    <Brush className="w-5 h-5"/>
+                    Custom Cursor Settings
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="space-y-2">
+                    <Label htmlFor="cursor-size">Cursor Size: {cursorSize}px</Label>
+                    <Slider 
+                        id="cursor-size"
+                        min={16} max={128} step={2}
+                        value={[cursorSize]}
+                        onValueChange={(v) => setCursorSize(v[0])}
+                    />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="cursor-opacity">Cursor Opacity: {cursorOpacity}%</Label>
+                    <Slider 
+                        id="cursor-opacity"
+                        min={10} max={100} step={5}
+                        value={[cursorOpacity]}
+                        onValueChange={(v) => setCursorOpacity(v[0])}
+                    />
+                </div>
+                 <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                        <Label>Enable Animation</Label>
+                        <p className="text-xs text-muted-foreground">
+                            Animate color transitions smoothly.
+                        </p>
+                    </div>
+                    <Switch
+                        checked={useAnimation}
+                        onCheckedChange={setUseAnimation}
+                    />
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
 
 export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange }: { showHotkeys: boolean, onShowHotkeysChange: (value: boolean) => void }) {
   const [activeTab, setActiveTab] = React.useState("hotkeys");
 
   const settingTabs = [
     { id: "hotkeys", icon: Keyboard, label: "Hotkeys" },
+    { id: "cursor", icon: Brush, label: "Cursor" },
     { id: "theme", icon: Palette, label: "Theme" },
     { id: "performance", icon: Cpu, label: "Performance" },
     { id: "account", icon: User, label: "Account" },
@@ -156,6 +207,9 @@ export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange }: { show
               </CardContent>
             </Card>
           </div>
+        )}
+        {activeTab === 'cursor' && (
+          <CursorSettingsPanel />
         )}
         {activeTab === 'theme' && (
           <UIAdjusterPanel />
