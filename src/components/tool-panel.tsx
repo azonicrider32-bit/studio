@@ -143,7 +143,7 @@ const ToolButtonWithProgressiveHover = ({
   const lastMousePosition = React.useRef({ x: 0, y: 0 });
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    lastMousePosition.current = { x: e.clientX, y: e.clientY };
+    lastMousePosition.current = { x: e.clientX, e: e.clientY };
   };
 
   const startHoverTimers = () => {
@@ -179,7 +179,9 @@ const ToolButtonWithProgressiveHover = ({
         Math.abs(lastMousePosition.current.y - previousPosition.y) < 2
       ) {
         // Mouse has stopped
-        startHoverTimers();
+        if (!tooltipOpen && !popoverOpen) {
+          startHoverTimers();
+        }
         if (hoverCheckTimer.current) clearTimeout(hoverCheckTimer.current);
       } else {
         // Mouse is still moving
