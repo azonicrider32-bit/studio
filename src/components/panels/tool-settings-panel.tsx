@@ -24,6 +24,7 @@ import {
   Replace,
   SlidersHorizontal,
   Move,
+  BrainCircuit,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -40,6 +41,7 @@ import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
 import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
 import { TransformPanel } from "./transform-panel"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
