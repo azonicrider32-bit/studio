@@ -217,7 +217,7 @@ export class SelectionEngine {
       this.lineNodes.push(this.linePreviewPos);
   }
 
-  endLine(activeLayerId: string | null): Layer | null {
+  endLine(activeLayerId: string | null, closed: boolean): Layer | null {
     if (!this.isDrawingLine || this.lineNodes.length < 2) {
       this.cancelLine();
       return null;
@@ -227,10 +227,20 @@ export class SelectionEngine {
     if (this.linePreviewPos) {
       pathPoints.push(this.linePreviewPos);
     }
-
-    const finalPath = this.generateSplinePath(pathPoints, false);
     
-    const bounds = this.getBoundsForPixels(new Set(), finalPath);
+    // Close the path if requested, by adding the first point to the end.
+    if(closed && pathPoints.length > 2) {
+      pathPoints.push(pathPoints[0]);
+    }
+
+    const finalPath = this.generateSplinePath(pathPoints, closed);
+    
+    let pixels = new Set<number>();
+    if (closed) {
+      pixels = this.pathToSelection(finalPath);
+    }
+
+    const bounds = this.getBoundsForPixels(pixels, finalPath);
 
     const newLayer: Layer = {
       id: `path-${Date.now()}`,
@@ -239,12 +249,13 @@ export class SelectionEngine {
       subType: 'path',
       visible: true,
       locked: false,
-      pixels: new Set(),
+      pixels: pixels,
       path: finalPath,
       bounds: bounds,
       stroke: 'hsl(var(--primary))',
       strokeWidth: 2,
-      closed: false,
+      closed: closed,
+      fill: closed ? 'hsla(var(--primary), 0.2)' : undefined,
     };
     
     this.cancelLine();
@@ -414,7 +425,7 @@ export class SelectionEngine {
         const numSegments = 16; // Number of line segments between each control point
 
         let p = [...points];
-        if (closed) {
+        if (closed && p.length > 2) {
             // Add wrapping points for a closed loop
             p.unshift(points[points.length - 1]);
             p.push(points[1]);
@@ -424,8 +435,8 @@ export class SelectionEngine {
             p.push(points[points.length - 1]);
         }
 
-        const startI = closed ? 1 : 1;
-        const endI = closed ? p.length - 2 : p.length - 2;
+        const startI = 1;
+        const endI = p.length - 2;
 
         for (let i = startI; i < endI; i++) {
             const p0 = p[i - 1];
@@ -450,7 +461,7 @@ export class SelectionEngine {
         }
         if (!closed) {
             path.push(points[points.length - 1]);
-        } else {
+        } else if (points.length > 0) {
             path.push(points[0]);
         }
         
@@ -884,7 +895,7 @@ export class SelectionEngine {
         const exclusionSeedColor = {
             rgb: { r: this.negativeMagicWandSettings.seedColor.r, g: this.negativeMagicWandSettings.seedColor.g, b: this.negativeMagicWandSettings.seedColor.b },
             hsv: { h: this.negativeMagicWandSettings.seedColor.h, s: this.negativeMagicWandSettings.seedColor.s, v: this.negativeMagicWandSettings.seedColor.v },
-            lab: { l: this.negativeMagicWandSettings.seedColor.l, a: this.negativeMagicWandSettings.seedColor.a, b: this.negativeMagicWandSettings.seedColor.b_lab },
+            lab: { l: this.negativeMagicWandSettings.seedColor.l, a: this.negativeMagicWandSettings.seedColor.a, b_lab: this.negativeMagicWandSettings.seedColor.b_lab },
         }
         const isExcluded = this.isInsideTolerance(exclusionSeedColor, neighborColor, this.negativeMagicWandSettings);
         return !isExcluded;
@@ -1281,7 +1292,7 @@ export class SelectionEngine {
         }
     }
 
-    const drawPath = (path: [number, number][], style: string, width: number, dash: number[] = []) => {
+    const drawPath = (path: [number, number][], style: string, width: number, dash: number[] = [], closed = false) => {
         if (path.length < 2) return;
         overlayCtx.strokeStyle = style;
         overlayCtx.lineWidth = width;
@@ -1292,6 +1303,9 @@ export class SelectionEngine {
         overlayCtx.moveTo(path[0][0], path[0][1]);
         for (let i = 1; i < path.length; i++) {
             overlayCtx.lineTo(path[i][0], path[i][1]);
+        }
+        if (closed) {
+          overlayCtx.closePath();
         }
         overlayCtx.stroke();
         overlayCtx.setLineDash([]);

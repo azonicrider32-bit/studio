@@ -376,7 +376,7 @@ const drawLayers = React.useCallback(() => {
           // Vertical guide
           overlayCtx.beginPath();
           overlayCtx.moveTo(canvasMousePos.x, 0);
-          overlayCtx.lineTo(canvasMousePos.x, canvasMousePos.y);
+          overlayCtx.lineTo(canvasMousePos.x, overlayCanvas.y);
           overlayCtx.stroke();
           
           overlayCtx.restore();
@@ -479,11 +479,11 @@ const drawLayers = React.useCallback(() => {
     }
   }, [drawOverlay, toast, addLayer, activeLayerId]);
 
-  const endLineAndProcess = React.useCallback(async () => {
+  const endLineAndProcess = React.useCallback(async (closed: boolean) => {
     const engine = selectionEngineRef.current;
     if (!engine || !engine.isDrawingLine) return;
 
-    const newLayer = engine.endLine(activeLayerId);
+    const newLayer = engine.endLine(activeLayerId, closed);
     if (newLayer) addLayer(newLayer);
     drawOverlay();
     toast({ title: 'Line path completed.' });
@@ -512,7 +512,7 @@ const drawLayers = React.useCallback(() => {
                 toast({ title: 'Lasso path completed.' });
             }
           } else if(engine.isDrawingLine) {
-            endLineAndProcess();
+            endLineAndProcess(false);
           }
       }
       
@@ -926,7 +926,7 @@ const drawLayers = React.useCallback(() => {
     }
   };
 
-  const handleDoubleClick = () => {
+  const handleDoubleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const engine = selectionEngineRef.current;
     if (!engine) return;
     
@@ -940,7 +940,16 @@ const drawLayers = React.useCallback(() => {
         toast({ title: 'Lasso path completed.' });
       }
     } else if (activeTool === 'line' && engine.isDrawingLine) {
-      endLineAndProcess();
+        const pos = getMousePos(e.currentTarget, e);
+        const firstNode = engine.lineNodes[0];
+        let isClosed = false;
+        if(firstNode) {
+            const dist = Math.hypot(pos.x - firstNode[0], pos.y - firstNode[1]);
+            if (dist < 10 / mainCanvasZoom) { // 10px snap radius
+                isClosed = true;
+            }
+        }
+        endLineAndProcess(isClosed);
     }
   };
 
