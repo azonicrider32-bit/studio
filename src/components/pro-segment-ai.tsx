@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -273,7 +272,8 @@ function ProSegmentAIContent() {
         colorMode: 'contrast',
         pattern: 'dashed',
         opacity: 1,
-    }
+    },
+    debounceDelay: 200,
   });
   const [negativeMagicWandSettings, setNegativeMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -301,6 +301,7 @@ function ProSegmentAIContent() {
         pattern: 'solid',
         opacity: 1,
     },
+    debounceDelay: 200,
   });
   const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
     antiAlias: { enabled: true, method: 'gaussian', quality: 'balanced' },
@@ -498,7 +499,7 @@ function ProSegmentAIContent() {
         if(e.key.toLowerCase() === 'p') {
             handleToolChange('line');
         }
-        if (e.key.toLowerCase() === 'c') {
+        if(e.key.toLowerCase() === 'c') {
             handleToolChange('clone');
         }
         if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -683,12 +684,16 @@ function ProSegmentAIContent() {
                   onMagicWandSettingsChange={handleMagicWandSettingsChange}
                   lassoSettings={lassoSettings}
                   onLassoSettingsChange={handleLassoSettingsChange}
+                  cloneStampSettings={cloneStampSettings}
+                  onCloneStampSettingsChange={handleCloneStampSettingsChange}
                   activeTool={activeTool}
+                  showHotkeys={showHotkeyLabels}
+                  onShowHotkeysChange={setShowHotkeyLabels}
                 />
       case 'clone':
         return <CloneStampPanel 
                   settings={cloneStampSettings}
-                  onSettingsChange={handleCloneStampSettingsChange}
+                  onSettingsChange={handleCloneStampSettingsChange} 
                 />
       case 'settings':
         return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} />;
@@ -908,7 +913,7 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingChange={handleMagicWandSettingsChange}
+              onMagicWandSettingsChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
@@ -1097,78 +1102,3 @@ export function ProSegmentAI() {
     
 
     
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-      
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

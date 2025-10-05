@@ -1,9 +1,8 @@
 
-
 "use client"
 
 import * as React from "react"
-import { Info, MinusCircle, Scan, Sigma, Droplets } from "lucide-react"
+import { Info, MinusCircle, Scan, Sigma, Droplets, RefreshCw } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
@@ -246,6 +245,23 @@ export function MagicWandPanel({
                       <Droplets className="w-4 h-4 mr-1"/> Dominant
                     </Button>
                   </div>
+                </div>
+              </ProgressiveHover>
+               <ProgressiveHover
+                initialContent="Refresh Rate"
+                summaryContent="Controls how often the preview updates while moving the mouse."
+                detailedContent="Lower values give a more responsive preview but may impact performance. Higher values are more performant."
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="debounce-delay">Preview Refresh Rate: {settings.debounceDelay}ms</Label>
+                  <Slider
+                    id="debounce-delay"
+                    min={10}
+                    max={1000}
+                    step={10}
+                    value={[settings.debounceDelay]}
+                    onValueChange={(v) => onSettingsChange({ debounceDelay: v[0] })}
+                  />
                 </div>
               </ProgressiveHover>
             </AccordionContent>

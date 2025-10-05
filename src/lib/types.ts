@@ -1,5 +1,4 @@
 
-
 import { z } from 'zod';
 
 export interface Layer {
@@ -95,6 +94,7 @@ export interface MagicWandSettings {
         pattern: 'solid' | 'dashed';
         opacity: number;
     };
+    debounceDelay: number;
 }
 
 

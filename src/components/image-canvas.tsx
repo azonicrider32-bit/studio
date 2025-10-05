@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Image from "next/image";
@@ -856,8 +855,8 @@ const drawLayers = React.useCallback(() => {
   }, [drawOverlay, magicWandSettings.useAiAssist]);
 
   const debouncedWandPreview = React.useMemo(
-    () => debounce(triggerWandPreview, 100),
-    [triggerWandPreview]
+    () => debounce(triggerWandPreview, magicWandSettings.debounceDelay),
+    [triggerWandPreview, magicWandSettings.debounceDelay]
   );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -1117,17 +1116,4 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
-
-
-
-
-
-
-
     
-
-    
-
-    
-
-
