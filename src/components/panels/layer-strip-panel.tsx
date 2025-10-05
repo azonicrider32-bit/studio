@@ -24,8 +24,6 @@ const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boo
         canvas.height = thumbnailSize;
         
         ctx.clearRect(0, 0, thumbnailSize, thumbnailSize);
-        ctx.fillStyle = '#666';
-        ctx.fillRect(0,0,thumbnailSize, thumbnailSize);
 
         if (layer.type === 'background' && imageUrl) {
              const img = new window.Image();
@@ -53,6 +51,7 @@ const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boo
             const tempCtx = tempCanvas.getContext('2d')
             if (tempCtx) {
                 tempCtx.putImageData(layer.imageData, 0, 0)
+                ctx.clearRect(0, 0, thumbnailSize, thumbnailSize);
                 ctx.drawImage(tempCanvas, xOffset, yOffset, drawWidth, drawHeight)
             }
         }
@@ -69,9 +68,9 @@ const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boo
     return (
         <div
             className={cn(
-                "w-12 h-12 rounded-md overflow-hidden border-2 transition-all cursor-pointer bg-transparent",
-                isActive ? "border-foreground" : "border-border",
-                isHovered && !isActive && "border-foreground/50"
+                "w-12 h-12 rounded-md overflow-hidden transition-all cursor-pointer bg-transparent",
+                isActive && "ring-2 ring-foreground/50",
+                isHovered && "opacity-80"
             )}
         >
             {content}
