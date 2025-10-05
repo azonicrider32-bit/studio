@@ -893,8 +893,8 @@ const drawLayers = React.useCallback(() => {
     const cursorSize = 32;
     const half = cursorSize / 2;
     const circleRadius = 10;
-    const rotation = -90 * (Math.PI / 180); // Rotate circle
-    const dotRotation = -45 * (Math.PI / 180); // Diagonal dots
+    const rotation = -45 * (Math.PI / 180); // Rotate circle
+    const dotRotation = 0 * (Math.PI / 180); // Diagonal dots
 
     const quadrantColors = colors.map(v => `rgb(${v}, ${v}, ${v})`);
 
@@ -928,7 +928,7 @@ const drawLayers = React.useCallback(() => {
     if (!mainCtx) return;
 
     const circleRadius = 10;
-    const dotRotation = -45 * (Math.PI / 180);
+    const dotRotation = 0 * (Math.PI / 180);
 
     const samplePoints = [
         { x: pos.x + circleRadius * Math.cos(dotRotation - Math.PI / 2), y: pos.y + circleRadius * Math.sin(dotRotation - Math.PI / 2) },
@@ -1257,3 +1257,4 @@ const drawLayers = React.useCallback(() => {
     
 
     
+
