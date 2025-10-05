@@ -135,25 +135,68 @@ const ToolButtonWithProgressiveHover = ({
 }) => {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [detailLevel, setDetailLevel] = React.useState(0); // 0: none, 1: summary, 2: detailed
+  const [tooltipOpen, setTooltipOpen] = React.useState(false);
+  
   const summaryTimer = React.useRef<NodeJS.Timeout>();
   const detailTimer = React.useRef<NodeJS.Timeout>();
+  const hoverCheckTimer = React.useRef<NodeJS.Timeout>();
+  const lastMousePosition = React.useRef({ x: 0, y: 0 });
 
-  const handleMouseEnter = () => {
+  const handleMouseMove = (e: React.MouseEvent) => {
+    lastMousePosition.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const startHoverTimers = () => {
+    // Clear any existing timers
+    clearTimeout(summaryTimer.current);
+    clearTimeout(detailTimer.current);
+    setPopoverOpen(false);
+    setDetailLevel(0);
+    setTooltipOpen(true); // Show initial tooltip immediately on hover start
+
+    // Progressive disclosure timers
     summaryTimer.current = setTimeout(() => {
+      setTooltipOpen(false); // Hide simple tooltip
       setPopoverOpen(true);
       setDetailLevel(1);
     }, 1500); // 1.5 seconds for summary
 
-    detailTimer.current = setTimeout(() => {
-      setPopoverOpen(true);
-      setDetailLevel(2);
-    }, 4000); // 4 seconds for detailed view
+    if (tool.details) {
+      detailTimer.current = setTimeout(() => {
+        setPopoverOpen(true);
+        setDetailLevel(2);
+      }, 4000); // 4 seconds for detailed view
+    }
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    lastMousePosition.current = { x: e.clientX, y: e.clientY };
+    let previousPosition = { ...lastMousePosition.current };
+
+    const checkHoverStop = () => {
+      if (
+        Math.abs(lastMousePosition.current.x - previousPosition.x) < 2 &&
+        Math.abs(lastMousePosition.current.y - previousPosition.y) < 2
+      ) {
+        // Mouse has stopped
+        startHoverTimers();
+        if (hoverCheckTimer.current) clearTimeout(hoverCheckTimer.current);
+      } else {
+        // Mouse is still moving
+        previousPosition = { ...lastMousePosition.current };
+        hoverCheckTimer.current = setTimeout(checkHoverStop, 100);
+      }
+    };
+    
+    hoverCheckTimer.current = setTimeout(checkHoverStop, 100);
   };
 
   const handleMouseLeave = () => {
     clearTimeout(summaryTimer.current);
     clearTimeout(detailTimer.current);
+    clearTimeout(hoverCheckTimer.current);
     setPopoverOpen(false);
+    setTooltipOpen(false);
     setDetailLevel(0);
   };
   
@@ -165,33 +208,39 @@ const ToolButtonWithProgressiveHover = ({
   );
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-          <PopoverTrigger asChild onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <Button
-              variant={"ghost"}
-              size="icon"
-              onClick={onClick}
-              disabled={tool.disabled}
-              className="h-12 w-12 relative ps-tool-icon-container bg-transparent hover:bg-white/10"
-              data-state={isActive ? "on" : "off"}
+    <TooltipProvider>
+      <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
+        <TooltipTrigger asChild>
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild 
+              onMouseEnter={handleMouseEnter} 
+              onMouseLeave={handleMouseLeave}
+              onMouseMove={handleMouseMove}
             >
-              <div className="ps-tool-icon">
-                <tool.icon className="h-6 w-6 ps-tool-icon__icon" />
-              </div>
-              {showHotkey && <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">{tool.shortcut}</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="right" align="start" className="w-80">
-            {content}
-          </PopoverContent>
-        </Popover>
-      </TooltipTrigger>
-      <TooltipContent side="right">
-        <p>{tool.tooltip} ({tool.shortcut})</p>
-      </TooltipContent>
-    </Tooltip>
+              <Button
+                variant={"ghost"}
+                size="icon"
+                onClick={onClick}
+                disabled={tool.disabled}
+                className="h-12 w-12 relative ps-tool-icon-container bg-transparent hover:bg-white/10"
+                data-state={isActive ? "on" : "off"}
+              >
+                <div className="ps-tool-icon">
+                  <tool.icon className="h-6 w-6 ps-tool-icon__icon" />
+                </div>
+                {showHotkey && <span className="absolute bottom-1 right-1.5 text-xs font-bold opacity-60">{tool.shortcut}</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="right" align="start" className="w-80">
+              {content}
+            </PopoverContent>
+          </Popover>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <p>{tool.tooltip} ({tool.shortcut})</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
