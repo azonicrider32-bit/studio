@@ -63,6 +63,7 @@ import { ImageCanvas } from "./image-canvas"
 import { InpaintingPanel } from "./panels/inpainting-panel"
 import { LassoSettings, Layer, MagicWandSettings, FeatherSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
+import { LayerStripPanel } from "./panels/layer-strip-panel"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { SegmentHoverPreview } from "./segment-hover-preview"
@@ -150,6 +151,8 @@ function ProSegmentAIContent() {
 
   const activeWorkspace = workspaces.find(ws => ws.id === activeWorkspaceId);
   const activeWorkspaceIndex = workspaces.findIndex(ws => ws.id === activeWorkspaceId);
+  
+  const [hoveredLayerId, setHoveredLayerId] = React.useState<string | null>(null);
   
   const { state: sidebarState } = useSidebar();
   const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(false);
@@ -504,25 +507,20 @@ function ProSegmentAIContent() {
     setActivePanels(currentPanels => {
       const existingIndex = currentPanels.indexOf(panelId);
       
-      // If clicked panel is already at the top, close it
       if (existingIndex === 0) {
         const newPanels = currentPanels.slice(1);
         if (newPanels.length === 0) {
-          // If no panels left, also close the main container
           setIsRightPanelOpen(false);
         }
         return newPanels;
       }
       
-      // If clicked panel exists but not at top, move it to top
       if (existingIndex > 0) {
         return [panelId, ...currentPanels.filter(p => p !== panelId)];
       }
       
-      // If panel is not open, add it to the top
       const newPanels = [panelId, ...currentPanels];
       
-      // Keep only the top 2
       return newPanels.slice(0, 2);
     });
   };
@@ -668,9 +666,7 @@ function ProSegmentAIContent() {
     <div className="h-screen w-screen bg-background overflow-hidden relative">
       <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <div 
-              className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg"
-            >
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
                 <p className="font-bold text-lg text-white">Ps</p>
             </div>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
@@ -825,8 +821,8 @@ function ProSegmentAIContent() {
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingsChange={handleMagicWandSettingsChange}
-              onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+              onMagicWandSettingChange={handleMagicWandSettingsChange}
+              onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
               getCanvasRef={canvasRef}
@@ -881,6 +877,22 @@ function ProSegmentAIContent() {
         />
       </div>
       
+      <div 
+        className="absolute top-12 h-[calc(100vh-3rem)] z-20 transition-all"
+        style={{
+            right: isRightPanelOpen ? `${rightPanelWidth + 56}px` : '56px',
+        }}
+      >
+          {activeWorkspace && 
+            <LayerStripPanel 
+                layers={activeWorkspace.layers}
+                activeLayerId={activeWorkspace.activeLayerId}
+                hoveredLayerId={hoveredLayerId}
+                onLayerSelect={(id) => setActiveWorkspaceState(ws => ({...ws, activeLayerId: id}))}
+                onHoverLayer={setHoveredLayerId}
+            />}
+      </div>
+
       <div className="fixed right-0 top-12 flex h-[calc(100vh-3rem)]">
         <div 
           className={cn(
@@ -1032,6 +1044,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
