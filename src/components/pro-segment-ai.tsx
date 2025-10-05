@@ -315,11 +315,19 @@ function ProSegmentAIContent() {
   const [cloneStampSettings, setCloneStampSettings] = React.useState<CloneStampSettings>({
     brushSize: 50,
     opacity: 100,
+    softness: 0,
     rotationStep: 5,
     sourceLayer: 'current',
     angle: 0,
     flipX: false,
     flipY: false,
+    blendMode: 'normal',
+    useAdvancedBlending: false,
+    tolerances: {
+      values: { r: 30, g: 30, b: 30, h: 15, s: 25, v: 25, l: 25, a: 15, b_lab: 15 },
+      enabled: new Set(),
+    },
+    falloff: 50,
   });
   const [canvasMousePos, setCanvasMousePos] = React.useState<{ x: number, y: number } | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
@@ -899,11 +907,12 @@ function ProSegmentAIContent() {
               magicWandSettings={magicWandSettings}
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
-              getSelectionMaskRef={getSelectionMaskRef}
-              clearSelectionRef={clearSelectionRef}
               onLassoSettingChange={handleLassoSettingsChange}
               onMagicWandSettingChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+              onCloneStampSettingsChange={handleCloneStampSettingsChange}
+              getSelectionMaskRef={getSelectionMaskRef}
+              clearSelectionRef={clearSelectionRef}
               canvasMousePos={canvasMousePos}
               setCanvasMousePos={setCanvasMousePos}
               getCanvasRef={canvasRef}
@@ -1127,6 +1136,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 

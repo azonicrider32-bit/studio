@@ -33,6 +33,7 @@ interface ImageCanvasProps {
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
   onMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
   onNegativeMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
+  onCloneStampSettingsChange: (settings: Partial<CloneStampSettings>) => void; // Added this prop
   canvasMousePos: { x: number; y: number } | null;
   setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
   getCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
@@ -166,6 +167,7 @@ export function ImageCanvas({
   onLassoSettingChange,
   onMagicWandSettingChange,
   onNegativeMagicWandSettingChange,
+  onCloneStampSettingsChange,
   canvasMousePos,
   setCanvasMousePos,
   getCanvasRef,
@@ -200,10 +202,10 @@ export function ImageCanvas({
 
   // Clone Stamp State
   const [cloneSource, setCloneSource] = React.useState<{x: number, y: number} | null>(null);
-  const [cloneAngle, setCloneAngle] = React.useState(0);
   const [ghostPreview, setGhostPreview] = React.useState<HTMLCanvasElement | null>(null);
   const [isSampling, setIsSampling] = React.useState(false);
   const [isCloning, setIsCloning] = React.useState(false);
+  const lastStampPosRef = React.useRef<{ x: number, y: number } | null>(null);
 
 
   // Refs for throttling wand preview
@@ -719,7 +721,7 @@ const drawLayers = React.useCallback(() => {
     const sourceCanvas = layersCanvasRef.current;
     if (!sourceCanvas || !cloneSource) return;
 
-    const { brushSize, angle, sourceLayer } = cloneStampSettings;
+    const { brushSize, angle, sourceLayer, flipX, flipY } = cloneStampSettings;
     const sourceCtx = sourceCanvas.getContext('2d');
     if (!sourceCtx) return;
 
@@ -731,10 +733,10 @@ const drawLayers = React.useCallback(() => {
 
     tempCtx.save();
     tempCtx.translate(brushSize / 2, brushSize / 2);
+    tempCtx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
     tempCtx.rotate(angle * Math.PI / 180);
     tempCtx.translate(-brushSize / 2, -brushSize / 2);
     
-    // This is a simplified approach; a real implementation might need to composite layers for 'all' mode
     tempCtx.drawImage(
       sourceCanvas,
       cloneSource.x - brushSize / 2,
@@ -750,21 +752,26 @@ const drawLayers = React.useCallback(() => {
     tempCtx.restore();
     setGhostPreview(tempCanvas);
     
-  }, [cloneSource, cloneAngle, cloneStampSettings]);
+  }, [cloneSource, cloneStampSettings]);
 
   React.useEffect(() => {
     if (activeTool === 'clone' && cloneSource) {
       updateGhostPreview();
     }
-  }, [cloneAngle, cloneSource, cloneStampSettings.brushSize, activeTool, updateGhostPreview]);
+  }, [cloneSource, cloneStampSettings, activeTool, updateGhostPreview]);
   
   const stampClone = (x: number, y: number) => {
     const targetCanvas = layersCanvasRef.current;
-    if (!targetCanvas || !ghostPreview) return;
-    
+    if (!targetCanvas || !ghostPreview || !cloneSource) return;
+
     const targetCtx = targetCanvas.getContext('2d');
     if (!targetCtx) return;
 
+    const dx = x - (lastStampPosRef.current?.x || x);
+    const dy = y - (lastStampPosRef.current?.y || y);
+
+    setCloneSource(prev => prev ? { x: prev.x + dx, y: prev.y + dy } : null);
+    
     targetCtx.save();
     targetCtx.globalAlpha = cloneStampSettings.opacity / 100;
     targetCtx.drawImage(
@@ -775,6 +782,8 @@ const drawLayers = React.useCallback(() => {
         cloneStampSettings.brushSize
     );
     targetCtx.restore();
+
+    lastStampPosRef.current = { x, y };
   }
 
 
@@ -787,7 +796,7 @@ const drawLayers = React.useCallback(() => {
     
     if (activeTool === 'clone' && isSampling) {
         setCloneSource(pos);
-        setCloneAngle(0);
+        lastStampPosRef.current = null;
         toast({ title: "Clone source set!" });
         return;
     }
@@ -964,6 +973,7 @@ const drawLayers = React.useCallback(() => {
     drawOverlay(null);
     setIsPanning(false);
     setIsCloning(false);
+    lastStampPosRef.current = null;
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -975,6 +985,7 @@ const drawLayers = React.useCallback(() => {
     }
     if (activeTool === 'clone') {
       setIsCloning(false);
+      lastStampPosRef.current = null;
     }
   };
 
@@ -1001,14 +1012,23 @@ const drawLayers = React.useCallback(() => {
     if (isLassoPreviewHovered) {
         return;
     }
-    if (activeTool === 'clone' && cloneSource) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -cloneStampSettings.rotationStep : cloneStampSettings.rotationStep;
-      setCloneAngle(prev => (prev + delta + 360) % 360);
-      return;
-    }
+    
     e.preventDefault();
     const delta = e.deltaY > 0 ? -1 : 1;
+
+    if (activeTool === 'clone' && cloneSource) {
+      if(e.shiftKey) {
+          onCloneStampSettingsChange({ brushSize: Math.max(1, cloneStampSettings.brushSize + delta * 5) });
+      } else if (e.ctrlKey) {
+          onCloneStampSettingsChange({ softness: Math.max(0, Math.min(100, cloneStampSettings.softness + delta * 5)) });
+      } else if (e.altKey) {
+          onCloneStampSettingsChange({ opacity: Math.max(0, Math.min(100, cloneStampSettings.opacity + delta * 5)) });
+      } else {
+          onCloneStampSettingsChange({ angle: (cloneStampSettings.angle + delta * cloneStampSettings.rotationStep + 360) % 360 });
+      }
+      return;
+    }
+
     const engine = selectionEngineRef.current;
 
     if (activeTool === 'lasso' && engine && engine.isDrawingLasso) {
@@ -1159,6 +1179,7 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
+
 
 
 
