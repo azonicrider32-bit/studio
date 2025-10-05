@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "../ui/label";
 import { AITool } from "@/lib/types";
 import { Slider } from "../ui/slider";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 export interface InstructionLayer {
   id: string;
@@ -85,14 +86,30 @@ export function NanoBananaPanel({
   setCustomPrompt,
 }: NanoBananaPanelProps) {
 
+  const AITabTrigger = ({ value, children, icon: Icon }: { value: string, children: React.ReactNode, icon: React.ElementType }) => (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <TabsTrigger value={value} className="group flex-1 flex items-center justify-center gap-2 data-[state=active]:w-auto data-[state=inactive]:w-10 data-[state=inactive]:hover:w-auto transition-all duration-300">
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="hidden group-hover:inline group-data-[state=active]:inline whitespace-nowrap">{children}</span>
+          </TabsTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="block md:hidden">
+          <p>{children}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
   return (
     <div className="p-4 space-y-4 h-full flex flex-col">
       <Tabs defaultValue="instruct" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="instruct"><Sparkle className="w-4 h-4 mr-2"/>Instruct</TabsTrigger>
-          <TabsTrigger value="photography"><Camera className="w-4 h-4 mr-2"/>Photography</TabsTrigger>
-          <TabsTrigger value="sfx"><Wind className="w-4 h-4 mr-2"/>SFX</TabsTrigger>
-          <TabsTrigger value="inpaint"><ImageUp className="w-4 h-4 mr-2"/>Inpainting</TabsTrigger>
+        <TabsList className="grid grid-cols-4">
+          <AITabTrigger value="instruct" icon={Sparkle}>Instruct</AITabTrigger>
+          <AITabTrigger value="photography" icon={Camera}>Photo</AITabTrigger>
+          <AITabTrigger value="sfx" icon={Wind}>SFX</AITabTrigger>
+          <AITabTrigger value="inpaint" icon={ImageUp}>Inpaint</AITabTrigger>
         </TabsList>
 
         <TabsContent value="instruct" className="flex-1 flex flex-col min-h-0 -mx-4 mt-4">
@@ -242,5 +259,3 @@ export function NanoBananaPanel({
     </div>
   );
 }
-
-    
