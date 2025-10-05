@@ -824,6 +824,9 @@ const drawLayers = React.useCallback(() => {
 
     if (e.button === 0) {
       if (activeTool === 'lasso') {
+        if (lassoSettings.drawMode === 'free') {
+            setIsFreeDrawing(true);
+        }
         if (!engine.isDrawingLasso) {
           engine.startLasso(pos.x, pos.y);
           lassoMouseTraceRef.current = [[pos.x, pos.y]];
@@ -899,7 +902,7 @@ const drawLayers = React.useCallback(() => {
     
     if (!engine) return;
     
-    const isFreeDrawLasso = activeTool === 'lasso' && lassoSettings.drawMode === 'free';
+    const isFreeDrawLasso = activeTool === 'lasso' && lassoSettings.drawMode === 'free' && isFreeDrawing;
     const isFreeDrawLine = activeTool === 'line' && lassoSettings.drawMode === 'free' && isFreeDrawing;
 
 
@@ -945,6 +948,11 @@ const drawLayers = React.useCallback(() => {
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isFreeDrawing && activeTool === 'lasso') {
+      // Don't end lasso on mouse up in free draw mode
+      setIsFreeDrawing(false);
+      return;
+    }
     if (activeTool === 'transform') {
         onDragMouseUp(e);
     }
@@ -1163,5 +1171,6 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
+
 
 
