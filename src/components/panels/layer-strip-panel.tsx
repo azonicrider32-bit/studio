@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -8,6 +7,8 @@ import { cn } from "@/lib/utils"
 import { Layer } from "@/lib/types"
 import { ScrollArea } from "../ui/scroll-area"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import { Button } from "../ui/button";
+import { PlusIcon } from "lucide-react";
 
 const LayerThumbnail: React.FC<{ layer: Layer; isActive: boolean; isHovered: boolean, imageUrl?: string; }> = ({ layer, isActive, isHovered, imageUrl }) => {
     const canvasRef = React.useRef<HTMLCanvasElement>(null)
@@ -101,6 +102,7 @@ interface LayerStripPanelProps {
     hoveredLayerId: string | null;
     onLayerSelect: (id: string) => void;
     onHoverLayer: (id: string | null) => void;
+    onAddLayer: () => void;
     imageUrl?: string;
 }
 
@@ -110,17 +112,19 @@ export function LayerStripPanel({
     hoveredLayerId,
     onLayerSelect,
     onHoverLayer,
+    onAddLayer,
     imageUrl,
 }: LayerStripPanelProps) {
     
-    const visibleLayers = layers.filter(l => !l.parentId);
+    const backgroundLayer = layers.find(l => l.type === 'background');
+    const regularLayers = layers.filter(l => l.type !== 'background' && !l.parentId);
 
     return (
         <div className="h-full w-16 bg-background/80 backdrop-blur-sm border-l border-r p-2 flex flex-col gap-2">
             <ScrollArea className="flex-1">
                 <div className="space-y-2">
                     <TooltipProvider>
-                    {visibleLayers.map(layer => (
+                    {regularLayers.map(layer => (
                         <Tooltip key={layer.id}>
                             <TooltipTrigger asChild>
                                 <div
@@ -132,7 +136,6 @@ export function LayerStripPanel({
                                         layer={layer}
                                         isActive={layer.id === activeLayerId}
                                         isHovered={layer.id === hoveredLayerId}
-                                        imageUrl={imageUrl}
                                     />
                                 </div>
                             </TooltipTrigger>
@@ -141,6 +144,42 @@ export function LayerStripPanel({
                             </TooltipContent>
                         </Tooltip>
                     ))}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="w-12 h-12 text-muted-foreground"
+                                onClick={onAddLayer}
+                            >
+                                <PlusIcon className="h-6 w-6" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">
+                            <p>Add New Layer</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    {backgroundLayer && (
+                        <Tooltip key={backgroundLayer.id}>
+                            <TooltipTrigger asChild>
+                                <div
+                                    onClick={() => onLayerSelect(backgroundLayer.id)}
+                                    onMouseEnter={() => onHoverLayer(backgroundLayer.id)}
+                                    onMouseLeave={() => onHoverLayer(null)}
+                                >
+                                    <LayerThumbnail
+                                        layer={backgroundLayer}
+                                        isActive={backgroundLayer.id === activeLayerId}
+                                        isHovered={backgroundLayer.id === hoveredLayerId}
+                                        imageUrl={imageUrl}
+                                    />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                                <p>{backgroundLayer.name}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
                     </TooltipProvider>
                 </div>
             </ScrollArea>

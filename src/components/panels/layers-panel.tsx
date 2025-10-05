@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -23,6 +22,7 @@ interface LayersPanelProps {
     onToggleLock: (id: string) => void;
     onToggleMask: (id: string) => void;
     onDeleteLayer: (id: string) => void;
+    onAddLayer: () => void; // Added for new layer button
     draggedLayerId: string | null;
     setDraggedLayerId: (id: string | null) => void;
     dropTargetId: string | null;
@@ -85,6 +85,7 @@ export function LayersPanel({
     onToggleLock,
     onToggleMask,
     onDeleteLayer,
+    onAddLayer,
     draggedLayerId,
     setDraggedLayerId,
     dropTargetId,
@@ -227,11 +228,21 @@ export function LayersPanel({
         return acc;
     }, [] as { parent: Layer & {children: Layer[]}, children: Layer[] }[]);
 
+    const backgroundLayer = workspace.layers.find(l => l.type === 'background');
+    const regularLayers = workspace.layers.filter(l => l.type !== 'background' && !l.parentId);
 
     return (
         <CardContent className="p-2 space-y-1">
          <TooltipProvider>
-          {workspace.layers.slice().reverse().filter(l => !l.parentId).map((parent) => (
+            <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 mb-2"
+                onClick={onAddLayer}
+            >
+                <Plus className="h-4 w-4" /> Add New Layer
+            </Button>
+            {regularLayers.slice().reverse().map((parent) => (
             <React.Fragment key={parent.id}>
               {renderLayer(parent)}
               {(parent.modifiers && parent.modifiers.length > 0) && (
@@ -264,6 +275,7 @@ export function LayersPanel({
                 </div>
             </React.Fragment>
           ))}
+          {backgroundLayer && renderLayer(backgroundLayer)}
           </TooltipProvider>
         </CardContent>
     )
