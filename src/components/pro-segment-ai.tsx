@@ -91,7 +91,7 @@ import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
 import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
 import { handleApiError } from "@/lib/error-handling"
 import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
-import { InstructionLayer } from "./panels/nano-banana-panel"
+import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -387,16 +387,6 @@ function ProSegmentAIContent() {
     },
     debounceDelay: 200,
   });
-  const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
-    antiAlias: { enabled: true, method: 'gaussian', quality: 'balanced' },
-    smartFeather: {
-      enabled: true,
-      alphaMatting: { enabled: true, method: 'closed-form', quality: 0.85 },
-      backgroundAdaptation: { enabled: true, sampleRadius: 8, adaptationStrength: 0.6, colorThreshold: 20 },
-      gradientTransparency: { enabled: true, gradientRadius: 6, smoothness: 0.7, edgeAware: true },
-      colorAwareProcessing: { enabled: true, haloPreventionStrength: 0.9, colorContextRadius: 10 }
-    }
-  });
   const [cloneStampSettings, setCloneStampSettings] = React.useState<CloneStampSettings>({
     brushSize: 50,
     opacity: 100,
@@ -666,28 +656,37 @@ function ProSegmentAIContent() {
 
   const handleShelfClick = (panelId: RightPanel, clickType: 'single' | 'double') => {
     setActivePanels(currentPanels => {
-        const topPanel = currentPanels[0];
-        const bottomPanel = currentPanels[1];
-        let newPanels: RightPanel[] = [];
-
-        if (clickType === 'single') {
-            if (topPanel === panelId) { // Clicked top panel again, toggle it off
-                newPanels = bottomPanel ? [bottomPanel] : [];
-            } else { // New panel for top slot
-                newPanels = [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
-            }
-        } else { // Double Click
-            if (bottomPanel === panelId) { // Clicked bottom panel again, toggle it off
-                newPanels = topPanel ? [topPanel] : [];
-            } else { // New panel for bottom slot
-                newPanels = topPanel ? [topPanel, panelId] : [panelId];
-            }
+      let topPanel = currentPanels[0];
+      let bottomPanel = currentPanels[1];
+  
+      const isTop = topPanel === panelId;
+      const isBottom = bottomPanel === panelId;
+  
+      if (clickType === 'single') {
+        if (isTop) {
+          // Close top panel, bottom moves up if it exists
+          return bottomPanel ? [bottomPanel] : [];
+        } else if (isBottom) {
+          // Move bottom to top
+          return [bottomPanel, topPanel].filter(Boolean) as RightPanel[];
+        } else {
+          // Add to top, move existing top to bottom
+          return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
         }
-        
-        return newPanels;
+      } else { // Double click
+        if (isBottom) {
+          // Close bottom panel
+          return [topPanel].filter(Boolean) as RightPanel[];
+        } else if (isTop) {
+          // Move top to bottom
+          return [bottomPanel, topPanel].filter(Boolean) as RightPanel[];
+        } else {
+          // Add to bottom
+          return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
+        }
+      }
     });
-};
-
+  };
 
   React.useEffect(() => {
       if (activePanels.length === 0 && isRightPanelOpen) {
