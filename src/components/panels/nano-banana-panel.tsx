@@ -1,5 +1,5 @@
 
-"use client";
+      "use client";
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "../ui/card";
-import { Wand2, Mic, Trash2, Sparkles, Plus, Palette, BrainCircuit, ImageUp, Sparkle, Camera, Aperture, Wind, Flame, Zap, PanelTop, MessageSquare } from "lucide-react";
+import { Wand2, Mic, Trash2, Sparkles, Plus, Palette, BrainCircuit, ImageUp, Sparkle, Camera, Aperture, Wind, Flame, Zap, PanelTop, MessageSquare, Frame, Pipette } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "../ui/label";
 import { AITool } from "@/lib/types";
 import { Slider } from "../ui/slider";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 export interface InstructionLayer {
   id: string;
@@ -38,6 +39,7 @@ export function NanoBananaPanel({
   onInstructionChange,
   onLayerDelete,
   onGenerate,
+  onAiToolClick,
   isGenerating,
   customPrompt,
   setCustomPrompt,
@@ -47,8 +49,9 @@ export function NanoBananaPanel({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <TabsTrigger value={value} className="flex-1 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+          <TabsTrigger value={value} className="flex-1 flex-col h-14 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
             <Icon className="h-5 w-5" />
+            <span className="text-xs mt-1 group-hover:block hidden">{children}</span>
           </TabsTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom">
@@ -58,24 +61,56 @@ export function NanoBananaPanel({
     </TooltipProvider>
   );
 
+  const oneClickPrompts: AITool[] = [
+    { id: 'blemish-remover', label: 'Blemish Remover', prompt: 'Seamlessly remove this blemish, matching the surrounding skin texture and tone.', icon: Sparkles, color: '#ff80ed', lineStyle: 'solid' },
+    { id: 'add-object', label: 'Add Object', prompt: 'Add a small, realistic bird sitting here.', icon: Plus, color: '#ffc107', lineStyle: 'solid' },
+    { id: 'change-color', label: 'Change Color', prompt: 'Change the color of this object to a deep blue.', icon: Pipette, color: '#00bcd4', lineStyle: 'dashed' },
+    { id: 'remove-object', label: 'Remove Object', prompt: 'Completely remove the selected object and realistically fill in the background.', icon: Trash2, color: '#f44336', lineStyle: 'solid' },
+  ];
+
   return (
     <div className="p-2 space-y-4 h-full flex flex-col">
       <Tabs defaultValue="instruct" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid grid-cols-5">
+        <TabsList className="grid grid-cols-5 h-auto">
           <AITabTrigger value="instruct" icon={MessageSquare}>Instruct</AITabTrigger>
-          <AITabTrigger value="photography" icon={Camera}>Photo</AITabTrigger>
-          <AITabTrigger value="sfx" icon={Wind}>SFX</AITabTrigger>
+          <AITabTrigger value="generate" icon={Wand2}>Generate</AITabTrigger>
+          <AITabTrigger value="enhance" icon={Sparkles}>Enhance</AITabTrigger>
+          <AITabTrigger value="inpaint" icon={ImageUp}>Inpaint &amp; Extend</AITabTrigger>
           <AITabTrigger value="lighting" icon={Zap}>Lighting</AITabTrigger>
-          <AITabTrigger value="inpaint" icon={ImageUp}>Inpaint</AITabTrigger>
         </TabsList>
 
         <TabsContent value="instruct" className="flex-1 flex flex-col min-h-0 -mx-2 mt-4">
+           <div className="px-2 pb-2 space-y-2">
+                <Label>One-Click Tools</Label>
+                <div className="grid grid-cols-4 gap-2">
+                    {oneClickPrompts.map(tool => (
+                        <TooltipProvider key={tool.id}>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-12 w-full flex-col gap-1"
+                                        onClick={() => onAiToolClick(tool)}
+                                    >
+                                        <tool.icon className="h-5 w-5" style={{ color: tool.color }} />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{tool.label}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ))}
+                </div>
+            </div>
+            <Separator className="my-2" />
            <ScrollArea className="flex-1 px-2">
             <div className="space-y-3">
               {instructionLayers.length === 0 ? (
                 <div className="text-center text-muted-foreground text-sm py-8">
-                  <p>Start by selecting an AI tool and drawing on the canvas.</p>
-                  <p className="text-xs mt-2">The AI's instructions will appear here for you to edit and approve.</p>
+                  <p>Draw on the canvas to give the AI instructions.</p>
+                  <p className="text-xs mt-2">Your visual edits will appear here.</p>
                 </div>
               ) : (
                 instructionLayers.map((layer) => (
@@ -118,58 +153,54 @@ export function NanoBananaPanel({
            </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="photography" className="flex-1 flex flex-col min-h-0 mt-4 space-y-4">
-            <Tabs defaultValue="camera-settings" className="flex-1 flex flex-col min-h-0">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="camera-settings">Camera Settings</TabsTrigger>
-                    <TabsTrigger value="camera-env">Camera & Env.</TabsTrigger>
-                </TabsList>
-                <TabsContent value="camera-settings" className="mt-4 space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="aperture-slider" className="flex items-center gap-2"><Aperture className="w-4 h-4"/> Aperture (f-stop)</Label>
-                        <Slider id="aperture-slider" min={1.4} max={22} step={0.1} defaultValue={[5.6]} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="shutter-slider">Shutter Speed</Label>
-                        <Slider id="shutter-slider" min={0} max={10} step={1} defaultValue={[5]} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="iso-slider">ISO</Label>
-                        <Slider id="iso-slider" min={100} max={6400} step={100} defaultValue={[400]} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label>Focus Area</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                            <Button variant="outline" size="sm">Center</Button>
-                            <Button variant="outline" size="sm">Subject</Button>
-                            <Button variant="outline" size="sm">Background</Button>
-                        </div>
-                    </div>
-                </TabsContent>
-                 <TabsContent value="camera-env" className="mt-4 space-y-4">
-                    <div className="space-y-2">
-                        <Label>Camera Movement</Label>
-                         <div className="grid grid-cols-2 gap-2">
-                            <Button variant="outline" size="sm">Pan Left</Button>
-                            <Button variant="outline" size="sm">Pan Right</Button>
-                            <Button variant="outline" size="sm">Tilt Up</Button>
-                            <Button variant="outline" size="sm">Tilt Down</Button>
-                         </div>
-                    </div>
-                     <div className="space-y-2">
-                        <Label>Environment</Label>
-                         <div className="grid grid-cols-2 gap-2">
-                            <Button variant="outline" size="sm">Add Wind</Button>
-                            <Button variant="outline" size="sm">Add Fog</Button>
-                         </div>
-                    </div>
-                </TabsContent>
-            </Tabs>
-        </TabsContent>
-        <TabsContent value="sfx" className="mt-4 space-y-4">
+        <TabsContent value="generate" className="mt-4 space-y-4">
              <div className="text-center text-muted-foreground text-sm py-8">
-                SFX tools will be available here.
+                <p>Text-to-Image generation tools will be available here.</p>
              </div>
+        </TabsContent>
+        <TabsContent value="enhance" className="mt-4 space-y-4">
+             <div className="text-center text-muted-foreground text-sm py-8">
+                <p>AI upscaling and enhancement tools will be available here.</p>
+             </div>
+        </TabsContent>
+        
+        <TabsContent value="inpaint" className="mt-4 space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="inpainting-prompt">Inpainting Prompt</Label>
+                <p className="text-xs text-muted-foreground">Select an area on the canvas, then describe what you want to generate inside it.</p>
+                <Textarea
+                  id="inpainting-prompt"
+                  placeholder="A majestic eagle soaring through a cloudy sky..."
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  rows={5}
+                  disabled={isGenerating}
+                />
+            </div>
+            <Separator/>
+            <div className="space-y-3">
+              <Label>Outpainting / Extend Image</Label>
+              <p className="text-xs text-muted-foreground">
+                Expand the canvas by drawing a rectangle from the edge of the image. The AI will fill in the new area.
+              </p>
+              <Button variant="outline" className="w-full">
+                <Frame className="w-4 h-4 mr-2"/>
+                Start Extending
+              </Button>
+               <div className="space-y-2">
+                  <Label htmlFor="content-adherence">Content Adherence</Label>
+                  <Select defaultValue="medium">
+                    <SelectTrigger id="content-adherence">
+                      <SelectValue placeholder="Select adherence..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High (Stick to style)</SelectItem>
+                      <SelectItem value="medium">Medium (Balanced)</SelectItem>
+                      <SelectItem value="low">Low (Creative freedom)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+            </div>
         </TabsContent>
         
         <TabsContent value="lighting" className="mt-4 space-y-4">
@@ -209,20 +240,6 @@ export function NanoBananaPanel({
             </div>
         </TabsContent>
 
-         <TabsContent value="inpaint" className="mt-4 space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="inpainting-prompt">Custom Inpainting Prompt</Label>
-                <p className="text-xs text-muted-foreground">Select an area on the canvas, then describe what you want to generate inside it.</p>
-                <Textarea
-                  id="inpainting-prompt"
-                  placeholder="A majestic eagle soaring through a cloudy sky..."
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                  rows={5}
-                  disabled={isGenerating}
-                />
-            </div>
-        </TabsContent>
       </Tabs>
 
 
@@ -235,3 +252,4 @@ export function NanoBananaPanel({
     </div>
   );
 }
+    
