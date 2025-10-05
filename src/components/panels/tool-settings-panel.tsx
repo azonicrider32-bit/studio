@@ -189,7 +189,7 @@ export function ToolSettingsPanel({
     }
   }
 
-  if (view === 'info') {
+  if (view === 'info' && currentToolInfo) {
     return (
         <div className="p-4 space-y-4 h-full flex flex-col">
              <div className="flex items-center justify-between">
@@ -222,151 +222,146 @@ export function ToolSettingsPanel({
       case 'line':
         return <Lasso className="w-4 h-4" />;
       case 'clone': return <Replace className="w-4 h-4" />;
-      case 'banana': return <BrainCircuit className="w-4 h-4" />;
-      case 'blemish-remover': return <Sparkles className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
       default: return null;
     }
   };
 
   const renderLeftPanelContent = () => {
-    switch(activeTool) {
-      case 'magic-wand':
-      case 'blemish-remover':
-        return <div>Magic Wand / Blemish settings would go here</div>;
-      case 'lasso':
-      case 'line':
-          return (
-           <Tabs defaultValue="general" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="general">General</TabsTrigger>
-                  <TabsTrigger value="magic-snap" disabled={lassoSettings.drawMode !== 'magic'}>Magic Snap</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="general" className="m-0 space-y-6 px-2">
-                  <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                          <Label htmlFor="draw-mode">Draw Mode</Label>
-                          <Popover>
-                              <PopoverTrigger>
-                                  <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-                              </PopoverTrigger>
-                              <PopoverContent side="right" className="text-sm">
-                                  <h4 className="font-semibold mb-2">Switching Modes</h4>
-                                  <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
-                              </PopoverContent>
-                          </Popover>
-                      </div>
-                      <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
-                          <SelectTrigger id="draw-mode">
-                              <div className="flex items-center gap-2">
-                                  {currentMode && <currentMode.icon className="h-4 h-4" />}
-                                  <SelectValue placeholder="Select mode..." />
-                              </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                              {DRAW_MODES.map(mode => (
-                                  <SelectItem key={mode.id} value={mode.id}>
-                                      <div className="flex items-center gap-2">
-                                          <mode.icon className="h-4 h-4" />
-                                          <span>{mode.label}</span>
-                                      </div>
-                                  </SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                  </div>
-                   <div className="space-y-2">
-                      <Label htmlFor="curve-tension" className="flex items-center gap-2">Curve Tension: {lassoSettings.curveTension.toFixed(2)}</Label>
-                      <Slider 
-                          id="curve-tension"
-                          min={0} max={1} step={0.05}
-                          value={[lassoSettings.curveTension]}
-                          onValueChange={(v) => onLassoSettingsChange({ curveTension: v[0]})}
-                          disabled={lassoSettings.drawMode === 'magic'}
-                      />
-                      <p className="text-xs text-muted-foreground">Smooths the line between nodes. 0 is straight, 1 is max curve. Only for Polygon & Free Draw.</p>
-                  </div>
-                  
-                  <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                          <Label htmlFor="useAiEnhancement" className="flex items-center gap-2"><Wand2 className="w-4 h-4 text-primary" />AI Enhancement</Label>
-                          <Switch
-                              id="useAiEnhancement"
-                              checked={lassoSettings.useAiEnhancement}
-                              onCheckedChange={(checked) => onLassoSettingsChange({ useAiEnhancement: checked })}
-                          />
-                      </div>
-                      <div className="flex items-center justify-between">
-                          <Label htmlFor="showMouseTrace" className="flex items-center gap-2"><Paintbrush className="w-4 h-4" />Show Mouse Trace</Label>
-                          <Switch
-                              id="showMouseTrace"
-                              checked={lassoSettings.showMouseTrace}
-                              onCheckedChange={(checked) => onLassoSettingsChange({ showMouseTrace: checked })}
-                              disabled={lassoSettings.drawMode !== 'magic'}
-                          />
-                      </div>
-                      <div className="flex items-center justify-between">
-                          <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
-                          <Switch
-                              id="show-masks"
-                              checked={lassoSettings.showAllMasks}
-                              onCheckedChange={(v) => onLassoSettingsChange({ showAllMasks: v })}
-                          />
-                      </div>
-                  </div>
-              </TabsContent>
-              <TabsContent value="magic-snap" className="m-0 space-y-2 px-2">
-                 {/* Magic Snap sliders would go here */}
-              </TabsContent>
-          </Tabs>
-        )
-      case 'clone':
-        return <CloneStampPanel 
-                  settings={cloneStampSettings} 
-                  onSettingsChange={onCloneStampSettingsChange} 
-                />
-      case 'banana':
-        return <NanoBananaPanel 
-                  instructionLayers={instructionLayers}
-                  onInstructionChange={onInstructionChange}
-                  onLayerDelete={onLayerDelete}
-                  onGenerate={onGenerate}
-                  isGenerating={isGenerating}
-                  customPrompt={customPrompt}
-                  setCustomPrompt={setCustomPrompt}
-                />
-      case 'settings':
-        return <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />;
-      default:
-        return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
+    if (activeTool === 'banana') {
+      return (
+          <NanoBananaPanel 
+            instructionLayers={instructionLayers}
+            onInstructionChange={onInstructionChange}
+            onLayerDelete={onLayerDelete}
+            onGenerate={onGenerate}
+            isGenerating={isGenerating}
+            customPrompt={customPrompt}
+            setCustomPrompt={setCustomPrompt}
+          />
+      );
     }
+    
+    return (
+      <div className="p-2 space-y-4 h-full flex flex-col">
+        <div className="space-y-1 px-2 flex items-center justify-between">
+          <h3 className="font-headline text-base flex items-center gap-2">
+              {getActiveToolIcon()}
+              Tool Settings
+          </h3>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setView('info')}>
+              <Info className="w-4 h-4" />
+          </Button>
+        </div>
+        <Separator />
+         
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {activeTool === 'lasso' || activeTool === 'line' ? (
+             <Tabs defaultValue="general" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="general">General</TabsTrigger>
+                    <TabsTrigger value="magic-snap" disabled={lassoSettings.drawMode !== 'magic'}>Magic Snap</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="general" className="m-0 space-y-6 px-2">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="draw-mode">Draw Mode</Label>
+                            <Popover>
+                                <PopoverTrigger>
+                                    <Info className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                                </PopoverTrigger>
+                                <PopoverContent side="right" className="text-sm">
+                                    <h4 className="font-semibold mb-2">Switching Modes</h4>
+                                    <p>You can quickly switch between draw modes while using the lasso tool on the canvas by using the mouse scroll wheel.</p>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <Select value={lassoSettings.drawMode} onValueChange={(value: LassoSettings['drawMode']) => onLassoSettingsChange({ drawMode: value })}>
+                            <SelectTrigger id="draw-mode">
+                                <div className="flex items-center gap-2">
+                                    {currentMode && <currentMode.icon className="h-4 h-4" />}
+                                    <SelectValue placeholder="Select mode..." />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {DRAW_MODES.map(mode => (
+                                    <SelectItem key={mode.id} value={mode.id}>
+                                        <div className="flex items-center gap-2">
+                                            <mode.icon className="h-4 h-4" />
+                                            <span>{mode.label}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="curve-tension" className="flex items-center gap-2">Curve Tension: {lassoSettings.curveTension.toFixed(2)}</Label>
+                        <Slider 
+                            id="curve-tension"
+                            min={0} max={1} step={0.05}
+                            value={[lassoSettings.curveTension]}
+                            onValueChange={(v) => onLassoSettingsChange({ curveTension: v[0]})}
+                            disabled={lassoSettings.drawMode === 'magic'}
+                        />
+                        <p className="text-xs text-muted-foreground">Smooths the line between nodes. 0 is straight, 1 is max curve. Only for Polygon & Free Draw.</p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="useAiEnhancement" className="flex items-center gap-2"><Wand2 className="w-4 h-4 text-primary" />AI Enhancement</Label>
+                            <Switch
+                                id="useAiEnhancement"
+                                checked={lassoSettings.useAiEnhancement}
+                                onCheckedChange={(checked) => onLassoSettingsChange({ useAiEnhancement: checked })}
+                            />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="showMouseTrace" className="flex items-center gap-2"><Paintbrush className="w-4 h-4" />Show Mouse Trace</Label>
+                            <Switch
+                                id="showMouseTrace"
+                                checked={lassoSettings.showMouseTrace}
+                                onCheckedChange={(checked) => onLassoSettingsChange({ showMouseTrace: checked })}
+                                disabled={lassoSettings.drawMode !== 'magic'}
+                            />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="show-masks" className="flex items-center gap-2"><Palette className="w-4 h-4" />Show All Masks</Label>
+                            <Switch
+                                id="show-masks"
+                                checked={lassoSettings.showAllMasks}
+                                onCheckedChange={(v) => onLassoSettingsChange({ showAllMasks: v })}
+                            />
+                        </div>
+                    </div>
+                </TabsContent>
+                <TabsContent value="magic-snap" className="m-0 space-y-2 px-2">
+                   {/* Magic Snap sliders would go here */}
+                </TabsContent>
+            </Tabs>
+          ) : activeTool === 'clone' ? (
+            <CloneStampPanel 
+                settings={cloneStampSettings} 
+                onSettingsChange={onCloneStampSettingsChange} 
+            />
+          ) : activeTool === 'settings' ? (
+            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onSettingsChange={onGlobalSettingsChange} />
+          ) : (
+             <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
+          )}
+        </div>
+        {activeTool !== 'settings' && activeTool !== 'banana' && currentToolInfo && (
+            <div className="px-2 pb-2">
+              <Separator className="mb-2"/>
+              <div className="bg-muted/50 rounded-md p-2 text-center text-xs text-muted-foreground">
+                  Pro-Tip: Use <span className="font-bold font-mono px-1 py-0.5 bg-background rounded">{currentToolInfo.shortcut}</span> to quickly select this tool.
+              </div>
+            </div>
+        )}
+      </div>
+    );
   }
 
-  return (
-    <div className="p-2 space-y-4 h-full flex flex-col">
-      <div className="space-y-1 px-2 flex items-center justify-between">
-        <h3 className="font-headline text-base flex items-center gap-2">
-            {getActiveToolIcon()}
-            Tool Settings
-        </h3>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setView('info')}>
-            <Info className="w-4 h-4" />
-        </Button>
-      </div>
-       <Separator />
-       
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {renderLeftPanelContent()}
-      </div>
-      {activeTool !== 'settings' && currentToolInfo && (
-          <div className="px-2 pb-2">
-            <Separator className="mb-2"/>
-            <div className="bg-muted/50 rounded-md p-2 text-center text-xs text-muted-foreground">
-                Pro-Tip: Use <span className="font-bold font-mono px-1 py-0.5 bg-background rounded">{currentToolInfo.shortcut}</span> to quickly select this tool.
-            </div>
-          </div>
-      )}
-    </div>
-  )
+  return renderLeftPanelContent();
 }

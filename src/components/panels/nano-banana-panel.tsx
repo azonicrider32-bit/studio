@@ -69,18 +69,6 @@ export function NanoBananaPanel({
 
   return (
     <div className="p-4 space-y-4 h-full flex flex-col">
-      <div className="space-y-2">
-        <h3 className="font-headline text-lg flex items-center gap-2">
-          <BananaIcon className="w-5 h-5 text-yellow-400" />
-          Nano Banana Editor
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Visually instruct the AI to perform generative edits.
-        </p>
-      </div>
-
-      <Separator />
-
       <Tabs defaultValue="instruct" className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="instruct">Instruct</TabsTrigger>
