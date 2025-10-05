@@ -46,7 +46,7 @@ export function MagicWandPanel({
     const [analysis, setAnalysis] = React.useState<Analysis | null>(null)
     
     React.useEffect(() => {
-      if (title === 'Exclusion' && settings.seedColor) {
+      if (title === 'Exclusion' && settings && settings.seedColor) {
           setAnalysis({
               rgb: { r: settings.seedColor.r, g: settings.seedColor.g, b: settings.seedColor.b },
               hsv: { h: settings.seedColor.h, s: settings.seedColor.s, v: settings.seedColor.v },
@@ -77,7 +77,7 @@ export function MagicWandPanel({
       } else if (title !== 'Exclusion') {
           setAnalysis(null);
       }
-    }, [canvas, mousePos, settings.seedColor, title]);
+    }, [canvas, mousePos, settings?.seedColor, title]);
 
     
     const handleToggleEnabled = (setting: keyof MagicWandSettings['tolerances']) => {
@@ -121,29 +121,29 @@ export function MagicWandPanel({
       onSettingsChange({ enabledTolerances: newEnabledTolerances });
     };
     
-    const ALL_COMPONENTS: {title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, value: number | undefined}[]}[] = [
+    const ALL_COMPONENTS: {title: string, components: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, value: number | undefined, description: string}[]}[] = [
       {
         title: 'RGB',
         components: [
-          { id: 'r', label: 'R', max: 255, color: "bg-red-500", value: analysis?.rgb.r },
-          { id: 'g', label: 'G', max: 255, color: "bg-green-500", value: analysis?.rgb.g },
-          { id: 'b', label: 'B', max: 255, color: "bg-blue-500", value: analysis?.rgb.b },
+          { id: 'r', label: 'R', max: 255, color: "bg-red-500", value: analysis?.rgb.r, description: "Red channel" },
+          { id: 'g', label: 'G', max: 255, color: "bg-green-500", value: analysis?.rgb.g, description: "Green channel" },
+          { id: 'b', label: 'B', max: 255, color: "bg-blue-500", value: analysis?.rgb.b, description: "Blue channel" },
         ]
       },
       {
         title: 'HSV',
         components: [
-          { id: 'h', label: 'H', max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500", value: analysis?.hsv.h },
-          { id: 's', label: 'S', max: 100, color: "bg-slate-400", value: analysis?.hsv.s },
-          { id: 'v', label: 'V', max: 100, color: "bg-white", value: analysis?.hsv.v },
+          { id: 'h', label: 'H', max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500", value: analysis?.hsv.h, description: "Hue (color type)" },
+          { id: 's', label: 'S', max: 100, color: "bg-slate-400", value: analysis?.hsv.s, description: "Saturation (intensity)" },
+          { id: 'v', label: 'V', max: 100, color: "bg-white", value: analysis?.hsv.v, description: "Value (brightness)" },
         ]
       },
       {
         title: 'LAB',
         components: [
-          { id: 'l', label: 'L', max: 100, color: "bg-gray-500", value: analysis?.lab.l },
-          { id: 'a', label: 'a', max: 256, color: "bg-gradient-to-t from-green-500 to-red-500", value: (analysis?.lab.a ?? -128) + 128 },
-          { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500", value: (analysis?.lab.b_lab ?? -128) + 128 },
+          { id: 'l', label: 'L', max: 100, color: "bg-gray-500", value: analysis?.lab.l, description: "Lightness" },
+          { id: 'a', label: 'a', max: 256, color: "bg-gradient-to-t from-green-500 to-red-500", value: (analysis?.lab.a ?? -128) + 128, description: "Green-Red axis" },
+          { id: 'b_lab', label: 'b', max: 256, color: "bg-gradient-to-t from-blue-500 to-yellow-500", value: (analysis?.lab.b_lab ?? -128) + 128, description: "Blue-Yellow axis" },
         ]
       }
     ]
