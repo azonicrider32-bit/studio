@@ -51,6 +51,7 @@ export class SelectionEngine {
     useAiEnhancement: false,
     showMouseTrace: true,
     showAllMasks: true,
+    fillPath: false,
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.5,
@@ -70,8 +71,7 @@ export class SelectionEngine {
         dropInterval: 100,
         minDistance: 5,
         maxDistance: 20
-    },
-    fillPath: false,
+    }
   };
   magicWandSettings: MagicWandSettings = {
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
@@ -225,19 +225,16 @@ export class SelectionEngine {
     }
 
     const pathPoints = [...this.lineNodes];
-    if (this.linePreviewPos) {
+    if (this.linePreviewPos && this.lassoSettings.drawMode !== 'free') {
       pathPoints.push(this.linePreviewPos);
     }
     
-    // Close the path if requested, by adding the first point to the end.
-    if(closed && pathPoints.length > 2) {
-      pathPoints.push(pathPoints[0]);
-    }
+    const finalPath = this.lassoSettings.drawMode === 'free' ? 
+        this.generateBezierSpline(pathPoints) :
+        this.generateSplinePath(pathPoints, closed);
 
-    const finalPath = this.generateSplinePath(pathPoints, closed);
-    
     let pixels = new Set<number>();
-    if (closed) {
+    if (closed && fill) {
       pixels = this.pathToSelection(finalPath);
     }
 
@@ -415,6 +412,39 @@ export class SelectionEngine {
     
     return rawPath;
   }
+
+    generateBezierSpline(points: [number, number][]): [number, number][] {
+        if (points.length < 2) return points;
+
+        const tension = this.lassoSettings.curveStrength;
+        if (tension === 0) return points; // Straight lines
+
+        const path: [number, number][] = [];
+        path.push(points[0]);
+
+        for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[i - 1] || points[i];
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p3 = points[i + 2] || p2;
+
+            for (let t = 0; t < 1; t += 0.1) {
+                const t2 = t * t;
+                const t3 = t2 * t;
+
+                const c1 = -tension * t3 + 2 * tension * t2 - tension * t;
+                const c2 = (2 - tension) * t3 + (tension - 3) * t2 + 1;
+                const c3 = (tension - 2) * t3 + (3 - 2 * tension) * t2 + tension * t;
+                const c4 = tension * t3 - tension * t2;
+
+                const x = c1 * p0[0] + c2 * p1[0] + c3 * p2[0] + c4 * p3[0];
+                const y = c1 * p0[1] + c2 * p1[1] + c3 * p2[1] + c4 * p3[1];
+                path.push([x, y]);
+            }
+        }
+        path.push(points[points.length - 1]);
+        return path;
+    }
 
     generateSplinePath(points: [number, number][], closed: boolean): [number, number][] {
         if (points.length < 2) return points;
@@ -1345,7 +1375,10 @@ export class SelectionEngine {
           pathPoints.push(this.linePreviewPos);
         }
     
-        const finalPath = this.generateSplinePath(pathPoints, false);
+        const finalPath = this.lassoSettings.drawMode === 'free' ?
+            this.generateBezierSpline(pathPoints) :
+            this.generateSplinePath(pathPoints, false);
+            
         drawPath(finalPath, 'hsl(var(--primary))', 2);
         
         this.lineNodes.forEach(([x, y], index) => {
