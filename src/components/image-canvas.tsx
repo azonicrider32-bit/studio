@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SelectionEngine } from "@/lib/selection-engine";
 import { intelligentLassoAssistedPathSnapping } from "@/ai/flows/intelligent-lasso-assisted-path-snapping";
 import { magicWandAssistedSegmentation, MagicWandAssistedSegmentationInput } from "@/ai/flows/magic-wand-assisted-segmentation";
-import { LassoSettings, MagicWandSettings, Segment, Layer } from "@/lib/types";
+import { LassoSettings, MagicWandSettings, Segment, Layer, CloneStampSettings } from "@/lib/types";
 import { handleApiError } from "@/lib/error-handling";
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils";
 
@@ -29,6 +29,7 @@ interface ImageCanvasProps {
   lassoSettings: LassoSettings;
   magicWandSettings: MagicWandSettings;
   negativeMagicWandSettings: MagicWandSettings;
+  cloneStampSettings: CloneStampSettings;
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
   onMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
   onNegativeMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
@@ -64,7 +65,7 @@ const HorizontalRuler = ({ width, zoom, panX }: { width: number, zoom: number, p
         canvas.width = canvas.offsetWidth;
         canvas.height = rulerHeight;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, rulerHeight);
         ctx.fillStyle = '#1f2937';
         ctx.fillRect(0, 0, canvas.width, rulerHeight);
         ctx.strokeStyle = '#4b5563';
@@ -161,6 +162,7 @@ export function ImageCanvas({
   lassoSettings,
   magicWandSettings,
   negativeMagicWandSettings,
+  cloneStampSettings,
   onLassoSettingChange,
   onMagicWandSettingChange,
   onNegativeMagicWandSettingChange,
@@ -195,6 +197,14 @@ export function ImageCanvas({
 
   const [isPanning, setIsPanning] = React.useState(false);
   const lastPanPointRef = React.useRef({ x: 0, y: 0 });
+
+  // Clone Stamp State
+  const [cloneSource, setCloneSource] = React.useState<{x: number, y: number} | null>(null);
+  const [cloneAngle, setCloneAngle] = React.useState(0);
+  const [ghostPreview, setGhostPreview] = React.useState<HTMLCanvasElement | null>(null);
+  const [isSampling, setIsSampling] = React.useState(false);
+  const [isCloning, setIsCloning] = React.useState(false);
+
 
   // Refs for throttling wand preview
   const lastPreviewTimeRef = React.useRef(0);
@@ -340,6 +350,19 @@ const drawLayers = React.useCallback(() => {
     if (overlayCtx) {
       engine.renderSelection(overlayCtx, layers, magicWandSettings, lassoSettings, currentHoverSegment, draggedLayer, activeLayerId, activeTool);
       
+      if (activeTool === 'clone' && ghostPreview && canvasMousePos) {
+          overlayCtx.save();
+          overlayCtx.globalAlpha = 0.5;
+          overlayCtx.drawImage(
+              ghostPreview,
+              canvasMousePos.x - cloneStampSettings.brushSize / 2,
+              canvasMousePos.y - cloneStampSettings.brushSize / 2,
+              cloneStampSettings.brushSize,
+              cloneStampSettings.brushSize
+          );
+          overlayCtx.restore();
+      }
+
       if(showGuides && canvasMousePos) {
           overlayCtx.save();
           overlayCtx.strokeStyle = 'hsla(var(--primary), 0.5)';
@@ -361,7 +384,7 @@ const drawLayers = React.useCallback(() => {
           overlayCtx.restore();
       }
     }
-  }, [magicWandSettings, lassoSettings, layers, hoveredSegment, draggedLayer, activeLayerId, activeTool, showGuides, canvasMousePos]);
+  }, [magicWandSettings, lassoSettings, layers, hoveredSegment, draggedLayer, activeLayerId, activeTool, showGuides, canvasMousePos, ghostPreview, cloneStampSettings]);
 
   React.useEffect(() => {
     drawLayers();
@@ -472,6 +495,11 @@ const drawLayers = React.useCallback(() => {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const engine = selectionEngineRef.current;
+      
+      if (e.key === 'Alt') {
+        setIsSampling(true);
+      }
+
       if (!engine) return;
       
       if (e.key === 'Enter') {
@@ -510,8 +538,18 @@ const drawLayers = React.useCallback(() => {
       }
     };
     
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') {
+        setIsSampling(false);
+      }
+    };
+    
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+    }
   }, [activeTool, toast, drawOverlay, endLassoAndProcess, endLineAndProcess, lassoSettings.useAiEnhancement, addLayer, activeLayerId]);
 
 
@@ -677,13 +715,88 @@ const drawLayers = React.useCallback(() => {
     });
   };
 
+  const updateGhostPreview = React.useCallback(() => {
+    const sourceCanvas = layersCanvasRef.current;
+    if (!sourceCanvas || !cloneSource) return;
+
+    const { brushSize, angle, sourceLayer } = cloneStampSettings;
+    const sourceCtx = sourceCanvas.getContext('2d');
+    if (!sourceCtx) return;
+
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = brushSize;
+    tempCanvas.height = brushSize;
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) return;
+
+    tempCtx.save();
+    tempCtx.translate(brushSize / 2, brushSize / 2);
+    tempCtx.rotate(angle * Math.PI / 180);
+    tempCtx.translate(-brushSize / 2, -brushSize / 2);
+    
+    // This is a simplified approach; a real implementation might need to composite layers for 'all' mode
+    tempCtx.drawImage(
+      sourceCanvas,
+      cloneSource.x - brushSize / 2,
+      cloneSource.y - brushSize / 2,
+      brushSize,
+      brushSize,
+      0,
+      0,
+      brushSize,
+      brushSize
+    );
+    
+    tempCtx.restore();
+    setGhostPreview(tempCanvas);
+    
+  }, [cloneSource, cloneAngle, cloneStampSettings]);
+
+  React.useEffect(() => {
+    if (activeTool === 'clone' && cloneSource) {
+      updateGhostPreview();
+    }
+  }, [cloneAngle, cloneSource, cloneStampSettings.brushSize, activeTool, updateGhostPreview]);
+  
+  const stampClone = (x: number, y: number) => {
+    const targetCanvas = layersCanvasRef.current;
+    if (!targetCanvas || !ghostPreview) return;
+    
+    const targetCtx = targetCanvas.getContext('2d');
+    if (!targetCtx) return;
+
+    targetCtx.save();
+    targetCtx.globalAlpha = cloneStampSettings.opacity / 100;
+    targetCtx.drawImage(
+        ghostPreview,
+        x - cloneStampSettings.brushSize / 2,
+        y - cloneStampSettings.brushSize / 2,
+        cloneStampSettings.brushSize,
+        cloneStampSettings.brushSize
+    );
+    targetCtx.restore();
+  }
+
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
     const engine = selectionEngineRef.current;
-    if (!canvas || !engine || isProcessing) return;
+    if (!canvas || isProcessing) return;
 
     const pos = getMousePos(canvas, e);
+    
+    if (activeTool === 'clone' && isSampling) {
+        setCloneSource(pos);
+        setCloneAngle(0);
+        toast({ title: "Clone source set!" });
+        return;
+    }
+    
+    if (activeTool === 'clone' && cloneSource) {
+        setIsCloning(true);
+        stampClone(pos.x, pos.y);
+        return;
+    }
     
     if (e.button === 2 || (activeTool === 'pan' && e.button === 0)) {
         setIsPanning(true);
@@ -697,6 +810,7 @@ const drawLayers = React.useCallback(() => {
         return;
     }
 
+    if (!engine) return;
 
     if (e.button === 0) {
       if (activeTool === 'lasso') {
@@ -763,7 +877,6 @@ const drawLayers = React.useCallback(() => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = overlayCanvasRef.current;
-    const engine = selectionEngineRef.current;
 
     if (isPanning) {
         const deltaX = e.clientX - lastPanPointRef.current.x;
@@ -780,10 +893,17 @@ const drawLayers = React.useCallback(() => {
         onDragMouseMove(e);
     }
 
-    if (!canvas || !engine || isProcessing) return;
-
+    if (!canvas || isProcessing) return;
+    const engine = selectionEngineRef.current;
+    
     const pos = getMousePos(canvas, e);
     setCanvasMousePos(pos);
+    
+    if (isCloning && activeTool === 'clone') {
+        stampClone(pos.x, pos.y);
+    }
+    
+    if (!engine) return;
 
     // Dynamic cursor update
     const mainCanvas = canvasRef.current;
@@ -843,6 +963,7 @@ const drawLayers = React.useCallback(() => {
     setHoveredSegment(null);
     drawOverlay(null);
     setIsPanning(false);
+    setIsCloning(false);
   }
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -851,6 +972,9 @@ const drawLayers = React.useCallback(() => {
     }
     if (e.button === 2 || activeTool === 'pan') {
       setIsPanning(false);
+    }
+    if (activeTool === 'clone') {
+      setIsCloning(false);
     }
   };
 
@@ -876,6 +1000,12 @@ const drawLayers = React.useCallback(() => {
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     if (isLassoPreviewHovered) {
         return;
+    }
+    if (activeTool === 'clone' && cloneSource) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -cloneStampSettings.rotationStep : cloneStampSettings.rotationStep;
+      setCloneAngle(prev => (prev + delta + 360) % 360);
+      return;
     }
     e.preventDefault();
     const delta = e.deltaY > 0 ? -1 : 1;
@@ -931,6 +1061,26 @@ const drawLayers = React.useCallback(() => {
     if (isPanning) return 'grabbing';
     if (activeTool === 'pan') return 'grab';
     if (activeTool === 'transform') return 'move';
+    if (activeTool === 'clone' && isSampling) return 'crosshair';
+    if (activeTool === 'clone' && cloneSource) {
+      const size = cloneStampSettings.brushSize * mainCanvasZoom;
+      const cursorCanvas = document.createElement('canvas');
+      cursorCanvas.width = size;
+      cursorCanvas.height = size;
+      const cursorCtx = cursorCanvas.getContext('2d');
+      if (cursorCtx) {
+        cursorCtx.strokeStyle = 'white';
+        cursorCtx.lineWidth = 2;
+        cursorCtx.setLineDash([2, 2]);
+        cursorCtx.beginPath();
+        cursorCtx.arc(size / 2, size / 2, size / 2 - 1, 0, 2 * Math.PI);
+        cursorCtx.stroke();
+        cursorCtx.strokeStyle = 'black';
+        cursorCtx.setLineDash([]);
+        cursorCtx.stroke();
+      }
+      return `url(${cursorCanvas.toDataURL()}) ${size/2} ${size/2}, crosshair`;
+    }
     return cursorStyle;
   }
   
@@ -1009,5 +1159,6 @@ const drawLayers = React.useCallback(() => {
     </div>
   );
 }
+
 
 

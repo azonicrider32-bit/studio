@@ -5,7 +5,7 @@ import * as React from "react"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Replace, Layers, Copy, RotateCcw, FlipHorizontal, FlipVertical } from "lucide-react"
+import { Replace, Layers, Copy, RotateCcw, FlipHorizontal, FlipVertical, HelpCircle } from "lucide-react"
 import { CloneStampSettings } from "@/lib/types"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -26,7 +26,7 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
   }
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-6 flex flex-col h-full">
       <div className="space-y-2">
         <h3 className="font-headline text-lg flex items-center gap-2">
             <Replace className="w-5 h-5"/>
@@ -39,7 +39,7 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
 
       <Separator />
 
-      <div className="space-y-4">
+      <div className="space-y-4 flex-1 overflow-y-auto pr-2">
         <div className="space-y-2">
           <Label htmlFor="brush-size">Brush Size: {settings.brushSize}px</Label>
           <Slider
@@ -63,90 +63,102 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
             onValueChange={(value) => onSettingsChange({ opacity: value[0] })}
           />
         </div>
-      </div>
-
-      <Separator />
+        
+        <Separator />
       
-      <div className="space-y-4">
-          <h4 className="font-semibold text-sm">Rotation</h4>
-          <div className="space-y-2">
-            <Label htmlFor="rotation-step">Scroll Step: {settings.rotationStep}°</Label>
-            <Slider
-                id="rotation-step"
-                min={1}
-                max={45}
-                step={1}
-                value={[settings.rotationStep]}
-                onValueChange={(value) => onSettingsChange({ rotationStep: value[0] })}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-                <Input
-                    type="number"
-                    value={settings.angle}
-                    onChange={handleAngleChange}
-                    className="pr-8"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">°</span>
+        <div className="space-y-4">
+            <h4 className="font-semibold text-sm">Rotation</h4>
+            <div className="space-y-2">
+              <Label htmlFor="rotation-step">Scroll Step: {settings.rotationStep}°</Label>
+              <Slider
+                  id="rotation-step"
+                  min={1}
+                  max={45}
+                  step={1}
+                  value={[settings.rotationStep]}
+                  onValueChange={(value) => onSettingsChange({ rotationStep: value[0] })}
+              />
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => onSettingsChange({ angle: 0 })}>
-                      <RotateCcw className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Reset Rotation</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipX: !settings.flipX })} data-state={settings.flipX ? 'on' : 'off'} className="data-[state=on]:bg-accent">
-                        <FlipHorizontal className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                  <Input
+                      type="number"
+                      value={settings.angle}
+                      onChange={handleAngleChange}
+                      className="pr-8"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">°</span>
+              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => onSettingsChange({ angle: 0 })}>
+                        <RotateCcw className="w-4 h-4" />
                     </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Flip Horizontal</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipY: !settings.flipY })} data-state={settings.flipY ? 'on' : 'off'} className="data-[state=on]:bg-accent">
-                        <FlipVertical className="w-4 h-4" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Flip Vertical</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-      </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Reset Rotation</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipX: !settings.flipX })} data-state={settings.flipX ? 'on' : 'off'} className="data-[state=on]:bg-accent">
+                          <FlipHorizontal className="w-4 h-4" />
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>Flip Horizontal</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button variant="outline" size="icon" onClick={() => onSettingsChange({ flipY: !settings.flipY })} data-state={settings.flipY ? 'on' : 'off'} className="data-[state=on]:bg-accent">
+                          <FlipVertical className="w-4 h-4" />
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                      <p>Flip Vertical</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+        </div>
 
+        <Separator />
+
+        <div className="space-y-2">
+          <Label>Source Layer</Label>
+          <div className="grid grid-cols-2 gap-2">
+              <Button 
+                  variant={settings.sourceLayer === 'current' ? 'default' : 'outline'}
+                  onClick={() => onSettingsChange({ sourceLayer: 'current' })}
+              >
+                  <Copy className="w-4 h-4 mr-2"/>
+                  Current
+              </Button>
+              <Button 
+                  variant={settings.sourceLayer === 'all' ? 'default' : 'outline'}
+                  onClick={() => onSettingsChange({ sourceLayer: 'all' })}
+              >
+                  <Layers className="w-4 h-4 mr-2"/>
+                  All Layers
+              </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Choose whether to sample pixels from only the active layer or all visible layers combined.</p>
+        </div>
+      </div>
+        
       <Separator />
 
-      <div className="space-y-2">
-        <Label>Source Layer</Label>
-        <div className="grid grid-cols-2 gap-2">
-            <Button 
-                variant={settings.sourceLayer === 'current' ? 'default' : 'outline'}
-                onClick={() => onSettingsChange({ sourceLayer: 'current' })}
-            >
-                <Copy className="w-4 h-4 mr-2"/>
-                Current
-            </Button>
-            <Button 
-                variant={settings.sourceLayer === 'all' ? 'default' : 'outline'}
-                onClick={() => onSettingsChange({ sourceLayer: 'all' })}
-            >
-                <Layers className="w-4 h-4 mr-2"/>
-                All Layers
-            </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">Choose whether to sample pixels from only the active layer or all visible layers combined.</p>
+      <div className="space-y-2 bg-muted/50 p-3 rounded-lg">
+          <h4 className="font-semibold text-sm flex items-center gap-2"><HelpCircle className="w-4 h-4"/>How It Works</h4>
+          <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+              <li><span className="font-bold">Alt + Click:</span> Set the source point to clone from.</li>
+              <li><span className="font-bold">Scroll Wheel:</span> Rotate the clone source preview.</li>
+              <li><span className="font-bold">Click + Drag:</span> Paint with the cloned pixels.</li>
+          </ul>
       </div>
+
     </div>
   )
 }
