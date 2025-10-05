@@ -14,6 +14,7 @@ import { LassoSettings, MagicWandSettings, Segment, Layer, CloneStampSettings, G
 import { handleApiError } from "@/lib/error-handling";
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils";
 import { debounce } from "@/lib/utils";
+import { Balloon, ChevronDown, ChevronUp } from "lucide-react";
 
 
 interface ImageCanvasProps {
@@ -357,12 +358,68 @@ const drawLayers = React.useCallback(() => {
         const layerToTransform = draggedLayer ?? layers.find(l => l.id === activeLayerId);
 
         if (activeTool === 'transform' && layerToTransform && layerToTransform.type !== 'background') {
-            const { x, y, width, height } = layerToTransform.bounds;
+            const minSize = 50;
+            let { x, y, width, height } = layerToTransform.bounds;
+
+            const isSmall = width < minSize || height < minSize;
+            let displayX = x, displayY = y, displayWidth = width, displayHeight = height;
+
+            if (isSmall) {
+                displayWidth = Math.max(width, minSize);
+                displayHeight = Math.max(height, minSize);
+                displayX = x + (width - displayWidth) / 2;
+                displayY = y + (height - displayHeight) / 2;
+            }
+
             overlayCtx.save();
+            
+            // Draw main bounding box
             overlayCtx.strokeStyle = 'hsl(var(--primary))';
             overlayCtx.lineWidth = 1;
-            overlayCtx.setLineDash([4, 4]);
-            overlayCtx.strokeRect(x, y, width, height);
+            overlayCtx.strokeRect(displayX, displayY, displayWidth, displayHeight);
+
+            if (isSmall) {
+                overlayCtx.strokeStyle = 'hsla(var(--primary), 0.5)';
+                overlayCtx.setLineDash([2, 2]);
+                overlayCtx.strokeRect(x, y, width, height);
+                overlayCtx.setLineDash([]);
+            }
+
+            // Draw handles
+            const handleSize = 8;
+            const handleOffset = handleSize / 2;
+            const handles = [
+                // Corners
+                { x: displayX, y: displayY, cursor: 'nwse-resize' },
+                { x: displayX + displayWidth, y: displayY, cursor: 'nesw-resize' },
+                { x: displayX, y: displayY + displayHeight, cursor: 'nesw-resize' },
+                { x: displayX + displayWidth, y: displayY + displayHeight, cursor: 'nwse-resize' },
+                // Mid-points
+                { x: displayX + displayWidth / 2, y: displayY, cursor: 'ns-resize' },
+                { x: displayX, y: displayY + displayHeight / 2, cursor: 'ew-resize' },
+                { x: displayX + displayWidth, y: displayY + displayHeight / 2, cursor: 'ew-resize' },
+                { x: displayX + displayWidth / 2, y: displayY + displayHeight, cursor: 'ns-resize' },
+            ];
+
+            overlayCtx.fillStyle = 'hsl(var(--background))';
+            overlayCtx.strokeStyle = 'hsl(var(--primary))';
+            overlayCtx.lineWidth = 1.5;
+
+            handles.forEach(handle => {
+                overlayCtx.fillRect(handle.x - handleOffset, handle.y - handleOffset, handleSize, handleSize);
+                overlayCtx.strokeRect(handle.x - handleOffset, handle.y - handleOffset, handleSize, handleSize);
+            });
+            
+            // Placeholder for advanced controls
+            overlayCtx.fillStyle = 'hsla(var(--primary), 0.8)';
+            // Layer order buttons
+            overlayCtx.fillRect(displayX + displayWidth + 5, displayY, 20, 40);
+            // Balloon toggle
+            overlayCtx.beginPath();
+            overlayCtx.arc(displayX + displayWidth + 15, displayY + 60, 10, 0, Math.PI * 2);
+            overlayCtx.fill();
+
+
             overlayCtx.restore();
         }
 
@@ -861,10 +918,7 @@ const drawLayers = React.useCallback(() => {
         }
       } else if (activeTool === 'magic-wand') {
           handleMagicWandClick(pos, e);
-      } else if (activeTool === 'pipette-minus') {
-          sampleExclusionColor(pos);
       }
-      drawOverlay();
     }
   };
   
@@ -1184,6 +1238,7 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
+
 
 
 
