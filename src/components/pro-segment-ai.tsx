@@ -85,8 +85,7 @@ import { ProgressiveHover } from "./ui/progressive-hover"
 import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line";
-type TopPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets';
-type BottomPanel = 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
+type RightPanel = 'zoom' | 'feather' | 'layers' | 'ai' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat';
 
 interface WorkspaceState {
   id: string;
@@ -131,8 +130,7 @@ function ProSegmentAIContent() {
   const isResizingRef = React.useRef(false);
   const { toast } = useToast()
   
-  const [activeTopPanel, setActiveTopPanel] = React.useState<TopPanel | null>('layers');
-  const [activeBottomPanel, setActiveBottomPanel] = React.useState<BottomPanel | null>(null);
+  const [activePanels, setActivePanels] = React.useState<RightPanel[]>(['layers']);
   
   const [zoomA, setZoomA] = React.useState(1.0);
   const [zoomB, setZoomB] = React.useState(4.0);
@@ -495,60 +493,38 @@ function ProSegmentAIContent() {
     }
   }
 
-  const handleShelfClick = (panel: TopPanel | BottomPanel) => {
-    if (isRightPanelOpen) {
-      if (['zoom', 'feather', 'layers', 'ai', 'assets'].includes(panel)) {
-        if(activeTopPanel === panel) {
-          setActiveTopPanel(null);
-        } else {
-          setActiveTopPanel(panel as TopPanel);
-        }
-      } else {
-        if (activeBottomPanel === panel) {
-          setActiveBottomPanel(null);
-        } else {
-          setActiveBottomPanel(panel as BottomPanel);
-        }
-      }
-    } else {
+  const handleShelfClick = (panelId: RightPanel) => {
+    if (!isRightPanelOpen) {
       setIsRightPanelOpen(true);
-      if (['zoom', 'feather', 'layers', 'ai', 'assets'].includes(panel)) {
-        setActiveTopPanel(panel as TopPanel);
-        setActiveBottomPanel(null);
-      } else {
-        setActiveBottomPanel(panel as BottomPanel);
-        setActiveTopPanel(null);
+      setActivePanels([panelId]);
+      return;
+    }
+
+    setActivePanels(currentPanels => {
+      const existingIndex = currentPanels.indexOf(panelId);
+
+      if (existingIndex === 0) { // Clicked the top panel
+        return currentPanels.slice(1); // Close it, second panel (if any) becomes top
       }
-    }
-  }
+      
+      if (existingIndex > 0) { // Clicked a lower panel
+        const newPanels = [panelId, ...currentPanels.filter(p => p !== panelId)];
+        return newPanels; // Move it to the top
+      }
+      
+      // Panel is not open, add it to the top
+      const newPanels = [panelId, ...currentPanels];
+      return newPanels.slice(0, 2); // Keep max 2 panels
+    });
+  };
 
 
-  const renderLeftPanelContent = () => {
-    switch(activeTool) {
-      case 'magic-wand':
-      case 'lasso':
-      case 'line':
-        return <ToolSettingsPanel 
-                  magicWandSettings={magicWandSettings}
-                  onMagicWandSettingsChange={handleMagicWandSettingsChange}
-                  lassoSettings={lassoSettings}
-                  onLassoSettingsChange={handleLassoSettingsChange}
-                  activeTool={activeTool}
-                />
-      case 'settings':
-        return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} />;
-      default:
-        return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
-    }
-  }
-
-  const renderTopPanelContent = () => {
-    if (!activeTopPanel) return null;
-    return (
-      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-        {activeTopPanel === "zoom" && <PixelZoomPanel canvas={canvasRef.current} mousePos={canvasMousePos} selectionEngine={selectionEngineRef.current} onHoverChange={setIsLassoPreviewHovered} className="flex-1"/>}
-        {activeTopPanel === "feather" && <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />}
-        {activeTopPanel === "layers" && activeWorkspace && 
+  const renderPanelContent = (panelId: RightPanel | undefined) => {
+    if (!panelId) return null;
+    switch(panelId) {
+        case "zoom": return <PixelZoomPanel canvas={canvasRef.current} mousePos={canvasMousePos} selectionEngine={selectionEngineRef.current} onHoverChange={setIsLassoPreviewHovered} className="flex-1"/>;
+        case "feather": return <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />;
+        case "layers": return activeWorkspace ? 
             <LayersPanel 
                 workspaces={workspaces}
                 activeWorkspaceId={activeWorkspaceId}
@@ -594,10 +570,9 @@ function ProSegmentAIContent() {
                         return { ...ws, layers: newLayers };
                     });
                 }}
-            />
-        }
-        {activeTopPanel === "assets" && <AdvancedAssetPanel onImageSelect={handleImageSelect} />}
-        {activeTopPanel === "ai" && (
+            /> : null;
+        case "assets": return <AdvancedAssetPanel onImageSelect={handleImageSelect} />;
+        case "ai": return (
           <Tabs defaultValue="segment" className="flex h-full flex-col">
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="segment" className="text-xs gap-1"><Scissors className="w-4 h-4" />Segment</TabsTrigger>
@@ -608,38 +583,33 @@ function ProSegmentAIContent() {
             <TabsContent value="generate" className="m-0 flex-1"><InpaintingPanel imageUrl={activeWorkspace?.imageUrl} getSelectionMask={() => getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined} onGenerationComplete={(newUrl) => handleImageSelect(newUrl)} clearSelection={() => clearSelectionRef.current ? clearSelectionRef.current() : undefined} /></TabsContent>
             <TabsContent value="enhance" className="m-0 flex-1"><div className="p-4 text-center text-sm text-muted-foreground">Upscaling and enhancement tools coming soon.</div></TabsContent>
           </Tabs>
-        )}
-      </div>
-    );
-  };
-
-  const renderBottomPanelContent = () => {
-    if (!activeBottomPanel) return null;
-    return (
-      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-          {activeBottomPanel === "chat" && <AiChatPanel />}
-          {activeBottomPanel === "color-analysis" && <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>}
-          {activeBottomPanel === "pixel-preview" && <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>}
-      </div>
-    );
-  };
-  
-  const handleHoverZoom = (preset: 'A' | 'B' | null) => {
-    const clearTimers = () => {
-      if (hoverTimeoutRef.current.A) clearTimeout(hoverTimeoutRef.current.A);
-      if (hoverTimeoutRef.current.B) clearTimeout(hoverTimeoutRef.current.B);
-    };
-
-    clearTimers();
-    setHoveredZoom(null); 
-
-    if (preset) {
-      hoverTimeoutRef.current[preset] = setTimeout(() => {
-        setHoveredZoom(preset);
-      }, 200);
+        );
+        case "chat": return <AiChatPanel />;
+        case "color-analysis": return <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>;
+        case "pixel-preview": return <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>;
+        default: return null;
     }
-  };
-  
+  }
+
+  const renderLeftPanelContent = () => {
+    switch(activeTool) {
+      case 'magic-wand':
+      case 'lasso':
+      case 'line':
+        return <ToolSettingsPanel 
+                  magicWandSettings={magicWandSettings}
+                  onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                  lassoSettings={lassoSettings}
+                  onLassoSettingsChange={handleLassoSettingsChange}
+                  activeTool={activeTool}
+                />
+      case 'settings':
+        return <GlobalSettingsPanel showHotkeys={showHotkeyLabels} onShowHotkeysChange={setShowHotkeyLabels} />;
+      default:
+        return <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
+    }
+  }
+
   if (!activeWorkspace) {
     return <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">No active workspace.</div>
   }
@@ -649,99 +619,64 @@ function ProSegmentAIContent() {
 
   const sidebarWidthVar = sidebarState === 'expanded' ? 'var(--sidebar-width)' : 'var(--sidebar-width-icon)';
   
-  const allShelfIcons = [
-    { id: 'assets', icon: ImageIcon, label: 'Asset Library (O)', panel: 'top' },
-    { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)', panel: 'top' },
-    { id: 'feather', icon: FeatherIcon, label: 'Feather & Edges (F)', panel: 'top' },
-    { id: 'layers', icon: LayersIcon, label: 'Layers (L)', panel: 'top' },
-    { id: 'ai', icon: BrainCircuit, label: 'AI Tools (A)', panel: 'top' },
-    { id: 'separator-1', icon: null, label: '' },
-    { id: 'color-analysis', icon: Palette, label: 'Color Analysis (C)', panel: 'bottom' },
-    { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)', panel: 'bottom' },
-    { id: 'pixel-preview', icon: Scan, label: 'Pixel Preview (P)', panel: 'bottom' },
-    { id: 'history', icon: History, label: 'History', panel: 'bottom' },
+  const allShelfIcons: {id: RightPanel, icon: React.ElementType, label: string }[] = [
+    { id: 'assets', icon: ImageIcon, label: 'Asset Library (O)' },
+    { id: 'zoom', icon: ZoomIn, label: 'Zoom Panel (Z)' },
+    { id: 'feather', icon: FeatherIcon, label: 'Feather & Edges (F)' },
+    { id: 'layers', icon: LayersIcon, label: 'Layers (L)' },
+    { id: 'ai', icon: BrainCircuit, label: 'AI Tools (A)' },
+    { id: 'color-analysis', icon: Palette, label: 'Color Analysis (C)' },
+    { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)' },
+    { id: 'pixel-preview', icon: Scan, label: 'Pixel Preview (P)' },
+    { id: 'history', icon: History, label: 'History' },
   ];
 
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
-      <main className="absolute inset-y-0 right-0 pt-12" style={{ left: 0 }}>
-          <ImageCanvas 
-            key={activeWorkspace.id}
-            imageUrl={activeWorkspace.imageUrl}
-            layers={activeWorkspace.layers}
-            addLayer={addLayer}
-            updateLayer={updateLayer}
-            removePixelsFromLayers={removePixelsFromLayers}
-            activeLayerId={activeWorkspace.activeLayerId}
-            onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
-            segmentationMask={activeWorkspace.segmentationMask}
-            setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask }))}
-            activeTool={activeTool}
-            lassoSettings={lassoSettings}
-            magicWandSettings={magicWandSettings}
-            negativeMagicWandSettings={negativeMagicWandSettings}
-            getSelectionMaskRef={getSelectionMaskRef}
-            clearSelectionRef={clearSelectionRef}
-            onLassoSettingChange={handleLassoSettingsChange}
-            onMagicWandSettingsChange={handleMagicWandSettingsChange}
-            onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
-            canvasMousePos={canvasMousePos}
-            setCanvasMousePos={setCanvasMousePos}
-            getCanvasRef={canvasRef}
-            getSelectionEngineRef={selectionEngineRef}
-            isLassoPreviewHovered={isLassoPreviewHovered}
-            mainCanvasZoom={mainCanvasZoom}
-            pan={pan}
-            setPan={setPan}
-            onDragMouseDown={handleDragMouseDown}
-            onDragMouseMove={handleDragMouseMove}
-            onDragMouseUp={handleDragMouseUp}
-            draggedLayer={draggedLayer}
-            showHorizontalRuler={showHorizontalRuler}
-            showVerticalRuler={showVerticalRuler}
-            showGuides={showGuides}
-            />
-      </main>
-      
       <div 
-        className="absolute bottom-0 z-30"
+        className="absolute top-0 h-full"
         style={{
+          left: '0px',
+          width: `calc(${sidebarWidthVar} + 4rem)`,
+          transition: 'width 0.2s ease-in-out'
+        }}
+      >
+        <div 
+          className="absolute top-12 h-[calc(100vh-3rem)]"
+          style={{
             left: `calc(${sidebarWidthVar})`,
-            top: '3rem',
-            height: 'calc(100vh - 3rem)',
             transition: 'left 0.2s ease-in-out',
           }}
         >
-        <ToolPanel
-          activeTool={activeTool}
-          setActiveTool={setActiveTool}
-          showHotkeys={showHotkeyLabels}
-          showHorizontalRuler={showHorizontalRuler}
-          onToggleHorizontalRuler={() => setShowHorizontalRuler(p => !p)}
-          showVerticalRuler={showVerticalRuler}
-          onToggleVerticalRuler={() => setShowVerticalRuler(p => !p)}
-          showGuides={showGuides}
-          onToggleGuides={() => setShowGuides(p => !p)}
-        />
+          <ToolPanel
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            showHotkeys={showHotkeyLabels}
+            showHorizontalRuler={showHorizontalRuler}
+            onToggleHorizontalRuler={() => setShowHorizontalRuler(p => !p)}
+            showVerticalRuler={showVerticalRuler}
+            onToggleVerticalRuler={() => setShowVerticalRuler(p => !p)}
+            showGuides={showGuides}
+            onToggleGuides={() => setShowGuides(p => !p)}
+          />
+        </div>
+        <div className="absolute left-0 top-0 h-full">
+          <Sidebar collapsible="icon">
+            <SidebarHeader>
+                <div className="flex items-center gap-2">
+                    <Settings2 className="w-5 h-5"/>
+                    <span className="font-semibold">Settings</span>
+                </div>
+            </SidebarHeader>
+            <SidebarContent>
+                {renderLeftPanelContent()}
+            </SidebarContent>
+          </Sidebar>
+        </div>
       </div>
-
-      <div className="absolute left-0 top-12 h-[calc(100vh-3rem)]">
-        <Sidebar collapsible="icon">
-          <SidebarHeader>
-              <div className="flex items-center gap-2">
-                  <Settings2 className="w-5 h-5"/>
-                  <span className="font-semibold">Settings</span>
-              </div>
-          </SidebarHeader>
-          <SidebarContent>
-              {renderLeftPanelContent()}
-          </SidebarContent>
-        </Sidebar>
-      </div>
-
-      <header className="absolute top-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
+       <header className="absolute top-0 h-12 flex items-center border-b border-border/50 px-4 z-20 bg-background/80 backdrop-blur-sm"
           style={{
-            left: sidebarWidthVar,
+            left: `calc(${sidebarWidthVar} + 4rem)`,
             right: '0px',
             transition: 'left 0.2s ease-in-out, right 0.2s ease-in-out'
           }}
@@ -869,6 +804,50 @@ function ProSegmentAIContent() {
           </DropdownMenu>
         </div>
       </header>
+       <main 
+        className="absolute inset-y-0 right-0 pt-12" 
+        style={{ 
+          left: `calc(${sidebarWidthVar} + 4rem)`,
+          transition: 'left 0.2s ease-in-out'
+        }}
+      >
+          <ImageCanvas 
+            key={activeWorkspace.id}
+            imageUrl={activeWorkspace.imageUrl}
+            layers={activeWorkspace.layers}
+            addLayer={addLayer}
+            updateLayer={updateLayer}
+            removePixelsFromLayers={removePixelsFromLayers}
+            activeLayerId={activeWorkspace.activeLayerId}
+            onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
+            segmentationMask={activeWorkspace.segmentationMask}
+            setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask }))}
+            activeTool={activeTool}
+            lassoSettings={lassoSettings}
+            magicWandSettings={magicWandSettings}
+            negativeMagicWandSettings={negativeMagicWandSettings}
+            getSelectionMaskRef={getSelectionMaskRef}
+            clearSelectionRef={clearSelectionRef}
+            onLassoSettingChange={handleLassoSettingsChange}
+            onMagicWandSettingsChange={handleMagicWandSettingsChange}
+            onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+            canvasMousePos={canvasMousePos}
+            setCanvasMousePos={setCanvasMousePos}
+            getCanvasRef={canvasRef}
+            getSelectionEngineRef={selectionEngineRef}
+            isLassoPreviewHovered={isLassoPreviewHovered}
+            mainCanvasZoom={mainCanvasZoom}
+            pan={pan}
+            setPan={setPan}
+            onDragMouseDown={handleDragMouseDown}
+            onDragMouseMove={handleDragMouseMove}
+            onDragMouseUp={handleDragMouseUp}
+            draggedLayer={draggedLayer}
+            showHorizontalRuler={showHorizontalRuler}
+            showVerticalRuler={showVerticalRuler}
+            showGuides={showGuides}
+            />
+      </main>
       
       <div className="fixed right-0 top-12 flex h-[calc(100vh-3rem)]">
         <div 
@@ -878,13 +857,26 @@ function ProSegmentAIContent() {
           )}
           style={{ width: isRightPanelOpen ? `${rightPanelWidth}px` : '0px'}}
         >
-            <div className="flex-1 flex flex-col min-h-0">
-              {activeTopPanel && renderTopPanelContent()}
-            </div>
-            {activeTopPanel && activeBottomPanel && <Separator />}
-            <div className="flex-1 flex flex-col min-h-0">
-              {activeBottomPanel && renderBottomPanelContent()}
-            </div>
+             {isRightPanelOpen && (
+                <div className="flex-1 flex flex-col min-h-0">
+                    {activePanels.length === 1 && (
+                        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                            {renderPanelContent(activePanels[0])}
+                        </div>
+                    )}
+                    {activePanels.length === 2 && (
+                        <>
+                            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                                {renderPanelContent(activePanels[0])}
+                            </div>
+                            <Separator />
+                            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                                {renderPanelContent(activePanels[1])}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
         <div className="h-full w-14 flex flex-col items-center justify-between border-l bg-background/80 backdrop-blur-sm p-2 z-10">
           <div className="flex flex-col gap-2">
@@ -899,17 +891,15 @@ function ProSegmentAIContent() {
               </Tooltip>
               <Separator />
                <div className="space-y-1 flex flex-col">
-                <p className="text-xs text-muted-foreground font-semibold text-center">TOP</p>
-                {allShelfIcons.filter(i => i.panel === 'top').map(({id, icon: Icon, label}) => {
-                  if (!Icon) return <Separator key={id} className="my-1"/>;
-                  const isActive = activeTopPanel === id;
+                {allShelfIcons.map(({id, icon: Icon, label}) => {
+                  const isActive = activePanels.includes(id);
                   return (
                     <Tooltip key={id}>
                       <TooltipTrigger asChild>
                         <Button 
                           variant={isActive && isRightPanelOpen ? "secondary" : "ghost"} 
                           size="icon" 
-                          onClick={() => handleShelfClick(id as any)}>
+                          onClick={() => handleShelfClick(id)}>
                           <Icon className="h-5 w-5"/>
                         </Button>
                       </TooltipTrigger>
@@ -918,30 +908,6 @@ function ProSegmentAIContent() {
                   )
                 })}
               </div>
-            </TooltipProvider>
-          </div>
-          <div className="flex flex-col gap-2">
-             <TooltipProvider>
-                <div className="space-y-1 flex flex-col">
-                    <p className="text-xs text-muted-foreground font-semibold text-center">BTM</p>
-                    {allShelfIcons.filter(i => i.panel === 'bottom').map(({id, icon: Icon, label}) => {
-                      if (!Icon) return <Separator key={id} className="my-1"/>;
-                      const isActive = activeBottomPanel === id;
-                      return (
-                        <Tooltip key={id}>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant={isActive && isRightPanelOpen ? "secondary" : "ghost"} 
-                              size="icon" 
-                              onClick={() => handleShelfClick(id as any)}>
-                              <Icon className="h-5 w-5"/>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="left"><p>{label}</p></TooltipContent>
-                        </Tooltip>
-                      )
-                    })}
-                </div>
             </TooltipProvider>
           </div>
       </div>
@@ -1039,6 +1005,7 @@ export function ProSegmentAI() {
 
 
     
+
 
 
 
