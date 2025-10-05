@@ -15,14 +15,14 @@ export interface Layer {
     stroke?: string;
     strokeWidth?: number;
     fill?: string;
-    closed?: boolean;
-    bounds: { x: number; y: number; width: number; height: number };
+    closed: boolean;
     imageData?: ImageData;
     maskVisible?: boolean;
     highlightColor?: string; // e.g., 'hsl(210, 40%, 96.1%)'
     highlightOpacity?: number; // 0-1
     highlightTexture?: 'solid' | 'checkerboard' | 'lines';
     modifiers?: Layer[];
+    bounds: { x: number; y: number; width: number; height: number };
 }
 
 export interface LassoSettings {
@@ -50,6 +50,7 @@ export interface LassoSettings {
         minDistance: number; // px
         maxDistance: number; // px
     };
+    fillPath: boolean;
 }
 
 export interface CloneStampSettings {

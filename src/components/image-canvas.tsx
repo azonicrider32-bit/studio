@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Image from "next/image";
@@ -199,6 +200,7 @@ export function ImageCanvas({
 
   const [isPanning, setIsPanning] = React.useState(false);
   const lastPanPointRef = React.useRef({ x: 0, y: 0 });
+  const lastDropTimeRef = React.useRef(0);
 
   // Clone Stamp State
   const [cloneSource, setCloneSource] = React.useState<{x: number, y: number} | null>(null);
@@ -483,11 +485,11 @@ const drawLayers = React.useCallback(() => {
     const engine = selectionEngineRef.current;
     if (!engine || !engine.isDrawingLine) return;
 
-    const newLayer = engine.endLine(activeLayerId, closed);
+    const newLayer = engine.endLine(activeLayerId, closed, lassoSettings.fillPath);
     if (newLayer) addLayer(newLayer);
     drawOverlay();
     toast({ title: 'Line path completed.' });
-  }, [addLayer, activeLayerId, drawOverlay, toast]);
+  }, [addLayer, activeLayerId, drawOverlay, toast, lassoSettings.fillPath]);
 
 
   React.useEffect(() => {
@@ -822,15 +824,17 @@ const drawLayers = React.useCallback(() => {
         if (!engine.isDrawingLasso) {
           engine.startLasso(pos.x, pos.y);
           lassoMouseTraceRef.current = [[pos.x, pos.y]];
+          lastDropTimeRef.current = Date.now();
           toast({ title: 'Lasso started', description: 'Click to add points. Double-click or Press Enter to complete.' });
-        } else {
+        } else if (lassoSettings.drawMode !== 'free') {
           engine.addLassoNode(lassoMouseTraceRef.current);
           lassoMouseTraceRef.current = [];
         }
       } else if (activeTool === 'line') {
         if (!engine.isDrawingLine) {
           engine.startLine(pos.x, pos.y);
-        } else {
+          lastDropTimeRef.current = Date.now();
+        } else if (lassoSettings.drawMode !== 'free') {
           engine.addNodeToLine();
         }
       } else if (activeTool === 'magic-wand') {
@@ -888,6 +892,24 @@ const drawLayers = React.useCallback(() => {
     }
     
     if (!engine) return;
+    
+    const isFreeDraw = (activeTool === 'lasso' || activeTool === 'line') && lassoSettings.drawMode === 'free';
+
+    if (isFreeDraw && (engine.isDrawingLasso || engine.isDrawingLine)) {
+        const lastNode = engine.isDrawingLasso ? engine.lassoNodes[engine.lassoNodes.length-1] : engine.lineNodes[engine.lineNodes.length-1];
+        if(!lastNode) return;
+        
+        const dist = Math.hypot(pos.x - lastNode[0], pos.y - lastNode[1]);
+        const timePassed = Date.now() - lastDropTimeRef.current;
+        const { minDistance, maxDistance, dropInterval } = lassoSettings.freeDraw;
+
+        if (dist > minDistance && (timePassed > dropInterval || dist > maxDistance)) {
+            if (activeTool === 'lasso') engine.addLassoNode([]);
+            if (activeTool === 'line') engine.addNodeToLine();
+            lastDropTimeRef.current = Date.now();
+        }
+    }
+
 
     if (activeTool === 'lasso') {
       if (engine.isDrawingLasso) {
@@ -941,14 +963,17 @@ const drawLayers = React.useCallback(() => {
       }
     } else if (activeTool === 'line' && engine.isDrawingLine) {
         const pos = getMousePos(e.currentTarget, e);
-        const firstNode = engine.lineNodes[0];
         let isClosed = false;
-        if(firstNode) {
-            const dist = Math.hypot(pos.x - firstNode[0], pos.y - firstNode[1]);
-            if (dist < 10 / mainCanvasZoom) { // 10px snap radius
+
+        for(let i = 0; i < engine.lineNodes.length - 1; i++) {
+            const node = engine.lineNodes[i];
+            const dist = Math.hypot(pos.x - node[0], pos.y - node[1]);
+            if (dist < (globalSettings.snapRadius / mainCanvasZoom)) {
                 isClosed = true;
+                break;
             }
         }
+        
         endLineAndProcess(isClosed);
     }
   };
@@ -1126,3 +1151,4 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
+
