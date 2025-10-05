@@ -21,6 +21,7 @@ import {
   Frame,
   Contrast,
   X,
+  Replace,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -28,7 +29,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
-import { MagicWandSettings, LassoSettings } from "@/lib/types"
+import { MagicWandSettings, LassoSettings, CloneStampSettings } from "@/lib/types"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Button } from "../ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
@@ -39,13 +40,20 @@ import { useSidebar } from "../ui/sidebar"
 import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
 import { LassoCompactSettings } from "./lasso-compact-settings"
 import { ProgressiveHover } from "../ui/progressive-hover"
+import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
+import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
+
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
   onMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void
   lassoSettings: LassoSettings
   onLassoSettingsChange: (settings: Partial<LassoSettings>) => void
-  activeTool: 'magic-wand' | 'lasso' | 'line'
+  cloneStampSettings: CloneStampSettings
+  onCloneStampSettingsChange: (settings: Partial<CloneStampSettings>) => void
+  activeTool: 'magic-wand' | 'lasso' | 'line' | 'clone' | 'settings'
+  showHotkeys: boolean
+  onShowHotkeysChange: (value: boolean) => void
 }
 
 export function ToolSettingsPanel({ 
@@ -53,7 +61,11 @@ export function ToolSettingsPanel({
     onMagicWandSettingsChange,
     lassoSettings,
     onLassoSettingsChange,
-    activeTool 
+    cloneStampSettings,
+    onCloneStampSettingsChange,
+    activeTool,
+    showHotkeys,
+    onShowHotkeysChange,
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -84,26 +96,43 @@ export function ToolSettingsPanel({
             description: 'The Line tool creates straight or curved paths by placing anchor points. It is ideal for precise, geometric selections or for creating vector paths.',
             shortcut: 'P'
         },
+        'clone': {
+            title: 'Clone Stamp Tool',
+            description: 'The Clone Stamp tool allows you to duplicate part of an image. Alt-click to define a source point, then click and drag to paint with the sampled pixels.',
+            shortcut: 'C'
+        },
+        'settings': {
+            title: 'Global Settings',
+            description: 'Configure application-wide preferences for UI, performance, and more.',
+            shortcut: ''
+        }
     };
     
     const currentToolInfo = toolInfo[activeTool];
 
 
   if (sidebarState === 'collapsed') {
-    if (isWand) {
-      return (
-        <MagicWandCompactSettings 
-          settings={magicWandSettings}
-          onSettingsChange={onMagicWandSettingsChange}
-        />
-      );
-    } else {
-      return (
-        <LassoCompactSettings 
-          settings={lassoSettings}
-          onSettingsChange={onLassoSettingsChange}
-        />
-      );
+    switch (activeTool) {
+        case 'magic-wand':
+            return <MagicWandCompactSettings 
+                      settings={magicWandSettings}
+                      onSettingsChange={onMagicWandSettingsChange}
+                    />
+        case 'lasso':
+        case 'line':
+             return <LassoCompactSettings 
+                      settings={lassoSettings}
+                      onSettingsChange={onLassoSettingsChange}
+                    />
+        case 'clone':
+            return <CloneStampCompactSettings 
+                        settings={cloneStampSettings} 
+                        onSettingsChange={onCloneStampSettingsChange} 
+                    />
+        case 'settings':
+            return <GlobalSettingsCompactPanel onShowHotkeysChange={onShowHotkeysChange} showHotkeys={showHotkeys} />
+        default:
+            return null;
     }
   }
 
@@ -122,20 +151,34 @@ export function ToolSettingsPanel({
             <Separator/>
             <div className="text-sm text-muted-foreground space-y-4 flex-1">
                 <p>{currentToolInfo.description}</p>
-                <p>
-                    <strong>Keyboard Shortcut:</strong>
-                    <span className="ml-2 inline-block px-2 py-1 text-xs font-mono font-bold bg-muted rounded">{currentToolInfo.shortcut}</span>
-                </p>
+                {currentToolInfo.shortcut && (
+                    <p>
+                        <strong>Keyboard Shortcut:</strong>
+                        <span className="ml-2 inline-block px-2 py-1 text-xs font-mono font-bold bg-muted rounded">{currentToolInfo.shortcut}</span>
+                    </p>
+                )}
             </div>
         </div>
     );
   }
 
+  const getActiveToolIcon = () => {
+    switch(activeTool) {
+      case 'magic-wand': return <Sparkles className="w-4 h-4" />;
+      case 'lasso':
+      case 'line':
+        return <Lasso className="w-4 h-4" />;
+      case 'clone': return <Replace className="w-4 h-4" />;
+      case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
+      default: return null;
+    }
+  };
+
   return (
     <div className="p-2 space-y-4 h-full flex flex-col">
       <div className="space-y-1 px-2 flex items-center justify-between">
         <h3 className="font-headline text-base flex items-center gap-2">
-            {isWand ? <Sparkles className="w-4 h-4"/> : <Lasso className="w-4 h-4"/>}
+            {getActiveToolIcon()}
             Tool Settings
         </h3>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setView('info')}>
@@ -145,7 +188,7 @@ export function ToolSettingsPanel({
       <Separator />
 
       <div className="flex-1 min-h-0 overflow-y-auto">
-        {isWand ? (
+        {activeTool === 'magic-wand' && (
            <Tabs defaultValue="general" className="space-y-4">
               <TabsList className="grid w-full grid-cols-1">
                   <TabsTrigger value="general">General</TabsTrigger>
@@ -389,7 +432,8 @@ export function ToolSettingsPanel({
                   </Accordion>
               </TabsContent>
           </Tabs>
-        ) : (
+        )}
+        {(activeTool === 'lasso' || activeTool === 'line') && (
           <Tabs defaultValue="general" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="general">General</TabsTrigger>
@@ -505,13 +549,24 @@ export function ToolSettingsPanel({
 
           </Tabs>
         )}
+        {activeTool === 'clone' && (
+            <CloneStampPanel 
+              settings={cloneStampSettings} 
+              onSettingsChange={onCloneStampSettingsChange} 
+            />
+        )}
+         {activeTool === 'settings' && (
+            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} />
+        )}
       </div>
-      <div className="px-2 pb-2">
-        <Separator className="mb-2"/>
-        <div className="bg-muted/50 rounded-md p-2 text-center text-xs text-muted-foreground">
-            Pro-Tip: Use <span className="font-bold font-mono px-1 py-0.5 bg-background rounded">{currentToolInfo.shortcut}</span> to quickly select this tool.
-        </div>
-      </div>
+      {activeTool !== 'settings' && (
+          <div className="px-2 pb-2">
+            <Separator className="mb-2"/>
+            <div className="bg-muted/50 rounded-md p-2 text-center text-xs text-muted-foreground">
+                Pro-Tip: Use <span className="font-bold font-mono px-1 py-0.5 bg-background rounded">{currentToolInfo.shortcut}</span> to quickly select this tool.
+            </div>
+          </div>
+      )}
     </div>
   )
 }

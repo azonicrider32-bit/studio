@@ -108,18 +108,18 @@ export function LassoCompactSettings({ settings, onSettingsChange }: { settings:
             <div className="flex flex-col items-center gap-1 my-2">
                 <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(snapKeys)} className="font-semibold text-xs h-auto p-1">Snap</Button>
                 <div className="flex items-end h-32">
-                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
-                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
-                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onLassoSettingsChange} settingKey="snapRadius" label="Radius" max={50} step={1} unit="px"/>
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onLassoSettingsChange} settingKey="snapThreshold" label="Thresh" max={1} step={0.05} />
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onLassoSettingsChange} settingKey="directionalStrength" label="Direction" max={1} step={0.05} />
                 </div>
             </div>
 
             <div className="flex flex-col items-center gap-1 my-2">
                 <Button variant="ghost" size="sm" onClick={() => handleToggleGroup(influenceKeys)} className="font-semibold text-xs h-auto p-1">Influence</Button>
                 <div className="flex items-end h-32">
-                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
-                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
-                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onSettingsChange} settingKey="colorInfluence" label="Color" max={1} step={0.05} />
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onLassoSettingsChange} settingKey="cursorInfluence" label="Cursor" max={1} step={0.05} />
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onLassoSettingsChange} settingKey="traceInfluence" label="Trace" max={1} step={0.05} />
+                    <VerticalLassoSlider lassoSettings={settings} onLassoSettingsChange={onLassoSettingsChange} settingKey="colorInfluence" label="Color" max={1} step={0.05} />
                 </div>
             </div>
         </div>

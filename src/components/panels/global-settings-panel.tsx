@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -21,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
 import { Slider } from "../ui/slider"
+import { useSidebar } from "../ui/sidebar"
 
 const hotkeys = [
   { tool: 'Transform', key: 'V' },
@@ -35,6 +37,39 @@ const hotkeys = [
   { tool: 'Undo', key: 'Ctrl+Z' },
   { tool: 'Redo', key: 'Ctrl+Y' },
 ];
+
+const SETTING_TABS = [
+    { id: "hotkeys", icon: Keyboard, label: "Hotkeys" },
+    { id: "cursor", icon: Brush, label: "Cursor" },
+    { id: "theme", icon: Palette, label: "Theme" },
+    { id: "performance", icon: Cpu, label: "Performance" },
+    { id: "account", icon: User, label: "Account" },
+    { id: "projects", icon: FolderOpen, label: "Projects" },
+    { id: "export", icon: Download, label: "Export" },
+];
+
+export function GlobalSettingsCompactPanel({ showHotkeys, onShowHotkeysChange }: { showHotkeys: boolean, onShowHotkeysChange: (value: boolean) => void }) {
+    return (
+        <div className="flex flex-col h-full items-center justify-start py-2 px-1">
+            <TooltipProvider>
+                <div className="flex flex-col items-center space-y-1">
+                    {SETTING_TABS.map(tab => (
+                        <Tooltip key={tab.id}>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10">
+                                    <tab.icon className="w-5 h-5"/>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                                <p>{tab.label}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    ))}
+                </div>
+            </TooltipProvider>
+        </div>
+    )
+}
 
 function UIAdjusterPanel() {
   const [primaryColor, setPrimaryColor] = React.useState("#6366f1");
@@ -136,16 +171,6 @@ function CursorSettingsPanel() {
 export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange }: { showHotkeys: boolean, onShowHotkeysChange: (value: boolean) => void }) {
   const [activeTab, setActiveTab] = React.useState("hotkeys");
 
-  const settingTabs = [
-    { id: "hotkeys", icon: Keyboard, label: "Hotkeys" },
-    { id: "cursor", icon: Brush, label: "Cursor" },
-    { id: "theme", icon: Palette, label: "Theme" },
-    { id: "performance", icon: Cpu, label: "Performance" },
-    { id: "account", icon: User, label: "Account" },
-    { id: "projects", icon: FolderOpen, label: "Projects" },
-    { id: "export", icon: Download, label: "Export" },
-  ];
-
   return (
     <div className="p-4 h-full flex flex-col">
       <div className="space-y-2 mb-4">
@@ -158,7 +183,7 @@ export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange }: { show
       <div className="border-b">
         <TooltipProvider>
           <div className="flex items-center justify-around">
-            {settingTabs.map(tab => (
+            {SETTING_TABS.map(tab => (
               <Tooltip key={tab.id}>
                 <TooltipTrigger asChild>
                   <Button

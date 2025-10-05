@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -13,11 +14,88 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Switch } from "../ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { cn } from "@/lib/utils"
 
 interface CloneStampPanelProps {
   settings: CloneStampSettings;
   onSettingsChange: (settings: Partial<CloneStampSettings>) => void;
 }
+
+export function CloneStampCompactSettings({ settings, onSettingsChange }: { settings: CloneStampSettings, onSettingsChange: (s: Partial<CloneStampSettings>) => void }) {
+  return (
+    <div className="flex flex-col h-full items-center justify-start py-2 px-1">
+      <TooltipProvider>
+        <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center gap-1 my-2">
+                <div className="flex items-end h-32">
+                    <VerticalCloneSlider settingKey="brushSize" label="Size" max={500} step={5} unit="px" settings={settings} onSettingsChange={onSettingsChange} />
+                    <VerticalCloneSlider settingKey="opacity" label="Opacity" max={100} step={5} unit="%" settings={settings} onSettingsChange={onSettingsChange} />
+                    <VerticalCloneSlider settingKey="angle" label="Angle" max={360} step={5} unit="°" settings={settings} onSettingsChange={onSettingsChange} />
+                </div>
+            </div>
+        </div>
+      </TooltipProvider>
+    </div>
+  )
+}
+
+const VerticalCloneSlider = ({
+    settingKey,
+    label,
+    max,
+    step,
+    unit = '',
+    settings,
+    onSettingsChange,
+  }: {
+    settingKey: keyof CloneStampSettings;
+    label: string;
+    max: number;
+    step: number;
+    unit?: string;
+    settings: CloneStampSettings;
+    onSettingsChange: (settings: Partial<CloneStampSettings>) => void;
+  }) => {
+    const value = settings[settingKey] as number;
+  
+    const handleWheel = (e: React.WheelEvent) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -1 : 1;
+        let newValue = value + delta * step;
+        newValue = Math.max(0, Math.min(max, newValue));
+        onSettingsChange({ [settingKey]: newValue } as Partial<CloneStampSettings>);
+    };
+  
+    return (
+        <div className={cn("flex flex-col items-center justify-end gap-2 h-full cursor-pointer rounded-md p-px")} onWheel={handleWheel}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                     <div className="w-full h-full flex flex-col items-center gap-2 justify-end">
+                        <div className={cn("w-3 h-full bg-muted rounded-full overflow-hidden flex flex-col justify-end relative")}>
+                          <div 
+                            className={cn("w-full bg-primary/75")}
+                            style={{ height: `${(value/max)*100}%`}}
+                          ></div>
+                        </div>
+                        <Slider
+                            id={`${settingKey}-slider`}
+                            min={0}
+                            max={max}
+                            step={step}
+                            value={[value]}
+                            onValueChange={(v) => onSettingsChange({ [settingKey]: v[0] } as Partial<CloneStampSettings>)}
+                            orientation="vertical"
+                            className="h-full absolute top-0 left-1/2 -translate-x-1/2 opacity-0 cursor-row-resize"
+                        />
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                    <p>{label}: {value.toFixed(0)}{unit}</p>
+                </TooltipContent>
+            </Tooltip>
+        </div>
+    );
+  };
 
 export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelProps) {
 
