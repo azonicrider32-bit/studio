@@ -90,7 +90,7 @@ While dense methods offer maximum possible accuracy, traditional optical flow al
 For production pipelines requiring high quality but feasible throughput, TPS-RPM, which relies on a mathematically closed-form solution to interpolate from a dense set of robust control points, is generally preferred as the primary non-rigid warper over computationally expensive deep flow networks.
 
 | Model Type | Required Control Points | Degrees of Freedom (2D) | Distortions Corrected | Primary Limitation |
-| :--- | :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- | :--- | :--- | :--- |
 | **Affine** | 3+ | 6 | Translation, Rotation, Scale, Shear, Aspect Ratio | Cannot correct perspective distortion or bending |
 | **Homography (Perspective)** | 4+ | 8 | All Affine + Perspective Distortion (Planar mapping) | Cannot correct non-rigid, localized deformation |
 | **Thin-Plate Spline (TPS)** | 10+ (Robust Control Points) | Infinite (Localized) | Non-Rigid Warping, Bending, Localized Artifacts | Requires high-quality, dense control points (TPS-RPM) 4 |
