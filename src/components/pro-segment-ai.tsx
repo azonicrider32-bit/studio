@@ -94,7 +94,7 @@ import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
 import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./panels/telemetry-panel"
 import { collection, serverTimestamp } from "firebase/firestore"
-import { summarizeLogEntry } from "@/ai/flows/summarize-log-entry"
+import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -257,41 +257,49 @@ function ProSegmentAIContent() {
   const [apiPerf, setApiPerf] = React.useState<ApiPerformanceMetrics>({ lastCall: 0, avgCall: 0, errors: 0 });
 
 
-  const logPerformanceEvent = React.useCallback(async (tool: string, operation: string, duration: number) => {
+  const logAppEvent = React.useCallback(async (
+    type: 'performance' | 'ai_call' | 'error',
+    data: {
+      tool?: string;
+      operation?: string;
+      duration?: number;
+      error?: string;
+      metadata?: Record<string, any>;
+    }
+  ) => {
     if (!user || !firestore) return;
-    
+
     const context = {
       image: activeWorkspace?.imageUrl,
       layerCount: activeWorkspace?.layers.length || 0,
+      activeTool,
+      ...data.metadata,
     };
 
     try {
-      const summary = await summarizeLogEntry({ tool, operation, duration, context });
+      const summary = await summarizeAppEvent({ eventType: type, ...data, context });
       const logData = {
         userId: user.uid,
         timestamp: serverTimestamp(),
-        tool,
-        operation,
-        duration,
+        type,
+        ...data,
         context,
         description: summary.description,
       };
       addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'performanceLogs'), logData);
     } catch (e) {
       console.error("Failed to generate log summary:", e);
-      // Log without summary
       const logData = {
         userId: user.uid,
         timestamp: serverTimestamp(),
-        tool,
-        operation,
-        duration,
+        type,
+        ...data,
         context,
-        description: `${tool} ${operation} took ${duration.toFixed(2)}ms`,
+        description: `Event: ${type} - ${data.operation || 'N/A'}. Duration: ${data.duration?.toFixed(2) || 'N/A'}ms.`,
       };
       addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'performanceLogs'), logData);
     }
-  }, [user, firestore, activeWorkspace]);
+  }, [user, firestore, activeWorkspace, activeTool]);
 
   const speak = React.useCallback(async (text: string) => {
     if (!isTtsEnabled) return;
@@ -834,12 +842,18 @@ function ProSegmentAIContent() {
     }
     setIsGenerating(true);
     toast({ title: 'Blemish Remover Active', description: 'AI is analyzing the selected area.' });
+    
+    const startTime = Date.now();
     try {
       const result = await inpaintWithPrompt({
         photoDataUri: activeWorkspace.imageUrl,
         maskDataUri: selectionMaskUri,
         prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the blemish or object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill."
       });
+      
+      const duration = Date.now() - startTime;
+      logAppEvent('ai_call', { tool: 'blemish-remover', operation: 'inpaintWithPrompt', duration });
+
       if (result.error || !result.generatedImageDataUri) {
         throw new Error(result.error || "Inpainting failed to return an image.");
       }
@@ -891,6 +905,8 @@ function ProSegmentAIContent() {
       toast({ title: 'Blemish Removed', description: 'The area has been repaired on a new layer.' });
 
     } catch (error) {
+      const duration = Date.now() - startTime;
+      logAppEvent('error', { tool: 'blemish-remover', operation: 'inpaintWithPrompt', duration, error: (error as Error).message });
       handleApiError(error, toast, { title: 'Blemish Remover Failed' });
     } finally {
       setIsGenerating(false);
@@ -921,12 +937,17 @@ function ProSegmentAIContent() {
     setIsGenerating(true)
     toast({ title: "AI is generating...", description: "This may take a moment." })
 
+    const startTime = Date.now();
     try {
       const result = await inpaintWithPrompt({
         photoDataUri: currentImageUrl,
         maskDataUri: maskDataUri,
         prompt: finalPrompt,
       })
+      
+      const duration = Date.now() - startTime;
+      logAppEvent('ai_call', { tool: 'banana', operation: 'inpaintWithPrompt', duration, metadata: { prompt: finalPrompt } });
+
 
       if (result.error) {
         throw new Error(result.error)
@@ -943,6 +964,8 @@ function ProSegmentAIContent() {
       }
 
     } catch (error: any) {
+      const duration = Date.now() - startTime;
+      logAppEvent('error', { tool: 'banana', operation: 'inpaintWithPrompt', duration, error: (error as Error).message });
       handleApiError(error, toast, {
         title: "Inpainting Failed",
         description: "An unknown error occurred during inpainting.",
@@ -1265,7 +1288,7 @@ function ProSegmentAIContent() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" onClick={() => setIsRightPanelOpen(p => !p)}>
-                    {isRightPanelOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
+                    {isRightPanelOpen ? <PanelRightClose className="h-5 h-5" /> : <PanelLeft className="h-5 h-5" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left"><p>{isRightPanelOpen ? 'Close Panel' : 'Open Panel'}</p></TooltipContent>
@@ -1282,7 +1305,7 @@ function ProSegmentAIContent() {
                           size="icon" 
                           onClick={() => handleShelfClick(id, 'single')}
                           onDoubleClick={() => handleShelfClick(id, 'double')}>
-                          <Icon className="h-5 w-5"/>
+                          <Icon className="h-5 h-5"/>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent side="left"><p>{label}</p></TooltipContent>
@@ -1343,3 +1366,4 @@ export function ProSegmentAI() {
     
 
     
+

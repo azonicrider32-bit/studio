@@ -9,4 +9,4 @@ import '@/ai/flows/inpaint-with-prompt.ts';
 import '@/ai/flows/add-object-flow.ts';
 import '@/ai/flows/upload-asset-flow.ts';
 import '@/ai/flows/text-to-speech-flow.ts';
-import '@/ai/flows/summarize-log-entry.ts';
+import '@/ai/flows/summarize-app-event.ts';
