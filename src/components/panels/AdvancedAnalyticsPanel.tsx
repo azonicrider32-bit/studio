@@ -114,7 +114,7 @@ export default function AdvancedAnalyticsPanel({
     }
     
     return rHist.map((r, i) => ({
-      range: `${i * 16}-${(i + 1) * 16 - 1}`,
+      range: `${i * 16}`,
       red: r,
       green: gHist[i],
       blue: bHist[i]
@@ -175,22 +175,22 @@ export default function AdvancedAnalyticsPanel({
         exit={{ opacity: 0, height: 0 }}
       >
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-700/60 shadow-xl">
-          <CardHeader className="pb-3 border-b border-slate-700/50">
+          <CardHeader className="py-3 px-4 border-b border-slate-700/50">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-slate-200">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <CardTitle className="flex items-center gap-2 text-slate-200 text-base">
+                <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center">
                   <BarChart3 className="w-4 h-4 text-white" />
                 </div>
                 Advanced Analytics
               </CardTitle>
               <div className="flex items-center gap-2">
                 {stats && (
-                  <Badge variant="outline" className="bg-slate-700/50 text-slate-300 border-slate-600">
+                  <Badge variant="outline" className="bg-slate-700/50 text-slate-300 border-slate-600 text-xs">
                     {stats.segmentationCoverage}% coverage
                   </Badge>
                 )}
-                <Button variant="ghost" size="sm" onClick={onToggle} className="text-slate-400 hover:text-slate-200">
-                  <Minimize2 className="w-4 h-4" />
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggle}>
+                  <Minimize2 className="w-4 h-4 text-slate-400 hover:text-slate-200" />
                 </Button>
               </div>
             </div>
@@ -198,8 +198,8 @@ export default function AdvancedAnalyticsPanel({
 
           <CardContent className="p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="p-4 border-b border-slate-700/50">
-                <div className="flex items-center justify-around bg-slate-700/50 border border-slate-600 rounded-md p-1">
+              <div className="p-2 border-b border-slate-700/50">
+                <div className="flex items-center justify-around bg-slate-700/50 border border-slate-600 rounded-md p-0.5">
                     <TooltipProvider>
                       {TABS.map(tab => (
                         <UITooltip key={tab.id}>
@@ -207,10 +207,10 @@ export default function AdvancedAnalyticsPanel({
                             <Button 
                               variant={activeTab === tab.id ? 'secondary' : 'ghost'} 
                               size="icon"
-                              className="h-9 w-14 flex-1"
+                              className="h-8 w-12 flex-1"
                               onClick={() => setActiveTab(tab.id)}
                             >
-                                <tab.icon className="w-5 h-5"/>
+                                <tab.icon className="w-4 h-4"/>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent><p>{tab.label}</p></TooltipContent>
@@ -220,26 +220,26 @@ export default function AdvancedAnalyticsPanel({
                 </div>
               </div>
 
-              <div className="p-4">
-                <TabsContent value="overview" className="mt-0 space-y-4">
+              <div className="p-3">
+                <TabsContent value="overview" className="mt-0 space-y-3">
                   {stats ? (
                     <>
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                         <StatCard icon={Target} label="Total Pixels" value={stats.totalPixels.toLocaleString()} color="blue" />
                         <StatCard icon={Eye} label="Segmented" value={stats.segmentedPixels.toLocaleString()} color="green" />
                         <StatCard icon={Activity} label="Coverage" value={`${stats.segmentationCoverage}%`} color="purple" />
-                        <StatCard icon={Layers} label="Layers" value={layers.filter(l => l.id !== 'bg').length} color="orange" />
+                        <StatCard icon={Layers} label="Layers" value={layers.filter(l => l.type !== 'background').length} color="orange" />
                       </div>
-                      <div className="bg-slate-700/20 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-slate-300 mb-3">Average Color</h4>
-                        <div className="flex items-center gap-4">
+                      <div className="bg-slate-700/20 rounded-lg p-3">
+                        <h4 className="text-xs font-medium text-slate-300 mb-2">Average Color</h4>
+                        <div className="flex items-center gap-3">
                           <div 
-                            className="w-16 h-16 rounded-lg border border-slate-600"
+                            className="w-12 h-12 rounded-md border border-slate-600"
                             style={{ backgroundColor: `rgb(${stats.avgColor.r}, ${stats.avgColor.g}, ${stats.avgColor.b})` }}
                           />
-                          <div className="text-sm text-slate-400">
+                          <div className="text-xs text-slate-400">
                             <div>RGB: {stats.avgColor.r}, {stats.avgColor.g}, {stats.avgColor.b}</div>
-                            <div>Hex: #{[stats.avgColor.r, stats.avgColor.g, stats.avgColor.b].map(c => c.toString(16).padStart(2, '0')).join('')}</div>
+                            <div className="font-mono">Hex: #{[stats.avgColor.r, stats.avgColor.g, stats.avgColor.b].map(c => c.toString(16).padStart(2, '0')).join('')}</div>
                           </div>
                         </div>
                       </div>
@@ -250,17 +250,17 @@ export default function AdvancedAnalyticsPanel({
                 </TabsContent>
 
                 <TabsContent value="histogram" className="mt-0">
-                  <div className="h-64 w-full">
+                  <div className="h-56 w-full">
                     {histogramData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={histogramData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                          <XAxis dataKey="range" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-                          <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-                          <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', color: '#f3f4f6' }} />
-                          <Bar dataKey="red" fill="#ef4444" opacity={0.8} />
-                          <Bar dataKey="green" fill="#22c55e" opacity={0.8} />
-                          <Bar dataKey="blue" fill="#3b82f6" opacity={0.8} />
+                        <BarChart data={histogramData} margin={{ top: 5, right: 0, left: -30, bottom: -10 }}>
+                          <CartesianGrid strokeDasharray="2 2" stroke="#374151" />
+                          <XAxis dataKey="range" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
+                          <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
+                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background)/0.8)', border: '1px solid hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--foreground))', fontSize: '12px' }} />
+                          <Bar dataKey="red" stackId="a" fill="#ef4444" opacity={0.7} />
+                          <Bar dataKey="green" stackId="a" fill="#22c55e" opacity={0.7} />
+                          <Bar dataKey="blue" stackId="a" fill="#3b82f6" opacity={0.7} />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
@@ -269,20 +269,20 @@ export default function AdvancedAnalyticsPanel({
                   </div>
                 </TabsContent>
 
-                <TabsContent value="layers" className="mt-0 space-y-4">
+                <TabsContent value="layers" className="mt-0 space-y-2">
                   {layerStats.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {layerStats.map((layer) => (
-                        <div key={layer.id} className="bg-slate-700/20 rounded-lg p-3 border border-slate-600/50">
-                          <div className="flex items-center justify-between mb-2">
+                        <div key={layer.id} className="bg-slate-700/20 rounded-lg p-2 border border-slate-600/50">
+                          <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded border border-slate-500" style={{ backgroundColor: layer.color }} />
-                              <span className="text-sm font-medium text-slate-300">{layer.name}</span>
+                              <div className="w-3 h-3 rounded border border-slate-500" style={{ backgroundColor: layer.color }} />
+                              <span className="text-xs font-medium text-slate-300 truncate">{layer.name}</span>
                               {!layer.visible && <Badge variant="outline" className="text-xs bg-slate-600/50">Hidden</Badge>}
                             </div>
-                            <span className="text-sm text-slate-400">{layer.pixels.toLocaleString()} pixels</span>
+                            <span className="text-xs text-slate-400 font-mono">{layer.pixels.toLocaleString()} px</span>
                           </div>
-                          <Progress value={stats ? (layer.pixels / stats.totalPixels) * 100 : 0} className="h-2 bg-slate-600" />
+                          <Progress value={stats ? (layer.pixels / stats.totalPixels) * 100 : 0} className="h-1 bg-slate-600" indicatorClassName="bg-primary/50" />
                         </div>
                       ))}
                     </div>
@@ -291,61 +291,54 @@ export default function AdvancedAnalyticsPanel({
                   )}
                 </TabsContent>
 
-                <TabsContent value="performance" className="mt-0 space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
+                <TabsContent value="performance" className="mt-0 space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
                     <StatCard icon={Activity} label="Frame Rate" value={`${performanceMetrics?.avgDuration ? (1000 / performanceMetrics.avgDuration).toFixed(0) : 'N/A'} FPS`} color="green" />
                     <StatCard icon={Cpu} label="Processing" value={`${Math.round(performanceMetrics?.lastDuration || 0)}ms`} color="blue" />
                     <StatCard icon={Zap} label="GPU" value="Active" color="purple" />
                   </div>
-                  <div className="bg-slate-700/20 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-slate-300 mb-3">Performance Timeline</h4>
-                    <div className="h-48">
+                  <div className="bg-slate-700/20 rounded-lg p-2">
+                    <h4 className="text-xs font-medium text-slate-300 mb-2">Performance Timeline</h4>
+                    <div className="h-40">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={performanceData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                          <XAxis dataKey="time" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-                          <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-                          <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', color: '#f3f4f6' }} />
-                          <Line type="monotone" dataKey="cpu" stroke="#22c55e" strokeWidth={2} name="CPU %" />
-                          <Line type="monotone" dataKey="memory" stroke="#3b82f6" strokeWidth={2} name="Memory MB" />
-                          <Line type="monotone" dataKey="gpu" stroke="#8b5cf6" strokeWidth={2} name="GPU %" />
+                        <LineChart data={performanceData} margin={{ top: 5, right: 5, left: -30, bottom: -10 }}>
+                          <CartesianGrid strokeDasharray="2 2" stroke="#374151" />
+                          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
+                          <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
+                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background)/0.8)', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                          <Line type="monotone" dataKey="cpu" stroke="#22c55e" strokeWidth={1.5} name="CPU %" dot={false} />
+                          <Line type="monotone" dataKey="memory" stroke="#3b82f6" strokeWidth={1.5} name="Memory MB" dot={false} />
+                          <Line type="monotone" dataKey="gpu" stroke="#8b5cf6" strokeWidth={1.5} name="GPU %" dot={false} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
-                  <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
-                    <h4 className="text-sm font-medium text-blue-300 mb-2">Optimization Suggestions</h4>
-                    <ul className="text-sm text-slate-400 space-y-1">
-                      <li>• GPU acceleration is active for optimal performance.</li>
-                      <li>• Consider reducing image size for faster processing.</li>
-                    </ul>
-                  </div>
                 </TabsContent>
                  <TabsContent value="logs" className="mt-0">
-                    <Card className="h-80 border-slate-600/50 bg-slate-700/20">
+                    <Card className="h-72 border-slate-600/50 bg-slate-700/20">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Operation</TableHead>
-                            <TableHead>Tool</TableHead>
-                            <TableHead className="text-right">Duration (ms)</TableHead>
-                            <TableHead>Time</TableHead>
+                            <TableHead className="text-xs h-8">Operation</TableHead>
+                            <TableHead className="text-xs h-8">Tool</TableHead>
+                            <TableHead className="text-right text-xs h-8">Duration</TableHead>
+                            <TableHead className="text-xs h-8">Time</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {logsLoading && Array.from({ length: 5 }).map((_, i) => (
-                            <TableRow key={i}><TableCell colSpan={4} className="text-center">Loading...</TableCell></TableRow>
+                            <TableRow key={i}><TableCell colSpan={4} className="text-center text-xs py-2">Loading...</TableCell></TableRow>
                           ))}
                           {!logsLoading && performanceLogs && performanceLogs.map((log: any) => (
                             <TableRow key={log.id}>
-                              <TableCell className="font-medium">{log.operation}</TableCell>
-                              <TableCell>{log.tool}</TableCell>
-                              <TableCell className="text-right font-mono">{log.duration.toFixed(2)}</TableCell>
-                              <TableCell>{log.timestamp ? formatDistanceToNow(log.timestamp.toDate(), { addSuffix: true }) : 'N/A'}</TableCell>
+                              <TableCell className="font-medium text-xs py-2">{log.operation}</TableCell>
+                              <TableCell className="text-xs py-2">{log.tool}</TableCell>
+                              <TableCell className="text-right font-mono text-xs py-2">{log.duration.toFixed(2)}ms</TableCell>
+                              <TableCell className="text-xs py-2">{log.timestamp ? formatDistanceToNow(log.timestamp.toDate(), { addSuffix: true }) : 'N/A'}</TableCell>
                             </TableRow>
                           ))}
                            {!logsLoading && (!performanceLogs || performanceLogs.length === 0) && (
-                            <TableRow><TableCell colSpan={4} className="text-center h-24">No logs yet. Perform an action to see data.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={4} className="text-center h-24 text-xs py-2">No logs yet. Perform an action to see data.</TableCell></TableRow>
                           )}
                         </TableBody>
                       </Table>
@@ -361,20 +354,20 @@ export default function AdvancedAnalyticsPanel({
 }
 
 const StatCard = ({ icon: Icon, label, value, color }: { icon: React.ElementType, label: string, value: string | number, color: string }) => (
-  <div className="bg-slate-700/30 rounded-lg p-3">
-    <div className={`flex items-center gap-2 mb-2`}>
+  <div className="bg-slate-700/30 rounded-lg p-2">
+    <div className={`flex items-center gap-2 mb-1`}>
       <Icon className={`w-4 h-4 text-${color}-400`} />
-      <span className="text-sm font-medium text-slate-300">{label}</span>
+      <span className="text-xs font-medium text-slate-300">{label}</span>
     </div>
-    <div className={`text-lg font-bold text-${color}-400`}>{value}</div>
+    <div className={`text-base font-bold text-${color}-400`}>{value}</div>
   </div>
 );
 
 const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType, text: string }) => (
-  <div className="flex items-center justify-center h-full text-slate-400">
+  <div className="flex items-center justify-center h-56 text-slate-400">
     <div className="text-center">
-      <Icon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-      <p>{text}</p>
+      <Icon className="w-10 h-10 mx-auto mb-2 opacity-50" />
+      <p className="text-sm">{text}</p>
     </div>
   </div>
 );
