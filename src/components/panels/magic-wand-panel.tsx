@@ -18,6 +18,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "..
 import { Label } from "../ui/label"
 import { ProgressiveHover } from "../ui/progressive-hover"
 import { Input } from "../ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
