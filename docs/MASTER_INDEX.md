@@ -70,3 +70,6 @@ This section links to markdown files containing direct code examples and compone
 *   ### [💻 ProSegment AI: Complete Application Code Reference](./APP_CODE_REFERENCE.md)
     *   **Summary:** An exhaustive, centralized snapshot of the complete source code for all major components and systems within the ProSegment AI application.
     *   **Status:** Live Code Snapshot v1.0
+*   ### [⚡️ Ultra-Fast Flood Fill Code Example](./ULTRAFAST_FLOOD_FILL.md)
+    *   **Summary:** Contains a user-provided, highly optimized flood fill algorithm that serves as a performance benchmark. It uses advanced techniques like bitmasks and typed arrays.
+    *   **Status:** Code Reference
