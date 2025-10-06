@@ -92,6 +92,7 @@ import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
 import { handleApiError } from "@/lib/error-handling"
 import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
 import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
+import { PerformanceMetrics, ApiPerformanceMetrics } from "./panels/telemetry-panel"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -248,6 +249,10 @@ function ProSegmentAIContent() {
     snapEnabled: true,
     snapRadius: 10,
   });
+
+  const [wandPerf, setWandPerf] = React.useState<PerformanceMetrics>({ lastDuration: 0, avgDuration: 0, lagEvents: 0 });
+  const [lassoPerf, setLassoPerf] = React.useState<PerformanceMetrics>({ lastDuration: 0, avgDuration: 0, lagEvents: 0 });
+  const [apiPerf, setApiPerf] = React.useState<ApiPerformanceMetrics>({ lastCall: 0, avgCall: 0, errors: 0 });
 
 
   const speak = React.useCallback(async (text: string) => {
@@ -1145,6 +1150,9 @@ function ProSegmentAIContent() {
                 mousePos={canvasMousePos}
                 negativeMagicWandSettings={negativeMagicWandSettings}
                 onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+                wandPerf={wandPerf}
+                lassoPerf={lassoPerf}
+                apiPerf={apiPerf}
               />
           </SidebarContent>
         </Sidebar>
@@ -1295,6 +1303,7 @@ export function ProSegmentAI() {
     
 
     
+
 
 
 
