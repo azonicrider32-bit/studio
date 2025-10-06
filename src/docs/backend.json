@@ -141,6 +141,70 @@
         "type",
         "description"
       ]
+    },
+    "CustomAiTool": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CustomAiTool",
+      "type": "object",
+      "description": "Represents a user-created AI tool with a configurable prompt and UI.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the custom tool."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who created this tool."
+        },
+        "name": {
+          "type": "string",
+          "description": "The display name of the tool."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of what the tool does."
+        },
+        "icon": {
+          "type": "string",
+          "description": "An icon identifier (e.g., from Lucide icons) for the tool's button."
+        },
+        "promptTemplate": {
+          "type": "string",
+          "description": "A Handlebars-style template string for the AI prompt. It can include placeholders like {{mask}} and {{custom_param_1}}."
+        },
+        "uiDefinition": {
+          "type": "array",
+          "description": "An array of objects defining the custom UI controls for this tool.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The key to use for this parameter in the prompt template (e.g., 'custom_param_1')."
+              },
+              "label": {
+                "type": "string",
+                "description": "The display label for the UI control."
+              },
+              "type": {
+                "type": "string",
+                "enum": ["slider", "switch", "select", "text"],
+                "description": "The type of UI control to render."
+              },
+              "defaultValue": {
+                "type": ["string", "number", "boolean"],
+                "description": "The default value for the control."
+              },
+              "options": {
+                "type": "object",
+                "description": "Configuration options for the control (e.g., min/max for a slider, items for a select dropdown)."
+              }
+            },
+            "required": ["id", "label", "type", "defaultValue"]
+          }
+        }
+      },
+      "required": ["id", "userId", "name", "promptTemplate"]
     }
   },
   "auth": {
@@ -206,8 +270,30 @@
             }
           ]
         }
+      },
+       {
+        "path": "/users/{userId}/customAiTools/{toolId}",
+        "definition": {
+          "entityName": "CustomAiTool",
+          "schema": {
+            "$ref": "#/backend/entities/CustomAiTool"
+          },
+          "description": "Stores user-created custom AI tools.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who created the tool."
+            },
+            {
+              "name": "toolId",
+              "description": "The unique identifier of the custom tool."
+            }
+          ]
+        }
       }
     ],
     "reasoning": "This Firestore data structure is designed to efficiently manage assets, user data, and roles while adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages structural segregation and denormalization to create a secure, scalable, and debuggable system.\n\nThe primary segregation strategy is to store user-owned assets under their respective user IDs. This eliminates the need for complex queries or security rules based on document content. Additionally, each document within a collection maintains a homogeneous security posture, and this ensures each document in the 'assets' collection share the same security requirements, simplifying the rules.\n\nAuthorization Independence is achieved by storing assets under user-specific paths, enabling path-based security rules that directly associate assets with their owners. Specifically, the `/users/{userId}/assets/{assetId}` structure facilitates security rules that permit only the user with the matching 'userId' to read, write, or delete assets. This design avoids `get()` calls in security rules by design, so rules will not depend on the parent document.\n\nThe QAP (Rules are not Filters) principle is supported through structural segregation. Listing operations can be secured by filtering assets based on the 'userId' in the path. This allows for efficient and secure listing of assets owned by a specific user without requiring rules to filter based on document data.\n\nOwnership invariants are maintained by enforcing the 'userId' in the asset document to match the 'userId' in the path. Timestamps can be easily added and managed within the asset documents, and denormalized data (e.g., asset counts) can be maintained in user documents via Cloud Functions triggered by asset creation or deletion."
   }
 }
+
+    
