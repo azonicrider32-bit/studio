@@ -50,6 +50,10 @@ These documents detail the user-facing tools for selection, transformation, and 
     *   **Summary:** A revolutionary redesign of the standard free transform interface. It features an intelligent border with dual arrows for scaling, dual sliders for skewing, a "Balloon Toggle" for warping, on-canvas layer ordering, and intelligent handling for small objects.
     *   **Status:** Detailed Architectural Specification v2.0
 
+*   ### [🧲 Magnet Lasso v2: The Predictive Edge-Following System](./MAGNET_LASSO_V2_BLUEPRINT.md)
+    *   **Summary:** A hybrid selection tool that combines real-time, cursor-centric segmentation with intelligent edge-pathfinding. It allows for rapid, accurate selections with minimal effort.
+    *   **Status:** Architectural Blueprint v1.0
+
 *   ### [🎨 The Segmentation Systems Encyclopedia](./SEGMENTATION_SYSTEMS.md)
     *   **Summary:** An exhaustive reference for over 30 image segmentation methodologies, from classical algorithms (Thresholding, Canny) to advanced AI-enhanced systems (SAM2, TSP-Optimization). This document forms the theoretical foundation for our selection tools.
     *   **Status:** Comprehensive Encyclopedia v1.0
