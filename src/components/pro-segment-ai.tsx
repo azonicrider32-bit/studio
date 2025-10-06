@@ -83,7 +83,7 @@ import { useSelectionDrag } from "@/hooks/use-selection-drag"
 import { useToast } from "@/hooks/use-toast"
 import { ToolPanel } from "./tool-panel"
 import { Slider } from "./ui/slider"
-import { useAuth, useUser } from "@/firebase"
+import { useAuth, useUser, useFirebase, addDocumentNonBlocking } from "@/firebase"
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
@@ -93,6 +93,7 @@ import { handleApiError } from "@/lib/error-handling"
 import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
 import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./panels/telemetry-panel"
+import { collection, serverTimestamp } from "firebase/firestore"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -233,7 +234,7 @@ function ProSegmentAIContent() {
   const [showVerticalRuler, setShowVerticalRuler] = React.useState(false);
   const [showGuides, setShowGuides] = React.useState(false);
 
-  const auth = useAuth();
+  const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
 
   const [isTtsEnabled, setIsTtsEnabled] = React.useState(false);
@@ -254,6 +255,22 @@ function ProSegmentAIContent() {
   const [lassoPerf, setLassoPerf] = React.useState<PerformanceMetrics>({ lastDuration: 0, avgDuration: 0, lagEvents: 0 });
   const [apiPerf, setApiPerf] = React.useState<ApiPerformanceMetrics>({ lastCall: 0, avgCall: 0, errors: 0 });
 
+
+  const logPerformanceEvent = React.useCallback((tool: string, operation: string, duration: number) => {
+    if (!user || !firestore) return;
+    const logData = {
+      userId: user.uid,
+      timestamp: serverTimestamp(),
+      tool,
+      operation,
+      duration,
+      context: {
+        image: activeWorkspace?.imageUrl,
+        layerCount: activeWorkspace?.layers.length || 0,
+      }
+    };
+    addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'performanceLogs'), logData);
+  }, [user, firestore, activeWorkspace]);
 
   const speak = React.useCallback(async (text: string) => {
     if (!isTtsEnabled) return;
@@ -1302,4 +1319,6 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+    
+
     
