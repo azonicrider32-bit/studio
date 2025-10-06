@@ -94,7 +94,7 @@ import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./panels/telemetry-panel"
 import { collection, serverTimestamp } from "firebase/firestore"
 import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
-import { UltraFastFloodFill } from "@/lib/ultrafast-flood-fill"
+import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 
 type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -1238,9 +1238,7 @@ function ProSegmentAIContent() {
         className="absolute left-0 top-12 h-[calc(100vh-3rem)] z-20"
       >
         <Sidebar collapsible="icon">
-          <SidebarHeader>
-            
-          </SidebarHeader>
+          <SidebarHeader/>
           <SidebarContent>
             <div>
               <ToolSettingsPanel
@@ -1424,4 +1422,3 @@ export function ProSegmentAI() {
   )
 }
 
-    
