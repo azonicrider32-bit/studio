@@ -32,10 +32,13 @@ import {
   Tooltip, 
   LineChart, 
   Line,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 import { Layer } from '@/lib/types';
-import { PerformanceMetrics } from './telemetry-panel';
-import { useCollection, useFirebase } from '@/firebase';
+import { PerformanceMetrics, ApiPerformanceMetrics } from './telemetry-panel';
+import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { formatDistanceToNow } from 'date-fns';
@@ -59,11 +62,14 @@ export default function AdvancedAnalyticsPanel({
   const [activeTab, setActiveTab] = React.useState('overview');
   const { firestore, user } = useFirebase();
 
-  const logsQuery = user ? query(
-    collection(firestore, 'users', user.uid, 'performanceLogs'),
-    orderBy('timestamp', 'desc'),
-    limit(50)
-  ) : null;
+  const logsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'performanceLogs'),
+      orderBy('timestamp', 'desc'),
+      limit(50)
+    );
+  }, [user, firestore]);
   
   const { data: performanceLogs, isLoading: logsLoading } = useCollection(logsQuery);
 
@@ -312,7 +318,7 @@ export default function AdvancedAnalyticsPanel({
                               <TableCell className="font-medium">{log.operation}</TableCell>
                               <TableCell>{log.tool}</TableCell>
                               <TableCell className="text-right font-mono">{log.duration.toFixed(2)}</TableCell>
-                              <TableCell>{formatDistanceToNow(log.timestamp.toDate(), { addSuffix: true })}</TableCell>
+                              <TableCell>{log.timestamp ? formatDistanceToNow(log.timestamp.toDate(), { addSuffix: true }) : 'N/A'}</TableCell>
                             </TableRow>
                           ))}
                            {!logsLoading && (!performanceLogs || performanceLogs.length === 0) && (
@@ -349,5 +355,3 @@ const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType, text: strin
     </div>
   </div>
 );
-
-    
