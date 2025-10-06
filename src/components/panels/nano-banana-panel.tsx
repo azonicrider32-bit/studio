@@ -1,5 +1,5 @@
 
-      "use client";
+"use client";
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,40 @@ interface NanoBananaPanelProps {
   isGenerating: boolean;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
+}
+
+export function NanoBananaCompactPanel({ onAiToolClick }: { onAiToolClick: (tool: AITool) => void }) {
+  const oneClickPrompts: AITool[] = [
+    { id: 'blemish-remover', label: 'Blemish Remover', prompt: 'Seamlessly remove this blemish, matching the surrounding skin texture and tone.', icon: Sparkles, color: '#ff80ed', lineStyle: 'solid' },
+    { id: 'add-object', label: 'Add Object', prompt: 'Add a small, realistic bird sitting here.', icon: Plus, color: '#ffc107', lineStyle: 'solid' },
+    { id: 'change-color', label: 'Change Color', prompt: 'Change the color of this object to a deep blue.', icon: Pipette, color: '#00bcd4', lineStyle: 'dashed' },
+    { id: 'remove-object', label: 'Remove Object', prompt: 'Completely remove the selected object and realistically fill in the background.', icon: Trash2, color: '#f44336', lineStyle: 'solid' },
+  ];
+  return (
+    <div className="flex flex-col h-full items-center justify-start py-2 px-1">
+      <TooltipProvider>
+        <div className="flex flex-col items-center space-y-1">
+          {oneClickPrompts.map(tool => (
+            <Tooltip key={tool.id}>
+              <TooltipTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10"
+                    onClick={() => onAiToolClick(tool)}
+                >
+                    <tool.icon className="h-5 w-5" style={{ color: tool.color }} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{tool.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </TooltipProvider>
+    </div>
+  );
 }
 
 
@@ -75,7 +109,7 @@ export function NanoBananaPanel({
           <AITabTrigger value="instruct" icon={MessageSquare}>Instruct</AITabTrigger>
           <AITabTrigger value="generate" icon={Wand2}>Generate</AITabTrigger>
           <AITabTrigger value="enhance" icon={Sparkles}>Enhance</AITabTrigger>
-          <AITabTrigger value="inpaint" icon={ImageUp}>Inpaint &amp; Extend</AITabTrigger>
+          <AITabTrigger value="inpaint" icon={ImageUp}>Inpaint & Extend</AITabTrigger>
           <AITabTrigger value="lighting" icon={Zap}>Lighting</AITabTrigger>
         </TabsList>
 
@@ -252,4 +286,3 @@ export function NanoBananaPanel({
     </div>
   );
 }
-    

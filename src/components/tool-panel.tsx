@@ -56,27 +56,7 @@ const manualToolDetails: Record<Tool, {
   settings: { id: "settings", icon: Settings2, tooltip: "Global Settings", shortcut: "", summary: "Configure application-wide preferences for UI, performance, and more.", details: "Access global settings for the entire application, including theme customization, hotkey management, and performance options." }
 };
 
-const aiToolDetails: Record<string, {
-    id: Tool | string;
-    icon: React.ElementType;
-    tooltip: string;
-    shortcut: string;
-    summary: string;
-    details: string;
-    disabled?: boolean;
-    isOneClick?: boolean;
-}> = {
-    banana: manualToolDetails.banana,
-    'blemish-remover': { ...manualToolDetails['blemish-remover'], isOneClick: true },
-    'remove-object': { id: 'remove-object', icon: Trash2, tooltip: 'Remove Object', shortcut: '', summary: 'Remove an object from the scene.', details: 'Draw a mask around an object to remove it and have the AI intelligently fill the background.', isOneClick: true },
-    'add-object': { id: 'add-object', icon: Plus, tooltip: 'Add Object', shortcut: '', summary: 'Add a new object to the scene.', details: 'Draw a rough shape and provide a prompt to generate a new object that matches the scene\'s perspective and lighting.', isOneClick: true },
-    'change-color': { id: 'change-color', icon: Palette, tooltip: 'Change Color', shortcut: '', summary: 'Change the color of an object.', details: 'Select an object and use a text prompt or color picker to change its color while preserving texture and lighting.', isOneClick: true },
-};
-
-
-const manualTools = Object.values(manualToolDetails).filter(t => t.id !== 'settings' && !aiToolDetails[t.id]);
-const aiTools = Object.values(aiToolDetails);
-
+const manualTools = Object.values(manualToolDetails).filter(t => t.id !== 'settings');
 
 interface ToolPanelProps {
   activeTool: Tool;
@@ -124,9 +104,7 @@ export function ToolPanel({
   activeTool,
   setActiveTool,
   showHotkeys,
-  onAiToolClick,
 }: ToolPanelProps) {
-  const [activeToolbar, setActiveToolbar] = React.useState<'manual' | 'ai'>('manual');
   
   return (
     <div className="h-full flex-shrink-0 w-16 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
@@ -136,62 +114,17 @@ export function ToolPanel({
             <Separator className="bg-border/10 my-2"/>
 
             <div className="flex flex-col gap-1">
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button 
-                            variant={activeToolbar === 'manual' ? 'secondary' : 'ghost'} 
-                            size="sm" 
-                            className="h-8"
-                            onClick={() => setActiveToolbar('manual')}
-                        >
-                            <Paintbrush className="w-4 h-4"/>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right"><p>Manual Tools</p></TooltipContent>
-                </Tooltip>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button 
-                            variant={activeToolbar === 'ai' ? 'secondary' : 'ghost'} 
-                            size="sm" 
-                            className="h-8"
-                            onClick={() => setActiveToolbar('ai')}
-                        >
-                            <BrainCircuit className="w-4 h-4"/>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right"><p>AI Tools</p></TooltipContent>
-                </Tooltip>
+                {manualTools.map((tool) => (
+                  <ToolButtonWithProgressiveHover
+                    key={tool.id}
+                    tool={tool}
+                    isActive={activeTool === tool.id}
+                    onClick={() => setActiveTool(tool.id as Tool)}
+                    showHotkey={showHotkeys}
+                  />
+                ))}
             </div>
             
-            <Separator className="bg-border/10 my-2"/>
-            
-            {activeToolbar === 'manual' && manualTools.map((tool) => (
-              <ToolButtonWithProgressiveHover
-                key={tool.id}
-                tool={tool}
-                isActive={activeTool === tool.id}
-                onClick={() => setActiveTool(tool.id as Tool)}
-                showHotkey={showHotkeys}
-              />
-            ))}
-
-            {activeToolbar === 'ai' && aiTools.map((tool) => (
-               <ToolButtonWithProgressiveHover
-                key={tool.id}
-                tool={tool}
-                isActive={activeTool === tool.id}
-                onClick={() => {
-                  if (tool.isOneClick) {
-                    onAiToolClick(tool as AITool);
-                  } else {
-                    setActiveTool(tool.id as Tool);
-                  }
-                }}
-                showHotkey={showHotkeys}
-              />
-            ))}
-
         </TooltipProvider>
       </div>
       <div className="flex flex-col items-center gap-2">

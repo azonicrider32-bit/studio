@@ -40,7 +40,7 @@ import { MagicWandPanel } from "./magic-wand-panel"
 import { LassoCompactSettings } from "./lasso-compact-settings"
 import { CloneStampPanel, CloneStampCompactSettings } from "./clone-stamp-panel"
 import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settings-panel"
-import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
+import { NanoBananaPanel, InstructionLayer, NanoBananaCompactPanel } from "./nano-banana-panel"
 import { TransformPanel } from "./transform-panel"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./telemetry-panel"
@@ -69,6 +69,7 @@ interface ToolSettingsPanelProps {
   onInstructionChange: (id: string, prompt: string) => void;
   onLayerDelete: (id: string) => void;
   onGenerate: (prompt?: string) => void;
+  onAiToolClick: (tool: AITool) => void;
   isGenerating: boolean;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
@@ -107,6 +108,7 @@ export function ToolSettingsPanel({
     onInstructionChange,
     onLayerDelete,
     onGenerate,
+    onAiToolClick,
     isGenerating,
     customPrompt,
     setCustomPrompt,
@@ -138,7 +140,7 @@ export function ToolSettingsPanel({
         },
         'wand-v2': {
             title: 'Magic Wand V2',
-            description: 'A high-performance version of the Magic Wand using an optimized flood-fill algorithm.',
+            description: 'A high-performance version of the Magic Wand tool using an optimized flood-fill algorithm.',
             shortcut: 'W'
         },
         'lasso': {
@@ -233,8 +235,12 @@ export function ToolSettingsPanel({
     onLassoSettingsChange(newSettings);
   };
 
+ const isAiToolActive = ['banana', 'blemish-remover', 'remove-object', 'add-object', 'change-color'].includes(activeTool);
 
   if (sidebarState === 'collapsed') {
+    if (isAiToolActive) {
+      return <NanoBananaCompactPanel onAiToolClick={onAiToolClick} />;
+    }
     switch (activeTool) {
         case 'magic-wand':
             return <MagicWandCompactSettings 
@@ -290,9 +296,6 @@ export function ToolSettingsPanel({
     );
   }
   
-  const isAiToolActive = ['banana', 'blemish-remover', 'remove-object', 'add-object', 'change-color'].includes(activeTool);
-
-
   const getActiveToolIcon = () => {
     switch(activeTool) {
       case 'magic-wand': return <Wand2 className="w-4 h-4" />;
@@ -315,10 +318,10 @@ export function ToolSettingsPanel({
             onInstructionChange={onInstructionChange}
             onLayerDelete={onLayerDelete}
             onGenerate={onGenerate}
+            onAiToolClick={onAiToolClick}
             isGenerating={isGenerating}
             customPrompt={customPrompt}
             setCustomPrompt={setCustomPrompt}
-            onAiToolClick={() => {}}
           />
       );
     }
@@ -496,7 +499,7 @@ export function ToolSettingsPanel({
                         <Switch
                             id="show-masks"
                             checked={lassoSettings.showAllMasks}
-                            onCheckedChange={(v) => onLassoSettingsChange({ showAllMasks: v })}
+                            onValueChange={(v) => onLassoSettingsChange({ showAllMasks: v })}
                         />
                     </div>
                 </div>
