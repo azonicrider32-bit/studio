@@ -90,8 +90,6 @@ export function ToolSettingsPanel({
     onMagicWandSettingsChange,
     wandV2Settings,
     onWandV2SettingsChange,
-    negativeMagicWandSettings,
-    onNegativeMagicWandSettingsChange,
     lassoSettings,
     onLassoSettingsChange,
     cloneStampSettings,
@@ -114,6 +112,8 @@ export function ToolSettingsPanel({
     setCustomPrompt,
     canvas,
     mousePos,
+    negativeMagicWandSettings,
+    onNegativeMagicWandSettingsChange,
     // Performance
     performanceMetrics,
     apiPerf,
