@@ -599,7 +599,7 @@ export class SelectionEngine {
         }
     }
     return { path, futurePath };
-}
+  }
 
 
   snapToEdge(x: number, y: number): [number, number] {
@@ -873,12 +873,47 @@ export class SelectionEngine {
   }
 
   isWithinTolerance(seedColor: any, neighborColor: any): boolean {
-    const isIncluded = this.isInsideTolerance(seedColor, neighborColor, this.magicWandSettings);
-    if (!isIncluded) {
-        return false;
+    const { tolerances, enabledTolerances } = this.magicWandSettings;
+    const hasRgb = enabledTolerances.has('r') || enabledTolerances.has('g') || enabledTolerances.has('b');
+    const hasHsv = enabledTolerances.has('h') || enabledTolerances.has('s') || enabledTolerances.has('v');
+    const hasLab = enabledTolerances.has('l') || enabledTolerances.has('a') || enabledTolerances.has('b_lab');
+
+    // Quick check: If no tolerances are enabled, all pixels are included.
+    if (!hasRgb && !hasHsv && !hasLab) {
+        return true;
     }
-    
-    // If there are active exclusion tolerances, check them
+
+    // Fast path: check RGB first if any RGB tolerance is enabled
+    if (hasRgb) {
+        if (enabledTolerances.has('r') && Math.abs(seedColor.rgb.r - neighborColor.rgb.r) > tolerances.r) return false;
+        if (enabledTolerances.has('g') && Math.abs(seedColor.rgb.g - neighborColor.rgb.g) > tolerances.g) return false;
+        if (enabledTolerances.has('b') && Math.abs(seedColor.rgb.b - neighborColor.rgb.b) > tolerances.b) return false;
+    }
+
+    // Lazy conversion and check for HSV
+    if (hasHsv) {
+        const seedHsv = seedColor.hsv || rgbToHsv(seedColor.rgb.r, seedColor.rgb.g, seedColor.rgb.b);
+        const neighborHsv = neighborColor.hsv || rgbToHsv(neighborColor.rgb.r, neighborColor.rgb.g, neighborColor.rgb.b);
+
+        if (enabledTolerances.has('h')) {
+            const hDiff = Math.abs(seedHsv.h - neighborHsv.h);
+            if (Math.min(hDiff, 360 - hDiff) > tolerances.h) return false;
+        }
+        if (enabledTolerances.has('s') && Math.abs(seedHsv.s - neighborHsv.s) > tolerances.s) return false;
+        if (enabledTolerances.has('v') && Math.abs(seedHsv.v - neighborHsv.v) > tolerances.v) return false;
+    }
+
+    // Lazy conversion and check for LAB
+    if (hasLab) {
+        const seedLab = seedColor.lab || rgbToLab(seedColor.rgb.r, seedColor.rgb.g, seedColor.rgb.b);
+        const neighborLab = neighborColor.lab || rgbToLab(neighborColor.rgb.r, neighborColor.rgb.g, neighborColor.rgb.b);
+
+        if (enabledTolerances.has('l') && Math.abs(seedLab.l - neighborLab.l) > tolerances.l) return false;
+        if (enabledTolerances.has('a') && Math.abs(seedLab.a - neighborLab.a) > tolerances.a) return false;
+        if (enabledTolerances.has('b_lab') && Math.abs(seedLab.b_lab - neighborLab.b_lab) > tolerances.b_lab) return false;
+    }
+
+    // Exclusion check
     if (this.negativeMagicWandSettings.enabledTolerances.size > 0 && this.negativeMagicWandSettings.seedColor) {
         const exclusionSeedColor = {
             rgb: { r: this.negativeMagicWandSettings.seedColor.r, g: this.negativeMagicWandSettings.seedColor.g, b: this.negativeMagicWandSettings.seedColor.b },
@@ -886,11 +921,11 @@ export class SelectionEngine {
             lab: { l: this.negativeMagicWandSettings.seedColor.l, a: this.negativeMagicWandSettings.seedColor.a, b_lab: this.negativeMagicWandSettings.seedColor.b_lab },
         }
         const isExcluded = this.isInsideTolerance(exclusionSeedColor, neighborColor, this.negativeMagicWandSettings);
-        return !isExcluded;
+        if (isExcluded) return false;
     }
 
     return true;
-  }
+}
   // #endregion
   
   createCircularMask(x: number, y: number, radius: number): string {
@@ -971,6 +1006,19 @@ export class SelectionEngine {
     }
     return newImageData;
   }
+  
+  getPixelsFromMask(imageData: ImageData): Set<number> {
+    const pixels = new Set<number>();
+    const { data, width, height } = imageData;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] > 128) { // Check alpha channel
+        const pixelIndex = i / 4;
+        pixels.add(pixelIndex);
+      }
+    }
+    return pixels;
+  }
+
 
   createLayerFromPixels(pixels: Set<number>, activeLayerId: string | null = null): Layer | null {
     const segment = this.createSegmentFromPixels(pixels);
@@ -1211,44 +1259,9 @@ export class SelectionEngine {
 
     overlayCtx.clearRect(0, 0, this.width, this.height);
     
-    const showMasks = wandSettings.showAllMasks && lassoSettings.showAllMasks;
+    // Only render the active highlights and tool previews, not all layer masks.
+    // The layer masks are now drawn on a separate canvas.
 
-    if (showMasks) {
-        layers.forEach(layer => {
-            const currentLayer = draggedLayer?.id === layer.id ? draggedLayer : layer;
-            if (currentLayer.visible && currentLayer.maskVisible && (currentLayer.type === 'segmentation' || currentLayer.subType === 'mask')) {
-                overlayCtx.save();
-                
-                const isMask = currentLayer.subType === 'mask';
-                const texture = isMask ? 'checkerboard' : (currentLayer.highlightTexture || 'solid');
-                let color = isMask ? 'hsl(0, 0%, 50%)' : (currentLayer.highlightColor || 'hsl(var(--primary))');
-                const opacity = currentLayer.highlightOpacity || 0.5;
-
-                 if (!isMask && wandSettings.highlightColorMode === 'contrast') {
-                    const avgLuminance = this.getAverageLuminance(currentLayer.pixels);
-                    color = avgLuminance > 0.5 ? '#000000' : '#FFFFFF';
-                }
-
-                const pattern = this.renderPattern(overlayCtx, texture, color, opacity);
-                if(pattern) {
-                    overlayCtx.fillStyle = pattern;
-                } else {
-                    overlayCtx.restore();
-                    return;
-                }
-                
-                const pixels = currentLayer.subType === 'path' ? this.pathToSelection(currentLayer.path || []) : currentLayer.pixels;
-                pixels.forEach(idx => {
-                    const x = idx % this.width;
-                    const y = Math.floor(idx / this.width);
-                    overlayCtx.fillRect(x, y, 1, 1);
-                });
-
-                overlayCtx.restore();
-            }
-        });
-    }
-    
     if (hoveredSegment && wandSettings.useAiAssist === false) {
        const isMask = wandSettings.createAsMask;
        this.renderHoverSegment(overlayCtx, hoveredSegment, isMask, wandSettings);

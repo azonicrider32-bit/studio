@@ -865,7 +865,7 @@ function ProSegmentAIContent() {
     setIsGenerating(true);
     toast({ title: 'Blemish Remover Active', description: 'AI is analyzing the selected area.' });
     
-    const startTime = Date.now();
+    const startTime = performance.now();
     try {
       const result = await inpaintWithPrompt({
         photoDataUri: activeWorkspace.imageUrl,
@@ -873,7 +873,7 @@ function ProSegmentAIContent() {
         prompt: "Inpaint the selected area to seamlessly match the surrounding background, making it look as if the blemish or object was never there. Pay close attention to texture, lighting, and patterns to create a realistic and unnoticeable fill."
       });
       
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       logAppEvent('ai_call', { tool: 'blemish-remover', operation: 'inpaintWithPrompt', duration });
 
       if (result.error || !result.generatedImageDataUri) {
@@ -927,7 +927,7 @@ function ProSegmentAIContent() {
       toast({ title: 'Blemish Removed', description: 'The area has been repaired on a new layer.' });
 
     } catch (error) {
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       logAppEvent('error', { tool: 'blemish-remover', operation: 'inpaintWithPrompt', duration, error: (error as Error).message });
       handleApiError(error, toast, { title: 'Blemish Remover Failed' });
     } finally {
@@ -959,7 +959,7 @@ function ProSegmentAIContent() {
     setIsGenerating(true)
     toast({ title: "AI is generating...", description: "This may take a moment." })
 
-    const startTime = Date.now();
+    const startTime = performance.now();
     try {
       const result = await inpaintWithPrompt({
         photoDataUri: currentImageUrl,
@@ -967,7 +967,7 @@ function ProSegmentAIContent() {
         prompt: finalPrompt,
       })
       
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       logAppEvent('ai_call', { tool: 'banana', operation: 'inpaintWithPrompt', duration, metadata: { prompt: finalPrompt } });
 
 
@@ -986,7 +986,7 @@ function ProSegmentAIContent() {
       }
 
     } catch (error: any) {
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       logAppEvent('error', { tool: 'banana', operation: 'inpaintWithPrompt', duration, error: (error as Error).message });
       handleApiError(error, toast, {
         title: "Inpainting Failed",
@@ -1175,8 +1175,8 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingsChange={handleMagicWandSettingsChange}
-              onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
+              onMagicWandSettingChange={handleMagicWandSettingsChange}
+              onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
@@ -1388,5 +1388,6 @@ export function ProSegmentAI() {
     
 
     
+
 
 
