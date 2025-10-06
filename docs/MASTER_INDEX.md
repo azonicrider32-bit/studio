@@ -20,9 +20,13 @@ These documents describe the fundamental systems that power the entire applicati
 
 ---
 
-## 3. Generative AI Editing Systems
+## 3. Multimodal Interaction & Tooling Systems
 
-This section covers the innovative AI-powered tools that allow users to perform visual edits through multimodal instructions.
+This section covers the innovative systems that define how users interact with and control the AI tools.
+
+*   ### [🎯 The Prompt-as-Tool (PaT) System](./PROMPT_AS_TOOL_SYSTEM.md)
+    *   **Summary:** An advanced architecture that treats every prompt as a living, multimodal tool that can be invoked by gestures, voice, and context. It defines the core of our "AI Wizard Fusion" interface.
+    *   **Status:** Technical Architecture v1.0
 
 *   ### [🍌 The "Nano Banana" Visual AI Editing System (v2)](./NANO_BANANA_SYSTEM_V2_BLUEPRINT.md)
     *   **Summary:** The core specification for the multimodal sketch-and-prompt editing system. It details how user drawings and text are converted into structured commands for the `gemini-2.5-flash-image-preview` model to enable a non-destructive, layer-based workflow.
