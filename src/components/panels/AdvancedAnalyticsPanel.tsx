@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from 'react';
@@ -130,20 +131,11 @@ export default function AdvancedAnalyticsPanel({
       color: `hsl(${index * 60}, 70%, 50%)`
     }));
   };
-  
-  const getPerformanceData = () => [
-    { time: '0s', cpu: 45, memory: 120, gpu: 30 },
-    { time: '1s', cpu: 60, memory: 150, gpu: 45 },
-    { time: '2s', cpu: 75, memory: 180, gpu: 60 },
-    { time: '3s', cpu: 50, memory: 160, gpu: 35 },
-    { time: '4s', cpu: 40, memory: 140, gpu: 25 },
-  ];
 
   const stats = getImageStats();
   const histogramData = getHistogramData();
   const layerStats = getLayerStats();
-  const performanceData = getPerformanceData();
-
+  
   const TABS = [
       { id: 'overview', icon: Target, label: "Overview" },
       { id: 'histogram', icon: BarChart3, label: "Histogram" },
@@ -300,14 +292,12 @@ export default function AdvancedAnalyticsPanel({
                     <h4 className="text-xs font-medium text-slate-300 mb-2">Performance Timeline</h4>
                     <div className="h-40">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={performanceData} margin={{ top: 5, right: 5, left: -30, bottom: -10 }}>
+                        <LineChart data={performanceMetrics.history.map((d, i) => ({name: i, duration: d})).reverse()} margin={{ top: 5, right: 5, left: -30, bottom: -10 }}>
                           <CartesianGrid strokeDasharray="2 2" stroke="#374151" />
-                          <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
-                          <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
+                          <XAxis dataKey="name" tick={false} axisLine={{ stroke: '#4b5563' }} />
+                          <YAxis domain={[0, 'dataMax + 20']} tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={{ stroke: '#4b5563' }} />
                           <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background)/0.8)', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                          <Line type="monotone" dataKey="cpu" stroke="#22c55e" strokeWidth={1.5} name="CPU %" dot={false} />
-                          <Line type="monotone" dataKey="memory" stroke="#3b82f6" strokeWidth={1.5} name="Memory MB" dot={false} />
-                          <Line type="monotone" dataKey="gpu" stroke="#8b5cf6" strokeWidth={1.5} name="GPU %" dot={false} />
+                          <Line type="monotone" dataKey="duration" stroke="#3b82f6" strokeWidth={1.5} name="Frame Time (ms)" dot={false} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -362,3 +352,4 @@ const EmptyState = ({ icon: Icon, text }: { icon: React.ElementType, text: strin
     </div>
   </div>
 );
+

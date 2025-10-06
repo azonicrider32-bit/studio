@@ -174,6 +174,13 @@ export interface FeatherSettings {
   };
 }
 
+export interface PerformanceMetrics {
+  lastDuration: number;
+  avgDuration: number;
+  lagEvents: number;
+  history: number[];
+}
+
 export const UploadAssetInputSchema = z.object({
   userId: z.string().describe('The ID of the user uploading the asset.'),
   fileName: z.string().describe('The name of the file to be uploaded.'),

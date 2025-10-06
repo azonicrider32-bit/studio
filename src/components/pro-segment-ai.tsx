@@ -252,10 +252,8 @@ function ProSegmentAIContent() {
     snapRadius: 10,
   });
 
-  const [wandPerf, setWandPerf] = React.useState<PerformanceMetrics>({ lastDuration: 0, avgDuration: 0, lagEvents: 0 });
-  const [lassoPerf, setLassoPerf] = React.useState<PerformanceMetrics>({ lastDuration: 0, avgDuration: 0, lagEvents: 0 });
+  const [performanceMetrics, setPerformanceMetrics] = React.useState<PerformanceMetrics>({ lastDuration: 0, avgDuration: 0, lagEvents: 0, history: [] });
   const [apiPerf, setApiPerf] = React.useState<ApiPerformanceMetrics>({ lastCall: 0, avgCall: 0, errors: 0 });
-
 
   const logAppEvent = React.useCallback(async (
     type: 'performance' | 'ai_call' | 'error',
@@ -300,6 +298,30 @@ function ProSegmentAIContent() {
       addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'performanceLogs'), logData);
     }
   }, [user, firestore, activeWorkspace, activeTool]);
+  
+  const measurePerformance = (op: () => void, tool: string, operation: string) => {
+    const start = performance.now();
+    op();
+    const duration = performance.now() - start;
+
+    setPerformanceMetrics(prev => {
+        const newHistory = [duration, ...prev.history.slice(0, 49)];
+        const newAvg = newHistory.reduce((a, b) => a + b, 0) / newHistory.length;
+        const newLagEvents = duration > 100 ? prev.lagEvents + 1 : prev.lagEvents;
+        
+        if (duration > 100) {
+            logAppEvent('performance', { tool, operation, duration });
+        }
+        
+        return {
+            lastDuration: duration,
+            avgDuration: newAvg,
+            lagEvents: newLagEvents,
+            history: newHistory
+        };
+    });
+  };
+
 
   const speak = React.useCallback(async (text: string) => {
     if (!isTtsEnabled) return;
@@ -1174,6 +1196,7 @@ function ProSegmentAIContent() {
               showVerticalRuler={showVerticalRuler}
               showGuides={showGuides}
               globalSettings={globalSettings}
+              measurePerformance={measurePerformance}
               />
           </div>
       </main>
@@ -1211,8 +1234,7 @@ function ProSegmentAIContent() {
                 mousePos={canvasMousePos}
                 negativeMagicWandSettings={negativeMagicWandSettings}
                 onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
-                wandPerf={wandPerf}
-                lassoPerf={lassoPerf}
+                performanceMetrics={performanceMetrics}
                 apiPerf={apiPerf}
                 imageData={selectionEngineRef.current?.imageData ?? null}
                 layers={activeWorkspace.layers}
@@ -1366,4 +1388,5 @@ export function ProSegmentAI() {
     
 
     
+
 

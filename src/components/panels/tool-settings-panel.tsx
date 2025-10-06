@@ -44,6 +44,7 @@ import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
 import { TransformPanel } from "./transform-panel"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./telemetry-panel"
+import AdvancedAnalyticsPanel from "./AdvancedAnalyticsPanel"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -72,8 +73,7 @@ interface ToolSettingsPanelProps {
   canvas: HTMLCanvasElement | null;
   mousePos: { x: number, y: number } | null;
   // Performance Metrics
-  wandPerf: PerformanceMetrics;
-  lassoPerf: PerformanceMetrics;
+  performanceMetrics: PerformanceMetrics;
   apiPerf: ApiPerformanceMetrics;
   imageData: ImageData | null;
   layers: Layer[];
@@ -109,8 +109,7 @@ export function ToolSettingsPanel({
     canvas,
     mousePos,
     // Performance
-    wandPerf,
-    lassoPerf,
+    performanceMetrics,
     apiPerf,
     imageData,
     layers,
@@ -489,8 +488,7 @@ export function ToolSettingsPanel({
                 onShowHotkeysChange={onShowHotkeysChange} 
                 settings={globalSettings} 
                 onSettingsChange={onGlobalSettingsChange} 
-                wandPerf={wandPerf}
-                lassoPerf={lassoPerf}
+                performanceMetrics={performanceMetrics}
                 apiPerf={apiPerf}
                 imageData={imageData}
                 layers={layers}
@@ -513,3 +511,4 @@ export function ToolSettingsPanel({
 
   return renderLeftPanelContent();
 }
+
