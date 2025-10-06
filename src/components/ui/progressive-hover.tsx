@@ -57,18 +57,18 @@ export function ProgressiveHover({
 
   return (
     <TooltipProvider>
-      <Tooltip>
+      <Tooltip open={popoverOpen ? false : undefined}>
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-                {React.cloneElement(children as React.ReactElement, {
-                    onMouseEnter: handleMouseEnter,
-                    onMouseLeave: handleMouseLeave,
-                })}
+              {React.cloneElement(children as React.ReactElement, {
+                onMouseEnter: handleMouseEnter,
+                onMouseLeave: handleMouseLeave,
+              })}
             </PopoverTrigger>
           </TooltipTrigger>
           <PopoverContent side="left" align="start" className="w-80">
-              {content}
+            {content}
           </PopoverContent>
         </Popover>
         <TooltipContent side="left">
