@@ -17,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "../ui/label"
 import { Switch } from "../ui/switch"
-import { TelemetryPanel } from "./telemetry-panel"
+import { TelemetryPanel, PerformanceMetrics, ApiPerformanceMetrics } from "./telemetry-panel"
 import { Button } from "../ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
@@ -208,7 +208,23 @@ function SnapSettingsPanel({ settings, onSettingsChange }: { settings: GlobalSet
 }
 
 
-export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange, settings, onSettingsChange }: { showHotkeys: boolean, onShowHotkeysChange: (value: boolean) => void, settings: GlobalSettings, onSettingsChange: (s: Partial<GlobalSettings>) => void }) {
+export function GlobalSettingsPanel({
+  showHotkeys,
+  onShowHotkeysChange,
+  settings,
+  onSettingsChange,
+  wandPerf,
+  lassoPerf,
+  apiPerf,
+}: {
+  showHotkeys: boolean;
+  onShowHotkeysChange: (value: boolean) => void;
+  settings: GlobalSettings;
+  onSettingsChange: (s: Partial<GlobalSettings>) => void;
+  wandPerf: PerformanceMetrics;
+  lassoPerf: PerformanceMetrics;
+  apiPerf: ApiPerformanceMetrics;
+}) {
   const [activeTab, setActiveTab] = React.useState("hotkeys");
 
   return (
@@ -284,9 +300,9 @@ export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange, settings
         )}
         {activeTab === 'performance' && (
             <TelemetryPanel 
-              wandPerf={{lastDuration: 0, avgDuration: 0, lagEvents: 0}}
-              lassoPerf={{lastDuration: 0, avgDuration: 0, lagEvents: 0}}
-              apiPerf={{lastCall: 0, avgCall: 0, errors: 0}}
+              wandPerf={wandPerf}
+              lassoPerf={lassoPerf}
+              apiPerf={apiPerf}
             />
         )}
          {activeTab === 'account' && (

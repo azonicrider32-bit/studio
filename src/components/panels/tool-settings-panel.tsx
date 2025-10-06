@@ -43,6 +43,7 @@ import { GlobalSettingsPanel, GlobalSettingsCompactPanel } from "./global-settin
 import { NanoBananaPanel, InstructionLayer } from "./nano-banana-panel"
 import { TransformPanel } from "./transform-panel"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { PerformanceMetrics, ApiPerformanceMetrics } from "./telemetry-panel"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -70,6 +71,10 @@ interface ToolSettingsPanelProps {
   setCustomPrompt: (prompt: string) => void;
   canvas: HTMLCanvasElement | null;
   mousePos: { x: number, y: number } | null;
+  // Performance Metrics
+  wandPerf: PerformanceMetrics;
+  lassoPerf: PerformanceMetrics;
+  apiPerf: ApiPerformanceMetrics;
 }
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
@@ -100,7 +105,11 @@ export function ToolSettingsPanel({
     customPrompt,
     setCustomPrompt,
     canvas,
-    mousePos
+    mousePos,
+    // Performance
+    wandPerf,
+    lassoPerf,
+    apiPerf,
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -470,7 +479,15 @@ export function ToolSettingsPanel({
                 onSettingsChange={onCloneStampSettingsChange} 
             />
           ) : activeTool === 'settings' ? (
-            <GlobalSettingsPanel showHotkeys={showHotkeys} onShowHotkeysChange={onShowHotkeysChange} settings={globalSettings} onGlobalSettingsChange={onGlobalSettingsChange} />
+            <GlobalSettingsPanel 
+                showHotkeys={showHotkeys} 
+                onShowHotkeysChange={onShowHotkeysChange} 
+                settings={globalSettings} 
+                onSettingsChange={onGlobalSettingsChange} 
+                wandPerf={wandPerf}
+                lassoPerf={lassoPerf}
+                apiPerf={apiPerf}
+            />
           ) : (
              <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
           )}
