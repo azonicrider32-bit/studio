@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -25,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
@@ -200,7 +202,7 @@ export function MagicWandPanel({
       <div className="space-y-4">
         <Accordion type="multiple" defaultValue={['sample-area', 'highlight-border']} className="w-full">
           <AccordionItem value="sample-area">
-            <AccordionTrigger className="text-base font-semibold">Sample Area</AccordionTrigger>
+            <AccordionTrigger className="text-base font-semibold">Sample Area &amp; Preview</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
               <ProgressiveHover
                 initialContent="Search Radius"
@@ -251,12 +253,28 @@ export function MagicWandPanel({
                 </div>
               </ProgressiveHover>
                <ProgressiveHover
-                initialContent="Refresh Rate"
+                initialContent="Preview Refresh"
                 summaryContent="Controls how often the preview updates while moving the mouse."
                 detailedContent="Lower values give a more responsive preview but may impact performance. Higher values are more performant."
               >
                 <div className="space-y-2">
-                  <Label htmlFor="debounce-delay">Preview Refresh Rate: {settings.debounceDelay}ms</Label>
+                  <Label>Preview Mode</Label>
+                   <ToggleGroup 
+                    type="single" 
+                    value={settings.previewMode}
+                    onValueChange={(value: MagicWandSettings['previewMode']) => value && onSettingsChange({ previewMode: value })}
+                    className="w-full grid grid-cols-2"
+                  >
+                    <ToggleGroupItem value="real-time" aria-label="Real-time preview">
+                      Real-time
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="on-stop" aria-label="Preview on mouse stop">
+                      On Stop
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="debounce-delay">Refresh Delay: {settings.debounceDelay}ms</Label>
                   <Slider
                     id="debounce-delay"
                     min={10}

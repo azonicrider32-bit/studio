@@ -115,6 +115,7 @@ export interface MagicWandSettings {
         opacity: number;
     };
     debounceDelay: number;
+    previewMode: 'real-time' | 'on-stop';
 }
 
 export interface GlobalSettings {
