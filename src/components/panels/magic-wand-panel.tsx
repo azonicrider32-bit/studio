@@ -17,6 +17,7 @@ import { Button } from "../ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Label } from "../ui/label"
 import { ProgressiveHover } from "../ui/progressive-hover"
+import { Input } from "../ui/input"
 
 interface MagicWandPanelProps {
   settings: MagicWandSettings;
@@ -190,14 +191,9 @@ export function MagicWandPanel({
   return (
     <div className="p-4 space-y-6">
       <div className="space-y-4">
-        <Accordion type="single" collapsible defaultValue="sample-area">
+        <Accordion type="multiple" defaultValue={['sample-area', 'highlight-border']} className="w-full">
           <AccordionItem value="sample-area">
-            <AccordionTrigger>
-              <div className="flex items-center gap-2">
-                <Scan className="w-5 h-5"/>
-                <h4 className="font-semibold">Sample Area</h4>
-              </div>
-            </AccordionTrigger>
+            <AccordionTrigger className="text-base font-semibold">Sample Area</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
               <ProgressiveHover
                 initialContent="Search Radius"
@@ -266,9 +262,77 @@ export function MagicWandPanel({
               </ProgressiveHover>
             </AccordionContent>
           </AccordionItem>
+          
+          <AccordionItem value="highlight-border">
+            <AccordionTrigger className="text-base font-semibold">Highlight &amp; Border</AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Highlight Color Mode</Label>
+                <Select value={settings.highlightColorMode} onValueChange={(v) => onSettingsChange({ highlightColorMode: v as any })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contrast">Contrast</SelectItem>
+                    <SelectItem value="random">Random</SelectItem>
+                    <SelectItem value="fixed">Fixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {settings.highlightColorMode === 'fixed' && (
+                <div className="space-y-2">
+                  <Label htmlFor="fixed-color">Fixed Highlight Color</Label>
+                  <Input id="fixed-color" type="color" value={settings.fixedHighlightColor} onChange={(e) => onSettingsChange({ fixedHighlightColor: e.target.value })}/>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Highlight Opacity: {Math.round(settings.highlightOpacity * 100)}%</Label>
+                <Slider min={0} max={1} step={0.05} value={[settings.highlightOpacity]} onValueChange={v => onSettingsChange({ highlightOpacity: v[0] })}/>
+              </div>
+              <div className="space-y-2">
+                <Label>Highlight Texture</Label>
+                <Select value={settings.highlightTexture} onValueChange={(v) => onSettingsChange({ highlightTexture: v as any })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="solid">Solid</SelectItem>
+                    <SelectItem value="checkerboard">Checkerboard</SelectItem>
+                    <SelectItem value="lines">Lines</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Separator />
+               <div className="flex items-center justify-between">
+                <Label htmlFor="border-enabled" className="flex items-center gap-2">Enable Border</Label>
+                <Switch id="border-enabled" checked={settings.highlightBorder.enabled} onCheckedChange={v => onSettingsChange({ highlightBorder: { ...settings.highlightBorder, enabled: v }})}/>
+              </div>
+              {settings.highlightBorder.enabled && (
+                <div className="pl-4 border-l-2 space-y-4">
+                    <div className="space-y-2">
+                      <Label>Border Thickness: {settings.highlightBorder.thickness}px</Label>
+                      <Slider min={1} max={10} step={1} value={[settings.highlightBorder.thickness]} onValueChange={v => onSettingsChange({ highlightBorder: { ...settings.highlightBorder, thickness: v[0] }})}/>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Border Color Mode</Label>
+                        <Select value={settings.highlightBorder.colorMode} onValueChange={(v) => onSettingsChange({ highlightBorder: { ...settings.highlightBorder, colorMode: v as any }})}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="contrast">Contrast</SelectItem>
+                            <SelectItem value="fixed">Fixed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                    </div>
+                    {settings.highlightBorder.colorMode === 'fixed' && (
+                        <div className="space-y-2">
+                            <Label>Fixed Border Color</Label>
+                            <Input type="color" value={settings.highlightBorder.color} onChange={(e) => onSettingsChange({ highlightBorder: { ...settings.highlightBorder, color: e.target.value }})}/>
+                        </div>
+                    )}
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
 
         <ToleranceSection title="Inclusion" settings={settings} onSettingsChange={onSettingsChange} />
+        
         <Accordion type="single" collapsible>
             <AccordionItem value="exclusions">
                 <AccordionTrigger>

@@ -412,8 +412,8 @@ function ProSegmentAIContent() {
     createAsMask: false,
     showAllMasks: true,
     ignoreExistingSegments: false,
-    enabledTolerances: new Set(['h', 's', 'v']),
-    scrollAdjustTolerances: new Set(),
+    enabledTolerances: new Set(['r', 'g', 'b']),
+    scrollAdjustTolerances: new Set(['r', 'g', 'b']),
     searchRadius: 15,
     sampleMode: 'point',
     useAntiAlias: true,
@@ -1175,8 +1175,8 @@ function ProSegmentAIContent() {
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingChange={handleMagicWandSettingsChange}
-              onNegativeMagicWandSettingChange={handleNegativeMagicWandSettingsChange}
+              onMagicWandSettingsChange={handleMagicWandSettingsChange}
+              onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
               clearSelectionRef={clearSelectionRef}
@@ -1388,6 +1388,7 @@ export function ProSegmentAI() {
     
 
     
+
 
 
 
