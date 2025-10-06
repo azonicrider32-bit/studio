@@ -42,6 +42,7 @@ import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { formatDistanceToNow } from 'date-fns';
+import { TooltipProvider, Tooltip as UITooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 
 
 export default function AdvancedAnalyticsPanel({ 
@@ -144,6 +145,14 @@ export default function AdvancedAnalyticsPanel({
   const layerStats = getLayerStats();
   const performanceData = getPerformanceData();
 
+  const TABS = [
+      { id: 'overview', icon: Target, label: "Overview" },
+      { id: 'histogram', icon: BarChart3, label: "Histogram" },
+      { id: 'layers', icon: Layers, label: "Layers Analysis" },
+      { id: 'performance', icon: Activity, label: "Performance" },
+      { id: 'logs', icon: FileText, label: "Event Logs" },
+  ]
+
   if (!isOpen) {
     return (
       <Button
@@ -189,13 +198,27 @@ export default function AdvancedAnalyticsPanel({
 
           <CardContent className="p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 m-4 mb-0 bg-slate-700/50 border border-slate-600">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="histogram">Histogram</TabsTrigger>
-                <TabsTrigger value="layers">Layers</TabsTrigger>
-                <TabsTrigger value="performance">Performance</TabsTrigger>
-                <TabsTrigger value="logs">Logs</TabsTrigger>
-              </TabsList>
+              <div className="p-4 border-b border-slate-700/50">
+                <div className="flex items-center justify-around bg-slate-700/50 border border-slate-600 rounded-md p-1">
+                    <TooltipProvider>
+                      {TABS.map(tab => (
+                        <Tooltip key={tab.id}>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant={activeTab === tab.id ? 'secondary' : 'ghost'} 
+                              size="icon"
+                              className="h-9 w-14 flex-1"
+                              onClick={() => setActiveTab(tab.id)}
+                            >
+                                <tab.icon className="w-5 h-5"/>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>{tab.label}</p></TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </TooltipProvider>
+                </div>
+              </div>
 
               <div className="p-4">
                 <TabsContent value="overview" className="mt-0 space-y-4">
