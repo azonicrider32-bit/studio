@@ -1,9 +1,8 @@
-
 "use client";
 
 import * as React from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "./popover";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
+import { Popover, PopoverContent } from "./popover";
+import { Tooltip, TooltipContent, TooltipProvider } from "./tooltip";
 
 interface ProgressiveHoverProps {
   children: React.ReactNode;
@@ -67,18 +66,15 @@ export function ProgressiveHover({
     </div>
   );
 
+  // This structure is now correct. A single div handles the hover events for both Tooltip and Popover.
   return (
     <TooltipProvider>
       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
         <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              {React.cloneElement(children as React.ReactElement, {
-                onMouseEnter: handleMouseEnter,
-                onMouseLeave: handleMouseLeave,
-              })}
-            </PopoverTrigger>
-          </TooltipTrigger>
+          {/* A single div as the trigger for everything */}
+          <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            {children}
+          </div>
           <TooltipContent side="left">
             {initialContent}
           </TooltipContent>
