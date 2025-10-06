@@ -23,32 +23,44 @@ export function ProgressiveHover({
   detailDelay = 4000,
 }: ProgressiveHoverProps) {
   const [popoverOpen, setPopoverOpen] = React.useState(false);
+  const [tooltipOpen, setTooltipOpen] = React.useState(false);
   const [detailLevel, setDetailLevel] = React.useState(0);
   const summaryTimer = React.useRef<NodeJS.Timeout>();
   const detailTimer = React.useRef<NodeJS.Timeout>();
 
   const handleMouseEnter = () => {
+    // Show initial tooltip immediately if popover isn't already open
+    if (!popoverOpen) {
+      setTooltipOpen(true);
+    }
+    
+    // Set timer for the summary popover
     summaryTimer.current = setTimeout(() => {
+      setTooltipOpen(false); // Hide tooltip when popover opens
       setPopoverOpen(true);
       setDetailLevel(1);
     }, summaryDelay);
-
+    
+    // Set timer for the detailed popover content
     if (detailedContent) {
-        detailTimer.current = setTimeout(() => {
-            setPopoverOpen(true);
-            setDetailLevel(2);
-        }, detailDelay);
+      detailTimer.current = setTimeout(() => {
+        setTooltipOpen(false); // Ensure tooltip is hidden
+        setPopoverOpen(true);
+        setDetailLevel(2);
+      }, detailDelay);
     }
   };
 
   const handleMouseLeave = () => {
+    // Clear all timers and close everything on mouse leave
     clearTimeout(summaryTimer.current);
     clearTimeout(detailTimer.current);
+    setTooltipOpen(false);
     setPopoverOpen(false);
     setDetailLevel(0);
   };
   
-  const content = (
+  const popoverContent = (
     <div className="space-y-2">
         <div className="font-semibold text-foreground">{summaryContent}</div>
         {detailLevel === 2 && detailedContent && <div className="text-muted-foreground text-sm">{detailedContent}</div>}
@@ -57,8 +69,8 @@ export function ProgressiveHover({
 
   return (
     <TooltipProvider>
-      <Tooltip open={popoverOpen ? false : undefined}>
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+        <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               {React.cloneElement(children as React.ReactElement, {
@@ -67,14 +79,14 @@ export function ProgressiveHover({
               })}
             </PopoverTrigger>
           </TooltipTrigger>
-          <PopoverContent side="left" align="start" className="w-80">
-            {content}
-          </PopoverContent>
-        </Popover>
-        <TooltipContent side="left">
+          <TooltipContent side="left">
             {initialContent}
-        </TooltipContent>
-      </Tooltip>
+          </TooltipContent>
+        </Tooltip>
+        <PopoverContent side="left" align="start" className="w-80">
+          {popoverContent}
+        </PopoverContent>
+      </Popover>
     </TooltipProvider>
   );
 }
