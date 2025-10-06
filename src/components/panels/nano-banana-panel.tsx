@@ -85,7 +85,6 @@ export function NanoBananaPanel({
         <TooltipTrigger asChild>
           <TabsTrigger value={value} className="flex-1 flex-col h-14 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
             <Icon className="h-5 w-5" />
-            <span className="text-xs mt-1 group-hover:block hidden">{children}</span>
           </TabsTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom">
