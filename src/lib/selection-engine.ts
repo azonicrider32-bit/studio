@@ -55,6 +55,7 @@ export class SelectionEngine {
     snapRadius: 20,
     snapThreshold: 0.3,
     curveStrength: 0.5,
+    curveTension: 0.5,
     directionalStrength: 0.2,
     cursorInfluence: 0.1,
     traceInfluence: 0.2,
@@ -842,33 +843,32 @@ export class SelectionEngine {
 
   isInsideTolerance(seedColor: any, neighborColor: any, settings: MagicWandSettings): boolean {
     const { tolerances, enabledTolerances } = settings;
-    if (!enabledTolerances) return true;
+    if (!enabledTolerances || enabledTolerances.size === 0) return true;
 
-    const colorSpaces: (keyof typeof seedColor)[] = ['rgb', 'hsv', 'lab'];
-
-    for (const space of colorSpaces) {
-        const components = Object.keys(seedColor[space]);
-        for (const key of components) {
-            const toleranceKey = key === 'b' ? 'b_lab' : (key as keyof typeof tolerances);
-            if (enabledTolerances && !enabledTolerances.has(toleranceKey)) continue;
-
-            const tolerance = tolerances[toleranceKey];
-            const c1 = seedColor[space];
-            const c2 = neighborColor[space];
-            let diff: number;
-
-            if (key === 'h') { // Handle hue's circular nature
-                const hDiff = Math.abs(c1.h - c2.h);
-                diff = Math.min(hDiff, 360 - hDiff);
-            } else {
-                diff = Math.abs(c1[key] - c2[key]);
-            }
-
-            if (diff > tolerance) {
-                return false;
-            }
-        }
+    // Fast path: check RGB first if any RGB tolerance is enabled
+    if (enabledTolerances.has('r') || enabledTolerances.has('g') || enabledTolerances.has('b')) {
+        if (enabledTolerances.has('r') && Math.abs(seedColor.rgb.r - neighborColor.rgb.r) > tolerances.r) return false;
+        if (enabledTolerances.has('g') && Math.abs(seedColor.rgb.g - neighborColor.rgb.g) > tolerances.g) return false;
+        if (enabledTolerances.has('b') && Math.abs(seedColor.rgb.b - neighborColor.rgb.b) > tolerances.b) return false;
     }
+    
+    // Check HSV only if necessary
+    if (enabledTolerances.has('h') || enabledTolerances.has('s') || enabledTolerances.has('v')) {
+        if (enabledTolerances.has('h')) {
+            const hDiff = Math.abs(seedColor.hsv.h - neighborColor.hsv.h);
+            if (Math.min(hDiff, 360 - hDiff) > tolerances.h) return false;
+        }
+        if (enabledTolerances.has('s') && Math.abs(seedColor.hsv.s - neighborColor.hsv.s) > tolerances.s) return false;
+        if (enabledTolerances.has('v') && Math.abs(seedColor.hsv.v - neighborColor.hsv.v) > tolerances.v) return false;
+    }
+
+    // Check LAB only if necessary
+    if (enabledTolerances.has('l') || enabledTolerances.has('a') || enabledTolerances.has('b_lab')) {
+        if (enabledTolerances.has('l') && Math.abs(seedColor.lab.l - neighborColor.lab.l) > tolerances.l) return false;
+        if (enabledTolerances.has('a') && Math.abs(seedColor.lab.a - neighborColor.lab.a) > tolerances.a) return false;
+        if (enabledTolerances.has('b_lab') && Math.abs(seedColor.lab.b_lab - neighborColor.lab.b_lab) > tolerances.b_lab) return false;
+    }
+
     return true;
   }
 

@@ -6,11 +6,27 @@ import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle2, AlertTriangle, Cpu, Clock, Bot } from "lucide-react"
 
-export function TelemetryPanel() {
-  // Placeholder data
-  const wandPerf = { lastDuration: 12, avgDuration: 18, lagEvents: 0 };
-  const lassoPerf = { lastDuration: 4, avgDuration: 5, lagEvents: 0 };
-  const apiPerf = { lastCall: 1250, avgCall: 1400, errors: 0 };
+interface PerformanceMetrics {
+    lastDuration: number;
+    avgDuration: number;
+    lagEvents: number;
+}
+
+interface ApiPerformanceMetrics {
+    lastCall: number;
+    avgCall: number;
+    errors: number;
+}
+
+export function TelemetryPanel({
+    wandPerf,
+    lassoPerf,
+    apiPerf,
+}: {
+    wandPerf: PerformanceMetrics;
+    lassoPerf: PerformanceMetrics;
+    apiPerf: ApiPerformanceMetrics;
+}) {
 
   const PerfStat = ({ icon: Icon, label, value, unit, status }: { icon: React.ElementType, label: string, value: number, unit: string, status: "good" | "warning" | "bad" }) => (
     <div className="flex items-center justify-between text-sm">

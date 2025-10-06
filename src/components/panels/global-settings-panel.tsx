@@ -283,7 +283,11 @@ export function GlobalSettingsPanel({ showHotkeys, onShowHotkeysChange, settings
             <SnapSettingsPanel settings={settings} onSettingsChange={onSettingsChange} />
         )}
         {activeTab === 'performance' && (
-            <TelemetryPanel />
+            <TelemetryPanel 
+              wandPerf={{lastDuration: 0, avgDuration: 0, lagEvents: 0}}
+              lassoPerf={{lastDuration: 0, avgDuration: 0, lagEvents: 0}}
+              apiPerf={{lastCall: 0, avgCall: 0, errors: 0}}
+            />
         )}
          {activeTab === 'account' && (
             <div className="text-center p-8 text-muted-foreground">Account settings will be available here.</div>

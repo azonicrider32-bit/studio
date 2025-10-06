@@ -1141,6 +1141,10 @@ function ProSegmentAIContent() {
                 isGenerating={isGenerating}
                 customPrompt={customPrompt}
                 setCustomPrompt={setCustomPrompt}
+                canvas={canvasRef.current}
+                mousePos={canvasMousePos}
+                negativeMagicWandSettings={negativeMagicWandSettings}
+                onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
               />
           </SidebarContent>
         </Sidebar>
@@ -1291,5 +1295,6 @@ export function ProSegmentAI() {
     
 
     
+
 
 
