@@ -15,6 +15,14 @@ import { handleApiError } from "@/lib/error-handling";
 import { rgbToHsv, rgbToLab } from "@/lib/color-utils";
 import { debounce } from "@/lib/utils";
 import { Balloon, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "./ui/input";
 
 
 interface ImageCanvasProps {
@@ -33,8 +41,8 @@ interface ImageCanvasProps {
   negativeMagicWandSettings: MagicWandSettings;
   cloneStampSettings: CloneStampSettings;
   onLassoSettingChange: (settings: Partial<LassoSettings>) => void;
-  onMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
-  onNegativeMagicWandSettingChange: (settings: Partial<MagicWandSettings>) => void;
+  onMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void;
+  onNegativeMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void;
   onCloneStampSettingsChange: (settings: Partial<CloneStampSettings>) => void; // Added this prop
   canvasMousePos: { x: number; y: number } | null;
   setCanvasMousePos: (pos: { x: number; y: number } | null) => void;
@@ -168,8 +176,8 @@ export function ImageCanvas({
   negativeMagicWandSettings,
   cloneStampSettings,
   onLassoSettingChange,
-  onMagicWandSettingChange,
-  onNegativeMagicWandSettingChange,
+  onMagicWandSettingsChange,
+  onNegativeMagicWandSettingsChange,
   onCloneStampSettingsChange,
   canvasMousePos,
   setCanvasMousePos,
@@ -1238,6 +1246,7 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
+
 
 
 
