@@ -2,7 +2,6 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
@@ -58,21 +57,21 @@ export function ProgressiveHover({
 
   return (
     <TooltipProvider>
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                    <PopoverTrigger asChild onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-                        {children}
-                    </PopoverTrigger>
-                    <PopoverContent side="left" align="start" className="w-80">
-                        {content}
-                    </PopoverContent>
-                </Popover>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-                {initialContent}
-            </TooltipContent>
-        </Tooltip>
+      <Tooltip>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+                {children}
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <PopoverContent side="left" align="start" className="w-80">
+              {content}
+          </PopoverContent>
+        </Popover>
+        <TooltipContent side="left">
+            {initialContent}
+        </TooltipContent>
+      </Tooltip>
     </TooltipProvider>
   );
 }
