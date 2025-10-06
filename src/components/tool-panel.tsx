@@ -31,6 +31,7 @@ import { ProgressiveHover } from "./ui/progressive-hover"
 import { BananaIcon } from "./icons/banana-icon"
 import { AITool, Tool } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { CustomWand2 } from "./icons/custom-tool-icons"
 
 const manualToolDetails: Record<Tool, {
     id: Tool;
@@ -43,6 +44,7 @@ const manualToolDetails: Record<Tool, {
 }> = {
   transform: { id: "transform", icon: Move, tooltip: "Transform Tool", shortcut: "V", summary: "Move, scale, and rotate layers or selections.", details: "The transform tool allows you to apply transformations to the active layer or selection. Hold Shift to maintain aspect ratio while scaling. Click and drag outside the selection to rotate." },
   "magic-wand": { id: "magic-wand", icon: Wand2, tooltip: "Magic Wand", shortcut: "W", summary: "Select similarly colored pixels.", details: "Click on an area of the image to select all contiguous pixels of a similar color. The tolerance can be adjusted in the settings panel to control how 'similar' the colors must be." },
+  "wand-v2": { id: "wand-v2", icon: CustomWand2, tooltip: "Magic Wand V2", shortcut: "W", summary: "High-performance pixel selection.", details: "A faster, more optimized version of the Magic Wand tool using advanced memory and algorithm techniques for real-time performance." },
   lasso: { id: "lasso", icon: Lasso, tooltip: "Intelligent Lasso", shortcut: "L", summary: "Draw a freehand selection with edge-snapping.", details: "Draw a freehand selection around an object. The 'Magic Snap' mode will automatically snap the selection path to the most prominent edges it detects. Other modes like Polygon and Free Draw are available." },
   line: { id: "line", icon: PenTool, tooltip: "Line Tool", shortcut: "P", summary: "Create straight or curved path segments.", details: "Click to create anchor points for a path. The path can be used to create precise selections or vector shapes. Press Enter to complete the path.", disabled: false },
   brush: { id: "brush", icon: Paintbrush, tooltip: "Brush Tool", shortcut: "B", summary: "Paint on a layer or a mask.", details: "The Brush Tool allows you to paint with a specific color and brush size. It can be used to add to a layer or to paint on a layer mask to show or hide parts of a layer." },

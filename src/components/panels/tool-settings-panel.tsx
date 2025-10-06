@@ -49,6 +49,8 @@ import AdvancedAnalyticsPanel from "./AdvancedAnalyticsPanel"
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
   onMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void
+  wandV2Settings: MagicWandSettings
+  onWandV2SettingsChange: (settings: Partial<MagicWandSettings>) => void
   negativeMagicWandSettings: MagicWandSettings
   onNegativeMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void
   lassoSettings: LassoSettings
@@ -79,12 +81,14 @@ interface ToolSettingsPanelProps {
   layers: Layer[];
 }
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
+type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 
 
 export function ToolSettingsPanel({ 
     magicWandSettings, 
     onMagicWandSettingsChange,
+    wandV2Settings,
+    onWandV2SettingsChange,
     negativeMagicWandSettings,
     onNegativeMagicWandSettingsChange,
     lassoSettings,
@@ -130,6 +134,11 @@ export function ToolSettingsPanel({
         'magic-wand': {
             title: 'Magic Wand Tool',
             description: 'The Magic Wand selects similarly colored pixels based on a set tolerance. Click on an area of the image to create a selection. Hold Shift to add to an existing selection, or Ctrl to subtract.',
+            shortcut: 'W'
+        },
+        'wand-v2': {
+            title: 'Magic Wand V2',
+            description: 'A high-performance version of the Magic Wand using an optimized flood-fill algorithm.',
             shortcut: 'W'
         },
         'lasso': {
@@ -232,6 +241,11 @@ export function ToolSettingsPanel({
                       settings={magicWandSettings}
                       onSettingsChange={onMagicWandSettingsChange}
                     />
+        case 'wand-v2':
+            return <MagicWandCompactSettings 
+                      settings={wandV2Settings}
+                      onSettingsChange={onWandV2SettingsChange}
+                    />
         case 'lasso':
         case 'line':
              return <LassoCompactSettings 
@@ -281,7 +295,8 @@ export function ToolSettingsPanel({
 
   const getActiveToolIcon = () => {
     switch(activeTool) {
-      case 'magic-wand': return <Sparkles className="w-4 h-4" />;
+      case 'magic-wand': return <Wand2 className="w-4 h-4" />;
+      case 'wand-v2': return <Sparkles className="w-4 h-4" />;
       case 'lasso':
       case 'line':
         return <Lasso className="w-4 h-4" />;
@@ -332,6 +347,15 @@ export function ToolSettingsPanel({
                 settings={magicWandSettings} 
                 onSettingsChange={onMagicWandSettingsChange}
                 exclusionSettings={negativeMagicWandSettings}
+                onExclusionSettingsChange={onNegativeMagicWandSettingsChange}
+                canvas={canvas}
+                mousePos={mousePos}
+              />
+          ) : activeTool === 'wand-v2' ? (
+              <MagicWandPanel 
+                settings={wandV2Settings} 
+                onSettingsChange={onWandV2SettingsChange}
+                exclusionSettings={negativeMagicWandSettings} // Can share or have its own
                 onExclusionSettingsChange={onNegativeMagicWandSettingsChange}
                 canvas={canvas}
                 mousePos={mousePos}
