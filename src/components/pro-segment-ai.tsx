@@ -94,6 +94,7 @@ import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
 import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./panels/telemetry-panel"
 import { collection, serverTimestamp } from "firebase/firestore"
+import { summarizeLogEntry } from "@/ai/flows/summarize-log-entry"
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -256,20 +257,40 @@ function ProSegmentAIContent() {
   const [apiPerf, setApiPerf] = React.useState<ApiPerformanceMetrics>({ lastCall: 0, avgCall: 0, errors: 0 });
 
 
-  const logPerformanceEvent = React.useCallback((tool: string, operation: string, duration: number) => {
+  const logPerformanceEvent = React.useCallback(async (tool: string, operation: string, duration: number) => {
     if (!user || !firestore) return;
-    const logData = {
-      userId: user.uid,
-      timestamp: serverTimestamp(),
-      tool,
-      operation,
-      duration,
-      context: {
-        image: activeWorkspace?.imageUrl,
-        layerCount: activeWorkspace?.layers.length || 0,
-      }
+    
+    const context = {
+      image: activeWorkspace?.imageUrl,
+      layerCount: activeWorkspace?.layers.length || 0,
     };
-    addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'performanceLogs'), logData);
+
+    try {
+      const summary = await summarizeLogEntry({ tool, operation, duration, context });
+      const logData = {
+        userId: user.uid,
+        timestamp: serverTimestamp(),
+        tool,
+        operation,
+        duration,
+        context,
+        description: summary.description,
+      };
+      addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'performanceLogs'), logData);
+    } catch (e) {
+      console.error("Failed to generate log summary:", e);
+      // Log without summary
+      const logData = {
+        userId: user.uid,
+        timestamp: serverTimestamp(),
+        tool,
+        operation,
+        duration,
+        context,
+        description: `${tool} ${operation} took ${duration.toFixed(2)}ms`,
+      };
+      addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'performanceLogs'), logData);
+    }
   }, [user, firestore, activeWorkspace]);
 
   const speak = React.useCallback(async (text: string) => {

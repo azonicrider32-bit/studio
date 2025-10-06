@@ -40,7 +40,6 @@ import { Layer } from '@/lib/types';
 import { PerformanceMetrics, ApiPerformanceMetrics } from './telemetry-panel';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { TooltipProvider, Tooltip as UITooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 
@@ -175,10 +174,10 @@ export default function AdvancedAnalyticsPanel({
         exit={{ opacity: 0, height: 0 }}
       >
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-700/60 shadow-xl">
-          <CardHeader className="py-3 px-4 border-b border-slate-700/50">
+          <CardHeader className="py-2 px-3 border-b border-slate-700/50">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-slate-200 text-base">
-                <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center">
+              <CardTitle className="flex items-center gap-2 text-slate-200 text-sm">
+                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center">
                   <BarChart3 className="w-4 h-4 text-white" />
                 </div>
                 Advanced Analytics
@@ -189,7 +188,7 @@ export default function AdvancedAnalyticsPanel({
                     {stats.segmentationCoverage}% coverage
                   </Badge>
                 )}
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggle}>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onToggle}>
                   <Minimize2 className="w-4 h-4 text-slate-400 hover:text-slate-200" />
                 </Button>
               </div>
@@ -198,7 +197,7 @@ export default function AdvancedAnalyticsPanel({
 
           <CardContent className="p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="p-2 border-b border-slate-700/50">
+              <div className="p-1 border-b border-slate-700/50">
                 <div className="flex items-center justify-around bg-slate-700/50 border border-slate-600 rounded-md p-0.5">
                     <TooltipProvider>
                       {TABS.map(tab => (
@@ -207,7 +206,7 @@ export default function AdvancedAnalyticsPanel({
                             <Button 
                               variant={activeTab === tab.id ? 'secondary' : 'ghost'} 
                               size="icon"
-                              className="h-8 w-12 flex-1"
+                              className="h-7 w-10 flex-1"
                               onClick={() => setActiveTab(tab.id)}
                             >
                                 <tab.icon className="w-4 h-4"/>
@@ -220,8 +219,8 @@ export default function AdvancedAnalyticsPanel({
                 </div>
               </div>
 
-              <div className="p-3">
-                <TabsContent value="overview" className="mt-0 space-y-3">
+              <div className="p-2">
+                <TabsContent value="overview" className="mt-0 space-y-2">
                   {stats ? (
                     <>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -230,11 +229,11 @@ export default function AdvancedAnalyticsPanel({
                         <StatCard icon={Activity} label="Coverage" value={`${stats.segmentationCoverage}%`} color="purple" />
                         <StatCard icon={Layers} label="Layers" value={layers.filter(l => l.type !== 'background').length} color="orange" />
                       </div>
-                      <div className="bg-slate-700/20 rounded-lg p-3">
+                      <div className="bg-slate-700/20 rounded-lg p-2">
                         <h4 className="text-xs font-medium text-slate-300 mb-2">Average Color</h4>
                         <div className="flex items-center gap-3">
                           <div 
-                            className="w-12 h-12 rounded-md border border-slate-600"
+                            className="w-10 h-10 rounded-md border border-slate-600"
                             style={{ backgroundColor: `rgb(${stats.avgColor.r}, ${stats.avgColor.g}, ${stats.avgColor.b})` }}
                           />
                           <div className="text-xs text-slate-400">
@@ -315,33 +314,25 @@ export default function AdvancedAnalyticsPanel({
                   </div>
                 </TabsContent>
                  <TabsContent value="logs" className="mt-0">
-                    <Card className="h-72 border-slate-600/50 bg-slate-700/20">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="text-xs h-8">Operation</TableHead>
-                            <TableHead className="text-xs h-8">Tool</TableHead>
-                            <TableHead className="text-right text-xs h-8">Duration</TableHead>
-                            <TableHead className="text-xs h-8">Time</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {logsLoading && Array.from({ length: 5 }).map((_, i) => (
-                            <TableRow key={i}><TableCell colSpan={4} className="text-center text-xs py-2">Loading...</TableCell></TableRow>
-                          ))}
-                          {!logsLoading && performanceLogs && performanceLogs.map((log: any) => (
-                            <TableRow key={log.id}>
-                              <TableCell className="font-medium text-xs py-2">{log.operation}</TableCell>
-                              <TableCell className="text-xs py-2">{log.tool}</TableCell>
-                              <TableCell className="text-right font-mono text-xs py-2">{log.duration.toFixed(2)}ms</TableCell>
-                              <TableCell className="text-xs py-2">{log.timestamp ? formatDistanceToNow(log.timestamp.toDate(), { addSuffix: true }) : 'N/A'}</TableCell>
-                            </TableRow>
-                          ))}
-                           {!logsLoading && (!performanceLogs || performanceLogs.length === 0) && (
-                            <TableRow><TableCell colSpan={4} className="text-center h-24 text-xs py-2">No logs yet. Perform an action to see data.</TableCell></TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
+                    <Card className="h-[280px] border-slate-600/50 bg-slate-700/20">
+                      <CardContent className="p-2 h-full overflow-y-auto">
+                        {logsLoading && <div className="text-center text-xs text-slate-400 p-4">Loading logs...</div>}
+                        {!logsLoading && (!performanceLogs || performanceLogs.length === 0) ? (
+                          <EmptyState icon={FileText} text="No performance logs yet."/>
+                        ) : (
+                          <div className="space-y-2">
+                            {performanceLogs?.map((log: any) => (
+                              <div key={log.id} className="text-xs p-2 rounded-md bg-slate-700/40 border border-slate-600/50">
+                                <p className="text-slate-300 font-medium leading-tight">{log.description}</p>
+                                <div className="flex items-center justify-between text-slate-400 mt-1">
+                                    <Badge variant="outline" className="text-xs font-mono">{log.duration.toFixed(2)}ms</Badge>
+                                    <span className="text-slate-500">{log.timestamp ? formatDistanceToNow(log.timestamp.toDate(), { addSuffix: true }) : 'N/A'}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
                     </Card>
                  </TabsContent>
               </div>
@@ -355,8 +346,8 @@ export default function AdvancedAnalyticsPanel({
 
 const StatCard = ({ icon: Icon, label, value, color }: { icon: React.ElementType, label: string, value: string | number, color: string }) => (
   <div className="bg-slate-700/30 rounded-lg p-2">
-    <div className={`flex items-center gap-2 mb-1`}>
-      <Icon className={`w-4 h-4 text-${color}-400`} />
+    <div className={`flex items-center gap-1.5 mb-1`}>
+      <Icon className={`w-3.5 h-3.5 text-${color}-400`} />
       <span className="text-xs font-medium text-slate-300">{label}</span>
     </div>
     <div className={`text-base font-bold text-${color}-400`}>{value}</div>

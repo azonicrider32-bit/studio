@@ -123,6 +123,10 @@
         "context": {
           "type": "object",
           "description": "Additional context about the event, such as image size or layer count."
+        },
+        "description": {
+          "type": "string",
+          "description": "A natural language summary of the performance event."
         }
       },
       "required": [
@@ -131,7 +135,8 @@
         "timestamp",
         "tool",
         "operation",
-        "duration"
+        "duration",
+        "description"
       ]
     }
   },
@@ -203,5 +208,3 @@
     "reasoning": "This Firestore data structure is designed to efficiently manage assets, user data, and roles while adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages structural segregation and denormalization to create a secure, scalable, and debuggable system.\n\nThe primary segregation strategy is to store user-owned assets under their respective user IDs. This eliminates the need for complex queries or security rules based on document content. Additionally, each document within a collection maintains a homogeneous security posture, and this ensures each document in the 'assets' collection share the same security requirements, simplifying the rules.\n\nAuthorization Independence is achieved by storing assets under user-specific paths, enabling path-based security rules that directly associate assets with their owners. Specifically, the `/users/{userId}/assets/{assetId}` structure facilitates security rules that permit only the user with the matching 'userId' to read, write, or delete assets. This design avoids `get()` calls in security rules by design, so rules will not depend on the parent document.\n\nThe QAP (Rules are not Filters) principle is supported through structural segregation. Listing operations can be secured by filtering assets based on the 'userId' in the path. This allows for efficient and secure listing of assets owned by a specific user without requiring rules to filter based on document data.\n\nOwnership invariants are maintained by enforcing the 'userId' in the asset document to match the 'userId' in the path. Timestamps can be easily added and managed within the asset documents, and denormalized data (e.g., asset counts) can be maintained in user documents via Cloud Functions triggered by asset creation or deletion."
   }
 }
-
-    
