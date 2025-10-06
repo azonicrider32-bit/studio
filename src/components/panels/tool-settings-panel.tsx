@@ -332,7 +332,7 @@ export function ToolSettingsPanel({
                 settings={magicWandSettings} 
                 onSettingsChange={onMagicWandSettingsChange}
                 exclusionSettings={negativeMagicWandSettings}
-                onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
+                onExclusionSettingsChange={onNegativeMagicWandSettingsChange}
                 canvas={canvas}
                 mousePos={mousePos}
               />
@@ -488,7 +488,8 @@ export function ToolSettingsPanel({
                 onShowHotkeysChange={onShowHotkeysChange} 
                 settings={globalSettings} 
                 onSettingsChange={onGlobalSettingsChange} 
-                performanceMetrics={performanceMetrics}
+                wandPerf={performanceMetrics}
+                lassoPerf={performanceMetrics}
                 apiPerf={apiPerf}
                 imageData={imageData}
                 layers={layers}
@@ -511,4 +512,3 @@ export function ToolSettingsPanel({
 
   return renderLeftPanelContent();
 }
-
