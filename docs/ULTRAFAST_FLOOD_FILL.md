@@ -397,4 +397,3 @@ export class HoleFillingSystem {
     return points.length / boundingBoxArea;
   }
 }
-```

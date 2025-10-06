@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-export type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
+export type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 
 export interface AITool {
     id: string;
@@ -15,26 +15,26 @@ export interface AITool {
 }
 
 export interface Layer {
-    id: string;
-    name: string;
-    type: 'segmentation' | 'background' | 'adjustment';
-    subType?: 'pixel' | 'mask' | 'path';
-    parentId?: string | null;
-    visible: boolean;
-    locked: boolean;
-    pixels: Set<number>;
-    path?: [number, number][];
-    stroke?: string;
-    strokeWidth?: number;
-    fill?: string;
-    closed: boolean;
-    imageData?: ImageData;
-    maskVisible?: boolean;
-    highlightColor?: string; // e.g., 'hsl(210, 40%, 96.1%)'
-    highlightOpacity?: number; // 0-1
+    id: string; // Unique identifier
+    name: string; // Display name in the layers panel
+    type: 'segmentation' | 'background' | 'adjustment'; // The fundamental type of the layer
+    subType?: 'pixel' | 'mask' | 'path'; // Specifies if it holds pixels, is a mask, or is a vector path
+    parentId?: string | null; // If it's a child (e.g., a mask), this links to its parent layer
+    visible: boolean; // Is the layer visible on the canvas?
+    locked: boolean; // Is the layer locked from editing?
+    pixels: Set<number>; // A set of pixel indices that belong to this layer's selection
+    path?: [number, number][]; // An array of [x, y] coordinates for vector paths
+    stroke?: string; // Stroke color for vector paths
+    strokeWidth?: number; // Stroke width for vector paths
+    fill?: string; // Fill color for vector paths
+    closed: boolean; // Is the vector path closed?
+    imageData?: ImageData; // The actual pixel data for pixel-based layers
+    maskVisible?: boolean; // Is the colored highlight/mask overlay visible?
+    highlightColor?: string;
+    highlightOpacity?: number;
     highlightTexture?: 'solid' | 'checkerboard' | 'lines';
-    modifiers?: Layer[];
-    bounds: { x: number; y: number; width: number; height: number };
+    modifiers?: Layer[]; // An array of child layers acting as modifiers (e.g., masks)
+    bounds: { x: number; y: number; width: number; height: number }; // The bounding box of the layer content
 }
 
 export interface LassoSettings {
@@ -43,13 +43,13 @@ export interface LassoSettings {
     showMouseTrace: boolean;
     showAllMasks: boolean;
     fillPath: boolean;
-    snapRadius: number;
-    snapThreshold: number;
-    curveStrength: number; // 0-1, for Catmull-Rom tension
+    snapRadius: number; // How close to an edge the cursor must be to snap.
+    snapThreshold: number; // How strong an edge must be to be considered for snapping.
+    curveStrength: number; // Controls the "curviness" of the path in polygon mode.
     curveTension: number;
-    directionalStrength: number;
-    cursorInfluence: number;
-    traceInfluence: number;
+    directionalStrength: number; // How much the path prefers to continue in its current direction.
+    cursorInfluence: number; // How strongly the path is pulled towards the user's cursor.
+    traceInfluence: number; // How much the path is influenced by the recent mouse trace.
     colorInfluence: number;
     snapRadiusEnabled: boolean;
     snapThresholdEnabled: boolean;
@@ -69,9 +69,9 @@ export interface LassoSettings {
 export interface CloneStampSettings {
     brushSize: number;
     opacity: number;
-    softness: number;
+    softness: number; // Feathering of the brush edge.
     rotationStep: number;
-    sourceLayer: 'current' | 'all';
+    sourceLayer: 'current' | 'all'; // Sample from the current layer or all visible layers.
     angle: number;
     flipX: boolean;
     flipY: boolean;
@@ -81,7 +81,7 @@ export interface CloneStampSettings {
         values: MagicWandSettings['tolerances'];
         enabled: Set<keyof MagicWandSettings['tolerances']>;
     };
-    falloff: number; // 0-100%
+    falloff: number;
 }
 
 export interface MagicWandSettings {
@@ -90,16 +90,16 @@ export interface MagicWandSettings {
         h: number; s: number; v: number;
         l: number; a: number; b_lab: number;
     };
-    contiguous: boolean;
+    contiguous: boolean; // Should the selection only include physically connected pixels?
     useAiAssist: boolean;
     createAsMask: boolean;
     showAllMasks: boolean;
-    ignoreExistingSegments: boolean;
-    enabledTolerances: Set<keyof MagicWandSettings['tolerances']>;
-    scrollAdjustTolerances: Set<keyof MagicWandSettings['tolerances']>;
-    searchRadius: number;
+    ignoreExistingSegments: boolean; // If true, can select pixels already in another layer.
+    enabledTolerances: Set<keyof MagicWandSettings['tolerances']>; // Which color channels to consider.
+    scrollAdjustTolerances: Set<keyof MagicWandSettings['tolerances']>; // Which tolerances are adjusted by scrolling.
+    searchRadius: number; // For 'average' or 'dominant' sample modes.
     sampleMode: 'point' | 'average' | 'dominant';
-    seedColor?: { [key: string]: number };
+    seedColor?: { [key: string]: number }; // The initial color sampled.
     useAntiAlias: boolean;
     useFeather: boolean;
     highlightColorMode: 'fixed' | 'random' | 'contrast';
@@ -124,7 +124,7 @@ export interface GlobalSettings {
 }
 
 export interface TransformSettings {
-    scope: 'layer' | 'visible' | 'all';
+    scope: 'layer' | 'visible' | 'all'; // What the transformation applies to.
     x: number;
     y: number;
     scaleX: number;
