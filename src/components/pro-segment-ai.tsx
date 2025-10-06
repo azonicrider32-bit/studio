@@ -94,8 +94,9 @@ import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./panels/telemetry-panel"
 import { collection, serverTimestamp } from "firebase/firestore"
 import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
+import { UltraFastFloodFill } from "@/lib/ultrafast-flood-fill"
 
-type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
+type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
 
 interface WorkspaceState {
@@ -430,6 +431,35 @@ function ProSegmentAIContent() {
         opacity: 1,
     },
     debounceDelay: 200,
+    previewMode: 'real-time',
+  });
+  const [wandV2Settings, setWandV2Settings] = React.useState<MagicWandSettings>({
+    tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
+    contiguous: true,
+    useAiAssist: false,
+    createAsMask: false,
+    showAllMasks: true,
+    ignoreExistingSegments: false,
+    enabledTolerances: new Set(['r', 'g', 'b']),
+    scrollAdjustTolerances: new Set(['r', 'g', 'b']),
+    searchRadius: 1,
+    sampleMode: 'point',
+    useAntiAlias: true,
+    useFeather: false,
+    highlightColorMode: 'contrast',
+    fixedHighlightColor: '#00aaff',
+    highlightOpacity: 0.5,
+    highlightTexture: 'lines',
+    highlightBorder: {
+        enabled: true,
+        thickness: 1,
+        color: '#ffffff',
+        colorMode: 'contrast',
+        pattern: 'dashed',
+        opacity: 1,
+    },
+    debounceDelay: 200,
+    previewMode: 'real-time',
   });
   const [negativeMagicWandSettings, setNegativeMagicWandSettings] = React.useState<MagicWandSettings>({
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
@@ -458,6 +488,7 @@ function ProSegmentAIContent() {
         opacity: 1,
     },
     debounceDelay: 200,
+    previewMode: 'real-time',
   });
   const [cloneStampSettings, setCloneStampSettings] = React.useState<CloneStampSettings>({
     brushSize: 50,
@@ -524,6 +555,8 @@ function ProSegmentAIContent() {
   const selectionEngineRef = React.useRef<SelectionEngine | null>(null);
   const [isLassoPreviewHovered, setIsLassoPreviewHovered] = React.useState(false);
   const hoverTimeoutRef = React.useRef<{ A: NodeJS.Timeout | null, B: NodeJS.Timeout | null }>({ A: null, B: null });
+
+  const mouseStopTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
 
   const getSelectionMaskRef = React.useRef<() => string | undefined>();
@@ -648,6 +681,9 @@ function ProSegmentAIContent() {
 
   const handleMagicWandSettingsChange = (newSettings: Partial<MagicWandSettings>) => {
     setMagicWandSettings(prev => ({ ...prev, ...newSettings }));
+  };
+  const handleWandV2SettingsChange = (newSettings: Partial<MagicWandSettings>) => {
+    setWandV2Settings(prev => ({ ...prev, ...newSettings }));
   };
   
   const handleCloneStampSettingsChange = (newSettings: Partial<CloneStampSettings>) => {
@@ -1170,11 +1206,11 @@ function ProSegmentAIContent() {
               setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask }))}
               activeTool={activeTool}
               lassoSettings={lassoSettings}
-              magicWandSettings={magicWandSettings}
+              magicWandSettings={activeTool === 'wand-v2' ? wandV2Settings : magicWandSettings}
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingsChange={handleMagicWandSettingsChange}
+              onMagicWandSettingsChange={activeTool === 'wand-v2' ? handleWandV2SettingsChange : handleMagicWandSettingsChange}
               onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
@@ -1206,9 +1242,12 @@ function ProSegmentAIContent() {
             
           </SidebarHeader>
           <SidebarContent>
+            <div>
               <ToolSettingsPanel
                 magicWandSettings={magicWandSettings}
                 onMagicWandSettingsChange={handleMagicWandSettingsChange}
+                wandV2Settings={wandV2Settings}
+                onWandV2SettingsChange={handleWandV2SettingsChange}
                 lassoSettings={lassoSettings}
                 onLassoSettingsChange={handleLassoSettingsChange}
                 cloneStampSettings={cloneStampSettings}
@@ -1237,6 +1276,7 @@ function ProSegmentAIContent() {
                 imageData={selectionEngineRef.current?.imageData ?? null}
                 layers={activeWorkspace.layers}
               />
+            </div>
           </SidebarContent>
         </Sidebar>
       </div>
