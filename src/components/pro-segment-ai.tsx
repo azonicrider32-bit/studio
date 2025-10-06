@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -78,7 +77,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { AiChatPanel } from "./panels/ai-chat-panel"
 import { FeatherPanel } from "./panels/feather-panel"
-import { cn } from "@/lib/utils"
+import { cn, debounce } from "@/lib/utils"
 import { useSelectionDrag } from "@/hooks/use-selection-drag"
 import { useToast } from "@/hooks/use-toast"
 import { ToolPanel } from "./tool-panel"
@@ -299,7 +298,7 @@ function ProSegmentAIContent() {
     }
   }, [user, firestore, activeWorkspace, activeTool]);
   
-  const measurePerformance = (op: () => void, tool: string, operation: string) => {
+  const measurePerformance = React.useCallback((op: () => void, tool: string, operation: string) => {
     const start = performance.now();
     op();
     const duration = performance.now() - start;
@@ -320,7 +319,7 @@ function ProSegmentAIContent() {
             history: newHistory
         };
     });
-  };
+  }, [logAppEvent]);
 
 
   const speak = React.useCallback(async (text: string) => {
@@ -1196,7 +1195,6 @@ function ProSegmentAIContent() {
               showVerticalRuler={showVerticalRuler}
               showGuides={showGuides}
               globalSettings={globalSettings}
-              measurePerformance={measurePerformance}
               />
           </div>
       </main>
@@ -1385,11 +1383,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-    
-
-    
-
-
-
-
-
