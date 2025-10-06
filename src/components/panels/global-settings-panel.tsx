@@ -18,13 +18,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "../ui/label"
 import { Switch } from "../ui/switch"
 import { TelemetryPanel, PerformanceMetrics, ApiPerformanceMetrics } from "./telemetry-panel"
+import AdvancedAnalyticsPanel from "./AdvancedAnalyticsPanel"
 import { Button } from "../ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
 import { Slider } from "../ui/slider"
 import { useSidebar } from "../ui/sidebar"
-import { GlobalSettings } from "@/lib/types"
+import { GlobalSettings, Layer } from "@/lib/types"
 
 const hotkeys = [
   { tool: 'Transform', key: 'V' },
@@ -216,6 +217,8 @@ export function GlobalSettingsPanel({
   wandPerf,
   lassoPerf,
   apiPerf,
+  imageData,
+  layers,
 }: {
   showHotkeys: boolean;
   onShowHotkeysChange: (value: boolean) => void;
@@ -224,8 +227,11 @@ export function GlobalSettingsPanel({
   wandPerf: PerformanceMetrics;
   lassoPerf: PerformanceMetrics;
   apiPerf: ApiPerformanceMetrics;
+  imageData: ImageData | null;
+  layers: Layer[];
 }) {
-  const [activeTab, setActiveTab] = React.useState("hotkeys");
+  const [activeTab, setActiveTab] = React.useState("performance");
+  const [isPerfOpen, setIsPerfOpen] = React.useState(true);
 
   return (
     <div className="p-4 h-full flex flex-col">
@@ -299,10 +305,13 @@ export function GlobalSettingsPanel({
             <SnapSettingsPanel settings={settings} onSettingsChange={onSettingsChange} />
         )}
         {activeTab === 'performance' && (
-            <TelemetryPanel 
-              wandPerf={wandPerf}
-              lassoPerf={lassoPerf}
-              apiPerf={apiPerf}
+            <AdvancedAnalyticsPanel 
+              imageData={imageData}
+              segmentationData={null}
+              layers={layers}
+              performanceMetrics={wandPerf}
+              isOpen={isPerfOpen}
+              onToggle={() => setIsPerfOpen(!isPerfOpen)}
             />
         )}
          {activeTab === 'account' && (

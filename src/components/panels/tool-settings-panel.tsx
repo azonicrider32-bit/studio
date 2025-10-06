@@ -32,7 +32,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
-import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings, AITool, TransformSettings } from "@/lib/types"
+import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings, AITool, TransformSettings, Layer } from "@/lib/types"
 import { Button } from "../ui/button"
 import { useSidebar } from "../ui/sidebar"
 import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
@@ -75,6 +75,8 @@ interface ToolSettingsPanelProps {
   wandPerf: PerformanceMetrics;
   lassoPerf: PerformanceMetrics;
   apiPerf: ApiPerformanceMetrics;
+  imageData: ImageData | null;
+  layers: Layer[];
 }
 
 type Tool = "magic-wand" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
@@ -110,6 +112,8 @@ export function ToolSettingsPanel({
     wandPerf,
     lassoPerf,
     apiPerf,
+    imageData,
+    layers,
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -300,6 +304,7 @@ export function ToolSettingsPanel({
             isGenerating={isGenerating}
             customPrompt={customPrompt}
             setCustomPrompt={setCustomPrompt}
+            onAiToolClick={() => {}}
           />
       );
     }
@@ -328,7 +333,7 @@ export function ToolSettingsPanel({
                 settings={magicWandSettings} 
                 onSettingsChange={onMagicWandSettingsChange}
                 exclusionSettings={negativeMagicWandSettings}
-                onExclusionSettingsChange={onNegativeMagicWandSettingsChange}
+                onExclusionSettingsChange={handleNegativeMagicWandSettingsChange}
                 canvas={canvas}
                 mousePos={mousePos}
               />
@@ -487,6 +492,8 @@ export function ToolSettingsPanel({
                 wandPerf={wandPerf}
                 lassoPerf={lassoPerf}
                 apiPerf={apiPerf}
+                imageData={imageData}
+                layers={layers}
             />
           ) : (
              <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>

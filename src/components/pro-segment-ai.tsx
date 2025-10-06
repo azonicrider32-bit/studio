@@ -1153,6 +1153,8 @@ function ProSegmentAIContent() {
                 wandPerf={wandPerf}
                 lassoPerf={lassoPerf}
                 apiPerf={apiPerf}
+                imageData={selectionEngineRef.current?.imageData ?? null}
+                layers={activeWorkspace.layers}
               />
           </SidebarContent>
         </Sidebar>
@@ -1301,9 +1303,3 @@ export function ProSegmentAI() {
   )
 }
     
-
-    
-
-
-
-

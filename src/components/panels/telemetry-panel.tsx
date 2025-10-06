@@ -1,18 +1,17 @@
 
-
 "use client"
 
 import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle2, AlertTriangle, Cpu, Clock, Bot } from "lucide-react"
 
-interface PerformanceMetrics {
+export interface PerformanceMetrics {
     lastDuration: number;
     avgDuration: number;
     lagEvents: number;
 }
 
-interface ApiPerformanceMetrics {
+export interface ApiPerformanceMetrics {
     lastCall: number;
     avgCall: number;
     errors: number;
@@ -51,17 +50,17 @@ export function TelemetryPanel({
           <div className="space-y-2">
             <h4 className="font-semibold text-sm">Magic Wand</h4>
              <div className="p-3 rounded-lg bg-muted/50 space-y-2">
-                <PerfStat icon={Clock} label="Last Preview" value={wandPerf.lastDuration} unit="ms" status="good" />
-                <PerfStat icon={Clock} label="Avg Preview" value={wandPerf.avgDuration} unit="ms" status="good" />
-                <PerfStat icon={AlertTriangle} label="Lag Events" value={wandPerf.lagEvents} unit="" status="good" />
+                <PerfStat icon={Clock} label="Last Preview" value={wandPerf?.lastDuration || 0} unit="ms" status="good" />
+                <PerfStat icon={Clock} label="Avg Preview" value={wandPerf?.avgDuration || 0} unit="ms" status="good" />
+                <PerfStat icon={AlertTriangle} label="Lag Events" value={wandPerf?.lagEvents || 0} unit="" status="good" />
              </div>
           </div>
            <div className="space-y-2">
             <h4 className="font-semibold text-sm">Intelligent Lasso</h4>
              <div className="p-3 rounded-lg bg-muted/50 space-y-2">
-                <PerfStat icon={Clock} label="Last Path" value={lassoPerf.lastDuration} unit="ms" status="good" />
-                <PerfStat icon={Clock} label="Avg Path" value={lassoPerf.avgDuration} unit="ms" status="good" />
-                <PerfStat icon={AlertTriangle} label="Lag Events" value={lassoPerf.lagEvents} unit="" status="good" />
+                <PerfStat icon={Clock} label="Last Path" value={lassoPerf?.lastDuration || 0} unit="ms" status="good" />
+                <PerfStat icon={Clock} label="Avg Path" value={lassoPerf?.avgDuration || 0} unit="ms" status="good" />
+                <PerfStat icon={AlertTriangle} label="Lag Events" value={lassoPerf?.lagEvents || 0} unit="" status="good" />
              </div>
           </div>
         </CardContent>
@@ -76,9 +75,9 @@ export function TelemetryPanel({
         </CardHeader>
         <CardContent className="space-y-4">
            <div className="p-3 rounded-lg bg-muted/50 space-y-2">
-              <PerfStat icon={Clock} label="Last Call" value={apiPerf.lastCall} unit="ms" status="good" />
-              <PerfStat icon={Clock} label="Avg Call" value={apiPerf.avgCall} unit="ms" status="good" />
-              <PerfStat icon={AlertTriangle} label="Errors" value={apiPerf.errors} unit="" status="good" />
+              <PerfStat icon={Clock} label="Last Call" value={apiPerf?.lastCall || 0} unit="ms" status="good" />
+              <PerfStat icon={Clock} label="Avg Call" value={apiPerf?.avgCall || 0} unit="ms" status="good" />
+              <PerfStat icon={AlertTriangle} label="Errors" value={apiPerf?.errors || 0} unit="" status="good" />
            </div>
         </CardContent>
       </Card>
