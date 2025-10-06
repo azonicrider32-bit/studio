@@ -122,7 +122,7 @@ export default function AdvancedAnalyticsPanel({
   };
 
   const getLayerStats = () => {
-    return layers.filter(layer => layer.id !== 'bg').map((layer, index) => ({
+    return layers.filter(layer => layer.type !== 'background').map((layer, index) => ({
       id: layer.id,
       name: layer.name,
       pixels: layer.pixels?.size || 0,
@@ -202,7 +202,7 @@ export default function AdvancedAnalyticsPanel({
                 <div className="flex items-center justify-around bg-slate-700/50 border border-slate-600 rounded-md p-1">
                     <TooltipProvider>
                       {TABS.map(tab => (
-                        <Tooltip key={tab.id}>
+                        <UITooltip key={tab.id}>
                           <TooltipTrigger asChild>
                             <Button 
                               variant={activeTab === tab.id ? 'secondary' : 'ghost'} 
@@ -214,7 +214,7 @@ export default function AdvancedAnalyticsPanel({
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent><p>{tab.label}</p></TooltipContent>
-                        </Tooltip>
+                        </UITooltip>
                       ))}
                     </TooltipProvider>
                 </div>
