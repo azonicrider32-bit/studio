@@ -1,74 +1,84 @@
 /**
- * @fileOverview Firestore Security Rules for Asset Management Application
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for assets. Each user has full control over their own assets.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for data access.
  *
  * Data Structure:
- * - Users: `/users/{userId}` - Stores user profiles. Only the user themselves can read/write their profile.
- * - Assets: `/users/{userId}/assets/{assetId}` - Stores assets owned by a specific user. Only the owning user can manage their assets.
+ * - /users/{userId}: Stores user profiles, accessible only to the user themselves.
+ * - /users/{userId}/assets/{assetId}: Stores assets owned by a specific user, accessible only to that user.
+ * - /users/{userId}/performanceLogs/{logId}: Stores performance logs for a specific user, accessible only to that user.
  *
  * Key Security Decisions:
- * - Users cannot list all users (no allUsers collection).
- * - Assets are private to their owner by default. Public read access is not supported in this version.
- *
- * Denormalization for Authorization:
- * - Assets store the `userId` to easily enforce ownership (`isOwner(asset.userId)`).
+ * - Users can only access their own data.
+ * - Data is segregated by user ID to simplify rules and improve performance.
+ * - List operations are restricted to the owner of the data.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure user profiles. Only the user can read, update, or delete their own profile.
+     * @description Enforces user-level access control for user profiles.
      * @path /users/{userId}
-     * @allow (create): User with ID 'user123' creates their own profile. `request.auth.uid == 'user123'`
-     * @allow (get): User with ID 'user123' reads their own profile. `request.auth.uid == 'user123'`
-     * @allow (update): User with ID 'user123' updates their own profile. `request.auth.uid == 'user123'`
-     * @allow (delete): User with ID 'user123' deletes their own profile. `request.auth.uid == 'user123'`
-     * @deny (create): User with ID 'user456' attempts to create a profile for 'user123'. `request.auth.uid != 'user123'`
-     * @deny (get): User with ID 'user456' attempts to read the profile of 'user123'. `request.auth.uid != 'user123'`
-     * @deny (update): User with ID 'user456' attempts to update the profile of 'user123'. `request.auth.uid != 'user123'`
-     * @deny (delete): User with ID 'user456' attempts to delete the profile of 'user123'. `request.auth.uid != 'user123'`
-     * @principle Enforces document ownership for all operations on user profiles.
+     * @allow (create) User with ID 'user123' can create their profile.
+     * @allow (get) User with ID 'user123' can read their profile.
+     * @allow (update) User with ID 'user123' can update their profile.
+     * @allow (delete) User with ID 'user123' can delete their profile.
+     * @deny (create) User with ID 'user456' cannot create a profile for 'user123'.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false; // Prevent listing all users.
-
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && resource.data.id == userId;
-      allow delete: if isOwner(userId) && resource != null;
+      //function isOwner(userId) {
+      //  return request.auth != null && request.auth.uid == userId;
+      //}
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Secure user assets. Only the owning user can create, read, update, or delete their own assets.
+     * @description Enforces user-level access control for assets.
      * @path /users/{userId}/assets/{assetId}
-     * @allow (create): User with ID 'user123' creates an asset under their profile. `request.auth.uid == 'user123'` and `request.resource.data.userId == 'user123'`
-     * @allow (get): User with ID 'user123' reads an asset under their profile. `request.auth.uid == 'user123'`
-     * @allow (update): User with ID 'user123' updates an asset under their profile. `request.auth.uid == 'user123'`
-     * @allow (delete): User with ID 'user123' deletes an asset under their profile. `request.auth.uid == 'user123'`
-     * @deny (create): User with ID 'user456' attempts to create an asset under the profile of 'user123'. `request.auth.uid != 'user123'`
-     * @deny (get): User with ID 'user456' attempts to read an asset under the profile of 'user123'. `request.auth.uid != 'user123'`
-     * @deny (update): User with ID 'user456' attempts to update an asset under the profile of 'user123'. `request.auth.uid != 'user123'`
-     * @deny (delete): User with ID 'user456' attempts to delete an asset under the profile of 'user123'. `request.auth.uid != 'user123'`
-     * @principle Enforces document ownership for all operations on user assets, and validates the userId on creation to prevent cross-user asset creation.
+     * @allow (create) User with ID 'user123' can create an asset under their profile.
+     * @allow (get) User with ID 'user123' can read an asset under their profile.
+     * @allow (update) User with ID 'user123' can update an asset under their profile.
+     * @allow (delete) User with ID 'user123' can delete an asset under their profile.
+     * @deny (create) User with ID 'user456' cannot create an asset under 'user123's profile.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/assets/{assetId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
+    }
 
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isOwner(userId) && resource.data.userId == userId && resource != null;
-      allow delete: if isOwner(userId) && resource != null;
+    /**
+     * @description Enforces user-level access control for performance logs.
+     * @path /users/{userId}/performanceLogs/{logId}
+     * @allow (create) User with ID 'user123' can create a performance log under their profile.
+     * @allow (get) User with ID 'user123' can read a performance log under their profile.
+     * @allow (update) User with ID 'user123' can update a performance log under their profile.
+     * @allow (delete) User with ID 'user123' can delete a performance log under their profile.
+     * @deny (create) User with ID 'user456' cannot create a performance log under 'user123's profile.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/performanceLogs/{logId} {
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+        return request.auth.uid == userId;
     }
   }
 }
