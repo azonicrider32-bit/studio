@@ -230,9 +230,13 @@ function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: R
                     {isHovered && (
                         <div className="absolute inset-0 flex">
                             <div
-                                className="w-1/2 h-full bg-primary/20 hover:bg-primary/40"
+                                className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center"
                                 onClick={() => onShelfClick(panel.id, 'full')}
-                            />
+                            >
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80">
+                                    <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                                </svg>
+                            </div>
                             <div className="w-1/2 h-full flex flex-col">
                                 <div
                                     className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center border-b border-primary/50"
@@ -1573,5 +1577,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
