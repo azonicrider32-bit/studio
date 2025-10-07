@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "./ui/input";
+import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill";
 
 
 interface ImageCanvasProps {
@@ -52,6 +53,7 @@ interface ImageCanvasProps {
   clearSelectionRef: React.MutableRefObject<(() => void) | undefined>;
   isLassoPreviewHovered: boolean;
   mainCanvasZoom: number;
+  setMainCanvasZoom: (zoom: number) => void;
   pan: {x: number, y: number};
   setPan: (pan: {x: number, y: number}) => void;
   onDragMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -62,6 +64,8 @@ interface ImageCanvasProps {
   showVerticalRuler: boolean;
   showGuides: boolean;
   globalSettings: GlobalSettings;
+  measurePerformance: (op: () => void, tool: string, operation: string) => void;
+  wandV2Settings: MagicWandSettings;
 }
 
 const HorizontalRuler = ({ width, zoom, panX }: { width: number, zoom: number, panX: number }) => {
@@ -187,6 +191,7 @@ export function ImageCanvas({
   clearSelectionRef,
   isLassoPreviewHovered,
   mainCanvasZoom,
+  setMainCanvasZoom,
   pan,
   setPan,
   onDragMouseDown,
@@ -197,6 +202,8 @@ export function ImageCanvas({
   showVerticalRuler,
   showGuides,
   globalSettings,
+  measurePerformance,
+  wandV2Settings,
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -764,6 +771,72 @@ const drawLayers = React.useCallback(() => {
     }
   };
 
+  const handleWandV2Click = async (pos: { x: number, y: number }, e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const imageData = canvas.getContext('2d')?.getImageData(0, 0, canvas.width, canvas.height);
+    if (!imageData) return;
+
+    const shiftKey = e.shiftKey;
+    const ctrlKey = e.ctrlKey || e.metaKey;
+
+    setIsProcessing(true);
+    setSegmentationMask(null);
+    
+    measurePerformance(() => {
+        try {
+            const floodFill = new UltraFastFloodFill(imageData);
+            
+            const firstEnabledColorSpace = wandV2Settings.enabledTolerances.values().next().value;
+
+            const options: WandOptions = {
+                tolerance: wandV2Settings.tolerances[firstEnabledColorSpace] || wandV2Settings.tolerances.r,
+                colorSpace: ['hsv', 'lab'].includes(firstEnabledColorSpace) ? firstEnabledColorSpace : 'rgb',
+                connectivity: 8,
+            };
+            
+            const result = floodFill.segment({x: pos.x, y: pos.y}, options);
+            const pixelSet = new Set(result.pixels);
+
+            if (pixelSet.size === 0) {
+              toast({ title: "Selection empty", description: "Wand v2 could not find any matching pixels."});
+              setIsProcessing(false);
+              return;
+            };
+
+            if(ctrlKey) {
+              toast({ title: "Subtracting from selection..." });
+              removePixelsFromLayers(pixelSet);
+              toast({ title: "Subtraction complete."});
+
+            } else if (shiftKey && activeLayerId && activeLayerId !== 'background-0') {
+              const activeLayer = layers.find(l => l.id === activeLayerId);
+              if (activeLayer && selectionEngineRef.current) {
+                toast({ title: "Adding to selection..." });
+                const combinedPixels = new Set([...activeLayer.pixels, ...pixelSet]);
+                const newBounds = selectionEngineRef.current.getBoundsForPixels(combinedPixels);
+                updateLayer(activeLayerId, combinedPixels, newBounds);
+                toast({ title: "Addition complete." });
+              }
+            } else {
+              toast({ title: "Creating new selection..." });
+              const newLayer = selectionEngineRef.current?.createLayerFromPixels(pixelSet, activeLayerId);
+              if (newLayer) addLayer(newLayer);
+              toast({ title: "New selection created." });
+            }
+        } catch (error: any) {
+            handleApiError(error, toast, {
+                title: "Wand v2 Failed",
+                description: "Could not perform segmentation."
+            });
+        } finally {
+            setIsProcessing(false);
+            drawOverlay();
+        }
+    }, 'wand-v2', 'selection');
+  };
+
   const sampleExclusionColor = (pos: { x: number, y: number }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -784,7 +857,7 @@ const drawLayers = React.useCallback(() => {
     const hsv = rgbToHsv(r, g, b);
     const lab = rgbToLab(r, g, b);
     
-    onNegativeMagicWandSettingChange({
+    onNegativeMagicWandSettingsChange({
         ...negativeMagicWandSettings,
         seedColor: { r,g,b, ...hsv, ...lab }
     })
@@ -926,6 +999,8 @@ const drawLayers = React.useCallback(() => {
         }
       } else if (activeTool === 'magic-wand') {
           handleMagicWandClick(pos, e);
+      } else if (activeTool === 'wand-v2') {
+          handleWandV2Click(pos, e);
       }
     }
   };
@@ -1008,8 +1083,10 @@ const drawLayers = React.useCallback(() => {
         engine.updateLinePreview(pos.x, pos.y);
         drawOverlay();
       }
-    } else if (activeTool === 'magic-wand') {
+    } else if (activeTool === 'magic-wand' && magicWandSettings.previewMode === 'real-time') {
         debouncedWandPreview(pos.x, pos.y);
+    } else if (activeTool === 'wand-v2' && wandV2Settings.previewMode === 'real-time') {
+        // Debounced preview for V2 can be added here if needed
     }
   };
   
@@ -1080,6 +1157,13 @@ const drawLayers = React.useCallback(() => {
     }
     
     e.preventDefault();
+
+    if (e.buttons === 2) { // Right mouse button is pressed
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setMainCanvasZoom(Math.max(0.1, Math.min(10, mainCanvasZoom + delta)));
+      return;
+    }
+
     const delta = e.deltaY > 0 ? -1 : 1;
 
     if (activeTool === 'clone' && cloneSource) {
@@ -1110,12 +1194,14 @@ const drawLayers = React.useCallback(() => {
         engine.updateLassoPreview(pos.x, pos.y, lassoMouseTraceRef.current);
         drawOverlay();
 
-    } else if (activeTool === 'magic-wand') {
-        
-        const newTolerances = { ...magicWandSettings.tolerances };
+    } else if (activeTool === 'magic-wand' || activeTool === 'wand-v2') {
+        const currentSettings = activeTool === 'magic-wand' ? magicWandSettings : wandV2Settings;
+        const settingsCallback = activeTool === 'magic-wand' ? onMagicWandSettingsChange : onMagicWandSettingsChange;
+
+        const newTolerances = { ...currentSettings.tolerances };
         let changed = false;
 
-        magicWandSettings.scrollAdjustTolerances.forEach(key => {
+        currentSettings.scrollAdjustTolerances.forEach(key => {
             const currentTolerance = newTolerances[key];
             let step = 1;
             if (key === 'h') step = 2;
@@ -1134,7 +1220,7 @@ const drawLayers = React.useCallback(() => {
         });
 
         if (changed) {
-            onMagicWandSettingsChange({ tolerances: newTolerances });
+            settingsCallback({ tolerances: newTolerances });
         }
     }
   };
@@ -1246,6 +1332,7 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
+
 
 
 

@@ -65,7 +65,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { ImageCanvas } from "./image-canvas"
-import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings, TransformSettings } from "@/lib/types"
+import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings, TransformSettings, CustomAiTool } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
 import { LayerStripPanel } from "./panels/layer-strip-panel"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
@@ -90,11 +90,12 @@ import { QuaternionColorWheel } from "./panels/quaternion-color-wheel"
 import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
 import { handleApiError } from "@/lib/error-handling"
 import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
-import { InstructionLayer, NanoBananaPanel } from "./panels/nano-banana-panel"
+import { InstructionLayer, NanoBananaPanel, NanoBananaCompactPanel } from "./panels/nano-banana-panel"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./panels/telemetry-panel"
 import { collection, serverTimestamp } from "firebase/firestore"
 import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
 import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
+import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
 
 type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -215,6 +216,7 @@ function ProSegmentAIContent() {
   const [isSplitView, setIsSplitView] = React.useState(false);
 
   const mainCanvasZoom = activeZoom === 'A' ? zoomA : zoomB;
+  const setMainCanvasZoom = activeZoom === 'A' ? setZoomA : setZoomB;
 
   const [pan, setPan] = React.useState({ x: 0, y: 0 });
 
@@ -244,6 +246,21 @@ function ProSegmentAIContent() {
   const [isTtsEnabled, setIsTtsEnabled] = React.useState(false);
   const [isSttEnabled, setIsSttEnabled] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const [customAiTools, setCustomAiTools] = React.useState<CustomAiTool[]>([
+    {
+        id: 'tool-1',
+        name: 'Vintage Film Look',
+        description: 'Applies a retro, film-like effect to the image.',
+        icon: 'Camera',
+        promptTemplate: 'Apply a vintage film effect with {{grain}} grain and {{saturation}} saturation to the image.',
+        uiDefinition: [
+            { id: 'grain', label: 'Grain', type: 'slider', defaultValue: 0.2, options: { min: 0, max: 1, step: 0.1 } },
+            { id: 'saturation', label: 'Saturation', type: 'slider', defaultValue: -0.3, options: { min: -1, max: 1, step: 0.1 } },
+        ]
+    }
+  ]);
+  const [editingTool, setEditingTool] = React.useState<CustomAiTool | null>(null);
 
   // State for Nano Banana Tool
   const [instructionLayers, setInstructionLayers] = React.useState<InstructionLayer[]>([]);
@@ -1294,6 +1311,7 @@ function ProSegmentAIContent() {
               getSelectionEngineRef={selectionEngineRef}
               isLassoPreviewHovered={isLassoPreviewHovered}
               mainCanvasZoom={mainCanvasZoom}
+              setMainCanvasZoom={setMainCanvasZoom}
               pan={pan}
               setPan={setPan}
               onDragMouseDown={handleDragMouseDown}
@@ -1326,8 +1344,8 @@ function ProSegmentAIContent() {
                 transformSettings={transformSettings}
                 onTransformSettingsChange={setTransformSettings}
                 activeTool={activeTool}
-                showHotkeys={showHotkeyLabels}
-                onShowHotkeysChange={setShowHotkeyLabels}
+                showHotkeyLabels={showHotkeyLabels}
+                onShowHotkeyLabelsChange={setShowHotkeyLabels}
                 globalSettings={globalSettings}
                 onGlobalSettingsChange={setGlobalSettings}
                 // AI Panel Props
@@ -1352,6 +1370,20 @@ function ProSegmentAIContent() {
                 apiPerf={apiPerf}
                 imageData={selectionEngineRef.current?.imageData ?? null}
                 layers={activeWorkspace.layers}
+                customAiTools={customAiTools}
+                onSaveCustomTool={(tool) => {
+                  setCustomAiTools(prev => {
+                    const index = prev.findIndex(t => t.id === tool.id);
+                    if (index > -1) {
+                      const newTools = [...prev];
+                      newTools[index] = tool;
+                      return newTools;
+                    }
+                    return [...prev, tool];
+                  })
+                  setEditingTool(null);
+                }}
+                onEditCustomTool={(tool) => setEditingTool(tool)}
               />
             </div>
           </SidebarContent>
@@ -1368,7 +1400,6 @@ function ProSegmentAIContent() {
           activeTool={activeTool}
           setActiveTool={handleToolChange}
           showHotkeys={showHotkeyLabels}
-          onAiToolClick={handleAiToolClick}
         />
       </div>
       
@@ -1454,6 +1485,26 @@ function ProSegmentAIContent() {
           </div>
       </div>
       </div>
+      {editingTool && (
+        <div className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <CustomAiToolEditor 
+                tool={editingTool}
+                onSave={(tool) => {
+                    setCustomAiTools(prev => {
+                        const index = prev.findIndex(t => t.id === tool.id);
+                        if (index > -1) {
+                            const newTools = [...prev];
+                            newTools[index] = tool;
+                            return newTools;
+                        }
+                        return [...prev, tool];
+                    });
+                    setEditingTool(null);
+                }}
+                onClose={() => setEditingTool(null)}
+            />
+        </div>
+      )}
     </div>
   )
 }
