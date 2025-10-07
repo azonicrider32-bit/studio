@@ -216,32 +216,26 @@ function ShelfButton({ panel, onShelfClick, isActive }: { panel: { id: RightPane
                   <Button
                       variant={isActive ? "secondary" : "ghost"}
                       size="icon"
-                      className="w-full h-12"
-                      onClick={() => onShelfClick(panel.id, 'full')}
+                      className="w-12 h-12"
+                      onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
                   >
                       <panel.icon className="h-5 w-5" />
                   </Button>
 
-                   <div className="absolute top-0 right-full w-24 h-12 flex mr-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                    <div
-                      className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-l-md cursor-pointer"
-                      onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
-                          <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                      </svg>
+                  <div 
+                    className="absolute top-0 right-full w-24 h-12 flex mr-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto"
+                  >
+                    <div className="w-1/2 h-full flex items-center justify-center rounded-l-md cursor-pointer bg-primary/20 hover:bg-primary/40"
+                         onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}>
+                        <panel.icon className="w-6 h-6 text-primary-foreground/80"/>
                     </div>
                     <div className="w-1/2 h-full flex flex-col">
-                      <div
-                        className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-tr-md border-b border-primary/50 cursor-pointer"
-                        onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
-                      >
+                      <div className="h-1/2 w-full flex items-center justify-center rounded-tr-md border-b border-primary/50 cursor-pointer bg-primary/20 hover:bg-primary/40"
+                           onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}>
                           <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
                       </div>
-                      <div
-                        className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-br-md cursor-pointer"
-                        onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
-                      >
+                      <div className="h-1/2 w-full flex items-center justify-center rounded-br-md cursor-pointer bg-primary/20 hover:bg-primary/40"
+                           onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}>
                           <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
                       </div>
                     </div>
@@ -862,26 +856,25 @@ function ProSegmentAIContent() {
 
   const handleShelfClick = (panelId: RightPanel, position: 'full' | 'top' | 'bottom') => {
     setActivePanels(currentPanels => {
-      const [topPanel, bottomPanel] = currentPanels;
-      const isAlreadyOpen = topPanel === panelId || bottomPanel === panelId;
+      let [topPanel, bottomPanel] = currentPanels;
   
       if (position === 'full') {
         return [panelId, null];
       }
   
       if (position === 'top') {
-        if (topPanel === panelId) return [bottomPanel, null]; // Toggle off top, bottom moves up
-        if (bottomPanel === panelId) return [bottomPanel, topPanel]; // Swap
-        return [panelId, topPanel]; // Add as new top, old top becomes bottom
+        if (topPanel === panelId) return [bottomPanel, null];
+        if (bottomPanel === panelId) return [bottomPanel, topPanel];
+        return [panelId, topPanel];
       }
   
       if (position === 'bottom') {
-        if (bottomPanel === panelId) return [topPanel, null]; // Toggle off bottom
-        if (topPanel === panelId) return [bottomPanel, topPanel]; // Swap
-        return [topPanel, panelId]; // Add as new bottom
+        if (bottomPanel === panelId) return [topPanel, null];
+        if (topPanel === panelId) return [bottomPanel, topPanel];
+        return [topPanel, panelId];
       }
   
-      return currentPanels; // Should not happen
+      return currentPanels;
     });
   };
 
