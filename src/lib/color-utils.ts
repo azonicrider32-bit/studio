@@ -1,3 +1,4 @@
+
 "use client"
 
 export function rgbToHex(r: number, g: number, b: number): string {
@@ -35,6 +36,29 @@ export function rgbToHsv(r: number, g: number, b: number): { h: number; s: numbe
 
   return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) }
 }
+
+export function hsvToRgbString(h: number, s: number, v: number): string {
+    let r=0, g=0, b=0;
+    const sat = s / 100;
+    const val = v / 100;
+    const i = Math.floor(h / 60);
+    const f = h / 60 - i;
+    const p = val * (1 - sat);
+    const q = val * (1 - f * sat);
+    const t = val * (1 - (1 - f) * sat);
+
+    switch (i % 6) {
+        case 0: r = val; g = t; b = p; break;
+        case 1: r = q; g = val; b = p; break;
+        case 2: r = p; g = val; b = t; break;
+        case 3: r = p; g = q; b = val; break;
+        case 4: r = t; g = p; b = val; break;
+        case 5: r = val; g = p; b = q; break;
+    }
+
+    return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+}
+
 
 export function rgbToLab(r: number, g: number, b: number): { l: number; a: number; b_lab: number } {
     r /= 255; g /= 255; b /= 255;

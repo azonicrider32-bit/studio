@@ -7,39 +7,17 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { AuraColorWheel } from '../icons/aura-color-wheel';
-import { rgbToHsv } from '@/lib/color-utils';
+import { rgbToHsv, hsvToRgbString } from '@/lib/color-utils';
 
 function rgbStringToHsv(rgbString: string): { h: number, s: number, v: number } {
-  const result = /rgb\((\d+), (\d+), (\d+)\)/.exec(rgbString);
+  if (!rgbString) return { h: 0, s: 0, v: 0 };
+  const result = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(rgbString);
   if (!result) return { h: 0, s: 0, v: 0 };
   const r = parseInt(result[1], 10);
   const g = parseInt(result[2], 10);
   const b = parseInt(result[3], 10);
   return rgbToHsv(r, g, b);
 }
-
-function hsvToRgbString(h: number, s: number, v: number): string {
-    let r=0, g=0, b=0;
-    const sat = s / 100;
-    const val = v / 100;
-    const i = Math.floor(h / 60);
-    const f = h / 60 - i;
-    const p = val * (1 - sat);
-    const q = val * (1 - f * sat);
-    const t = val * (1 - (1 - f) * sat);
-
-    switch (i % 6) {
-        case 0: r = val; g = t; b = p; break;
-        case 1: r = q; g = val; b = p; break;
-        case 2: r = p; g = val; b = t; break;
-        case 3: r = p; g = q; b = val; break;
-        case 4: r = t; g = p; b = val; break;
-        case 5: r = val; g = p; b = q; break;
-    }
-
-    return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
-}
-
 
 export function DynamicColorSpherePanel() {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -82,8 +60,8 @@ export function DynamicColorSpherePanel() {
       </div>
       
       <div className="w-full space-y-4">
-        <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full border-2" style={{ backgroundColor: selectedColorRgb }}></div>
+        <div className="flex items-center gap-4 p-2 rounded-md bg-muted/50">
+            <div className="w-10 h-10 rounded-full border-2 border-border" style={{ backgroundColor: selectedColorRgb }}></div>
             <div className="font-mono text-sm">
                 <div>H: {selectedHsv.h.toFixed(0)}°</div>
                 <div>S: {selectedHsv.s.toFixed(0)}%</div>
