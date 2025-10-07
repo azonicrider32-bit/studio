@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useEffect } from 'react';
@@ -18,7 +19,6 @@ export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onCo
 
     const center = size / 2;
     const innerRadius = size * 0.1; // White core area
-    const midRadius = size * 0.4; // Peak color intensity
     const outerRadius = size / 2; // Fade to black
 
     // Black background base
@@ -37,30 +37,34 @@ export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onCo
 
     // 4 color fields (90° each, clockwise from top)
     const colorFields = [
-      { start: Math.PI, colors: ['purple', 'orange'], middle: 'red' }, // Top: purple-orange via red (angles: top is PI to 3PI/2? Adjust for clockwise)
-      { start: Math.PI / 2, colors: ['yellow', 'green'], middle: 'lightgreen' }, // Right
-      { start: 0, colors: ['green', 'blue'], middle: 'turquoise' }, // Bottom
-      { start: 3 * Math.PI / 2, colors: ['blue', 'purple'], middle: 'blueviolet' } // Left
+      { start: -Math.PI / 2, colors: ['purple', 'orange'], middle: 'red' },       // Top
+      { start: 0, colors: ['orange', 'green'], middle: 'yellow' },        // Right
+      { start: Math.PI / 2, colors: ['green', 'blue'], middle: 'turquoise' },  // Bottom
+      { start: Math.PI, colors: ['blue', 'purple'], middle: 'blueviolet' } // Left
     ];
 
-    colorFields.forEach((field, index) => {
-      // Conic gradient for field: inner white blend, mid hues with gradient, outer black fade
-      const grad = ctx.createConicGradient(field.start, center, center);
-      grad.addColorStop(0, 'transparent'); // Inner to white
-      grad.addColorStop(0.3, field.colors[0]); // First hue peak
-      grad.addColorStop(0.5, field.middle); // Middle blend
-      grad.addColorStop(0.7, field.colors[1]); // Second hue peak
-      grad.addColorStop(1, 'transparent'); // Outer to black
+    ctx.globalCompositeOperation = 'screen'; // Aura-like glow blend
 
+    colorFields.forEach((field) => {
+      const grad = ctx.createConicGradient(field.start, center, center);
+      // The gradient needs to span a 90 degree (PI/2 radians) arc.
+      grad.addColorStop(0, field.colors[0]);
+      grad.addColorStop(0.5, field.middle);
+      grad.addColorStop(1, field.colors[1]);
+      
       ctx.fillStyle = grad;
-      ctx.globalCompositeOperation = 'screen'; // Aura-like glow blend
       ctx.beginPath();
-      ctx.arc(center, center, outerRadius, 0, Math.PI * 2); // Full for field diffusion
+      ctx.moveTo(center, center);
+      ctx.arc(center, center, outerRadius, field.start, field.start + Math.PI / 2);
+      ctx.closePath();
       ctx.fill();
     });
 
     // Thinner black separations (45° arcs, with hueless/gray fades)
-    const separations = [Math.PI * 1.75, Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25]; // Positions between quadrants
+    const separations = [-Math.PI / 4, Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4];
+    
+    ctx.globalCompositeOperation = 'multiply'; // Darken for separation
+    
     separations.forEach((angle) => {
       const desatGrad = ctx.createRadialGradient(center, center, innerRadius, center, center, outerRadius);
       desatGrad.addColorStop(0, 'white'); // Inner white
@@ -68,10 +72,9 @@ export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onCo
       desatGrad.addColorStop(1, 'black'); // Outer black
 
       ctx.fillStyle = desatGrad;
-      ctx.globalCompositeOperation = 'multiply'; // Darken for separation
       ctx.beginPath();
       ctx.moveTo(center, center);
-      ctx.arc(center, center, outerRadius, angle - Math.PI / 8, angle + Math.PI / 8); // Thinner arc
+      ctx.arc(center, center, outerRadius, angle - Math.PI / 16, angle + Math.PI / 16); // Thinner arc
       ctx.closePath();
       ctx.fill();
     });
@@ -80,19 +83,21 @@ export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onCo
 
     // Interaction: Pick color on click
     const handleClick = (e: MouseEvent) => {
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const data = ctx.getImageData(x, y, 1, 1).data;
-      const color = `rgb(${data[0]}, ${data[1]}, ${data[2]})`;
-      if (onColorSelect) onColorSelect(color);
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const data = ctx.getImageData(x, y, 1, 1).data;
+        const color = `rgb(${data[0]}, ${data[1]}, ${data[2]})`;
+        if (onColorSelect) onColorSelect(color);
     };
 
     canvas.addEventListener('click', handleClick);
     
     return () => {
-        canvas.removeEventListener('click', handleClick);
+        if (canvas) {
+          canvas.removeEventListener('click', handleClick);
+        }
     }
   }, [size, onColorSelect]);
 
