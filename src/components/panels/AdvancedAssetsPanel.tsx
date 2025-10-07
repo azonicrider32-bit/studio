@@ -33,6 +33,9 @@ import {
   Utensils,
   MountainSnow,
   Trees,
+  Edit,
+  Plus,
+  Copy,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -43,6 +46,7 @@ import { handleApiError } from '@/lib/error-handling';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 type Asset = (typeof PlaceHolderImages)[0];
 
@@ -340,14 +344,16 @@ export default function AdvancedAssetPanel({
                     
                     {activeAssetTabs.map(asset => (
                         <TabsContent key={asset.id} value={asset.id} className="flex-1 overflow-y-auto">
-                           <ScrollArea className="h-full">
+                           <ScrollArea className="h-full pr-4">
                             <div className="p-1 space-y-6">
-                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="md:col-span-1 space-y-4">
-                                        <h3 className="text-xl font-bold">{asset.name}</h3>
+                                <h3 className="text-xl font-bold">{asset.name}</h3>
+                                <p className="text-sm text-muted-foreground">{asset.description}</p>
+                                
+                                <Separator/>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="md:col-span-1">
                                         <Image src={asset.imageUrl} width={400} height={400} alt={asset.id} className="rounded-lg w-full aspect-square object-cover" />
-                                        <p className="text-sm text-muted-foreground">{asset.description}</p>
-                                        <Button onClick={() => handleImageSelect(asset)} className="w-full">Use This Image</Button>
                                     </div>
                                     <div className="md:col-span-2 space-y-6">
                                         {asset.type === 'character' ? (
@@ -365,6 +371,35 @@ export default function AdvancedAssetPanel({
                                         )}
                                     </div>
                                  </div>
+
+                                <Separator/>
+
+                                <div className="flex gap-4">
+                                     <Popover>
+                                        <PopoverTrigger asChild>
+                                           <Button className="w-full">
+                                                <Plus className="w-4 h-4 mr-2"/>
+                                                Use This Image
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-64 p-2">
+                                            <div className="flex flex-col gap-1">
+                                                <Button variant="ghost" className="w-full justify-start" onClick={() => handleImageSelect(asset)}>
+                                                    <Copy className="w-4 h-4 mr-2"/>
+                                                    Add to Current Project
+                                                </Button>
+                                                <Button variant="ghost" className="w-full justify-start">
+                                                    <Plus className="w-4 h-4 mr-2"/>
+                                                    Start New Project
+                                                </Button>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                    <Button variant="outline" className="w-full">
+                                        <Edit className="w-4 h-4 mr-2"/>
+                                        Edit Asset
+                                    </Button>
+                                </div>
                             </div>
                            </ScrollArea>
                         </TabsContent>
