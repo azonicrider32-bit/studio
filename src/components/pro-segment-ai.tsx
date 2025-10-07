@@ -49,6 +49,7 @@ import {
   Database,
   PanelTop,
   PanelBottom,
+  Smile,
 } from "lucide-react"
 
 import {
@@ -69,7 +70,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { ImageCanvas } from "./image-canvas"
-import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings, TransformSettings } from "@/lib/types"
+import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings, TransformSettings, CharacterSculptSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
 import { LayerStripPanel } from "./panels/layer-strip-panel"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
@@ -102,8 +103,9 @@ import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
 import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
 import { AuraColorWheel } from "./icons/aura-color-wheel"
+import { CharacterSculptPanel } from "./panels/character-sculpt-panel"
 
-type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account";
+type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account" | "character-sculpt";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'quaternion-wheel' | 'dynamic-sphere';
 
 interface WorkspaceState {
@@ -595,6 +597,12 @@ function ProSegmentAIContent() {
     skewX: 0,
     skewY: 0,
     maintainAspectRatio: true,
+  });
+   const [characterSculptSettings, setCharacterSculptSettings] = React.useState<CharacterSculptSettings>({
+    foreheadHeight: 0,
+    nosePosition: 0,
+    eyeWidth: 0,
+    eyeSpacing: 0,
   });
   const [featherSettings, setFeatherSettings] = React.useState<FeatherSettings>({
     antiAlias: {
@@ -1436,6 +1444,8 @@ function ProSegmentAIContent() {
                 onCloneStampSettingsChange={handleCloneStampSettingsChange}
                 transformSettings={transformSettings}
                 onTransformSettingsChange={setTransformSettings}
+                characterSculptSettings={characterSculptSettings}
+                onCharacterSculptSettingsChange={setCharacterSculptSettings}
                 activeTool={activeTool}
                 showHotkeys={showHotkeyLabels}
                 onShowHotkeysChange={setShowHotkeyLabels}

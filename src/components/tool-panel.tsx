@@ -22,6 +22,7 @@ import {
   Trash2,
   Plus,
   Palette,
+  Smile,
 } from "lucide-react"
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
@@ -54,6 +55,7 @@ const manualToolDetails: Record<Tool, {
   clone: { id: "clone", icon: Replace, tooltip: "Clone Stamp", shortcut: "C", summary: "Paint with pixels from another part of the image.", details: "The Clone Stamp tool allows you to duplicate part of an image. Alt-click to define a source point, then click and drag to paint with the sampled pixels.", disabled: false },
   banana: { id: "banana", icon: BananaIcon, tooltip: "Nano Banana Tool", shortcut: "N", summary: "Visually instruct the AI to perform edits.", details: "Draw and write directly on the canvas to tell the AI what to change. Use Shift to create new colored instruction layers." },
   'blemish-remover': { id: "blemish-remover", icon: Sparkles, tooltip: "Blemish Remover", shortcut: "J", summary: "Quickly remove small imperfections.", details: "Click and drag over an area to automatically select, inpaint, and replace it." },
+  'character-sculpt': { id: "character-sculpt", icon: Smile, tooltip: "Character Sculpt", shortcut: "K", summary: "Morph facial and body features with AI.", details: "Use sliders to define changes to facial or body proportions. The AI will generate a new image based on your adjustments." },
   settings: { id: "settings", icon: Settings2, tooltip: "Global Settings", shortcut: "", summary: "Configure application-wide preferences for UI, performance, and more.", details: "Access global settings for the entire application, including theme customization, hotkey management, and performance options." }
 };
 

@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-export type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account";
+export type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account" | "character-sculpt";
 
 export interface AITool {
     id: string;
@@ -133,6 +133,13 @@ export interface TransformSettings {
     skewX: number;
     skewY: number;
     maintainAspectRatio: boolean;
+}
+
+export interface CharacterSculptSettings {
+    foreheadHeight: number;
+    nosePosition: number;
+    eyeWidth: number;
+    eyeSpacing: number;
 }
 
 
