@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -26,7 +27,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Button } from "./ui/button"
 import { Separator } from "./ui/separator"
-import { SidebarTrigger } from "./ui/sidebar"
+import { SidebarTrigger, useSidebar } from "./ui/sidebar"
 import { ProgressiveHover } from "./ui/progressive-hover"
 import { BananaIcon } from "./icons/banana-icon"
 import { AITool, Tool } from "@/lib/types"
@@ -105,7 +106,7 @@ export function ToolPanel({
   setActiveTool,
   showHotkeys,
 }: ToolPanelProps) {
-  
+  const { state: sidebarState, setOpen: setSidebarOpen } = useSidebar();
   return (
     <div className="h-full flex-shrink-0 w-16 flex flex-col items-center justify-between gap-2 border-r border-border/10 bg-background/80 backdrop-blur-sm p-2 z-30">
       <div className="flex flex-col items-center gap-2">
@@ -128,21 +129,23 @@ export function ToolPanel({
         </TooltipProvider>
       </div>
       <div className="flex flex-col items-center gap-2">
-          <Separator className="bg-border/10"/>
-          <TooltipProvider>
+        <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setActiveTool('settings')} className="h-12 w-12 relative ps-tool-icon-container bg-transparent hover:bg-white/10" data-state={activeTool === 'settings' ? "on" : "off"}>
-                        <div className="ps-tool-icon">
-                            <Settings2 className="h-5 w-5 ps-tool-icon__icon" />
-                        </div>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setSidebarOpen(s => !s)}
+                        className={cn("h-12 w-12", sidebarState === 'expanded' ? "text-destructive" : "text-foreground")}
+                    >
+                        <PanelLeft className="h-6 w-6" />
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                    <p>Global Settings</p>
+                    <p>{sidebarState === 'expanded' ? "Collapse Panel" : "Expand Panel"}</p>
                 </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
+        </TooltipProvider>
       </div>
     </div>
   )

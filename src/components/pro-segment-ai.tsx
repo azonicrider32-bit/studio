@@ -234,7 +234,7 @@ function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: R
                                 className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center"
                                 onClick={() => onShelfClick(panel.id, 'full')}
                             >
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
                                     <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
                                 </svg>
                             </div>
@@ -293,7 +293,7 @@ function ProSegmentAIContent() {
   
   const [hoveredLayerId, setHoveredLayerId] = React.useState<string | null>(null);
   
-  const { state: sidebarState } = useSidebar();
+  const { state: sidebarState, setOpen: setSidebarOpen } = useSidebar();
   const [showHotkeyLabels, setShowHotkeyLabels] = React.useState(false);
   
   const [showHorizontalRuler, setShowHorizontalRuler] = React.useState(false);
@@ -867,25 +867,28 @@ function ProSegmentAIContent() {
 
   const handleShelfClick = (panelId: RightPanel, position: 'full' | 'top' | 'bottom') => {
     setActivePanels(currentPanels => {
-        const [topPanel, bottomPanel] = currentPanels;
+        let [topPanel, bottomPanel] = currentPanels;
         const isAlreadyOpen = topPanel === panelId || bottomPanel === panelId;
 
-        switch (position) {
-            case 'full':
-                return [panelId, null];
-            case 'top':
-                if (isAlreadyOpen) {
-                    return topPanel === panelId ? [bottomPanel, null] : [panelId, bottomPanel];
-                }
-                return [panelId, bottomPanel];
-            case 'bottom':
-                if (isAlreadyOpen) {
-                    return bottomPanel === panelId ? [topPanel, null] : [topPanel, panelId];
-                }
-                return [topPanel, panelId];
-            default:
-                return currentPanels;
+        if (position === 'full') {
+            return [panelId, null];
         }
+
+        if (topPanel === panelId && position === 'bottom') { // Move top to bottom
+            return [bottomPanel, topPanel];
+        }
+        if (bottomPanel === panelId && position === 'top') { // Move bottom to top
+            return [bottomPanel, topPanel];
+        }
+
+        if (position === 'top') {
+            return [panelId, isAlreadyOpen ? bottomPanel : topPanel];
+        }
+        if (position === 'bottom') {
+            return [isAlreadyOpen ? topPanel : bottomPanel, panelId];
+        }
+
+        return currentPanels;
     });
   };
 
@@ -1201,6 +1204,17 @@ function ProSegmentAIContent() {
       <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <AuraColorWheel size={28} />
+             <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                    handleToolChange('settings');
+                    setSidebarOpen(true);
+                }}
+            >
+                <Settings2 className="w-5 h-5"/>
+            </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />
             </Button>
@@ -1489,20 +1503,29 @@ function ProSegmentAIContent() {
         <div className="h-full w-14 flex flex-col items-center justify-between border-l bg-background/80 backdrop-blur-sm p-2 z-10">
           <div className="flex flex-col gap-2">
             <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => setActivePanels([null, null])}>
-                    <PanelRightClose className="h-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Close Panels</p></TooltipContent>
-              </Tooltip>
-              <Separator />
-               <div className="space-y-1 flex flex-col">
+              <div className="space-y-1 flex flex-col">
                 {allShelfIcons.map((panel) => (
                   <ShelfButton key={panel.id} panel={panel} onShelfClick={handleShelfClick} />
                 ))}
               </div>
+            </TooltipProvider>
+          </div>
+          <div className="flex flex-col gap-2 items-center">
+            <Separator className="bg-border/50" />
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                       <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setIsRightPanelOpen(p => !p)}
+                            className={cn(isRightPanelOpen ? "text-destructive" : "text-foreground")}
+                        >
+                            <PanelRightClose className="h-5 w-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left"><p>{isRightPanelOpen ? "Close Panels" : "Open Panels"}</p></TooltipContent>
+                </Tooltip>
             </TooltipProvider>
           </div>
       </div>
