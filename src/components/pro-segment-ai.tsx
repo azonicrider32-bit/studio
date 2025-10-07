@@ -146,7 +146,8 @@ function ZoomControl({
   isActive,
   onClick,
   label,
-  hotkey
+  hotkey,
+  showHotkey
 }: {
   zoomLevel: number;
   setZoomLevel: (value: number) => void;
@@ -154,6 +155,7 @@ function ZoomControl({
   onClick: () => void;
   label: string;
   hotkey: string;
+  showHotkey: boolean;
 }) {
   const [isHovered, setIsHovered] = React.useState(false);
 
@@ -169,7 +171,7 @@ function ZoomControl({
               onClick={onClick}
             >
               <ZoomIn className="w-4 h-4"/>
-              {hotkey && <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">{hotkey}</span>}
+              {showHotkey && hotkey && <span className="absolute bottom-0.5 right-1 text-xs font-bold opacity-70">{hotkey}</span>}
             </Button>
           </TooltipTrigger>
           <TooltipContent><p>Activate {label} ({hotkey})</p></TooltipContent>
@@ -1219,6 +1221,7 @@ function ProSegmentAIContent() {
               onClick={() => setActiveZoom('A')}
               label="Zoom A"
               hotkey="1"
+              showHotkey={showHotkeyLabels}
             />
             <ZoomControl 
               zoomLevel={zoomB}
@@ -1227,6 +1230,7 @@ function ProSegmentAIContent() {
               onClick={() => setActiveZoom('B')}
               label="Zoom B"
               hotkey="2"
+              showHotkey={showHotkeyLabels}
             />
             <Button variant="ghost" size="icon" onClick={() => setIsSplitView(p => !p)}>
                 <Split className={cn("w-5 h-5", isSplitView && "text-primary")} />
@@ -1542,3 +1546,4 @@ export function ProSegmentAI() {
   )
 }
 
+    
