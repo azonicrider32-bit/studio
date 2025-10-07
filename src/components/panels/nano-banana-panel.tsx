@@ -200,7 +200,7 @@ export function NanoBananaPanel({
         <TabsContent value="inpaint" className="mt-4 space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="inpainting-prompt">Inpainting Prompt</Label>
-                <p className="text-xs text-muted-foreground">Select an area on the canvas, then describe what you want to generate inside it.</p>
+                <p className="text-xs text-muted-foreground">Use a selection tool (Lasso or Wand) to define an area, then describe what you want to generate inside it.</p>
                 <Textarea
                   id="inpainting-prompt"
                   placeholder="A majestic eagle soaring through a cloudy sky..."
@@ -214,11 +214,11 @@ export function NanoBananaPanel({
             <div className="space-y-3">
               <Label>Outpainting / Extend Image</Label>
               <p className="text-xs text-muted-foreground">
-                Expand the canvas by drawing a rectangle from the edge of the image. The AI will fill in the new area.
+                Use the Transform tool (V) to expand the canvas, then click below. The AI will fill in the new empty area.
               </p>
               <Button variant="outline" className="w-full">
                 <Frame className="w-4 h-4 mr-2"/>
-                Start Extending
+                Outpaint Extended Area
               </Button>
                <div className="space-y-2">
                   <Label htmlFor="content-adherence">Content Adherence</Label>
@@ -228,7 +228,7 @@ export function NanoBananaPanel({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="high">High (Stick to style)</SelectItem>
-                      <SelectItem value="medium">Medium (Balanced)</SelectItem>
+                      <SelectItem value="medium">Balanced</SelectItem>
                       <SelectItem value="low">Low (Creative freedom)</SelectItem>
                     </SelectContent>
                   </Select>
