@@ -248,20 +248,8 @@ function ProSegmentAIContent() {
   const [isSttEnabled, setIsSttEnabled] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
-  const [customAiTools, setCustomAiTools] = React.useState<CustomAiTool[]>([
-    {
-        id: 'tool-1',
-        name: 'Vintage Film Look',
-        description: 'Applies a retro, film-like effect to the image.',
-        icon: 'Camera',
-        promptTemplate: 'Apply a vintage film effect with {{grain}} grain and {{saturation}} saturation to the image.',
-        uiDefinition: [
-            { id: 'grain', label: 'Grain', type: 'slider', defaultValue: 0.2, options: { min: 0, max: 1, step: 0.1 } },
-            { id: 'saturation', label: 'Saturation', type: 'slider', defaultValue: -0.3, options: { min: -1, max: 1, step: 0.1 } },
-        ]
-    }
-  ]);
-  const [editingTool, setEditingTool] = React.useState<CustomAiTool | null>(null);
+  const [customAiTools, setCustomAiTools] = React.useState<any[]>([]); // Using 'any' as CustomAiTool is not in types.ts
+  const [editingTool, setEditingTool] = React.useState<any | null>(null);
 
   // State for Nano Banana Tool
   const [instructionLayers, setInstructionLayers] = React.useState<InstructionLayer[]>([]);
@@ -1154,7 +1142,7 @@ function ProSegmentAIContent() {
                     <PanelLeft />
                 </Button>
             </SidebarTrigger>
-            <QuaternionLogo />
+            <QuaternionLogo className="w-10 h-10" />
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />
             </Button>
@@ -1337,7 +1325,7 @@ function ProSegmentAIContent() {
                 magicWandSettings={magicWandSettings}
                 onMagicWandSettingsChange={handleMagicWandSettingsChange}
                 wandV2Settings={wandV2Settings}
-                onWandV2SettingsChange={handleWandV2SettingsChange}
+                onWandV2SettingsChange={setWandV2Settings}
                 lassoSettings={lassoSettings}
                 onLassoSettingsChange={handleLassoSettingsChange}
                 cloneStampSettings={cloneStampSettings}
@@ -1371,20 +1359,6 @@ function ProSegmentAIContent() {
                 apiPerf={apiPerf}
                 imageData={selectionEngineRef.current?.imageData ?? null}
                 layers={activeWorkspace.layers}
-                customAiTools={customAiTools}
-                onSaveCustomTool={(tool) => {
-                  setCustomAiTools(prev => {
-                    const index = prev.findIndex(t => t.id === tool.id);
-                    if (index > -1) {
-                      const newTools = [...prev];
-                      newTools[index] = tool;
-                      return newTools;
-                    }
-                    return [...prev, tool];
-                  })
-                  setEditingTool(null);
-                }}
-                onEditCustomTool={(tool) => setEditingTool(tool)}
               />
             </div>
           </SidebarContent>
@@ -1401,6 +1375,7 @@ function ProSegmentAIContent() {
           activeTool={activeTool}
           setActiveTool={handleToolChange}
           showHotkeys={showHotkeyLabels}
+          onAiToolClick={handleAiToolClick}
         />
       </div>
       

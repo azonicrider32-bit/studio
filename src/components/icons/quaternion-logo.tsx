@@ -3,8 +3,8 @@
 
 import React from 'react';
 
-export const QuaternionLogo = () => (
-  <svg width="28" height="28" viewBox="0 0 100 100" style={{ background: 'black', borderRadius: '50%' }}>
+export const QuaternionLogo = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
+  <svg width="28" height="28" viewBox="0 0 100 100" {...props} className={className}>
     <defs>
       <conicGradient id="grad1" from="0deg" at="50% 50%">
         <stop offset="0%" stopColor="#ff0000" />
