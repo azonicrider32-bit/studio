@@ -208,58 +208,51 @@ function ZoomControl({
   )
 }
 
-function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: React.ElementType; label: string; }, onShelfClick: (panelId: RightPanel, position: 'full' | 'top' | 'bottom') => void }) {
-    const [isHovered, setIsHovered] = React.useState(false);
+function ShelfButton({ panel, onShelfClick, isActive }: { panel: { id: RightPanel; icon: React.ElementType; label: string; }, onShelfClick: (panelId: RightPanel, position: 'full' | 'top' | 'bottom') => void, isActive: boolean }) {
+  return (
+      <Tooltip>
+          <TooltipTrigger asChild>
+              <div className="relative group">
+                  <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      size="icon"
+                      className="w-full h-12"
+                      onClick={() => onShelfClick(panel.id, 'full')}
+                  >
+                      <panel.icon className="h-5 w-5" />
+                  </Button>
 
-    return (
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <div
-                    className="relative"
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                >
-                    <Button
-                        variant={"ghost"}
-                        size="icon"
-                        className="w-full h-12"
-                    >
-                        <panel.icon className="h-5 w-5" />
-                    </Button>
-
-                    {isHovered && (
-                        <div className="absolute top-0 right-full w-24 h-12 flex mr-1">
+                  <div className="absolute top-0 right-full w-24 h-12 flex mr-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                        <div
+                            className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-l-md"
+                            onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
+                                <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                            </svg>
+                        </div>
+                        <div className="w-1/2 h-full flex flex-col">
                             <div
-                                className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-l-md"
-                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
+                                className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-tr-md border-b border-primary/50"
+                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
                             >
-                               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
-                                    <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                                </svg>
+                                <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
                             </div>
-                            <div className="w-1/2 h-full flex flex-col">
-                                <div
-                                    className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-tr-md border-b border-primary/50"
-                                    onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
-                                >
-                                    <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
-                                </div>
-                                <div
-                                    className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-br-md"
-                                    onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
-                                >
-                                     <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
-                                </div>
+                            <div
+                                className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-br-md"
+                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
+                            >
+                                <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
                             </div>
                         </div>
-                    )}
-                </div>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-                <p>{panel.label}</p>
-            </TooltipContent>
-        </Tooltip>
-    );
+                    </div>
+              </div>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+              <p>{panel.label}</p>
+          </TooltipContent>
+      </Tooltip>
+  );
 }
 
 function ProSegmentAIContent() {
@@ -270,7 +263,7 @@ function ProSegmentAIContent() {
   const isResizingRef = React.useRef(false);
   const { toast } = useToast()
   
-  const [activePanels, setActivePanels] = React.useState<[RightPanel | null, RightPanel | null]>([null, null]);
+  const [activePanels, setActivePanels] = React.useState<[RightPanel | null, RightPanel | null]>(['layers', null]);
   
   const [zoomA, setZoomA] = React.useState(1.0);
   const [zoomB, setZoomB] = React.useState(4.0);
@@ -886,7 +879,7 @@ function ProSegmentAIContent() {
       if (position === 'bottom') {
         if (bottomPanel === panelId) return [topPanel, null]; // Toggle off
         if (topPanel === panelId) return [bottomPanel, topPanel]; // Swap
-        return [topPanel, panelId]; // Add as new bottom
+        return [topPanel, bottomPanel]; // Add as new bottom
       }
   
       return currentPanels; // Should not happen
@@ -1532,7 +1525,12 @@ function ProSegmentAIContent() {
             <TooltipProvider>
               <div className="space-y-1 flex flex-col">
                 {allShelfIcons.map((panel) => (
-                  <ShelfButton key={panel.id} panel={panel} onShelfClick={handleShelfClick} />
+                  <ShelfButton 
+                    key={panel.id} 
+                    panel={panel} 
+                    onShelfClick={handleShelfClick} 
+                    isActive={activePanels.includes(panel.id)}
+                  />
                 ))}
               </div>
             </TooltipProvider>
@@ -1546,7 +1544,7 @@ function ProSegmentAIContent() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => setActivePanels([null, null])}
-                            className={cn("h-10 w-10", !isRightPanelOpen && "text-destructive")}
+                            className={cn("h-10 w-10 text-muted-foreground", !isRightPanelOpen && "text-destructive")}
                         >
                             <PanelRightClose className="h-5 w-5" />
                         </Button>
@@ -1630,5 +1628,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
