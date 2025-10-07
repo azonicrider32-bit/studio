@@ -47,6 +47,8 @@ import {
   Balloon,
   Globe,
   Database,
+  PanelTop,
+  PanelBottom,
 } from "lucide-react"
 
 import {
@@ -206,6 +208,56 @@ function ZoomControl({
   )
 }
 
+function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: React.ElementType; label: string; }, onShelfClick: (panelId: RightPanel, position: 'full' | 'top' | 'bottom') => void }) {
+    const [isHovered, setIsHovered] = React.useState(false);
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <div
+                    className="relative"
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    <Button
+                        variant={"ghost"}
+                        size="icon"
+                        className="w-full h-12"
+                    >
+                        <panel.icon className="h-5 w-5" />
+                    </Button>
+
+                    {isHovered && (
+                        <div className="absolute inset-0 flex">
+                            <div
+                                className="w-1/2 h-full bg-primary/20 hover:bg-primary/40"
+                                onClick={() => onShelfClick(panel.id, 'full')}
+                            />
+                            <div className="w-1/2 h-full flex flex-col">
+                                <div
+                                    className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center border-b border-primary/50"
+                                    onClick={() => onShelfClick(panel.id, 'top')}
+                                >
+                                    <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
+                                </div>
+                                <div
+                                    className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center"
+                                    onClick={() => onShelfClick(panel.id, 'bottom')}
+                                >
+                                     <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+                <p>{panel.label}</p>
+            </TooltipContent>
+        </Tooltip>
+    );
+}
+
 function ProSegmentAIContent() {
   const [activeTool, setActiveTool] = React.useState<Tool>("banana")
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
@@ -213,7 +265,7 @@ function ProSegmentAIContent() {
   const isResizingRef = React.useRef(false);
   const { toast } = useToast()
   
-  const [activePanels, setActivePanels] = React.useState<RightPanel[]>(['layers']);
+  const [activePanels, setActivePanels] = React.useState<[RightPanel | null, RightPanel | null]>([null, null]);
   
   const [zoomA, setZoomA] = React.useState(1.0);
   const [zoomB, setZoomB] = React.useState(4.0);
@@ -808,48 +860,41 @@ function ProSegmentAIContent() {
     }
   }
 
-  const handleShelfClick = (panelId: RightPanel, clickType: 'single' | 'double') => {
+  const handleShelfClick = (panelId: RightPanel, position: 'full' | 'top' | 'bottom') => {
     setActivePanels(currentPanels => {
-      const [topPanel, bottomPanel] = currentPanels;
-      const isTop = topPanel === panelId;
-      const isBottom = bottomPanel === panelId;
-      const isOpen = isTop || isBottom;
-  
-      if (clickType === 'single') {
-        if (isOpen) {
-          // A single click on an open panel closes it.
-          return currentPanels.filter(p => p !== panelId);
-        } else {
-          // A single click on a closed panel opens it in the top slot.
-          return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
+        const [topPanel, bottomPanel] = currentPanels;
+        const isAlreadyOpen = topPanel === panelId || bottomPanel === panelId;
+
+        switch (position) {
+            case 'full':
+                return [panelId, null];
+            case 'top':
+                if (isAlreadyOpen) {
+                    return topPanel === panelId ? [bottomPanel, null] : [panelId, bottomPanel];
+                }
+                return [panelId, bottomPanel];
+            case 'bottom':
+                if (isAlreadyOpen) {
+                    return bottomPanel === panelId ? [topPanel, null] : [topPanel, panelId];
+                }
+                return [topPanel, panelId];
+            default:
+                return currentPanels;
         }
-      } else { // Double click
-        if (isBottom) {
-          // Double-clicking a bottom panel closes it.
-          return [topPanel];
-        } else if (isTop) {
-          // Double-clicking a top panel also closes it (can be changed to move to bottom if needed)
-           return currentPanels.filter(p => p !== panelId);
-        } else {
-          // Double-clicking a closed panel opens it in the bottom slot.
-          return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
-        }
-      }
     });
   };
-  
 
   React.useEffect(() => {
-      if (activePanels.length === 0 && isRightPanelOpen) {
+      if (activePanels.every(p => p === null) && isRightPanelOpen) {
           setIsRightPanelOpen(false);
       }
-       if (activePanels.length > 0 && !isRightPanelOpen) {
+       if (activePanels.some(p => p !== null) && !isRightPanelOpen) {
           setIsRightPanelOpen(true);
       }
   }, [activePanels, isRightPanelOpen]);
 
 
-  const renderPanelContent = (panelId: RightPanel | undefined) => {
+  const renderPanelContent = (panelId: RightPanel | null) => {
     if (!panelId) return null;
     if (!activeWorkspace) return null;
 
@@ -1422,8 +1467,8 @@ function ProSegmentAIContent() {
         >
              {isRightPanelOpen && (
                  <div className="flex-1 flex flex-col min-h-0">
-                    {activePanels.length === 0 ? null :
-                     activePanels.length === 1 ? (
+                    {activePanels[0] === null && activePanels[1] === null ? null :
+                     activePanels[1] === null ? (
                         <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
                             {renderPanelContent(activePanels[0])}
                         </div>
@@ -1446,34 +1491,17 @@ function ProSegmentAIContent() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => setIsRightPanelOpen(p => {
-                      if(p && activePanels.length > 0) setActivePanels([]);
-                      return !p;
-                  })}>
-                    {isRightPanelOpen ? <PanelRightClose className="h-5 h-5" /> : <PanelLeft className="h-5 h-5" />}
+                  <Button variant="ghost" size="icon" onClick={() => setActivePanels([null, null])}>
+                    <PanelRightClose className="h-5 h-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="left"><p>{isRightPanelOpen ? 'Close Panel' : 'Open Panel'}</p></TooltipContent>
+                <TooltipContent side="left"><p>Close Panels</p></TooltipContent>
               </Tooltip>
               <Separator />
                <div className="space-y-1 flex flex-col">
-                {allShelfIcons.map(({id, icon: Icon, label}) => {
-                  const isActive = activePanels.includes(id);
-                  return (
-                    <Tooltip key={id}>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant={isActive && isRightPanelOpen ? "secondary" : "ghost"} 
-                          size="icon" 
-                          onClick={() => handleShelfClick(id, 'single')}
-                          onDoubleClick={() => handleShelfClick(id, 'double')}>
-                          <Icon className="h-5 h-5"/>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left"><p>{label}</p></TooltipContent>
-                    </Tooltip>
-                  )
-                })}
+                {allShelfIcons.map((panel) => (
+                  <ShelfButton key={panel.id} panel={panel} onShelfClick={handleShelfClick} />
+                ))}
               </div>
             </TooltipProvider>
           </div>
