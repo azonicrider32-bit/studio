@@ -22,8 +22,9 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
     if (!ctx) return;
 
     const center = size / 2;
-    const hueRadius = size * 0.4;
-    const svRadius = size * 0.3;
+    const hueRingOuterRadius = size / 2;
+    const hueRingInnerRadius = size * 0.35;
+    const svRadius = hueRingInnerRadius - (size * 0.05);
 
     ctx.clearRect(0, 0, size, size);
 
@@ -33,50 +34,65 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
       hueGradient.addColorStop(i / 360, `hsl(${i}, 100%, 50%)`);
     }
     ctx.strokeStyle = hueGradient;
-    ctx.lineWidth = size * 0.15;
+    ctx.lineWidth = hueRingOuterRadius - hueRingInnerRadius;
     ctx.beginPath();
-    ctx.arc(center, center, hueRadius, 0, 2 * Math.PI);
+    ctx.arc(center, center, (hueRingOuterRadius + hueRingInnerRadius) / 2, 0, 2 * Math.PI);
     ctx.stroke();
 
-    // 2. Draw Saturation/Value Box (Poles projection)
-    // Background Value Gradient
-    const valueGradient = ctx.createLinearGradient(center - svRadius, center - svRadius, center + svRadius, center - svRadius);
-    valueGradient.addColorStop(0, '#fff');
-    valueGradient.addColorStop(1, hsvToRgbString(selectedHsv.h, 100, 100));
-    ctx.fillStyle = valueGradient;
-    ctx.fillRect(center - svRadius, center - svRadius, svRadius * 2, svRadius * 2);
+    // 2. Draw Saturation/Value Triangle inside a circle
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(center, center, svRadius, 0, 2 * Math.PI);
+    ctx.clip(); // Clip all drawing to the inner circle
 
-    // Saturation Overlay
-    const satGradient = ctx.createLinearGradient(center - svRadius, center + svRadius, center - svRadius, center - svRadius);
-    satGradient.addColorStop(0, '#000');
-    satGradient.addColorStop(1, 'rgba(0,0,0,0)');
+    const pureHueColor = `hsl(${selectedHsv.h}, 100%, 50%)`;
+
+    // Saturation gradient (from white to pure hue)
+    const satGradient = ctx.createLinearGradient(center - svRadius, center, center + svRadius, center);
+    satGradient.addColorStop(0, 'white');
+    satGradient.addColorStop(1, pureHueColor);
     ctx.fillStyle = satGradient;
     ctx.fillRect(center - svRadius, center - svRadius, svRadius * 2, svRadius * 2);
+
+    // Value gradient (from transparent to black)
+    const valGradient = ctx.createLinearGradient(center, center - svRadius, center, center + svRadius);
+    valGradient.addColorStop(0, 'rgba(0,0,0,0)');
+    valGradient.addColorStop(1, 'black');
+    ctx.fillStyle = valGradient;
+    ctx.fillRect(center - svRadius, center - svRadius, svRadius * 2, svRadius * 2);
     
-    // Draw cursors
-    // Hue cursor
+    ctx.restore(); // Restore from clipping
+
+    // 3. Draw cursors
+    // Hue cursor on the ring
     const hueAngle = (selectedHsv.h * Math.PI) / 180;
-    const hueX = center + hueRadius * Math.cos(hueAngle);
-    const hueY = center + hueRadius * Math.sin(hueAngle);
+    const hueCursorRadius = (hueRingOuterRadius + hueRingInnerRadius) / 2;
+    const hueX = center + hueCursorRadius * Math.cos(hueAngle);
+    const hueY = center + hueCursorRadius * Math.sin(hueAngle);
     ctx.fillStyle = 'white';
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(hueX, hueY, 5, 0, 2 * Math.PI);
+    ctx.arc(hueX, hueY, 6, 0, 2 * Math.PI);
     ctx.fill();
     ctx.stroke();
     
-    // SV cursor
-    const svX = center - svRadius + (selectedHsv.s / 100) * (svRadius * 2);
-    const svY = center + svRadius - (selectedHsv.v / 100) * (svRadius * 2);
+    // SV cursor in the triangle
+    const svAngle = (selectedHsv.h * Math.PI) / 180;
+    const svDist = (selectedHsv.s / 100) * svRadius;
+    const svX = center + svDist * Math.cos(svAngle);
+    const svY = center + svDist * Math.sin(svAngle);
+    // This is a simplified representation. A true triangular picker would be more complex.
+    // For now, let's map S/V to X/Y inside the circle.
+    const finalSvX = center - svRadius + (selectedHsv.s / 100) * (svRadius * 2);
+    const finalSvY = center + svRadius - (selectedHsv.v / 100) * (svRadius * 2);
     ctx.fillStyle = selectedHsv.v > 50 ? 'black' : 'white';
     ctx.strokeStyle = selectedHsv.v > 50 ? 'white' : 'black';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(svX, svY, 5, 0, 2 * Math.PI);
-    ctx.fill();
+    ctx.arc(finalSvX, finalSvY, 5, 0, 2 * Math.PI);
     ctx.stroke();
-
+    ctx.fill();
 
   }, [size, selectedHsv]);
 
@@ -118,7 +134,7 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
         if (hue < 0) hue += 360;
         setSelectedHsv(prev => ({ ...prev, h: hue }));
     } else if (isDragging === 'sv') {
-        const svRadius = size * 0.3;
+        const svRadius = size * 0.35 - (size * 0.05);
         const svBoxLeft = center - svRadius;
         const svBoxTop = center - svRadius;
 
@@ -141,14 +157,13 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
     const center = size / 2;
 
     const dist = Math.hypot(x - center, y - center);
-    const hueRadius = size * 0.4;
-    const hueRingWidth = size * 0.15;
-    
-    const svRadius = size * 0.3;
+    const hueRingOuterRadius = size / 2;
+    const hueRingInnerRadius = size * 0.35;
+    const svRadius = hueRingInnerRadius - (size * 0.05);
 
-    if (dist > hueRadius - hueRingWidth / 2 && dist < hueRadius + hueRingWidth / 2) {
+    if (dist > hueRingInnerRadius && dist < hueRingOuterRadius) {
       setIsDragging('hue');
-    } else if (Math.abs(x - center) <= svRadius && Math.abs(y - center) <= svRadius) {
+    } else if (dist <= svRadius) {
       setIsDragging('sv');
     }
     
