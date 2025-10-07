@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -224,7 +225,7 @@ function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: R
                         size="icon"
                         className="w-full h-12"
                     >
-                        <panel.icon className="h-5 w-5" />
+                        <panel.icon className="h-5 h-5" />
                     </Button>
 
                     {isHovered && (
@@ -1199,11 +1200,6 @@ function ProSegmentAIContent() {
     <div className="h-screen w-screen bg-background overflow-hidden relative">
       <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <SidebarTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10">
-                    <PanelLeft />
-                </Button>
-            </SidebarTrigger>
             <AuraColorWheel size={28} />
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />

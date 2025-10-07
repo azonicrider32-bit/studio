@@ -274,7 +274,7 @@ export function ToolSettingsPanel({
                         onSettingsChange={onCloneStampSettingsChange} 
                     />
         case 'settings':
-            return <GlobalSettingsCompactPanel onShowHotkeysChange={onShowHotkeysChange} showHotkeys={showHotkeyLabels} />
+            return <GlobalSettingsCompactPanel onShowHotkeysChange={onShowHotkeysChange} showHotkeys={showHotkeys} />
         default:
             return null;
     }
@@ -526,10 +526,10 @@ export function ToolSettingsPanel({
             />
           ) : activeTool === 'settings' ? (
             <GlobalSettingsPanel 
-                showHotkeys={showHotkeyLabels} 
-                onShowHotkeysChange={setShowHotkeyLabels} 
+                showHotkeys={showHotkeys} 
+                onShowHotkeysChange={onShowHotkeysChange} 
                 settings={globalSettings} 
-                onSettingsChange={setGlobalSettings} 
+                onSettingsChange={onGlobalSettingsChange} 
                 wandPerf={performanceMetrics}
                 lassoPerf={performanceMetrics}
                 apiPerf={apiPerf}
