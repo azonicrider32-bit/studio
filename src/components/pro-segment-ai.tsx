@@ -96,6 +96,7 @@ import { collection, serverTimestamp } from "firebase/firestore"
 import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
 import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
+import { LuminLogo } from "./icons/lumin-logo"
 
 type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -1153,9 +1154,7 @@ function ProSegmentAIContent() {
                     <PanelLeft />
                 </Button>
             </SidebarTrigger>
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
-                <p className="font-bold text-lg text-white">Ps</p>
-            </div>
+            <LuminLogo />
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />
             </Button>
@@ -1296,11 +1295,11 @@ function ProSegmentAIContent() {
               setSegmentationMask={(mask) => setActiveWorkspaceState(ws => ({...ws, segmentationMask: mask }))}
               activeTool={activeTool}
               lassoSettings={lassoSettings}
-              magicWandSettings={activeTool === 'wand-v2' ? wandV2Settings : magicWandSettings}
+              magicWandSettings={magicWandSettings}
               negativeMagicWandSettings={negativeMagicWandSettings}
               cloneStampSettings={cloneStampSettings}
               onLassoSettingChange={handleLassoSettingsChange}
-              onMagicWandSettingsChange={activeTool === 'wand-v2' ? handleWandV2SettingsChange : handleMagicWandSettingsChange}
+              onMagicWandSettingsChange={handleMagicWandSettingsChange}
               onNegativeMagicWandSettingsChange={handleNegativeMagicWandSettingsChange}
               onCloneStampSettingsChange={handleCloneStampSettingsChange}
               getSelectionMaskRef={getSelectionMaskRef}
@@ -1322,6 +1321,8 @@ function ProSegmentAIContent() {
               showVerticalRuler={showVerticalRuler}
               showGuides={showGuides}
               globalSettings={globalSettings}
+              measurePerformance={measurePerformance}
+              wandV2Settings={wandV2Settings}
               />
           </div>
       </main>
@@ -1344,8 +1345,8 @@ function ProSegmentAIContent() {
                 transformSettings={transformSettings}
                 onTransformSettingsChange={setTransformSettings}
                 activeTool={activeTool}
-                showHotkeyLabels={showHotkeyLabels}
-                onShowHotkeyLabelsChange={setShowHotkeyLabels}
+                showHotkeys={showHotkeyLabels}
+                onShowHotkeysChange={setShowHotkeyLabels}
                 globalSettings={globalSettings}
                 onGlobalSettingsChange={setGlobalSettings}
                 // AI Panel Props
