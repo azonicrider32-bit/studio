@@ -98,10 +98,9 @@ import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
 import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
 import { AuraColorWheel } from "@/components/icons/quaternion-logo"
-import { ColorSpherePanel } from "./panels/color-sphere-panel"
 
 type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
-type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel' | 'color-sphere';
+type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
 
 interface WorkspaceState {
   id: string;
@@ -901,7 +900,6 @@ function ProSegmentAIContent() {
         case "color-analysis": return <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>;
         case "pixel-preview": return <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>;
         case "color-wheel": return <QuaternionColorWheelPanel layers={activeWorkspace.layers} onToggleLayerVisibility={toggleLayerVisibility} />;
-        case "color-sphere": return <ColorSpherePanel />;
         default: return null;
     }
   }
@@ -1140,7 +1138,6 @@ function ProSegmentAIContent() {
     { id: 'pixel-preview', icon: Microscope, label: 'Pixel Preview (P)' },
     { id: 'history', icon: History, label: 'History' },
     { id: 'color-wheel', icon: Palette, label: 'Color Wheel' },
-    { id: 'color-sphere', icon: Globe, label: 'Color Sphere' },
   ];
 
   return (

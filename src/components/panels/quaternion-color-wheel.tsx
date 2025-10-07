@@ -10,12 +10,14 @@ import { Card, CardContent } from '../ui/card';
 import { Separator } from '../ui/separator';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
+import { Layer } from '@/lib/types';
 
 interface QuaternionColorWheelPanelProps {
-    // Keeping these for potential future use, but not using them for the construction layers
+    layers: Layer[];
+    onToggleLayerVisibility: (id: string) => void;
 }
 
-export function QuaternionColorWheel({ }: QuaternionColorWheelPanelProps) {
+export function QuaternionColorWheelPanel({ layers, onToggleLayerVisibility }: QuaternionColorWheelPanelProps) {
     const containerRef = React.useRef<HTMLDivElement>(null);
     const [size, setSize] = React.useState(200);
     const [constructionLayers, setConstructionLayers] = React.useState<AuraColorWheelProps['constructionLayers']>({
@@ -73,6 +75,20 @@ export function QuaternionColorWheel({ }: QuaternionColorWheelPanelProps) {
                             onCheckedChange={() => handleToggleLayer(key as keyof typeof constructionLayers)}
                        />
                    </div>
+                ))}
+            </div>
+        </ScrollArea>
+        <Separator className="my-2"/>
+        <h4 className="font-semibold text-sm mb-2">Image Layers</h4>
+        <ScrollArea className="flex-1">
+            <div className="space-y-1 pr-2">
+                {layers.map(layer => (
+                    <div key={layer.id} className="flex items-center justify-between p-2 rounded-md bg-muted/30">
+                        <Label htmlFor={`layer-vis-${layer.id}`} className="text-sm">{layer.name}</Label>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onToggleLayerVisibility(layer.id)}>
+                            {layer.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                        </Button>
+                    </div>
                 ))}
             </div>
         </ScrollArea>
