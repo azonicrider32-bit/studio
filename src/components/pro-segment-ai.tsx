@@ -222,30 +222,30 @@ function ShelfButton({ panel, onShelfClick, isActive }: { panel: { id: RightPane
                       <panel.icon className="h-5 w-5" />
                   </Button>
 
-                  <div className="absolute top-0 right-full w-24 h-12 flex mr-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
-                        <div
-                            className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-l-md"
-                            onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
-                                <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-                            </svg>
-                        </div>
-                        <div className="w-1/2 h-full flex flex-col">
-                            <div
-                                className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-tr-md border-b border-primary/50"
-                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
-                            >
-                                <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
-                            </div>
-                            <div
-                                className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-br-md"
-                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
-                            >
-                                <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
-                            </div>
-                        </div>
+                   <div className="absolute top-0 right-full w-24 h-12 flex mr-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+                    <div
+                      className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-l-md cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
+                          <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                      </svg>
                     </div>
+                    <div className="w-1/2 h-full flex flex-col">
+                      <div
+                        className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-tr-md border-b border-primary/50 cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
+                      >
+                          <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
+                      </div>
+                      <div
+                        className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-br-md cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
+                      >
+                          <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
+                      </div>
+                    </div>
+                  </div>
               </div>
           </TooltipTrigger>
           <TooltipContent side="left">
@@ -866,20 +866,19 @@ function ProSegmentAIContent() {
       const isAlreadyOpen = topPanel === panelId || bottomPanel === panelId;
   
       if (position === 'full') {
-        // If it's already open and we click full, it should just be the only one
         return [panelId, null];
       }
   
       if (position === 'top') {
-        if (topPanel === panelId) return [null, bottomPanel]; // Toggle off
+        if (topPanel === panelId) return [bottomPanel, null]; // Toggle off top, bottom moves up
         if (bottomPanel === panelId) return [bottomPanel, topPanel]; // Swap
-        return [panelId, topPanel]; // Add as new top
+        return [panelId, topPanel]; // Add as new top, old top becomes bottom
       }
   
       if (position === 'bottom') {
-        if (bottomPanel === panelId) return [topPanel, null]; // Toggle off
+        if (bottomPanel === panelId) return [topPanel, null]; // Toggle off bottom
         if (topPanel === panelId) return [bottomPanel, topPanel]; // Swap
-        return [topPanel, bottomPanel]; // Add as new bottom
+        return [topPanel, panelId]; // Add as new bottom
       }
   
       return currentPanels; // Should not happen
@@ -1214,7 +1213,7 @@ function ProSegmentAIContent() {
           <div className="flex items-center gap-2">
             <AuraColorWheel size={28} />
              <Button
-                variant="ghost"
+                variant={activeTool === 'settings' ? 'secondary' : 'ghost'}
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => handleHeaderToolClick('settings')}
@@ -1222,7 +1221,7 @@ function ProSegmentAIContent() {
               {activeTool === 'settings' ? <XIcon className="w-5 h-5 text-red-500"/> : <Settings2 className="w-5 h-5"/>}
             </Button>
             <Button
-                variant="ghost"
+                variant={activeTool === 'account' ? 'secondary' : 'ghost'}
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => handleHeaderToolClick('account')}
@@ -1230,7 +1229,7 @@ function ProSegmentAIContent() {
               {activeTool === 'account' ? <XIcon className="w-5 h-5 text-red-500"/> : <User className="w-5 h-5"/>}
             </Button>
             <Button
-                variant="ghost"
+                variant={activeTool === 'project' ? 'secondary' : 'ghost'}
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => handleHeaderToolClick('project')}
