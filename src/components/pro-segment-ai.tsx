@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -312,6 +311,8 @@ function ProSegmentAIContent() {
 
   const [customAiTools, setCustomAiTools] = React.useState<any[]>([]); // Using 'any' as CustomAiTool is not in types.ts
   const [editingTool, setEditingTool] = React.useState<any | null>(null);
+  const previousToolRef = React.useRef<Tool>(activeTool);
+
 
   // State for Nano Banana Tool
   const [instructionLayers, setInstructionLayers] = React.useState<InstructionLayer[]>([]);
@@ -1209,11 +1210,18 @@ function ProSegmentAIContent() {
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => {
-                    handleToolChange('settings');
+                  if (activeTool === 'settings') {
+                    // It's already open, so close it and restore previous tool
+                    setActiveTool(previousToolRef.current || 'magic-wand');
+                  } else {
+                    // It's closed, so open it
+                    previousToolRef.current = activeTool;
+                    setActiveTool('settings');
                     setSidebarOpen(true);
+                  }
                 }}
             >
-                <Settings2 className="w-5 h-5"/>
+              {activeTool === 'settings' ? <XIcon className="w-5 h-5 text-red-500"/> : <Settings2 className="w-5 h-5"/>}
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />
@@ -1519,7 +1527,7 @@ function ProSegmentAIContent() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => setIsRightPanelOpen(p => !p)}
-                            className={cn(isRightPanelOpen ? "text-destructive" : "text-foreground")}
+                            className={cn("h-10 w-10", isRightPanelOpen ? "text-destructive" : "text-foreground")}
                         >
                             <PanelRightClose className="h-5 w-5" />
                         </Button>
@@ -1596,3 +1604,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
