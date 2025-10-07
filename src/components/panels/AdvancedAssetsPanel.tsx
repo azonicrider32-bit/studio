@@ -47,8 +47,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { cn } from '@/lib/utils';
 
 type Asset = (typeof PlaceHolderImages)[0];
+type AssetDetails = { [key: string]: string };
 
 const categories = [
   { id: 'all', name: 'All Images', icon: Grid3x3 },
@@ -64,19 +66,27 @@ const categories = [
   { id: 'texture', name: 'Textures', icon: Trees },
 ];
 
-const AssetDetailSection: React.FC<{ title: string; assets?: { [key: string]: string } }> = ({ title, assets }) => {
+const AssetDetailSection: React.FC<{
+  title: string;
+  assets?: AssetDetails;
+  onThumbnailClick: (url: string) => void;
+  activeThumbnail: string;
+}> = ({ title, assets, onThumbnailClick, activeThumbnail }) => {
   if (!assets || Object.keys(assets).length === 0) return null;
 
   return (
     <div className="space-y-3">
-      <h4 className="font-semibold text-foreground">{title}</h4>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <h4 className="font-semibold text-foreground text-sm">{title}</h4>
+      <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
         {Object.entries(assets).map(([key, url]) => (
-          <div key={key} className="space-y-1">
-            <div className="aspect-square rounded-lg overflow-hidden border bg-muted hover:border-primary transition-all">
-              <Image src={url} alt={`${title} - ${key}`} width={200} height={200} className="object-cover w-full h-full" />
+          <div key={key} className="space-y-1 cursor-pointer group" onClick={() => onThumbnailClick(url)}>
+            <div className={cn(
+                "aspect-square rounded-md overflow-hidden border bg-muted hover:border-primary transition-all ring-2",
+                activeThumbnail === url ? "ring-primary" : "ring-transparent"
+            )}>
+              <Image src={url} alt={`${title} - ${key}`} width={80} height={80} className="object-cover w-full h-full transition-transform group-hover:scale-105" />
             </div>
-            <p className="text-xs text-muted-foreground text-center capitalize">{key.replace(/([A-Z])/g, ' $1')}</p>
+            <p className="text-xs text-muted-foreground text-center capitalize truncate">{key.replace(/([A-Z])/g, ' $1')}</p>
           </div>
         ))}
       </div>
@@ -97,6 +107,7 @@ export default function AdvancedAssetPanel({
   const [isUploading, setIsUploading] = useState(false);
   const [activeAssetTabs, setActiveAssetTabs] = useState<Asset[]>([]);
   const [activeTab, setActiveTab] = useState<string>('library');
+  const [activePreviews, setActivePreviews] = useState<{[assetId: string]: string}>({});
   
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -124,11 +135,16 @@ export default function AdvancedAssetPanel({
           setActiveAssetTabs(prev => [...prev, asset]);
       }
       setActiveTab(asset.id);
+      if (!activePreviews[asset.id]) {
+          setActivePreviews(prev => ({...prev, [asset.id]: asset.imageUrl}));
+      }
   }
   
   const closeAssetTab = (assetId: string) => {
       setActiveAssetTabs(prev => prev.filter(tab => tab.id !== assetId));
-      setActiveTab('library');
+      if (activeTab === assetId) {
+          setActiveTab('library');
+      }
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -273,7 +289,7 @@ export default function AdvancedAssetPanel({
             </div>
             <div className="flex-1 flex flex-col p-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
-                    <TabsList className="mb-4 flex-shrink-0 flex-wrap h-auto">
+                    <TabsList className="mb-4 flex-shrink-0 flex-wrap h-auto justify-start">
                         <TabsTrigger value="library">Library</TabsTrigger>
                         {activeAssetTabs.map(asset => (
                             <TabsTrigger key={asset.id} value={asset.id} className="flex items-center gap-2">
@@ -345,36 +361,35 @@ export default function AdvancedAssetPanel({
                     {activeAssetTabs.map(asset => (
                         <TabsContent key={asset.id} value={asset.id} className="flex-1 overflow-y-auto">
                            <ScrollArea className="h-full pr-4">
-                            <div className="p-1 space-y-6">
-                                <h3 className="text-xl font-bold">{asset.name}</h3>
-                                <p className="text-sm text-muted-foreground">{asset.description}</p>
-                                
+                            <div className="p-1 space-y-4">
+                               <div className="space-y-2">
+                                    <h3 className="text-xl font-bold">{asset.name}</h3>
+                                    <p className="text-sm text-muted-foreground">{asset.description}</p>
+                                </div>
                                 <Separator/>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="md:col-span-1">
-                                        <Image src={asset.imageUrl} width={400} height={400} alt={asset.id} className="rounded-lg w-full aspect-square object-cover" />
+                                <div className="space-y-4">
+                                    <div className="aspect-video w-full relative bg-muted rounded-lg overflow-hidden border">
+                                        <Image src={activePreviews[asset.id] || asset.imageUrl} layout="fill" objectFit="contain" alt="Main asset preview" />
                                     </div>
-                                    <div className="md:col-span-2 space-y-6">
-                                        {asset.type === 'character' ? (
-                                            <>
-                                                <AssetDetailSection title="Character Views" assets={asset.views} />
-                                                <Separator />
-                                                <AssetDetailSection title="Expressions" assets={asset.expressions} />
-                                                <Separator />
-                                                <AssetDetailSection title="Outfits" assets={asset.outfits} />
-                                            </>
-                                        ) : (
-                                            <div className="text-center text-muted-foreground py-10">
-                                                <p>No detailed views available for this asset type.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                 </div>
+
+                                    {asset.type === 'character' ? (
+                                        <div className="space-y-4">
+                                            <AssetDetailSection title="Character Views" assets={asset.views} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                            <Separator />
+                                            <AssetDetailSection title="Expressions" assets={asset.expressions} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                            <Separator />
+                                            <AssetDetailSection title="Outfits" assets={asset.outfits} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                        </div>
+                                    ) : (
+                                        <div className="text-center text-muted-foreground py-6">
+                                            <p className="text-sm">No detailed views available for this asset type.</p>
+                                        </div>
+                                    )}
+                                </div>
 
                                 <Separator/>
 
-                                <div className="flex gap-4">
+                                <div className="flex gap-4 pt-2">
                                      <Popover>
                                         <PopoverTrigger asChild>
                                            <Button className="w-full">
@@ -411,3 +426,5 @@ export default function AdvancedAssetPanel({
     </div>
   );
 }
+
+    
