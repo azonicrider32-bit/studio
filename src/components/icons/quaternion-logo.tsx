@@ -46,14 +46,11 @@ export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onCo
     ctx.globalCompositeOperation = 'screen'; // Aura-like glow blend
 
     colorFields.forEach((field) => {
-      // Create a gradient that spans 90 degrees (PI/2 radians)
       const grad = ctx.createConicGradient(field.start, center, center);
       
-      // We need to map the 0 to 1 range of addColorStop to a 90 degree arc.
-      // So, a 90 degree arc is 0.25 of a full circle.
-      grad.addColorStop(0, field.colors[0]); // Start of the 90 degree arc
-      grad.addColorStop(0.125, field.middle); // Midpoint of the 90 degree arc (0.25 / 2)
-      grad.addColorStop(0.25, field.colors[1]); // End of the 90 degree arc
+      grad.addColorStop(0, field.colors[0]);
+      grad.addColorStop(0.125, field.middle);
+      grad.addColorStop(0.25, field.colors[1]);
       
       ctx.fillStyle = grad;
       ctx.beginPath();
@@ -81,6 +78,15 @@ export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onCo
       ctx.closePath();
       ctx.fill();
     });
+
+    // Fade to black at the outer edge (vignette)
+    ctx.globalCompositeOperation = 'multiply';
+    const vignette = ctx.createRadialGradient(center, center, innerRadius * 2, center, center, outerRadius);
+    vignette.addColorStop(0, 'rgba(255,255,255,1)');
+    vignette.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, size, size);
+
 
     ctx.globalCompositeOperation = 'source-over'; // Reset
 
