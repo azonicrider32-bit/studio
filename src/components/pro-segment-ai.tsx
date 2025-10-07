@@ -97,7 +97,8 @@ import { collection, serverTimestamp } from "firebase/firestore"
 import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
 import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
-import { AuraColorWheel } from "@/components/icons/quaternion-logo"
+import { ColorSpherePanel } from "./panels/color-sphere-panel"
+import { AuraColorWheel } from './icons/quaternion-logo';
 
 type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -856,7 +857,7 @@ function ProSegmentAIContent() {
                 workspaces={workspaces}
                 activeWorkspaceId={activeWorkspaceId}
                 onWorkspaceSelect={setActiveWorkspaceId}
-                onLayerSelect={(id) => setActiveWorkspaceState(ws => ({...ws, activeLayerId: id}))}
+                onLayerSelect={(id) => setActiveWorkspaceState(ws => ({ ...ws, activeLayerId: id }))}
                 onToggleVisibility={toggleLayerVisibility}
                 onToggleLock={toggleLayerLock}
                 onToggleMask={toggleLayerMask}
@@ -899,7 +900,7 @@ function ProSegmentAIContent() {
         case "chat": return <AiChatPanel />;
         case "color-analysis": return <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>;
         case "pixel-preview": return <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>;
-        case "color-wheel": return <QuaternionColorWheelPanel layers={activeWorkspace.layers} onToggleLayerVisibility={toggleLayerVisibility} />;
+        case "color-wheel": return <ColorSpherePanel layers={activeWorkspace.layers} onToggleLayerVisibility={toggleLayerVisibility} />;
         default: return null;
     }
   }
@@ -1137,7 +1138,7 @@ function ProSegmentAIContent() {
     { id: 'chat', icon: MessageSquare, label: 'AI Chat (M)' },
     { id: 'pixel-preview', icon: Microscope, label: 'Pixel Preview (P)' },
     { id: 'history', icon: History, label: 'History' },
-    { id: 'color-wheel', icon: Palette, label: 'Color Wheel' },
+    { id: 'color-wheel', icon: Globe, label: 'Color Sphere' },
   ];
 
   return (
@@ -1537,3 +1538,4 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
