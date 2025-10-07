@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -33,7 +32,7 @@ import {
   User,
   Keyboard,
   Magnet,
-  Smile
+  Smile,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -58,6 +57,7 @@ import { useAuth, useUser } from "@/firebase"
 import { CharacterSculptPanel } from "./character-sculpt-panel"
 
 interface ToolSettingsPanelProps {
+  activeWorkspace: any;
   magicWandSettings: MagicWandSettings
   onMagicWandSettingsChange: (settings: Partial<MagicWandSettings>) => void
   wandV2Settings: MagicWandSettings
@@ -105,6 +105,7 @@ type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings"
 
 
 export function ToolSettingsPanel({ 
+    activeWorkspace,
     magicWandSettings, 
     onMagicWandSettingsChange,
     wandV2Settings,

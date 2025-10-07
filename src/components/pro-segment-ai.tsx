@@ -1057,7 +1057,7 @@ function ProSegmentAIContent() {
     }
   };
 
-  const handleGenerate = async (prompt?: string) => {
+  const handleGenerate = async (prompt?: string, overlayUri?: string) => {
     const finalPrompt = prompt || customPrompt;
     const currentImageUrl = activeWorkspace?.imageUrl;
 
@@ -1434,6 +1434,7 @@ function ProSegmentAIContent() {
           <SidebarContent>
             <div>
               <ToolSettingsPanel
+                activeWorkspace={activeWorkspace}
                 magicWandSettings={magicWandSettings}
                 onMagicWandSettingsChange={handleMagicWandSettingsChange}
                 wandV2Settings={wandV2Settings}
@@ -1473,6 +1474,7 @@ function ProSegmentAIContent() {
                 apiPerf={apiPerf}
                 imageData={selectionEngineRef.current?.imageData ?? null}
                 layers={activeWorkspace.layers}
+                selectionMaskUri={getSelectionMaskRef.current?.()}
               />
             </div>
           </SidebarContent>
