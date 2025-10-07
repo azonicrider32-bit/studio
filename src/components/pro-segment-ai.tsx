@@ -65,7 +65,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { ImageCanvas } from "./image-canvas"
-import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings, TransformSettings, CustomAiTool } from "@/lib/types"
+import { AITool, LassoSettings, Layer, MagicWandSettings, FeatherSettings, CloneStampSettings, GlobalSettings, TransformSettings } from "@/lib/types"
 import { LayersPanel } from "./panels/layers-panel"
 import { LayerStripPanel } from "./panels/layer-strip-panel"
 import { PixelZoomPanel } from "./panels/pixel-zoom-panel"
@@ -96,7 +96,7 @@ import { collection, serverTimestamp } from "firebase/firestore"
 import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
 import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
-import { LuminLogo } from "./icons/lumin-logo"
+import { QuaternionLogo } from "./icons/quaternion-logo"
 
 type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -1154,7 +1154,7 @@ function ProSegmentAIContent() {
                     <PanelLeft />
                 </Button>
             </SidebarTrigger>
-            <LuminLogo />
+            <QuaternionLogo />
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />
             </Button>
