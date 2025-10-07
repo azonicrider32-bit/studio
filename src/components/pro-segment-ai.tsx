@@ -806,33 +806,33 @@ function ProSegmentAIContent() {
   const handleShelfClick = (panelId: RightPanel, clickType: 'single' | 'double') => {
     setActivePanels(currentPanels => {
       const [topPanel, bottomPanel] = currentPanels;
+      const isTop = topPanel === panelId;
+      const isBottom = bottomPanel === panelId;
+      const isOpen = isTop || isBottom;
   
       if (clickType === 'single') {
-        if (topPanel === panelId) {
-          // If clicking the top panel, close it. The bottom becomes the new top.
-          return bottomPanel ? [bottomPanel] : [];
-        } else if (bottomPanel === panelId) {
-          // If clicking the bottom panel, close it.
-          return [topPanel];
+        if (isOpen) {
+          // A single click on an open panel closes it.
+          return currentPanels.filter(p => p !== panelId);
         } else {
-          // If panel is not open, open it in the top slot.
-          // The old top panel moves to the bottom if there's space.
+          // A single click on a closed panel opens it in the top slot.
           return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
         }
       } else { // Double click
-        if (bottomPanel === panelId) {
-          // If double-clicking the bottom panel, close it.
+        if (isBottom) {
+          // Double-clicking a bottom panel closes it.
           return [topPanel];
-        } else if (topPanel === panelId) {
-          // If double-clicking the top panel, close it.
-          return bottomPanel ? [bottomPanel] : [];
+        } else if (isTop) {
+          // Double-clicking a top panel also closes it (can be changed to move to bottom if needed)
+           return currentPanels.filter(p => p !== panelId);
         } else {
-          // If panel is not open, open it in the bottom slot.
+          // Double-clicking a closed panel opens it in the bottom slot.
           return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
         }
       }
     });
   };
+  
 
   React.useEffect(() => {
       if (activePanels.length === 0 && isRightPanelOpen) {
@@ -1147,7 +1147,7 @@ function ProSegmentAIContent() {
                     <PanelLeft />
                 </Button>
             </SidebarTrigger>
-            <AuraColorWheel size={40} />
+            <AuraColorWheel size={28} />
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />
             </Button>
