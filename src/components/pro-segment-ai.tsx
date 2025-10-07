@@ -804,29 +804,34 @@ function ProSegmentAIContent() {
   }
 
   const handleShelfClick = (panelId: RightPanel, clickType: 'single' | 'double') => {
-      setActivePanels(currentPanels => {
-          let [topPanel, bottomPanel] = currentPanels;
-
-          if (clickType === 'single') {
-              if (topPanel === panelId) { // Clicked open top panel: close it
-                  return bottomPanel ? [bottomPanel] : [];
-              }
-              if (bottomPanel === panelId) { // Clicked open bottom panel: move to top
-                  return [bottomPanel, topPanel].filter(Boolean) as RightPanel[];
-              }
-              // Not open: open at top
-              return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
-          } else { // Double click
-              if (bottomPanel === panelId) { // Clicked open bottom panel: close it
-                  return [topPanel];
-              }
-              if (topPanel === panelId) { // Clicked open top panel: move to bottom
-                   return [bottomPanel, topPanel].filter(Boolean) as RightPanel[];
-              }
-              // Not open: open at bottom
-              return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
-          }
-      });
+    setActivePanels(currentPanels => {
+      const [topPanel, bottomPanel] = currentPanels;
+  
+      if (clickType === 'single') {
+        if (topPanel === panelId) {
+          // If clicking the top panel, close it. The bottom becomes the new top.
+          return bottomPanel ? [bottomPanel] : [];
+        } else if (bottomPanel === panelId) {
+          // If clicking the bottom panel, close it.
+          return [topPanel];
+        } else {
+          // If panel is not open, open it in the top slot.
+          // The old top panel moves to the bottom if there's space.
+          return [panelId, topPanel].filter(Boolean).slice(0, 2) as RightPanel[];
+        }
+      } else { // Double click
+        if (bottomPanel === panelId) {
+          // If double-clicking the bottom panel, close it.
+          return [topPanel];
+        } else if (topPanel === panelId) {
+          // If double-clicking the top panel, close it.
+          return bottomPanel ? [bottomPanel] : [];
+        } else {
+          // If panel is not open, open it in the bottom slot.
+          return [topPanel, panelId].filter(Boolean).slice(0, 2) as RightPanel[];
+        }
+      }
+    });
   };
 
   React.useEffect(() => {
