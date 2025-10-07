@@ -1436,7 +1436,7 @@ function ProSegmentAIContent() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => setIsRightPanelOpen(p => !p)}>
+                  <Button variant="ghost" size="icon" onClick={() => { setIsRightPanelOpen(p => !p); if(isRightPanelOpen) setActivePanels([])}}>
                     {isRightPanelOpen ? <PanelRightClose className="h-5 h-5" /> : <PanelLeft className="h-5 h-5" />}
                   </Button>
                 </TooltipTrigger>
@@ -1532,3 +1532,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
