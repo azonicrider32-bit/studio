@@ -31,6 +31,9 @@ import {
   Clock,
   Download,
   User,
+  Keyboard,
+  Magnet,
+  Smile
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -38,7 +41,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
-import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings, AITool, TransformSettings, Layer } from "@/lib/types"
+import { MagicWandSettings, LassoSettings, CloneStampSettings, GlobalSettings, AITool, TransformSettings, Layer, CharacterSculptSettings } from "@/lib/types"
 import { Button } from "../ui/button"
 import { useSidebar } from "../ui/sidebar"
 import { MagicWandCompactSettings } from "./magic-wand-compact-settings"
@@ -52,6 +55,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./telemetry-panel"
 import AdvancedAnalyticsPanel from "./AdvancedAnalyticsPanel"
 import { useAuth, useUser } from "@/firebase"
+import { CharacterSculptPanel } from "./character-sculpt-panel"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -66,6 +70,8 @@ interface ToolSettingsPanelProps {
   onCloneStampSettingsChange: (settings: Partial<CloneStampSettings>) => void
   transformSettings: TransformSettings;
   onTransformSettingsChange: (settings: Partial<TransformSettings>) => void;
+  characterSculptSettings: CharacterSculptSettings;
+  onCharacterSculptSettingsChange: (settings: Partial<CharacterSculptSettings>) => void;
   activeTool: Tool
   showHotkeys: boolean
   onShowHotkeysChange: (value: boolean) => void
@@ -75,7 +81,7 @@ interface ToolSettingsPanelProps {
   instructionLayers: InstructionLayer[];
   onInstructionChange: (id: string, prompt: string) => void;
   onLayerDelete: (id: string) => void;
-  onGenerate: (prompt?: string) => void;
+  onGenerate: (prompt?: string, overlayUri?: string) => void;
   onOutpaint: () => void;
   outpaintDimensions: { top: number; right: number; bottom: number; left: number; };
   setOutpaintDimensions: (dims: { top: number; right: number; bottom: number; left: number; }) => void;
@@ -92,9 +98,10 @@ interface ToolSettingsPanelProps {
   apiPerf: ApiPerformanceMetrics;
   imageData: ImageData | null;
   layers: Layer[];
+  selectionMaskUri: string | undefined;
 }
 
-type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account";
+type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account" | "character-sculpt";
 
 
 export function ToolSettingsPanel({ 
@@ -108,6 +115,8 @@ export function ToolSettingsPanel({
     onCloneStampSettingsChange,
     transformSettings,
     onTransformSettingsChange,
+    characterSculptSettings,
+    onCharacterSculptSettingsChange,
     activeTool,
     showHotkeys,
     onShowHotkeysChange,
@@ -136,6 +145,7 @@ export function ToolSettingsPanel({
     apiPerf,
     imageData,
     layers,
+    selectionMaskUri,
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
@@ -186,6 +196,11 @@ export function ToolSettingsPanel({
             title: 'Blemish Remover',
             description: 'Quickly remove small imperfections. Click and drag over an area to automatically select, inpaint, and replace it.',
             shortcut: 'J' // Common hotkey for healing/spot removal tools
+        },
+        'character-sculpt': {
+            title: 'Character Sculpt',
+            description: 'Use sliders to morph facial and body features with AI precision.',
+            shortcut: 'K'
         },
         'settings': {
             title: 'Global Settings',
@@ -336,6 +351,7 @@ export function ToolSettingsPanel({
         return <Lasso className="w-4 h-4" />;
       case 'clone': return <Replace className="w-4 h-4" />;
       case 'transform': return <Move className="w-4 h-4" />;
+      case 'character-sculpt': return <Smile className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
       case 'project': return <FolderOpen className="w-4 h-4" />;
       case 'account': return <User className="w-4 h-4" />;
@@ -348,6 +364,7 @@ export function ToolSettingsPanel({
       case 'settings': return 'Global Settings';
       case 'project': return 'Project';
       case 'account': return 'Account';
+      case 'character-sculpt': return 'Character Sculpt';
       default: return 'Tool Settings';
     }
   }
@@ -360,11 +377,6 @@ export function ToolSettingsPanel({
             onInstructionChange={onInstructionChange}
             onLayerDelete={onLayerDelete}
             onGenerate={onGenerate}
-            onOutpaint={onOutpaint}
-            outpaintDimensions={outpaintDimensions}
-            setOutpaintDimensions={setOutpaintDimensions}
-            isOutpainting={isOutpainting}
-            setIsOutpainting={setIsOutpainting}
             isGenerating={isGenerating}
             customPrompt={customPrompt}
             setCustomPrompt={setCustomPrompt}
@@ -556,6 +568,15 @@ export function ToolSettingsPanel({
                 settings={cloneStampSettings} 
                 onSettingsChange={onCloneStampSettingsChange} 
             />
+          ) : activeTool === 'character-sculpt' ? (
+              <CharacterSculptPanel 
+                  settings={characterSculptSettings}
+                  onSettingsChange={onCharacterSculptSettingsChange}
+                  onApply={onGenerate}
+                  isGenerating={isGenerating}
+                  imageUrl={activeWorkspace?.imageUrl}
+                  selectionMaskUri={selectionMaskUri}
+              />
           ) : activeTool === 'settings' ? (
             <GlobalSettingsPanel 
                 showHotkeys={showHotkeys} 
