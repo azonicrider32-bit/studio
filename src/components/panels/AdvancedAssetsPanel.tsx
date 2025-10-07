@@ -38,7 +38,7 @@ import {
   Copy,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { PlaceHolderImages, ImagePlaceholder } from '@/lib/placeholder-images';
 import { useFirebase, useUser } from '@/firebase';
 import { uploadAsset } from '@/ai/flows/upload-asset-flow';
 import { useToast } from '@/hooks/use-toast';
@@ -49,7 +49,7 @@ import { Separator } from '../ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
 
-type Asset = (typeof PlaceHolderImages)[0];
+type Asset = ImagePlaceholder;
 type AssetDetails = { [key: string]: string };
 
 const categories = [
@@ -57,6 +57,7 @@ const categories = [
   { id: 'characters', name: 'Characters', icon: Users },
   { id: 'portrait', name: 'Portraits', icon: Camera },
   { id: 'landscape', name: 'Landscapes', icon: MountainSnow },
+  { id: 'automotive', name: 'Automotive', icon: Car },
   { id: 'architecture', name: 'Architecture', icon: Building },
   { id: 'product', name: 'Products', icon: Component },
   { id: 'nature', name: 'Nature', icon: Sprout },
@@ -126,8 +127,8 @@ export default function AdvancedAssetPanel({
     return categoryMatch && searchMatch;
   });
 
-  const handleImageSelect = (image: Asset) => {
-    onImageSelect(image.imageUrl, image.description);
+  const handleImageSelect = (image: Asset, viewUrl?: string) => {
+    onImageSelect(viewUrl || image.imageUrl, image.name || image.description);
   };
   
   const handleViewAssetDetails = (asset: Asset) => {
@@ -361,33 +362,27 @@ export default function AdvancedAssetPanel({
                     {activeAssetTabs.map(asset => (
                         <TabsContent key={asset.id} value={asset.id} className="flex-1 overflow-y-auto">
                            <ScrollArea className="h-full pr-4">
-                            <div className="p-1 space-y-4">
-                               <div className="space-y-2">
+                            <div className="p-1 space-y-6">
+                               <div className="space-y-1">
                                     <h3 className="text-xl font-bold">{asset.name}</h3>
                                     <p className="text-sm text-muted-foreground">{asset.description}</p>
                                 </div>
-                                <Separator/>
+                                
                                 <div className="space-y-4">
                                     <div className="aspect-video w-full relative bg-muted rounded-lg overflow-hidden border">
                                         <Image src={activePreviews[asset.id] || asset.imageUrl} layout="fill" objectFit="contain" alt="Main asset preview" />
                                     </div>
 
-                                    {asset.type === 'character' ? (
-                                        <div className="space-y-4">
-                                            <AssetDetailSection title="Character Views" assets={asset.views} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
-                                            <Separator />
-                                            <AssetDetailSection title="Expressions" assets={asset.expressions} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
-                                            <Separator />
-                                            <AssetDetailSection title="Outfits" assets={asset.outfits} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
-                                        </div>
-                                    ) : (
-                                        <div className="text-center text-muted-foreground py-6">
-                                            <p className="text-sm">No detailed views available for this asset type.</p>
-                                        </div>
-                                    )}
+                                    <div className="space-y-4">
+                                      <AssetDetailSection title="Character Views" assets={asset.views} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                      <AssetDetailSection title="Expressions" assets={asset.expressions} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                      <AssetDetailSection title="Outfits" assets={asset.outfits} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                      <AssetDetailSection title="Vehicle Angles" assets={asset.views} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                      <AssetDetailSection title="Vehicle Interior" assets={asset.interior} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                      <AssetDetailSection title="Seasons" assets={asset.seasons} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                      <AssetDetailSection title="Landscape Angles" assets={asset.angles} onThumbnailClick={(url) => setActivePreviews(p => ({...p, [asset.id]: url}))} activeThumbnail={activePreviews[asset.id] || ''} />
+                                    </div>
                                 </div>
-
-                                <Separator/>
 
                                 <div className="flex gap-4 pt-2">
                                      <Popover>
@@ -399,7 +394,7 @@ export default function AdvancedAssetPanel({
                                         </PopoverTrigger>
                                         <PopoverContent className="w-64 p-2">
                                             <div className="flex flex-col gap-1">
-                                                <Button variant="ghost" className="w-full justify-start" onClick={() => handleImageSelect(asset)}>
+                                                <Button variant="ghost" className="w-full justify-start" onClick={() => handleImageSelect(asset, activePreviews[asset.id])}>
                                                     <Copy className="w-4 h-4 mr-2"/>
                                                     Add to Current Project
                                                 </Button>
@@ -426,5 +421,3 @@ export default function AdvancedAssetPanel({
     </div>
   );
 }
-
-    

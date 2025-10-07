@@ -15,6 +15,10 @@ export type ImagePlaceholder = {
   views?: AssetDetails;
   expressions?: AssetDetails;
   outfits?: AssetDetails;
+  interior?: AssetDetails;
+  seasons?: AssetDetails;
+  angles?: AssetDetails;
+  panoramic?: AssetDetails;
 };
 
 export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages;

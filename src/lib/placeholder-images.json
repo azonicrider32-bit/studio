@@ -35,17 +35,35 @@
     },
     {
       "id": "pro-segment-ai-2",
-      "description": "A dramatic landscape of a mountain range at sunset, useful for testing sky and terrain segmentation.",
+      "name": "Alpine Peaks",
+      "description": "A dramatic landscape of a mountain range, demonstrating seasonal and angular variations.",
       "imageUrl": "https://images.unsplash.com/photo-1476610182048-b716b8518a2a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsYW5kc2NhcGV8ZW58MHx8fHwxNzU5MjA5NzY3fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "mountain landscape",
-      "category": "landscape"
+      "category": "landscape",
+      "seasons": {
+        "summer": "https://images.unsplash.com/photo-1476610182048-b716b8518a2a?w=1080&h=800&fit=crop",
+        "winter": "https://images.unsplash.com/photo-1483728642387-6c351b4d1cb1?w=1080&h=800&fit=crop"
+      },
+      "angles": {
+        "wide": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1080&h=800&fit=crop",
+        "telephoto": "https://images.unsplash.com/photo-1536532184021-da5392b55da1?w=1080&h=800&fit=crop"
+      }
     },
     {
       "id": "pro-segment-ai-3",
+      "name": "Vintage Roadster",
       "description": "A close-up shot of a classic red sports car, good for testing reflections and smooth surfaces.",
       "imageUrl": "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjbGFzc2ljJTIwY2FyfGVufDB8fHx8MTc1OTIwOTg1MXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "classic car",
-      "category": "product"
+      "category": "automotive",
+      "views": {
+        "front": "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1080&h=800&fit=crop",
+        "rear": "https://images.unsplash.com/photo-1541443131876-44b43de101c5?w=1080&h=800&fit=crop",
+        "side": "https://images.unsplash.com/photo-1514316454348-772a0a282435?w=1080&h=800&fit=crop"
+      },
+      "interior": {
+        "dashboard": "https://images.unsplash.com/photo-1471479917193-f00955256257?w=1080&h=800&fit=crop"
+      }
     },
     {
       "id": "pro-segment-ai-4",
