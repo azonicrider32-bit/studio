@@ -23,12 +23,12 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
 
     const center = size / 2;
     const hueRingOuterRadius = size / 2;
-    const hueRingInnerRadius = size * 0.35;
-    const svRadius = hueRingInnerRadius - (size * 0.05);
+    const hueRingInnerRadius = hueRingOuterRadius - (size * 0.15); // Hue ring is 15% of total size
+    const svRadius = hueRingInnerRadius - (size * 0.01); // Inner circle is almost the size of the hue ring's inner radius
 
     ctx.clearRect(0, 0, size, size);
 
-    // 1. Draw Hue Ring (Equator)
+    // 1. Draw Hue Ring
     const hueGradient = ctx.createConicGradient(0, center, center);
     for (let i = 0; i <= 360; i++) {
       hueGradient.addColorStop(i / 360, `hsl(${i}, 100%, 50%)`);
@@ -47,20 +47,24 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
 
     const pureHueColor = `hsl(${selectedHsv.h}, 100%, 50%)`;
 
-    // Saturation gradient (from white to pure hue)
-    const satGradient = ctx.createLinearGradient(center - svRadius, center, center + svRadius, center);
-    satGradient.addColorStop(0, 'white');
-    satGradient.addColorStop(1, pureHueColor);
-    ctx.fillStyle = satGradient;
-    ctx.fillRect(center - svRadius, center - svRadius, svRadius * 2, svRadius * 2);
+    // Base color
+    ctx.fillStyle = pureHueColor;
+    ctx.fillRect(0, 0, size, size);
 
-    // Value gradient (from transparent to black)
-    const valGradient = ctx.createLinearGradient(center, center - svRadius, center, center + svRadius);
-    valGradient.addColorStop(0, 'rgba(0,0,0,0)');
-    valGradient.addColorStop(1, 'black');
+    // Value gradient (black to transparent)
+    const valGradient = ctx.createLinearGradient(0, 0, 0, size);
+    valGradient.addColorStop(0, 'black');
+    valGradient.addColorStop(1, 'transparent');
     ctx.fillStyle = valGradient;
-    ctx.fillRect(center - svRadius, center - svRadius, svRadius * 2, svRadius * 2);
+    ctx.fillRect(0, 0, size, size);
     
+    // Saturation gradient (white to transparent)
+    const satGradient = ctx.createLinearGradient(0, 0, size, 0);
+    satGradient.addColorStop(0, 'white');
+    satGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = satGradient;
+    ctx.fillRect(0, 0, size, size);
+
     ctx.restore(); // Restore from clipping
 
     // 3. Draw cursors
@@ -78,19 +82,13 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
     ctx.stroke();
     
     // SV cursor in the triangle
-    const svAngle = (selectedHsv.h * Math.PI) / 180;
-    const svDist = (selectedHsv.s / 100) * svRadius;
-    const svX = center + svDist * Math.cos(svAngle);
-    const svY = center + svDist * Math.sin(svAngle);
-    // This is a simplified representation. A true triangular picker would be more complex.
-    // For now, let's map S/V to X/Y inside the circle.
-    const finalSvX = center - svRadius + (selectedHsv.s / 100) * (svRadius * 2);
-    const finalSvY = center + svRadius - (selectedHsv.v / 100) * (svRadius * 2);
+    const svCursorX = center - svRadius + (selectedHsv.s / 100) * (svRadius * 2);
+    const svCursorY = center + svRadius - (selectedHsv.v / 100) * (svRadius * 2);
     ctx.fillStyle = selectedHsv.v > 50 ? 'black' : 'white';
     ctx.strokeStyle = selectedHsv.v > 50 ? 'white' : 'black';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(finalSvX, finalSvY, 5, 0, 2 * Math.PI);
+    ctx.arc(svCursorX, svCursorY, 5, 0, 2 * Math.PI);
     ctx.stroke();
     ctx.fill();
 
@@ -121,20 +119,27 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
 
   const handleInteraction = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;
-    if (!canvas || !isDragging) return;
+    if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const center = size / 2;
 
-    if (isDragging === 'hue') {
+    const hueRingOuterRadius = size / 2;
+    const hueRingInnerRadius = hueRingOuterRadius - (size * 0.15);
+    const svRadius = hueRingInnerRadius - (size * 0.01);
+    
+    const dist = Math.hypot(x - center, y - center);
+
+    if (isDragging === 'hue' || (!isDragging && dist > hueRingInnerRadius && dist <= hueRingOuterRadius)) {
+        if (!isDragging) setIsDragging('hue');
         const angle = Math.atan2(y - center, x - center);
         let hue = (angle * 180) / Math.PI;
         if (hue < 0) hue += 360;
         setSelectedHsv(prev => ({ ...prev, h: hue }));
-    } else if (isDragging === 'sv') {
-        const svRadius = size * 0.35 - (size * 0.05);
+    } else if (isDragging === 'sv' || (!isDragging && dist <= svRadius)) {
+        if (!isDragging) setIsDragging('sv');
         const svBoxLeft = center - svRadius;
         const svBoxTop = center - svRadius;
 
@@ -148,25 +153,6 @@ export function DynamicColorSpherePanel({}: DynamicColorSpherePanelProps) {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const center = size / 2;
-
-    const dist = Math.hypot(x - center, y - center);
-    const hueRingOuterRadius = size / 2;
-    const hueRingInnerRadius = size * 0.35;
-    const svRadius = hueRingInnerRadius - (size * 0.05);
-
-    if (dist > hueRingInnerRadius && dist < hueRingOuterRadius) {
-      setIsDragging('hue');
-    } else if (dist <= svRadius) {
-      setIsDragging('sv');
-    }
-    
     handleInteraction(e); // Handle initial click
   };
   
