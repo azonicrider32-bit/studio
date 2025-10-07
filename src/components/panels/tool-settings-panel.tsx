@@ -346,7 +346,7 @@ export function ToolSettingsPanel({
         <div className="space-y-1 px-2 flex items-center justify-between">
           <h3 className="font-headline text-base flex items-center gap-2">
               {getActiveToolIcon()}
-              Tool Settings
+              {activeTool === 'settings' ? 'Global Settings' : 'Tool Settings'}
           </h3>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setView('info')}>
               <Info className="w-4 h-4" />
