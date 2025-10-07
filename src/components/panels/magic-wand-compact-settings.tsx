@@ -5,13 +5,14 @@ import * as React from "react"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
-import { MagicWandSettings } from "@/lib/types"
+import { MagicWandSettings, SelectionMode } from "@/lib/types"
 import { Button } from "../ui/button"
-import { EyeOff, Layers, Link, Palette, Info } from "lucide-react"
+import { EyeOff, Layers, Link, Palette, Info, Copy, Scissors, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Label } from "../ui/label"
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 
 interface VerticalToleranceSliderProps {
     id: keyof MagicWandSettings['tolerances'];
@@ -166,7 +167,7 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
     const HSV_COMPONENTS: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, description: string}[] = [
         { id: 'h', label: 'H', max: 360, color: "bg-gradient-to-t from-red-500 via-yellow-500 to-blue-500", description: "Hue tolerance (color type)" },
         { id: 's', label: 'S', max: 100, color: "bg-slate-400", description: "Saturation tolerance (color intensity)" },
-        { id: 'v', label: 'V', max: 100, color: "bg-white", description: "Value/Brightness tolerance" },
+        { id: 'v', label: 'V', max: 100, color: "bg-white", description: "Value (brightness)" },
     ]
     const LAB_COMPONENTS: {id: keyof MagicWandSettings['tolerances'], label: string, max: number, color: string, description: string}[] = [
         { id: 'l', label: 'L', max: 100, color: "bg-gray-500", description: "Lightness tolerance" },
@@ -177,7 +178,36 @@ export function MagicWandCompactSettings({ settings, onSettingsChange }: { setti
   return (
     <div className="flex flex-col h-full items-center justify-start py-2 px-1">
       <TooltipProvider>
-        <div className="flex flex-col items-center gap-2 mb-4">
+        <div className="flex flex-col items-center gap-2 mb-2">
+            <ToggleGroup 
+                type="single"
+                value={settings.selectionMode}
+                onValueChange={(value: SelectionMode) => value && onSettingsChange({ selectionMode: value })}
+                orientation="vertical"
+                className="gap-1"
+            >
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <ToggleGroupItem value="cut" aria-label="Cut selection" className="w-10 h-10"><Scissors className="w-5 h-5"/></ToggleGroupItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right"><p>Cut (Create layer and mask source)</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <ToggleGroupItem value="copy" aria-label="Copy selection" className="w-10 h-10"><Copy className="w-5 h-5"/></ToggleGroupItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right"><p>Copy (Create new layer)</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <ToggleGroupItem value="remove" aria-label="Remove selection" className="w-10 h-10"><Trash2 className="w-5 h-5"/></ToggleGroupItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right"><p>Remove (Mask source layer)</p></TooltipContent>
+                </Tooltip>
+            </ToggleGroup>
+
+            <Separator className="my-1"/>
+
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant={settings.contiguous ? "secondary" : "ghost"} size="icon" className="h-8 w-8" onClick={() => onSettingsChange({ contiguous: !settings.contiguous })}>

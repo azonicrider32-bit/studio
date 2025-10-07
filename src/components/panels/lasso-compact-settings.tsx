@@ -5,12 +5,13 @@ import * as React from "react"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
-import { LassoSettings } from "@/lib/types"
+import { LassoSettings, SelectionMode } from "@/lib/types"
 import { Button } from "../ui/button"
 import { cn } from "@/lib/utils"
-import { GitCommit, PenTool, Sparkles, Wand2, Layers } from "lucide-react"
+import { GitCommit, PenTool, Sparkles, Wand2, Layers, Copy, Scissors, Trash2 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Separator } from "../ui/separator"
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 
 const VerticalLassoSlider = ({
   settingKey,
@@ -122,7 +123,34 @@ export function LassoCompactSettings({ settings, onLassoSettingsChange }: { sett
         <div className="flex flex-col items-center space-y-2">
 
           {/* General Settings */}
-          <div className="flex flex-col items-center gap-2 mb-4">
+          <div className="flex flex-col items-center gap-2 mb-2">
+            <ToggleGroup 
+                type="single"
+                value={settings.selectionMode}
+                onValueChange={(value: SelectionMode) => value && onLassoSettingsChange({ selectionMode: value })}
+                orientation="vertical"
+                className="gap-1"
+            >
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <ToggleGroupItem value="cut" aria-label="Cut selection" className="w-10 h-10"><Scissors className="w-5 h-5"/></ToggleGroupItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right"><p>Cut (Create layer and mask source)</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <ToggleGroupItem value="copy" aria-label="Copy selection" className="w-10 h-10"><Copy className="w-5 h-5"/></ToggleGroupItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right"><p>Copy (Create new layer)</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <ToggleGroupItem value="remove" aria-label="Remove selection" className="w-10 h-10"><Trash2 className="w-5 h-5"/></ToggleGroupItem>
+                    </TooltipTrigger>
+                    <TooltipContent side="right"><p>Remove (Mask source layer)</p></TooltipContent>
+                </Tooltip>
+            </ToggleGroup>
+            <Separator className="my-1"/>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-10 w-10" onClick={cycleDrawMode}>

@@ -37,8 +37,11 @@ export interface Layer {
     bounds: { x: number; y: number; width: number; height: number }; // The bounding box of the layer content
 }
 
+export type SelectionMode = 'copy' | 'cut' | 'remove';
+
 export interface LassoSettings {
     drawMode: 'magic' | 'polygon' | 'free';
+    selectionMode: SelectionMode;
     useAiEnhancement: boolean;
     showMouseTrace: boolean;
     showAllMasks: boolean;
@@ -86,6 +89,7 @@ export interface CloneStampSettings {
 }
 
 export interface MagicWandSettings {
+    selectionMode: SelectionMode;
     tolerances: {
         r: number; g: number; b: number;
         h: number; s: number; v: number;
@@ -207,5 +211,3 @@ export const UploadAssetOutputSchema = z.object({
   error: z.string().optional().describe('An error message if the upload failed.'),
 });
 export type UploadAssetOutput = z.infer<typeof UploadAssetOutputSchema>;
-
-  
