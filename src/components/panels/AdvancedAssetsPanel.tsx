@@ -44,18 +44,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 
-
-type Asset = (typeof PlaceHolderImages)[0] & { type: 'placeholder' } | {
-  id: string;
-  name: string;
-  imageUrl: string;
-  description: string;
-  category: string;
-  userId: string;
-  gcsPath: string;
-  uploadDate: string;
-  type: 'uploaded'
-};
+type Asset = (typeof PlaceHolderImages)[0];
 
 const categories = [
   { id: 'all', name: 'All Images', icon: Grid3x3 },
@@ -70,6 +59,27 @@ const categories = [
   { id: 'animal', name: 'Animals', icon: Dog },
   { id: 'texture', name: 'Textures', icon: Trees },
 ];
+
+const AssetDetailSection: React.FC<{ title: string; assets?: { [key: string]: string } }> = ({ title, assets }) => {
+  if (!assets || Object.keys(assets).length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <h4 className="font-semibold text-foreground">{title}</h4>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {Object.entries(assets).map(([key, url]) => (
+          <div key={key} className="space-y-1">
+            <div className="aspect-square rounded-lg overflow-hidden border bg-muted hover:border-primary transition-all">
+              <Image src={url} alt={`${title} - ${key}`} width={200} height={200} className="object-cover w-full h-full" />
+            </div>
+            <p className="text-xs text-muted-foreground text-center capitalize">{key.replace(/([A-Z])/g, ' $1')}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 export default function AdvancedAssetPanel({ 
   onImageSelect, 
@@ -89,22 +99,20 @@ export default function AdvancedAssetPanel({
   const { toast } = useToast();
   
   const allImages: Asset[] = [
-      ...PlaceHolderImages.map(p => ({...p, type: 'placeholder' as const})),
+      ...PlaceHolderImages,
       ...uploadedImages
   ];
 
   const filteredImages = allImages.filter(img => {
-    const imageHint = 'imageHint' in img ? img.imageHint : img.category;
-    const description = 'description' in img ? img.description : img.name;
-
-    const categoryMatch = selectedCategory === 'all' || imageHint.toLowerCase().includes(selectedCategory.toLowerCase());
-    const searchMatch = description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       imageHint.toLowerCase().includes(searchTerm.toLowerCase());
+    const categoryMatch = selectedCategory === 'all' || img.category?.toLowerCase() === selectedCategory.toLowerCase();
+    const searchMatch = img.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       (img.name && img.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                       img.imageHint.toLowerCase().includes(searchTerm.toLowerCase());
     return categoryMatch && searchMatch;
   });
 
   const handleImageSelect = (image: Asset) => {
-    onImageSelect(image.imageUrl, 'description' in image ? image.description : image.name);
+    onImageSelect(image.imageUrl, image.description);
   };
   
   const handleViewAssetDetails = (asset: Asset) => {
@@ -159,10 +167,7 @@ export default function AdvancedAssetPanel({
               imageUrl: result.downloadURL,
               description: `Uploaded: ${file.name}`,
               category: 'uploaded',
-              userId: user.uid,
-              gcsPath: result.gcsPath,
-              uploadDate: new Date().toISOString(),
-              type: 'uploaded'
+              imageHint: 'custom upload',
             };
 
             setUploadedImages(prev => [...prev, newImage]);
@@ -268,7 +273,7 @@ export default function AdvancedAssetPanel({
                         <TabsTrigger value="library">Library</TabsTrigger>
                         {activeAssetTabs.map(asset => (
                             <TabsTrigger key={asset.id} value={asset.id} className="flex items-center gap-2">
-                                <span>{'name' in asset ? asset.name : asset.description}</span>
+                                <span>{asset.name || asset.description}</span>
                                 <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); closeAssetTab(asset.id)}}>
                                     <X className="w-3 h-3" />
                                 </Button>
@@ -291,7 +296,7 @@ export default function AdvancedAssetPanel({
                                   <div className="aspect-square relative overflow-hidden">
                                     <Image
                                       src={image.imageUrl}
-                                      alt={'description' in image ? image.description : image.name}
+                                      alt={image.description}
                                       fill
                                       sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
@@ -313,16 +318,16 @@ export default function AdvancedAssetPanel({
                                       <div className="w-20 h-16 rounded-md overflow-hidden flex-shrink-0 relative">
                                         <Image
                                           src={image.imageUrl}
-                                          alt={'description' in image ? image.description : image.name}
+                                          alt={image.description}
                                           fill
                                           sizes="80px"
                                           className="w-full h-full object-cover"
                                         />
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-sm mb-1 truncate">{'description' in image ? image.description : image.name}</h4>
+                                        <h4 className="font-semibold text-sm mb-1 truncate">{image.description}</h4>
                                         <div className="flex items-center gap-2">
-                                          <Badge variant="outline" className="text-xs">{'imageHint' in image ? image.imageHint : image.category}</Badge>
+                                          <Badge variant="outline" className="text-xs">{image.imageHint}</Badge>
                                         </div>
                                       </div>
                                     </div>
@@ -335,19 +340,33 @@ export default function AdvancedAssetPanel({
                     
                     {activeAssetTabs.map(asset => (
                         <TabsContent key={asset.id} value={asset.id} className="flex-1 overflow-y-auto">
-                            <div className="p-4 bg-muted/30 rounded-lg">
-                                 <h3 className="text-xl font-bold mb-4">{'name' in asset ? asset.name : asset.description}</h3>
-                                 <div className="grid grid-cols-3 gap-4">
-                                    <div className="col-span-2">
-                                        <Image src={asset.imageUrl} width={800} height={600} alt={asset.id} className="rounded-lg w-full" />
+                           <ScrollArea className="h-full">
+                            <div className="p-1 space-y-6">
+                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="md:col-span-1 space-y-4">
+                                        <h3 className="text-xl font-bold">{asset.name}</h3>
+                                        <Image src={asset.imageUrl} width={400} height={400} alt={asset.id} className="rounded-lg w-full aspect-square object-cover" />
+                                        <p className="text-sm text-muted-foreground">{asset.description}</p>
+                                        <Button onClick={() => handleImageSelect(asset)} className="w-full">Use This Image</Button>
                                     </div>
-                                    <div className="space-y-4">
-                                        <h4 className="font-semibold">Asset Details</h4>
-                                        <p className="text-sm text-muted-foreground">This is where detailed asset views for different poses, outfits, and expressions will go.</p>
-                                        <Button onClick={() => handleImageSelect(asset)}>Use This Image</Button>
+                                    <div className="md:col-span-2 space-y-6">
+                                        {asset.type === 'character' ? (
+                                            <>
+                                                <AssetDetailSection title="Character Views" assets={asset.views} />
+                                                <Separator />
+                                                <AssetDetailSection title="Expressions" assets={asset.expressions} />
+                                                <Separator />
+                                                <AssetDetailSection title="Outfits" assets={asset.outfits} />
+                                            </>
+                                        ) : (
+                                            <div className="text-center text-muted-foreground py-10">
+                                                <p>No detailed views available for this asset type.</p>
+                                            </div>
+                                        )}
                                     </div>
                                  </div>
                             </div>
+                           </ScrollArea>
                         </TabsContent>
                     ))}
                 </Tabs>

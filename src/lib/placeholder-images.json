@@ -1,124 +1,170 @@
 {
   "placeholderImages": [
     {
+      "id": "character-1",
+      "name": "Alex 'Nova' Ryder",
+      "description": "A versatile sci-fi character for concept art and game development.",
+      "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1080&h=1080&fit=crop&crop=faces",
+      "imageHint": "character portrait",
+      "category": "characters",
+      "type": "character",
+      "views": {
+        "front": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1080&h=1080&fit=crop&crop=faces",
+        "threeQuarter": "https://images.unsplash.com/photo-1557862921-37829c790f19?w=1080&h=1080&fit=crop&crop=faces",
+        "side": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=1080&h=1080&fit=crop&crop=faces",
+        "back": "https://images.unsplash.com/photo-1583193498426-3a1b3b555977?w=1080&h=1080&fit=crop&crop=faces"
+      },
+      "expressions": {
+        "neutral": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop&crop=faces",
+        "smiling": "https://images.unsplash.com/photo-1492446845049-9c50cc313f00?w=800&h=800&fit=crop&crop=faces",
+        "serious": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=800&auto=format&fit=crop",
+        "surprised": "https://images.unsplash.com/photo-1504257432389-72b425b43a26?w=800&h=800&fit=crop&crop=faces"
+      },
+      "outfits": {
+        "casual": "https://images.unsplash.com/photo-1488161628813-04466f872d24?w=800&h=1200&fit=crop",
+        "formal": "https://images.unsplash.com/photo-1594897992923-7643f87b353f?w=800&h=1200&fit=crop",
+        "sciFi": "https://images.unsplash.com/photo-1678812040053-a725170344a5?w=800&h=1200&fit=crop"
+      }
+    },
+    {
       "id": "pro-segment-ai-1",
       "description": "A woman with vibrant face paint, against a neutral background, suitable for segmentation tasks.",
       "imageUrl": "https://images.unsplash.com/photo-1557053910-d9eadeed1c58?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc1OTE3MTY1OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "woman portrait"
+      "imageHint": "woman portrait",
+      "category": "portrait"
     },
     {
       "id": "pro-segment-ai-2",
       "description": "A dramatic landscape of a mountain range at sunset, useful for testing sky and terrain segmentation.",
       "imageUrl": "https://images.unsplash.com/photo-1476610182048-b716b8518a2a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsYW5kc2NhcGV8ZW58MHx8fHwxNzU5MjA5NzY3fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "mountain landscape"
+      "imageHint": "mountain landscape",
+      "category": "landscape"
     },
     {
       "id": "pro-segment-ai-3",
       "description": "A close-up shot of a classic red sports car, good for testing reflections and smooth surfaces.",
       "imageUrl": "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjbGFzc2ljJTIwY2FyfGVufDB8fHx8MTc1OTIwOTg1MXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "classic car"
+      "imageHint": "classic car",
+      "category": "product"
     },
     {
       "id": "pro-segment-ai-4",
       "description": "A detailed image of a Siberian Husky, perfect for testing fur and animal segmentation.",
       "imageUrl": "https://images.unsplash.com/photo-1547407139-3c921a66005c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzaWJlcmlhbiUyMGh1c2t5fGVufDB8fHx8MTc1OTIwOTg5OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "husky dog"
+      "imageHint": "husky dog",
+      "category": "animal"
     },
     {
       "id": "pro-segment-ai-5",
       "description": "A macro shot of a complex mechanical watch, challenging for fine details and metallic textures.",
       "imageUrl": "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3YXRjaHxlbnwwfHx8fDE3NTkyMDk5MzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "watch mechanism"
+      "imageHint": "watch mechanism",
+      "category": "product"
     },
     {
       "id": "pro-segment-ai-6",
       "description": "A vibrant bowl of fresh salad, great for segmenting multiple small, overlapping objects.",
       "imageUrl": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzYWxhZHxlbnwwfHx8fDE3NTkyMDk5Nzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fresh salad"
+      "imageHint": "fresh salad",
+      "category": "food"
     },
     {
       "id": "pro-segment-ai-7",
       "description": "Close-up of a bright yellow sunflower.",
       "imageUrl": "https://images.unsplash.com/photo-1597848212624-a19eb35e2651?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "nature flower"
+      "imageHint": "nature flower",
+      "category": "nature"
     },
     {
       "id": "pro-segment-ai-8",
       "description": "A modern building with interesting geometric lines.",
       "imageUrl": "https://images.unsplash.com/photo-1580828343064-fde4fc206b60?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "architecture building"
+      "imageHint": "architecture building",
+      "category": "architecture"
     },
     {
       "id": "pro-segment-ai-9",
       "description": "A red apple with a single water drop.",
       "imageUrl": "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "product fruit"
+      "imageHint": "product fruit",
+      "category": "food"
     },
     {
       "id": "pro-segment-ai-10",
       "description": "Portrait of an elderly man with detailed wrinkles.",
       "imageUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "portrait man"
+      "imageHint": "portrait man",
+      "category": "portrait"
     },
     {
       "id": "pro-segment-ai-11",
       "description": "A colorful chameleon on a branch.",
       "imageUrl": "https://images.unsplash.com/photo-1588878939833-2a3124d7b056?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "animal reptile"
+      "imageHint": "animal reptile",
+      "category": "animal"
     },
     {
       "id": "pro-segment-ai-12",
       "description": "A plate of delicious pasta.",
       "imageUrl": "https://images.unsplash.com/photo-1588013273468-31508b942a25?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "food pasta"
+      "imageHint": "food pasta",
+      "category": "food"
     },
     {
       "id": "pro-segment-ai-13",
       "description": "A person snowboarding down a snowy mountain.",
       "imageUrl": "https://images.unsplash.com/photo-1551524358-c4b378ad7425?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "sports snowboard"
+      "imageHint": "sports snowboard",
+      "category": "sports"
     },
     {
       "id": "pro-segment-ai-14",
       "description": "A classic leather boot, perfect for product segmentation.",
       "imageUrl": "https://images.unsplash.com/photo-1603808033173-7c134e9639dd?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "product shoe"
+      "imageHint": "product shoe",
+      "category": "product"
     },
     {
       "id": "pro-segment-ai-15",
       "description": "A tropical beach with clear blue water and palm trees.",
       "imageUrl": "https://images.unsplash.com/photo-1507525428034-b723a996f3ea?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "landscape beach"
+      "imageHint": "landscape beach",
+      "category": "landscape"
     },
     {
       "id": "pro-segment-ai-16",
       "description": "A detailed texture of a rusted metal surface.",
       "imageUrl": "https://images.unsplash.com/photo-1555116553-625b03c27187?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "texture metal"
+      "imageHint": "texture metal",
+      "category": "texture"
     },
     {
       "id": "pro-segment-ai-17",
       "description": "A glass of whiskey on a dark background.",
       "imageUrl": "https://images.unsplash.com/photo-1619158401321-f8a3d76de562?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "product drink"
+      "imageHint": "product drink",
+      "category": "product"
     },
     {
       "id": "pro-segment-ai-18",
       "description": "A cat looking directly at the camera.",
       "imageUrl": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "animal cat"
+      "imageHint": "animal cat",
+      "category": "animal"
     },
     {
       "id": "pro-segment-ai-19",
       "description": "A city skyline at night with lights reflecting on the water.",
       "imageUrl": "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "landscape city"
+      "imageHint": "landscape city",
+      "category": "landscape"
     },
     {
       "id": "pro-segment-ai-20",
       "description": "A close up of an eye with detailed iris.",
       "imageUrl": "https://images.unsplash.com/photo-1616681993427-b089c74d6c1b?q=80&w=1080&auto=format&fit=crop",
-      "imageHint": "portrait eye"
+      "imageHint": "portrait eye",
+      "category": "portrait"
     }
   ]
 }
