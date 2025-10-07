@@ -96,7 +96,7 @@ import { collection, serverTimestamp } from "firebase/firestore"
 import { summarizeAppEvent } from "@/ai/flows/summarize-app-event"
 import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
-import { QuaternionLogo } from "./icons/quaternion-logo"
+import { AuraColorWheel } from "@/components/icons/quaternion-logo"
 
 type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
@@ -1142,7 +1142,7 @@ function ProSegmentAIContent() {
                     <PanelLeft />
                 </Button>
             </SidebarTrigger>
-            <QuaternionLogo className="w-10 h-10" />
+            <AuraColorWheel size={40} />
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
                 <Plus className="w-4 h-4" />
             </Button>

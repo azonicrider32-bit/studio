@@ -1,52 +1,103 @@
-
 "use client";
 
-import React from 'react';
-import { cn } from '@/lib/utils';
+import React, { useRef, useEffect } from 'react';
 
-export const QuaternionLogo = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
-  <svg width="28" height="28" viewBox="0 0 100 100" {...props} className={cn("w-auto h-auto", className)}>
-    <defs>
-      {/* The Conic Gradient for the full color spectrum */}
-      <conicGradient id="grad1" from="0deg" at="50% 50%">
-        <stop offset="0%" stopColor="#ff4444" /> {/* Red */}
-        <stop offset="12.5%" stopColor="#ff8c00" /> {/* Orange */}
-        <stop offset="25%" stopColor="#f0e68c" /> {/* Yellow */}
-        <stop offset="37.5%" stopColor="#9acd32" /> {/* Green */}
-        <stop offset="50%" stopColor="#40e0d0" /> {/* Turquoise */}
-        <stop offset="62.5%" stopColor="#87ceeb" /> {/* Sky Blue */}
-        <stop offset="75%" stopColor="#00008b" /> {/* Deep Blue */}
-        <stop offset="87.5%" stopColor="#9400d3" /> {/* Purple */}
-        <stop offset="100%" stopColor="#ff4444" /> {/* Back to Red */}
-      </conicGradient>
+interface AuraColorWheelProps {
+  size: number;
+  onColorSelect?: (color: string) => void;
+}
 
-      {/* The Radial Gradient for the white-to-black value overlay */}
-      <radialGradient id="grad2" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="white" stopOpacity="1" />
-        <stop offset="50%" stopColor="white" stopOpacity="0.5" />
-        <stop offset="75%" stopColor="black" stopOpacity="0.3" />
-        <stop offset="100%" stopColor="black" stopOpacity="0.8" />
-      </radialGradient>
-      
-      {/* Mask to create the hole in the center */}
-      <mask id="hole">
-        <rect width="100" height="100" fill="white" />
-        <circle cx="50" cy="50" r="5" fill="black" />
-      </mask>
-    </defs>
+export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onColorSelect }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const center = size / 2;
+    const innerRadius = size * 0.1; // White core area
+    const midRadius = size * 0.4; // Peak color intensity
+    const outerRadius = size / 2; // Fade to black
+
+    // Black background base
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, size, size);
+
+    // White center aura with soft glow
+    const whiteGrad = ctx.createRadialGradient(center, center, 0, center, center, outerRadius);
+    whiteGrad.addColorStop(0, 'white');
+    whiteGrad.addColorStop(0.3, 'rgba(255,255,255,0.5)'); // Glow fade
+    whiteGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = whiteGrad;
+    ctx.beginPath();
+    ctx.arc(center, center, outerRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4 color fields (90° each, clockwise from top)
+    const colorFields = [
+      { start: Math.PI, colors: ['purple', 'orange'], middle: 'red' }, // Top: purple-orange via red (angles: top is PI to 3PI/2? Adjust for clockwise)
+      { start: Math.PI / 2, colors: ['yellow', 'green'], middle: 'lightgreen' }, // Right
+      { start: 0, colors: ['green', 'blue'], middle: 'turquoise' }, // Bottom
+      { start: 3 * Math.PI / 2, colors: ['blue', 'purple'], middle: 'blueviolet' } // Left
+    ];
+
+    colorFields.forEach((field, index) => {
+      // Conic gradient for field: inner white blend, mid hues with gradient, outer black fade
+      const grad = ctx.createConicGradient(field.start, center, center);
+      grad.addColorStop(0, 'transparent'); // Inner to white
+      grad.addColorStop(0.3, field.colors[0]); // First hue peak
+      grad.addColorStop(0.5, field.middle); // Middle blend
+      grad.addColorStop(0.7, field.colors[1]); // Second hue peak
+      grad.addColorStop(1, 'transparent'); // Outer to black
+
+      ctx.fillStyle = grad;
+      ctx.globalCompositeOperation = 'screen'; // Aura-like glow blend
+      ctx.beginPath();
+      ctx.arc(center, center, outerRadius, 0, Math.PI * 2); // Full for field diffusion
+      ctx.fill();
+    });
+
+    // Thinner black separations (45° arcs, with hueless/gray fades)
+    const separations = [Math.PI * 1.75, Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25]; // Positions between quadrants
+    separations.forEach((angle) => {
+      const desatGrad = ctx.createRadialGradient(center, center, innerRadius, center, center, outerRadius);
+      desatGrad.addColorStop(0, 'white'); // Inner white
+      desatGrad.addColorStop(0.5, 'gray'); // Mid desaturation (hueless)
+      desatGrad.addColorStop(1, 'black'); // Outer black
+
+      ctx.fillStyle = desatGrad;
+      ctx.globalCompositeOperation = 'multiply'; // Darken for separation
+      ctx.beginPath();
+      ctx.moveTo(center, center);
+      ctx.arc(center, center, outerRadius, angle - Math.PI / 8, angle + Math.PI / 8); // Thinner arc
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    ctx.globalCompositeOperation = 'source-over'; // Reset
+
+    // Interaction: Pick color on click
+    const handleClick = (e: MouseEvent) => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const data = ctx.getImageData(x, y, 1, 1).data;
+      const color = `rgb(${data[0]}, ${data[1]}, ${data[2]})`;
+      if (onColorSelect) onColorSelect(color);
+    };
+
+    canvas.addEventListener('click', handleClick);
     
-    {/* Base circle with the color gradient */}
-    <circle cx="50" cy="50" r="50" fill="url(#grad1)" />
+    return () => {
+        canvas.removeEventListener('click', handleClick);
+    }
+  }, [size, onColorSelect]);
 
-    {/* Overlay with the value gradient, with a hole in the middle */}
-    <rect x="0" y="0" width="100" height="100" fill="url(#grad2)" mask="url(#hole)" style={{mixBlendMode: 'overlay'}}/>
+  return <canvas ref={canvasRef} width={size} height={size} style={{ cursor: 'crosshair' }} />;
+};
 
-    {/* Structural lines */}
-    <g stroke="black" strokeWidth="2" strokeOpacity="0.5">
-        <path d="M 50 0 V 100" />
-        <path d="M 0 50 H 100" />
-        <path d="M 0 0 L 100 100" />
-        <path d="M 100 0 L 0 100" />
-    </g>
-  </svg>
-);
+// For backward compatibility if other files import QuaternionLogo
+export const QuaternionLogo = AuraColorWheel;
