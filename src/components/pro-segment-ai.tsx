@@ -103,7 +103,7 @@ import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
 import { AuraColorWheel } from "./icons/aura-color-wheel"
 
-type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project";
+type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'quaternion-wheel' | 'dynamic-sphere';
 
 interface WorkspaceState {
@@ -1201,6 +1201,21 @@ function ProSegmentAIContent() {
     { id: 'dynamic-sphere', icon: Database, label: 'Dynamic Sphere' },
   ];
 
+  const handleHeaderToolClick = (tool: Tool) => {
+    if (activeTool === tool) {
+      setActiveTool(previousTool);
+      if(sidebarState === 'expanded') {
+        setSidebarOpen(false);
+      }
+    } else {
+      setPreviousTool(activeTool);
+      setActiveTool(tool);
+      if(sidebarState !== 'expanded') {
+        setSidebarOpen(true);
+      }
+    }
+  }
+
   return (
     <div className="h-screen w-screen bg-background overflow-hidden relative">
       <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm">
@@ -1210,15 +1225,7 @@ function ProSegmentAIContent() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => {
-                  if (activeTool === 'settings') {
-                    setActiveTool(previousTool);
-                  } else {
-                    setPreviousTool(activeTool);
-                    setActiveTool('settings');
-                    setSidebarOpen(true);
-                  }
-                }}
+                onClick={() => handleHeaderToolClick('settings')}
             >
               {activeTool === 'settings' ? <XIcon className="w-5 h-5 text-red-500"/> : <Settings2 className="w-5 h-5"/>}
             </Button>
@@ -1226,15 +1233,15 @@ function ProSegmentAIContent() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => {
-                  if (activeTool === 'project') {
-                    setActiveTool(previousTool);
-                  } else {
-                    setPreviousTool(activeTool);
-                    setActiveTool('project');
-                    setSidebarOpen(true);
-                  }
-                }}
+                onClick={() => handleHeaderToolClick('account')}
+            >
+              {activeTool === 'account' ? <XIcon className="w-5 h-5 text-red-500"/> : <User className="w-5 h-5"/>}
+            </Button>
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => handleHeaderToolClick('project')}
             >
               {activeTool === 'project' ? <XIcon className="w-5 h-5 text-red-500"/> : <FolderOpen className="w-5 h-5"/>}
             </Button>

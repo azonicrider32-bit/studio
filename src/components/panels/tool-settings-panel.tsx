@@ -30,6 +30,7 @@ import {
   FilePlus,
   Clock,
   Download,
+  User,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -50,6 +51,7 @@ import { TransformPanel } from "./transform-panel"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { PerformanceMetrics, ApiPerformanceMetrics } from "./telemetry-panel"
 import AdvancedAnalyticsPanel from "./AdvancedAnalyticsPanel"
+import { useAuth, useUser } from "@/firebase"
 
 interface ToolSettingsPanelProps {
   magicWandSettings: MagicWandSettings
@@ -79,10 +81,10 @@ interface ToolSettingsPanelProps {
   setOutpaintDimensions: (dims: { top: number; right: number; bottom: number; left: number; }) => void;
   isOutpainting: boolean;
   setIsOutpainting: (is: boolean) => void;
-  onAiToolClick: (tool: AITool) => void;
   isGenerating: boolean;
   customPrompt: string;
   setCustomPrompt: (prompt: string) => void;
+  onAiToolClick: (tool: AITool) => void;
   canvas: HTMLCanvasElement | null;
   mousePos: { x: number, y: number } | null;
   // Performance Metrics
@@ -92,7 +94,7 @@ interface ToolSettingsPanelProps {
   layers: Layer[];
 }
 
-type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project";
+type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account";
 
 
 export function ToolSettingsPanel({ 
@@ -137,6 +139,8 @@ export function ToolSettingsPanel({
 }: ToolSettingsPanelProps) {
   
   const [view, setView] = React.useState<'settings' | 'info'>('settings');
+  const auth = useAuth();
+  const { user } = useUser();
   
   const { state: sidebarState } = useSidebar();
   
@@ -212,6 +216,11 @@ export function ToolSettingsPanel({
             title: 'Eraser Tool',
             description: 'Erase pixels from a layer.',
             shortcut: 'E'
+        },
+        'account': {
+            title: 'Account Settings',
+            description: 'Manage your account, sign in, or sign out.',
+            shortcut: ''
         }
     };
     
@@ -285,6 +294,7 @@ export function ToolSettingsPanel({
                     />
         case 'settings':
         case 'project':
+        case 'account':
             return <GlobalSettingsCompactPanel onShowHotkeysChange={onShowHotkeysChange} showHotkeys={showHotkeys} />
         default:
             return null;
@@ -328,9 +338,19 @@ export function ToolSettingsPanel({
       case 'transform': return <Move className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
       case 'project': return <FolderOpen className="w-4 h-4" />;
+      case 'account': return <User className="w-4 h-4" />;
       default: return isAiToolActive ? <BrainCircuit className="w-4 h-4" /> : null;
     }
   };
+
+  const getActiveToolTitle = () => {
+    switch(activeTool) {
+      case 'settings': return 'Global Settings';
+      case 'project': return 'Project';
+      case 'account': return 'Account';
+      default: return 'Tool Settings';
+    }
+  }
 
   const renderLeftPanelContent = () => {
     if (isAiToolActive) {
@@ -358,7 +378,7 @@ export function ToolSettingsPanel({
         <div className="space-y-1 px-2 flex items-center justify-between">
           <h3 className="font-headline text-base flex items-center gap-2">
               {getActiveToolIcon()}
-              {activeTool === 'settings' ? 'Global Settings' : activeTool === 'project' ? 'Project' : 'Tool Settings'}
+              {getActiveToolTitle()}
           </h3>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setView('info')}>
               <Info className="w-4 h-4" />
@@ -596,6 +616,26 @@ export function ToolSettingsPanel({
                     <Button className="w-full"><Download className="w-4 h-4 mr-2"/>Export Project</Button>
                  </div>
             </div>
+          ) : activeTool === 'account' ? (
+              <div className="p-4 space-y-6">
+                {user ? (
+                  <>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">Account</h4>
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">Signed in as</p>
+                        <p className="font-medium text-foreground truncate">{user.email || 'Anonymous User'}</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full" onClick={() => auth.signOut()}>Sign Out</Button>
+                  </>
+                ) : (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    <p>Sign in to save projects and access more features.</p>
+                    {/* Sign-in form would go here */}
+                  </div>
+                )}
+              </div>
           ) : (
              <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
           )}
