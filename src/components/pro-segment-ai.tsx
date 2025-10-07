@@ -224,13 +224,13 @@ function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: R
                         size="icon"
                         className="w-full h-12"
                     >
-                        <panel.icon className="h-5 h-5" />
+                        <panel.icon className="h-5 w-5" />
                     </Button>
 
                     {isHovered && (
-                        <div className="absolute inset-0 flex">
+                        <div className="absolute top-0 right-full w-24 h-12 flex mr-1">
                             <div
-                                className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center"
+                                className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-l-md"
                                 onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
                             >
                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
@@ -239,13 +239,13 @@ function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: R
                             </div>
                             <div className="w-1/2 h-full flex flex-col">
                                 <div
-                                    className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center border-b border-primary/50"
+                                    className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-tr-md border-b border-primary/50"
                                     onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
                                 >
                                     <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
                                 </div>
                                 <div
-                                    className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center"
+                                    className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center rounded-br-md"
                                     onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
                                 >
                                      <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
@@ -869,28 +869,27 @@ function ProSegmentAIContent() {
 
   const handleShelfClick = (panelId: RightPanel, position: 'full' | 'top' | 'bottom') => {
     setActivePanels(currentPanels => {
-        let [topPanel, bottomPanel] = currentPanels;
-        const isAlreadyOpen = topPanel === panelId || bottomPanel === panelId;
-
-        if (position === 'full') {
-            return [panelId, null];
-        }
-
-        if (topPanel === panelId && position === 'bottom') { // Move top to bottom
-            return [bottomPanel, topPanel];
-        }
-        if (bottomPanel === panelId && position === 'top') { // Move bottom to top
-            return [bottomPanel, topPanel];
-        }
-
-        if (position === 'top') {
-            return [panelId, isAlreadyOpen ? bottomPanel : topPanel];
-        }
-        if (position === 'bottom') {
-            return [isAlreadyOpen ? topPanel : bottomPanel, panelId];
-        }
-
-        return currentPanels;
+      const [topPanel, bottomPanel] = currentPanels;
+      const isAlreadyOpen = topPanel === panelId || bottomPanel === panelId;
+  
+      if (position === 'full') {
+        // If it's already open and we click full, it should just be the only one
+        return [panelId, null];
+      }
+  
+      if (position === 'top') {
+        if (topPanel === panelId) return [null, bottomPanel]; // Toggle off
+        if (bottomPanel === panelId) return [bottomPanel, topPanel]; // Swap
+        return [panelId, topPanel]; // Add as new top
+      }
+  
+      if (position === 'bottom') {
+        if (bottomPanel === panelId) return [topPanel, null]; // Toggle off
+        if (topPanel === panelId) return [bottomPanel, topPanel]; // Swap
+        return [topPanel, panelId]; // Add as new bottom
+      }
+  
+      return currentPanels; // Should not happen
     });
   };
 
@@ -1252,6 +1251,7 @@ function ProSegmentAIContent() {
                   activeWorkspaceId={activeWorkspaceId}
                   onWorkspaceSelect={setActiveWorkspaceId}
                   onWorkspaceClose={handleCloseWorkspace}
+                  onAddNewWorkspace={handleAddNewWorkspace}
               />
           </div>
           <div className="flex items-center gap-2 ml-auto">
@@ -1545,13 +1545,13 @@ function ProSegmentAIContent() {
                        <Button 
                             variant="ghost" 
                             size="icon" 
-                            onClick={() => setIsRightPanelOpen(p => !p)}
-                            className={cn("h-10 w-10", isRightPanelOpen ? "text-destructive" : "text-foreground")}
+                            onClick={() => setActivePanels([null, null])}
+                            className={cn("h-10 w-10", !isRightPanelOpen && "text-destructive")}
                         >
                             <PanelRightClose className="h-5 w-5" />
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="left"><p>{isRightPanelOpen ? "Close Panels" : "Open Panels"}</p></TooltipContent>
+                    <TooltipContent side="left"><p>{isRightPanelOpen ? "Close Panels" : "Panels Closed"}</p></TooltipContent>
                 </Tooltip>
             </TooltipProvider>
           </div>
@@ -1586,11 +1586,13 @@ function WorkspaceTabs({
   activeWorkspaceId, 
   onWorkspaceSelect, 
   onWorkspaceClose,
+  onAddNewWorkspace,
 }: {
   workspaces: WorkspaceState[];
   activeWorkspaceId: string;
   onWorkspaceSelect: (id: string) => void;
   onWorkspaceClose: (id: string) => void;
+  onAddNewWorkspace: () => void;
 }) {
   return (
     <div className="flex-1 flex items-end -mb-px">
@@ -1606,11 +1608,16 @@ function WorkspaceTabs({
           )}
         >
           <span>{ws.name}</span>
-          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); onWorkspaceClose(ws.id) }}>
-            <XIcon className="w-3 h-3" />
-          </Button>
+          {workspaces.length > 1 && (
+            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => { e.stopPropagation(); onWorkspaceClose(ws.id) }}>
+              <XIcon className="w-3 h-3" />
+            </Button>
+          )}
         </div>
       ))}
+       <Button variant="ghost" size="icon" className="h-8 w-8 ml-2" onClick={onAddNewWorkspace}>
+            <Plus className="w-4 h-4" />
+        </Button>
     </div>
   );
 }
@@ -1623,3 +1630,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+    
