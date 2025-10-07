@@ -1,17 +1,30 @@
 
 "use client";
 
-import React, { useRef, useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sphere, Line } from '@react-three/drei';
 import * as THREE from 'three';
+import { Button } from '../ui/button';
+import { Separator } from '../ui/separator';
+import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
+import { Layer } from '@/lib/types';
+import { ScrollArea } from '../ui/scroll-area';
 
-interface ColorSphereProps {
+interface AuraColorWheelProps {
   size: number;
-  onNodeSwap?: (node1: number, node2: number) => void;
+  onColorSelect?: (color: string) => void;
+  constructionLayers?: {
+    showBase?: boolean;
+    showWhiteAura?: boolean;
+    showColorFields?: boolean;
+    showSeparators?: boolean;
+    showVignette?: boolean;
+  }
 }
 
-export const ColorSphere: React.FC<ColorSphereProps> = ({ size = 2.5, onNodeSwap }) => {
+export const ColorSphere: React.FC<AuraColorWheelProps> = ({ size = 2.5, onColorSelect, constructionLayers }) => {
   const [poleTop, setPoleTop] = React.useState('white'); // Adjustable: white/black/lum/sat
   const [poleBottom, setPoleBottom] = React.useState('black');
   const [equatorColors, setEquatorColors] = React.useState([
@@ -24,7 +37,6 @@ export const ColorSphere: React.FC<ColorSphereProps> = ({ size = 2.5, onNodeSwap
     const newColors = [...equatorColors];
     [newColors[idx1], newColors[idx2]] = [newColors[idx2], newColors[idx1]];
     setEquatorColors(newColors);
-    if (onNodeSwap) onNodeSwap(idx1, idx2);
   };
 
   // Generate gradient texture for sphere (dynamic based on poles/equator)
@@ -84,7 +96,7 @@ export const ColorSphere: React.FC<ColorSphereProps> = ({ size = 2.5, onNodeSwap
 
 
 export function ColorSpherePanel() {
-    const [sphereSize, setSphereSize] = useState(2.5);
+    const [sphereSize, setSphereSize] = React.useState(2.5);
 
     return (
         <div style={{ height: '100%', width: '100%' }}>
