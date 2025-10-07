@@ -37,17 +37,17 @@ export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onCo
     }
 
 
-    // 2. White center aura with soft glow
-    if (constructionLayers?.showWhiteAura !== false) {
-        const whiteGrad = ctx.createRadialGradient(center, center, 0, center, center, outerRadius);
-        whiteGrad.addColorStop(0, 'white');
-        whiteGrad.addColorStop(0.3, 'rgba(255,255,255,0.5)'); // Glow fade
-        whiteGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = whiteGrad;
-        ctx.beginPath();
-        ctx.arc(center, center, outerRadius, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    // 2. White center aura with soft glow - REMOVED AS PER REQUEST
+    // if (constructionLayers?.showWhiteAura !== false) {
+    //     const whiteGrad = ctx.createRadialGradient(center, center, 0, center, center, outerRadius);
+    //     whiteGrad.addColorStop(0, 'white');
+    //     whiteGrad.addColorStop(0.3, 'rgba(255,255,255,0.5)'); // Glow fade
+    //     whiteGrad.addColorStop(1, 'transparent');
+    //     ctx.fillStyle = whiteGrad;
+    //     ctx.beginPath();
+    //     ctx.arc(center, center, outerRadius, 0, Math.PI * 2);
+    //     ctx.fill();
+    // }
 
 
     // 3. 4 color fields (90° each, clockwise from top)
@@ -134,6 +134,3 @@ export const AuraColorWheel: React.FC<AuraColorWheelProps> = ({ size = 400, onCo
 
   return <canvas ref={canvasRef} width={size} height={size} style={{ cursor: 'crosshair' }} />;
 };
-
-// For backward compatibility if other files import QuaternionLogo
-export const QuaternionLogo = AuraColorWheel;
