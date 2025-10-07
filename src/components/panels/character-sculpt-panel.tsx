@@ -6,11 +6,11 @@ import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "../ui/button"
-import { Smile, Wand2 } from "lucide-react"
+import { Smile, Wand2, Bot } from "lucide-react"
 import { CharacterSculptSettings } from "@/lib/types"
-import { executeCustomTool } from "@/ai/flows/custom-tool-flow"
 import { useToast } from "@/hooks/use-toast"
 import { handleApiError } from "@/lib/error-handling"
+import { generateFacialOverlay } from "@/ai/flows/generate-facial-overlay-flow"
 
 interface CharacterSculptPanelProps {
   settings: CharacterSculptSettings;
@@ -30,56 +30,32 @@ export function CharacterSculptPanel({
   selectionMaskUri,
 }: CharacterSculptPanelProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const [overlayImageUrl, setOverlayImageUrl] = React.useState<string | undefined>(imageUrl);
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const { toast } = useToast();
+  
+  React.useEffect(() => {
+    setOverlayImageUrl(imageUrl);
+  }, [imageUrl]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!ctx || !imageUrl) return;
+    if (!ctx || !overlayImageUrl) return;
 
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = imageUrl;
+    img.src = overlayImageUrl;
     img.onload = () => {
         canvas.width = 256;
         canvas.height = 256;
         ctx.clearRect(0, 0, 256, 256);
         ctx.drawImage(img, 0, 0, 256, 256);
 
-        // Draw overlays based on settings
-        ctx.strokeStyle = 'rgba(255, 100, 100, 0.9)';
-        ctx.fillStyle = 'rgba(255, 100, 100, 0.9)';
-        ctx.lineWidth = 1;
-        ctx.font = '10px sans-serif';
-
-        // Example: Forehead height overlay
-        if (settings.foreheadHeight !== 0) {
-            const y = 64 - settings.foreheadHeight * 0.5;
-            ctx.beginPath();
-            ctx.moveTo(80, y);
-            ctx.lineTo(176, y);
-            ctx.stroke();
-            ctx.fillText(`${settings.foreheadHeight > 0 ? '+' : ''}${settings.foreheadHeight.toFixed(0)}%`, 180, y + 4);
-        }
-
-        // Example: Eye spacing overlay
-        if (settings.eyeSpacing !== 0) {
-            const spacing = 40 + settings.eyeSpacing * 0.2;
-            const leftEyeX = 128 - spacing;
-            const rightEyeX = 128 + spacing;
-            ctx.beginPath();
-            ctx.moveTo(leftEyeX, 128);
-            ctx.lineTo(leftEyeX - 5, 128 - 5);
-            ctx.moveTo(leftEyeX, 128);
-            ctx.lineTo(leftEyeX - 5, 128 + 5);
-            ctx.moveTo(rightEyeX, 128);
-            ctx.lineTo(rightEyeX + 5, 128 - 5);
-            ctx.moveTo(rightEyeX, 128);
-            ctx.lineTo(rightEyeX + 5, 128 + 5);
-            ctx.stroke();
-        }
+        // This part is now handled by the AI, but we could add client-side previews too.
+        // For now, we rely on the AI-generated overlay.
     };
-  }, [settings, imageUrl]);
+  }, [settings, overlayImageUrl]);
 
   const generateMorphPrompt = () => {
     const changes: string[] = [];
@@ -111,6 +87,34 @@ export function CharacterSculptPanel({
     
     onApply(prompt, overlayUri);
   };
+
+  const handleGenerateOverlay = async () => {
+    if (!imageUrl) {
+      toast({ title: "No Image", description: "Please select an image first.", variant: "destructive" });
+      return;
+    }
+    setIsAnalyzing(true);
+    toast({ title: "AI is analyzing...", description: "Generating facial landmarks overlay." });
+
+    try {
+      const result = await generateFacialOverlay({
+        photoDataUri: imageUrl,
+        overlayTemplatePrompt: "Draw a grid over the forehead, a vertical line down the nose, horizontal lines through the pupils, and lines indicating jaw width. Use bright green lines.",
+      });
+
+      if (result.error || !result.overlayImageUri) {
+        throw new Error(result.error || "Failed to generate overlay.");
+      }
+      
+      setOverlayImageUrl(result.overlayImageUri);
+      toast({ title: "Analysis Complete", description: "Facial overlay has been generated." });
+
+    } catch (error) {
+      handleApiError(error, toast, { title: "Overlay Generation Failed" });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
   
   const handleReset = () => {
     onSettingsChange({
@@ -118,7 +122,8 @@ export function CharacterSculptPanel({
         nosePosition: 0,
         eyeWidth: 0,
         eyeSpacing: 0,
-    })
+    });
+    setOverlayImageUrl(imageUrl);
   }
 
   const SliderControl = ({
@@ -146,7 +151,6 @@ export function CharacterSculptPanel({
     </div>
   )
 
-
   return (
     <div className="p-4 space-y-4 flex flex-col h-full">
       <div className="space-y-2">
@@ -164,6 +168,11 @@ export function CharacterSculptPanel({
         <div className="aspect-square w-full bg-muted rounded-md border overflow-hidden">
             <canvas ref={canvasRef} />
         </div>
+
+        <Button onClick={handleGenerateOverlay} variant="outline" className="w-full" disabled={isAnalyzing}>
+            <Bot className="w-4 h-4 mr-2" />
+            {isAnalyzing ? "Analyzing Face..." : "Analyze Face & Generate Overlay"}
+        </Button>
 
         <SliderControl 
           label="Forehead Height"
@@ -189,7 +198,7 @@ export function CharacterSculptPanel({
 
        <Separator />
        <div className="space-y-2">
-        <Button onClick={handleApplyClick} disabled={isGenerating} className="w-full">
+        <Button onClick={handleApplyClick} disabled={isGenerating || isAnalyzing} className="w-full">
             <Wand2 className="w-4 h-4 mr-2"/>
             {isGenerating ? 'Applying...' : 'Apply Morph'}
         </Button>
