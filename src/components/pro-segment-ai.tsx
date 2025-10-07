@@ -846,11 +846,12 @@ function ProSegmentAIContent() {
 
   const renderPanelContent = (panelId: RightPanel | undefined) => {
     if (!panelId) return null;
+    if (!activeWorkspace) return null;
+
     switch(panelId) {
         case "zoom": return <PixelZoomPanel canvas={canvasRef.current} mousePos={canvasMousePos} selectionEngine={selectionEngineRef.current} onHoverChange={setIsLassoPreviewHovered} className="flex-1"/>;
         case "feather": return <FeatherPanel settings={featherSettings} onSettingsChange={handleFeatherSettingsChange} />;
-        case "layers": return activeWorkspace ? 
-            <LayersPanel 
+        case "layers": return <LayersPanel 
                 workspaces={workspaces}
                 activeWorkspaceId={activeWorkspaceId}
                 onWorkspaceSelect={setActiveWorkspaceId}
@@ -892,12 +893,12 @@ function ProSegmentAIContent() {
                         return { ...ws, layers: newLayers };
                     });
                 }}
-            /> : null;
+            />;
         case "assets": return <AdvancedAssetPanel onImageSelect={handleImageSelect} />;
         case "chat": return <AiChatPanel />;
         case "color-analysis": return <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>;
         case "pixel-preview": return <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>;
-        case "color-wheel": return <QuaternionColorWheel />;
+        case "color-wheel": return <QuaternionColorWheel layers={activeWorkspace.layers} onToggleVisibility={toggleLayerVisibility} />;
         default: return null;
     }
   }
@@ -1436,7 +1437,7 @@ function ProSegmentAIContent() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => { setIsRightPanelOpen(p => !p); if(isRightPanelOpen) setActivePanels([])}}>
+                  <Button variant="ghost" size="icon" onClick={() => { setIsRightPanelOpen(p => !p); if(activePanels.length === 0 && !isRightPanelOpen) {setActivePanels(['layers'])} }}>
                     {isRightPanelOpen ? <PanelRightClose className="h-5 h-5" /> : <PanelLeft className="h-5 h-5" />}
                   </Button>
                 </TooltipTrigger>
@@ -1532,5 +1533,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    
