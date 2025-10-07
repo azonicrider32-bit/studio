@@ -88,6 +88,7 @@ import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
 import { ToolSettingsPanel } from "./panels/tool-settings-panel"
 import AdvancedAssetPanel from "./panels/AdvancedAssetsPanel"
 import { QuaternionColorWheelPanel } from "./panels/quaternion-color-wheel"
+import { ColorSpherePanel } from "./panels/color-sphere-panel"
 import { textToSpeech } from "@/ai/flows/text-to-speech-flow"
 import { handleApiError } from "@/lib/error-handling"
 import { inpaintWithPrompt } from "@/ai/flows/inpaint-with-prompt"
@@ -100,7 +101,7 @@ import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
 import { AuraColorWheel } from "@/components/icons/quaternion-logo"
 
 type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
-type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel';
+type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'color-wheel' | 'color-sphere';
 
 interface WorkspaceState {
   id: string;
@@ -900,6 +901,7 @@ function ProSegmentAIContent() {
         case "color-analysis": return <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>;
         case "pixel-preview": return <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>;
         case "color-wheel": return <QuaternionColorWheelPanel layers={activeWorkspace.layers} onToggleLayerVisibility={toggleLayerVisibility} />;
+        case "color-sphere": return <ColorSpherePanel />;
         default: return null;
     }
   }
@@ -1138,6 +1140,7 @@ function ProSegmentAIContent() {
     { id: 'pixel-preview', icon: Microscope, label: 'Pixel Preview (P)' },
     { id: 'history', icon: History, label: 'History' },
     { id: 'color-wheel', icon: Palette, label: 'Color Wheel' },
+    { id: 'color-sphere', icon: Globe, label: 'Color Sphere' },
   ];
 
   return (
