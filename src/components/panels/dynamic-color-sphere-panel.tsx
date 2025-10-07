@@ -1,122 +1,124 @@
+
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Slider } from '../ui/slider';
 import { Label } from '../ui/label';
-import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { AuraColorWheel } from '../icons/aura-color-wheel';
+import { rgbToHsv } from '@/lib/color-utils';
+
+function rgbStringToHsv(rgbString: string): { h: number, s: number, v: number } {
+  const result = /rgb\((\d+), (\d+), (\d+)\)/.exec(rgbString);
+  if (!result) return { h: 0, s: 0, v: 0 };
+  const r = parseInt(result[1], 10);
+  const g = parseInt(result[2], 10);
+  const b = parseInt(result[3], 10);
+  return rgbToHsv(r, g, b);
+}
+
+function hsvToRgbString(h: number, s: number, v: number): string {
+    let r=0, g=0, b=0;
+    const sat = s / 100;
+    const val = v / 100;
+    const i = Math.floor(h / 60);
+    const f = h / 60 - i;
+    const p = val * (1 - sat);
+    const q = val * (1 - f * sat);
+    const t = val * (1 - (1 - f) * sat);
+
+    switch (i % 6) {
+        case 0: r = val; g = t; b = p; break;
+        case 1: r = q; g = val; b = p; break;
+        case 2: r = p; g = val; b = t; break;
+        case 3: r = p; g = q; b = val; break;
+        case 4: r = t; g = p; b = val; break;
+        case 5: r = val; g = p; b = q; break;
+    }
+
+    return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+}
+
 
 export function DynamicColorSpherePanel() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [size, setSize] = useState(300);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [size, setSize] = React.useState(200);
 
-  const [equatorColors, setEquatorColors] = useState(['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#ff00ff']);
-  const [poleTop, setPoleTop] = useState('#ffffff');
-  const [poleBottom, setPoleBottom] = useState('#000000');
-  const [lightness, setLightness] = useState(0);
+  const [selectedHsv, setSelectedHsv] = useState({ h: 0, s: 100, v: 100 });
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    setSize(canvas.parentElement?.clientWidth || 300);
-    canvas.width = size;
-    canvas.height = size;
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-    const center = size / 2;
-    const radius = size / 2 * 0.9;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width } = entry.contentRect;
+        setSize(width > 0 ? Math.floor(width * 0.9) : 200);
+      }
+    });
 
-    ctx.clearRect(0, 0, size, size);
-    
-    // Draw sphere body
-    for (let i = -radius; i <= radius; i++) {
-        const y = center + i;
-        const r = Math.sqrt(radius * radius - i * i);
-
-        const lat = Math.asin(i / radius); // latitude
-        
-        const grad = ctx.createLinearGradient(center - r, y, center + r, y);
-        
-        for (let j = 0; j <= 10; j++) {
-            const lon = (j / 10) * 2 * Math.PI - rotation.x;
-            const hue = (lon * 180 / Math.PI + 360) % 360;
-
-            const sat = 100 - Math.abs(lat * 200 / Math.PI);
-            const lit = 50 + lightness + (lat * (50 + lightness) / (Math.PI / 2));
-
-            grad.addColorStop(j/10, `hsl(${hue}, ${sat}%, ${lit}%)`);
-        }
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(center, y, r, 0, 2 * Math.PI);
-        ctx.fill();
-    }
-    
-    // Simulate lighting
-    const lightGradient = ctx.createRadialGradient(center - radius/2, center - radius/2, 0, center, center, radius);
-    lightGradient.addColorStop(0, 'rgba(255,255,255,0.3)');
-    lightGradient.addColorStop(1, 'rgba(0,0,0,0.5)');
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = lightGradient;
-    ctx.beginPath();
-    ctx.arc(center, center, radius, 0, 2*Math.PI);
-    ctx.fill();
-
-    ctx.globalCompositeOperation = 'source-over';
-
-
-  }, [size, rotation, equatorColors, poleTop, poleBottom, lightness]);
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging) return;
-    const dx = (e.clientX - dragStart.x) * 0.01;
-    const dy = (e.clientY - dragStart.y) * 0.01;
-    setRotation(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
+    observer.observe(container);
+    return () => {
+      if (container) {
+        observer.unobserve(container);
+      }
+    };
+  }, []);
+  
+  const handleColorSelect = (rgbColor: string) => {
+    const hsv = rgbStringToHsv(rgbColor);
+    setSelectedHsv(hsv);
   };
   
-  const handleColorChange = (index: number, color: string) => {
-    const newColors = [...equatorColors];
-    newColors[index] = color;
-    setEquatorColors(newColors);
-  }
+  const selectedColorRgb = hsvToRgbString(selectedHsv.h, selectedHsv.s, selectedHsv.v);
 
   return (
     <div className="p-4 flex flex-col h-full items-center">
-      <canvas
-        ref={canvasRef}
-        className="cursor-pointer"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      />
-      <div className="w-full space-y-4 mt-4">
-        <div className="space-y-2">
-            <Label>Lightness: {lightness.toFixed(0)}%</Label>
-            <Slider value={[lightness]} onValueChange={(v) => setLightness(v[0])} min={-50} max={50} step={1} />
+      <h3 className="font-headline text-lg mb-2">Color Gradient Explorer</h3>
+      
+      <div ref={containerRef} className="w-full aspect-square mb-4">
+          <AuraColorWheel size={size} onColorSelect={handleColorSelect}/>
+      </div>
+      
+      <div className="w-full space-y-4">
+        <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full border-2" style={{ backgroundColor: selectedColorRgb }}></div>
+            <div className="font-mono text-sm">
+                <div>H: {selectedHsv.h.toFixed(0)}°</div>
+                <div>S: {selectedHsv.s.toFixed(0)}%</div>
+                <div>V: {selectedHsv.v.toFixed(0)}%</div>
+            </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-            {equatorColors.map((color, index) => (
-                <div key={index} className="flex items-center gap-2">
-                    <Label htmlFor={`color-${index}`} className="text-xs">Node {index+1}</Label>
-                    <Input id={`color-${index}`} type="color" value={color} onChange={e => handleColorChange(index, e.target.value)} className="w-12 h-8 p-1" />
-                </div>
-            ))}
+
+        <div className="grid grid-cols-3 gap-2">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline">Hue</Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                    <Label>Hue: {selectedHsv.h.toFixed(0)}°</Label>
+                    <Slider value={[selectedHsv.h]} onValueChange={([val]) => setSelectedHsv(p => ({...p, h: val}))} min={0} max={360} step={1} />
+                </PopoverContent>
+            </Popover>
+             <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline">Saturation</Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                    <Label>Saturation: {selectedHsv.s.toFixed(0)}%</Label>
+                    <Slider value={[selectedHsv.s]} onValueChange={([val]) => setSelectedHsv(p => ({...p, s: val}))} min={0} max={100} step={1} />
+                </PopoverContent>
+            </Popover>
+             <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline">Value</Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                    <Label>Value/Brightness: {selectedHsv.v.toFixed(0)}%</Label>
+                    <Slider value={[selectedHsv.v]} onValueChange={([val]) => setSelectedHsv(p => ({...p, v: val}))} min={0} max={100} step={1} />
+                </PopoverContent>
+            </Popover>
         </div>
       </div>
     </div>

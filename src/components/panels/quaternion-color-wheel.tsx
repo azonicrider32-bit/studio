@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -5,7 +6,6 @@ import { AuraColorWheel, type AuraColorWheelProps } from '../icons/aura-color-wh
 import { Button } from '../ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
-import { Card, CardContent } from '../ui/card';
 import { Separator } from '../ui/separator';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
@@ -21,7 +21,6 @@ export function QuaternionColorWheelPanel({ layers, onToggleLayerVisibility }: Q
     const [size, setSize] = React.useState(200);
     const [constructionLayers, setConstructionLayers] = React.useState<AuraColorWheelProps['constructionLayers']>({
         showBase: true,
-        showWhiteAura: true,
         showColorFields: true,
         showSeparators: true,
         showVignette: true,
