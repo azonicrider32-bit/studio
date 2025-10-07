@@ -26,6 +26,10 @@ import {
   Move,
   BrainCircuit,
   FolderOpen,
+  Save,
+  FilePlus,
+  Clock,
+  Download,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -545,12 +549,52 @@ export function ToolSettingsPanel({
                 layers={layers}
             />
           ) : activeTool === 'project' ? (
-            <div className="p-4">
-                <h4 className="font-semibold mb-4">Project Management</h4>
+            <div className="p-4 space-y-6">
                 <div className="space-y-2">
-                    <Button variant="outline" className="w-full">Save Project</Button>
-                    <Button variant="outline" className="w-full">Load Project</Button>
+                    <h4 className="font-semibold text-sm">Project Actions</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline"><FilePlus className="w-4 h-4 mr-2"/>New</Button>
+                        <Button variant="outline"><FolderOpen className="w-4 h-4 mr-2"/>Load</Button>
+                        <Button variant="outline"><Save className="w-4 h-4 mr-2"/>Save</Button>
+                        <Button variant="outline">Save As...</Button>
+                    </div>
                 </div>
+                <Separator />
+                <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Recent Projects</h4>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                        <p className="p-2 rounded-md hover:bg-muted/50 cursor-pointer">Project_Alpha.json <span className="text-xs ml-2">2 hours ago</span></p>
+                        <p className="p-2 rounded-md hover:bg-muted/50 cursor-pointer">Mountain_Scene.json <span className="text-xs ml-2">1 day ago</span></p>
+                         <p className="text-center text-xs pt-2">No more recent projects.</p>
+                    </div>
+                </div>
+                 <Separator />
+                 <div className="space-y-4">
+                    <h4 className="font-semibold text-sm">Export</h4>
+                     <div className="space-y-2">
+                        <Label htmlFor="export-format">Format</Label>
+                        <Select defaultValue="png">
+                          <SelectTrigger id="export-format"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="png">PNG</SelectItem>
+                            <SelectItem value="jpg">JPG</SelectItem>
+                            <SelectItem value="webp">WebP</SelectItem>
+                             <SelectItem value="psd" disabled>PSD (Coming Soon)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                            <Switch id="export-visible-only" defaultChecked/>
+                            <Label htmlFor="export-visible-only">Visible layers only</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Switch id="export-separate-files"/>
+                            <Label htmlFor="export-separate-files">Export layers as separate files</Label>
+                        </div>
+                    </div>
+                    <Button className="w-full"><Download className="w-4 h-4 mr-2"/>Export Project</Button>
+                 </div>
             </div>
           ) : (
              <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
