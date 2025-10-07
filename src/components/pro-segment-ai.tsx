@@ -210,42 +210,43 @@ function ZoomControl({
 
 function ShelfButton({ panel, onShelfClick, isActive }: { panel: { id: RightPanel; icon: React.ElementType; label: string; }, onShelfClick: (panelId: RightPanel, position: 'full' | 'top' | 'bottom') => void, isActive: boolean }) {
   return (
-      <Tooltip>
-          <TooltipTrigger asChild>
-              <div className="relative group">
-                  <Button
-                      variant={isActive ? "secondary" : "ghost"}
-                      size="icon"
-                      className="w-12 h-12"
-                      onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
-                  >
-                      <panel.icon className="h-5 w-5" />
-                  </Button>
+    <Tooltip>
+        <TooltipTrigger asChild>
+            <div className="relative group">
+                <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    size="icon"
+                    className="w-12 h-12"
+                    onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
+                >
+                    <panel.icon className="h-5 w-5" />
+                </Button>
 
+                <div 
+                  className="absolute top-0 right-full w-24 h-12 flex mr-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto"
+                >
                   <div 
-                    className="absolute top-0 right-full w-24 h-12 flex mr-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto"
-                  >
-                    <div className="w-1/2 h-full flex items-center justify-center rounded-l-md cursor-pointer bg-primary/20 hover:bg-primary/40"
-                         onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}>
-                        <panel.icon className="w-6 h-6 text-primary-foreground/80"/>
+                    className="w-1/2 h-full flex items-center justify-center rounded-l-md cursor-pointer bg-primary/20 hover:bg-primary/40"
+                       onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}>
+                      <panel.icon className="w-6 h-6 text-primary-foreground/80"/>
+                  </div>
+                  <div className="w-1/2 h-full flex flex-col">
+                    <div className="h-1/2 w-full flex items-center justify-center rounded-tr-md border-b border-primary/50 cursor-pointer bg-primary/20 hover:bg-primary/40"
+                         onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}>
+                        <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
                     </div>
-                    <div className="w-1/2 h-full flex flex-col">
-                      <div className="h-1/2 w-full flex items-center justify-center rounded-tr-md border-b border-primary/50 cursor-pointer bg-primary/20 hover:bg-primary/40"
-                           onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}>
-                          <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
-                      </div>
-                      <div className="h-1/2 w-full flex items-center justify-center rounded-br-md cursor-pointer bg-primary/20 hover:bg-primary/40"
-                           onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}>
-                          <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
-                      </div>
+                    <div className="h-1/2 w-full flex items-center justify-center rounded-br-md cursor-pointer bg-primary/20 hover:bg-primary/40"
+                         onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}>
+                        <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
                     </div>
                   </div>
-              </div>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-              <p>{panel.label}</p>
-          </TooltipContent>
-      </Tooltip>
+                </div>
+            </div>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+            <p>{panel.label}</p>
+        </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -1620,3 +1621,4 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
