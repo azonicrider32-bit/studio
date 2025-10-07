@@ -214,40 +214,53 @@ function ShelfButton({ panel, onShelfClick, isActive }: { panel: { id: RightPane
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                <div className="relative group">
+                <div className="relative group w-12 h-12">
                     <Button
                         variant={isActive ? "secondary" : "ghost"}
                         size="icon"
-                        className="w-12 h-12"
+                        className="w-full h-full"
                     >
                         <panel.icon className="h-5 w-5" />
                     </Button>
-                    <div className="absolute inset-0 z-10 flex cursor-pointer" onMouseLeave={() => setHoverZone(null)}>
-                        <div 
-                            className="w-1/2 h-full rounded-l-md" 
-                            onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
-                            onMouseEnter={() => setHoverZone('full')}
-                        ></div>
-                        <div className="w-1/2 h-full flex flex-col">
+                    <div 
+                        className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseLeave={() => setHoverZone(null)}
+                    >
+                        <div className="relative w-full h-full">
                             <div 
-                                className="h-1/2 rounded-tr-md" 
-                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
-                                onMouseEnter={() => setHoverZone('top')}
-                            ></div>
+                                className="absolute inset-0 bg-primary/20 rounded-md"
+                                style={{
+                                    clipPath: hoverZone === 'full' ? 'inset(0 0 0 0)' : 
+                                              hoverZone === 'top' ? 'inset(0 0 50% 50%)' :
+                                              hoverZone === 'bottom' ? 'inset(50% 0 0 50%)' : 'none'
+                                }}
+                            />
+
                             <div 
-                                className="h-1/2 rounded-br-md" 
-                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
-                                onMouseEnter={() => setHoverZone('bottom')}
-                            ></div>
+                                className="absolute left-0 top-0 h-full w-1/2 cursor-pointer"
+                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
+                                onMouseEnter={() => setHoverZone('full')}
+                            >
+                               <PanelLeft className="w-4 h-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/80"/>
+                            </div>
+                            <div className="absolute right-0 top-0 h-full w-1/2 flex flex-col">
+                                <div 
+                                    className="h-1/2 w-full cursor-pointer" 
+                                    onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
+                                    onMouseEnter={() => setHoverZone('top')}
+                                >
+                                    <PanelTop className="w-4 h-4 absolute top-1/4 right-1/4 text-white/80"/>
+                                </div>
+                                <div 
+                                    className="h-1/2 w-full cursor-pointer" 
+                                    onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
+                                    onMouseEnter={() => setHoverZone('bottom')}
+                                >
+                                    <PanelBottom className="w-4 h-4 absolute bottom-1/4 right-1/4 text-white/80"/>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                     {hoverZone && (
-                        <div className="absolute inset-0 pointer-events-none z-20">
-                            {hoverZone === 'full' && <div className="absolute inset-0 bg-primary/20 rounded-md"></div>}
-                            {hoverZone === 'top' && <div className="absolute top-0 right-0 h-1/2 w-1/2 bg-primary/20 rounded-tr-md"></div>}
-                            {hoverZone === 'bottom' && <div className="absolute bottom-0 right-0 h-1/2 w-1/2 bg-primary/20 rounded-br-md"></div>}
-                        </div>
-                    )}
                 </div>
             </TooltipTrigger>
             <TooltipContent side="left">
@@ -265,7 +278,7 @@ function ProSegmentAIContent() {
   const isResizingRef = React.useRef(false);
   const { toast } = useToast()
   
-  const [activePanels, setActivePanels] = React.useState<[RightPanel | null, RightPanel | null]>(['layers', null]);
+  const [activePanels, setActivePanels] = React.useState<[RightPanel | null, RightPanel | null]>(['layers', 'assets']);
   
   const [zoomA, setZoomA] = React.useState(1.0);
   const [zoomB, setZoomB] = React.useState(4.0);
