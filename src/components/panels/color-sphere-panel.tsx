@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import { Switch } from '../ui/switch';
 import { ScrollArea } from '../ui/scroll-area';
 import { Layer } from '@/lib/types';
 import { Eye, EyeOff } from 'lucide-react';
+import { AuraColorWheel, AuraColorWheelProps } from '../icons/quaternion-logo';
 
 interface ColorSpherePanelProps {
     layers: Layer[];
@@ -70,7 +72,7 @@ export function ColorSpherePanel({ layers, onToggleLayerVisibility }: ColorSpher
              ctx.lineWidth = 1;
             const y = center + (i/4) * radius;
             const r = Math.sqrt(radius**2 - (y - center)**2);
-            ctx.ellipse(center, y, r, (i/4)*0.2 * radius, 0, 0, 2*Math.PI);
+            ctx.ellipse(center, y, r, Math.abs((i/4)*0.2 * radius), 0, 0, 2*Math.PI);
             ctx.stroke();
         }
 
