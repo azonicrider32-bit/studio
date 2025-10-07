@@ -235,6 +235,9 @@ function ProSegmentAIContent() {
   const [showVerticalRuler, setShowVerticalRuler] = React.useState(false);
   const [showGuides, setShowGuides] = React.useState(false);
 
+  const [isOutpainting, setIsOutpainting] = React.useState(false);
+  const [outpaintDimensions, setOutpaintDimensions] = React.useState({ top: 0, right: 0, bottom: 0, left: 0 });
+
   const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
 
@@ -1032,6 +1035,76 @@ function ProSegmentAIContent() {
     }
   }
 
+  const handleOutpaint = async () => {
+    if (!activeWorkspace?.imageUrl || !canvasRef.current) {
+        toast({ title: 'No Image Loaded', variant: 'destructive' });
+        return;
+    }
+    setIsGenerating(true);
+    toast({ title: 'Outpainting...', description: 'Extending the image with AI.' });
+
+    const originalCanvas = canvasRef.current;
+    const { top, right, bottom, left } = outpaintDimensions;
+    const newWidth = originalCanvas.width + left + right;
+    const newHeight = originalCanvas.height + top + bottom;
+
+    const newCanvas = document.createElement('canvas');
+    newCanvas.width = newWidth;
+    newCanvas.height = newHeight;
+    const ctx = newCanvas.getContext('2d');
+    if (!ctx) {
+        setIsGenerating(false);
+        return;
+    }
+
+    // Draw the original image onto the new, larger canvas
+    ctx.drawImage(originalCanvas, left, top);
+    const photoDataUri = newCanvas.toDataURL();
+    
+    // Create the mask
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = newWidth;
+    maskCanvas.height = newHeight;
+    const maskCtx = maskCanvas.getContext('2d');
+    if(!maskCtx) {
+        setIsGenerating(false);
+        return;
+    }
+    maskCtx.fillStyle = 'black'; // Area to inpaint
+    maskCtx.fillRect(0, 0, newWidth, newHeight);
+    maskCtx.fillStyle = 'white'; // Area to keep
+    maskCtx.fillRect(left, top, originalCanvas.width, originalCanvas.height);
+    const maskDataUri = maskCanvas.toDataURL();
+
+    const startTime = performance.now();
+    try {
+        const result = await inpaintWithPrompt({
+            photoDataUri: photoDataUri,
+            maskDataUri: maskDataUri,
+            prompt: 'Extend the image seamlessly, continuing the patterns, textures, and content of the original image into the black area.',
+        });
+
+        const duration = performance.now() - startTime;
+        logAppEvent('ai_call', { tool: 'banana', operation: 'outpaint', duration });
+
+        if (result.error || !result.generatedImageDataUri) {
+            throw new Error(result.error || 'Outpainting did not return an image.');
+        }
+
+        handleImageSelect(result.generatedImageDataUri);
+        toast({ title: 'Outpainting Successful!', description: 'The canvas has been extended.' });
+        setIsOutpainting(false);
+        setOutpaintDimensions({ top: 0, right: 0, bottom: 0, left: 0 });
+
+    } catch (error) {
+        const duration = performance.now() - startTime;
+        logAppEvent('error', { tool: 'banana', operation: 'outpaint', duration, error: (error as Error).message });
+        handleApiError(error, toast, { title: 'Outpainting Failed' });
+    } finally {
+        setIsGenerating(false);
+    }
+  }
+
 
   if (!activeWorkspace) {
     return <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground">No active workspace.</div>
@@ -1262,9 +1335,15 @@ function ProSegmentAIContent() {
                 onInstructionChange={(id, prompt) => setInstructionLayers(layers => layers.map(l => l.id === id ? {...l, prompt} : l))}
                 onLayerDelete={(id) => setInstructionLayers(layers => layers.filter(l => l.id !== id))}
                 onGenerate={handleGenerate}
+                onOutpaint={handleOutpaint}
+                outpaintDimensions={outpaintDimensions}
+                setOutpaintDimensions={setOutpaintDimensions}
+                isOutpainting={isOutpainting}
+                setIsOutpainting={setIsOutpainting}
                 isGenerating={isGenerating}
                 customPrompt={customPrompt}
                 setCustomPrompt={setCustomPrompt}
+                onAiToolClick={handleAiToolClick}
                 canvas={canvasRef.current}
                 mousePos={canvasMousePos}
                 negativeMagicWandSettings={negativeMagicWandSettings}
@@ -1421,4 +1500,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-

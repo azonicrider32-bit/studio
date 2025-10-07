@@ -69,6 +69,11 @@ interface ToolSettingsPanelProps {
   onInstructionChange: (id: string, prompt: string) => void;
   onLayerDelete: (id: string) => void;
   onGenerate: (prompt?: string) => void;
+  onOutpaint: () => void;
+  outpaintDimensions: { top: number; right: number; bottom: number; left: number; };
+  setOutpaintDimensions: (dims: { top: number; right: number; bottom: number; left: number; }) => void;
+  isOutpainting: boolean;
+  setIsOutpainting: (is: boolean) => void;
   onAiToolClick: (tool: AITool) => void;
   isGenerating: boolean;
   customPrompt: string;
@@ -106,10 +111,15 @@ export function ToolSettingsPanel({
     onInstructionChange,
     onLayerDelete,
     onGenerate,
-    onAiToolClick,
+    onOutpaint,
+    outpaintDimensions,
+    setOutpaintDimensions,
+    isOutpainting,
+    setIsOutpainting,
     isGenerating,
     customPrompt,
     setCustomPrompt,
+    onAiToolClick,
     canvas,
     mousePos,
     negativeMagicWandSettings,
@@ -264,7 +274,7 @@ export function ToolSettingsPanel({
                         onSettingsChange={onCloneStampSettingsChange} 
                     />
         case 'settings':
-            return <GlobalSettingsCompactPanel onShowHotkeysChange={onShowHotkeysChange} showHotkeys={showHotkeys} />
+            return <GlobalSettingsCompactPanel onShowHotkeysChange={onShowHotkeysChange} showHotkeys={showHotkeyLabels} />
         default:
             return null;
     }
@@ -318,6 +328,11 @@ export function ToolSettingsPanel({
             onInstructionChange={onInstructionChange}
             onLayerDelete={onLayerDelete}
             onGenerate={onGenerate}
+            onOutpaint={onOutpaint}
+            outpaintDimensions={outpaintDimensions}
+            setOutpaintDimensions={setOutpaintDimensions}
+            isOutpainting={isOutpainting}
+            setIsOutpainting={setIsOutpainting}
             onAiToolClick={onAiToolClick}
             isGenerating={isGenerating}
             customPrompt={customPrompt}
@@ -511,10 +526,10 @@ export function ToolSettingsPanel({
             />
           ) : activeTool === 'settings' ? (
             <GlobalSettingsPanel 
-                showHotkeys={showHotkeys} 
-                onShowHotkeysChange={onShowHotkeysChange} 
+                showHotkeys={showHotkeyLabels} 
+                onShowHotkeysChange={setShowHotkeyLabels} 
                 settings={globalSettings} 
-                onSettingsChange={onGlobalSettingsChange} 
+                onSettingsChange={setGlobalSettings} 
                 wandPerf={performanceMetrics}
                 lassoPerf={performanceMetrics}
                 apiPerf={apiPerf}
