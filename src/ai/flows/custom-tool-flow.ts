@@ -1,15 +1,16 @@
+
 'use server';
 
 /**
  * @fileOverview A Genkit flow for executing dynamic, user-created AI tools.
  *
  * This flow takes a prompt template and a set of parameters, compiles them,
- * and executes the request against the Gemini AI model.
+ * and executes the request against the Gemini AI model. It supports an optional
+ * overlay image for visual guidance.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import Handlebars from 'handlebars';
 
 export const CustomToolInputSchema = z.object({
   photoDataUri: z
@@ -18,13 +19,14 @@ export const CustomToolInputSchema = z.object({
   maskDataUri: z
     .string()
     .optional()
-    .describe("The mask image (for inpainting), as a data URI."),
-  promptTemplate: z
+    .describe("An optional mask image (for inpainting), as a data URI."),
+  overlayDataUri: z
     .string()
-    .describe("A Handlebars-style prompt template."),
-  parameters: z
-    .record(z.any())
-    .describe("An object containing key-value pairs for the prompt template."),
+    .optional()
+    .describe("An optional overlay image providing visual guidance, as a data URI."),
+  prompt: z
+    .string()
+    .describe("The final compiled text prompt for the AI."),
 });
 export type CustomToolInput = z.infer<typeof CustomToolInputSchema>;
 
@@ -44,16 +46,16 @@ const customToolFlow = ai.defineFlow(
     inputSchema: CustomToolInputSchema,
     outputSchema: CustomToolOutputSchema,
   },
-  async ({ photoDataUri, maskDataUri, promptTemplate, parameters }) => {
+  async ({ photoDataUri, maskDataUri, overlayDataUri, prompt }) => {
     try {
-      // Compile the Handlebars template with the provided parameters
-      const template = Handlebars.compile(promptTemplate);
-      const finalPrompt = template(parameters);
-
-      const promptParts = [{ text: finalPrompt }, { media: { url: photoDataUri } }];
+      const promptParts: any[] = [{ text: prompt }, { media: { url: photoDataUri } }];
 
       if (maskDataUri) {
         promptParts.push({ media: { url: maskDataUri, role: 'mask' } });
+      }
+      
+      if (overlayDataUri) {
+          promptParts.push({ media: { url: overlayDataUri }});
       }
 
       const { media } = await ai.generate({
@@ -80,5 +82,3 @@ const customToolFlow = ai.defineFlow(
     }
   }
 );
-
-    
