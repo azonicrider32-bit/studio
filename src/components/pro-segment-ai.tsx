@@ -103,7 +103,7 @@ import { UltraFastFloodFill, WandOptions } from "@/lib/ultrafast-flood-fill"
 import { CustomAiToolEditor } from "./panels/custom-ai-tool-editor"
 import { AuraColorWheel } from "./icons/aura-color-wheel"
 
-type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
+type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project";
 type RightPanel = 'zoom' | 'feather' | 'layers' | 'assets' | 'history' | 'color-analysis' | 'pixel-preview' | 'chat' | 'quaternion-wheel' | 'dynamic-sphere';
 
 interface WorkspaceState {
@@ -231,22 +231,22 @@ function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: R
                         <div className="absolute inset-0 flex">
                             <div
                                 className="w-1/2 h-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center"
-                                onClick={() => onShelfClick(panel.id, 'full')}
+                                onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'full'); }}
                             >
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
+                               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-foreground/80 h-auto w-full p-1.5">
                                     <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
                                 </svg>
                             </div>
                             <div className="w-1/2 h-full flex flex-col">
                                 <div
                                     className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center border-b border-primary/50"
-                                    onClick={() => onShelfClick(panel.id, 'top')}
+                                    onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'top'); }}
                                 >
                                     <PanelTop className="w-4 h-4 text-primary-foreground/80"/>
                                 </div>
                                 <div
                                     className="h-1/2 w-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center"
-                                    onClick={() => onShelfClick(panel.id, 'bottom')}
+                                    onClick={(e) => { e.stopPropagation(); onShelfClick(panel.id, 'bottom'); }}
                                 >
                                      <PanelBottom className="w-4 h-4 text-primary-foreground/80"/>
                                 </div>
@@ -263,7 +263,8 @@ function ShelfButton({ panel, onShelfClick }: { panel: { id: RightPanel; icon: R
 }
 
 function ProSegmentAIContent() {
-  const [activeTool, setActiveTool] = React.useState<Tool>("banana")
+  const [activeTool, setActiveTool] = React.useState<Tool>("banana");
+  const [previousTool, setPreviousTool] = React.useState<Tool>("banana");
   const [rightPanelWidth, setRightPanelWidth] = React.useState(380);
   const [isRightPanelOpen, setIsRightPanelOpen] = React.useState(true);
   const isResizingRef = React.useRef(false);
@@ -1211,11 +1212,9 @@ function ProSegmentAIContent() {
                 className="h-8 w-8"
                 onClick={() => {
                   if (activeTool === 'settings') {
-                    // It's already open, so close it and restore previous tool
-                    setActiveTool(previousToolRef.current || 'magic-wand');
+                    setActiveTool(previousTool);
                   } else {
-                    // It's closed, so open it
-                    previousToolRef.current = activeTool;
+                    setPreviousTool(activeTool);
                     setActiveTool('settings');
                     setSidebarOpen(true);
                   }
@@ -1223,8 +1222,21 @@ function ProSegmentAIContent() {
             >
               {activeTool === 'settings' ? <XIcon className="w-5 h-5 text-red-500"/> : <Settings2 className="w-5 h-5"/>}
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddNewWorkspace}>
-                <Plus className="w-4 h-4" />
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  if (activeTool === 'project') {
+                    setActiveTool(previousTool);
+                  } else {
+                    setPreviousTool(activeTool);
+                    setActiveTool('project');
+                    setSidebarOpen(true);
+                  }
+                }}
+            >
+              {activeTool === 'project' ? <XIcon className="w-5 h-5 text-red-500"/> : <FolderOpen className="w-5 h-5"/>}
             </Button>
           </div>
           <div className="flex items-center gap-4 flex-1">
@@ -1604,5 +1616,3 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
-
-    

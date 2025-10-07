@@ -25,6 +25,7 @@ import {
   SlidersHorizontal,
   Move,
   BrainCircuit,
+  FolderOpen,
 } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
@@ -87,7 +88,7 @@ interface ToolSettingsPanelProps {
   layers: Layer[];
 }
 
-type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover";
+type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project";
 
 
 export function ToolSettingsPanel({ 
@@ -183,6 +184,11 @@ export function ToolSettingsPanel({
             description: 'Configure application-wide preferences for UI, performance, and more.',
             shortcut: ''
         },
+        'project': {
+            title: 'Project Settings',
+            description: 'Save, load, and manage your projects.',
+            shortcut: ''
+        },
          'transform': {
             title: 'Transform Tool',
             description: 'Move, scale, and rotate layers or selections.',
@@ -274,6 +280,7 @@ export function ToolSettingsPanel({
                         onSettingsChange={onCloneStampSettingsChange} 
                     />
         case 'settings':
+        case 'project':
             return <GlobalSettingsCompactPanel onShowHotkeysChange={onShowHotkeysChange} showHotkeys={showHotkeys} />
         default:
             return null;
@@ -316,6 +323,7 @@ export function ToolSettingsPanel({
       case 'clone': return <Replace className="w-4 h-4" />;
       case 'transform': return <Move className="w-4 h-4" />;
       case 'settings': return <SlidersHorizontal className="w-4 h-4" />;
+      case 'project': return <FolderOpen className="w-4 h-4" />;
       default: return isAiToolActive ? <BrainCircuit className="w-4 h-4" /> : null;
     }
   };
@@ -333,10 +341,10 @@ export function ToolSettingsPanel({
             setOutpaintDimensions={setOutpaintDimensions}
             isOutpainting={isOutpainting}
             setIsOutpainting={setIsOutpainting}
-            onAiToolClick={onAiToolClick}
             isGenerating={isGenerating}
             customPrompt={customPrompt}
             setCustomPrompt={setCustomPrompt}
+            onAiToolClick={onAiToolClick}
           />
       );
     }
@@ -346,7 +354,7 @@ export function ToolSettingsPanel({
         <div className="space-y-1 px-2 flex items-center justify-between">
           <h3 className="font-headline text-base flex items-center gap-2">
               {getActiveToolIcon()}
-              {activeTool === 'settings' ? 'Global Settings' : 'Tool Settings'}
+              {activeTool === 'settings' ? 'Global Settings' : activeTool === 'project' ? 'Project' : 'Tool Settings'}
           </h3>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setView('info')}>
               <Info className="w-4 h-4" />
@@ -536,11 +544,19 @@ export function ToolSettingsPanel({
                 imageData={imageData}
                 layers={layers}
             />
+          ) : activeTool === 'project' ? (
+            <div className="p-4">
+                <h4 className="font-semibold mb-4">Project Management</h4>
+                <div className="space-y-2">
+                    <Button variant="outline" className="w-full">Save Project</Button>
+                    <Button variant="outline" className="w-full">Load Project</Button>
+                </div>
+            </div>
           ) : (
              <div className="p-4 text-sm text-muted-foreground">No settings for this tool.</div>
           )}
         </div>
-        {activeTool !== 'settings' && !isAiToolActive && currentToolInfo && (
+        {activeTool !== 'settings' && activeTool !== 'project' && !isAiToolActive && currentToolInfo && (
             <div className="px-2 pb-2">
               <Separator className="mb-2"/>
               <div className="bg-muted/50 rounded-md p-2 text-center text-xs text-muted-foreground">
