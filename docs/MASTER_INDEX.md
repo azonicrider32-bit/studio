@@ -46,6 +46,10 @@ This section covers the innovative systems that define how users interact with a
 
 These documents detail the user-facing tools for selection, transformation, and manipulation.
 
+*   ### [🪡 The AI Puppet Warp & Text Tool Blueprint](./PUPPET_WARP_AND_TEXT_TOOL_BLUEPRINT.md)
+    *   **Summary:** A detailed design for an AI-powered "Puppet Warp" tool that uses paired vector lines to define complex object deformations, and a streamlined "Text Changer" tool for rapid, AI-driven text edits.
+    *   **Status:** Architectural Blueprint v1.0
+    
 *   ### [✨ The Transform Tool v2 Blueprint](./TRANSFORM_TOOL_V2_BLUEPRINT.md)
     *   **Summary:** A revolutionary redesign of the standard free transform interface. It features an intelligent border with dual arrows for scaling, dual sliders for skewing, a "Balloon Toggle" for warping, on-canvas layer ordering, and intelligent handling for small objects.
     *   **Status:** Detailed Architectural Specification v2.0
