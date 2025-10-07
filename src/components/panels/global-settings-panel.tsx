@@ -235,14 +235,7 @@ export function GlobalSettingsPanel({
 
   return (
     <div className="p-4 h-full flex flex-col">
-      <div className="space-y-2 mb-4">
-        <h3 className="font-headline text-lg">Global Settings</h3>
-        <p className="text-sm text-muted-foreground">
-          Configure application-wide preferences.
-        </p>
-      </div>
-
-      <div className="border-b">
+      <div className="border-b mb-4">
         <TooltipProvider>
           <div className="flex items-center justify-around">
             {SETTING_TABS.map(tab => (
@@ -265,7 +258,7 @@ export function GlobalSettingsPanel({
         </TooltipProvider>
       </div>
 
-      <div className="mt-4 flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {activeTab === 'hotkeys' && (
            <div className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
