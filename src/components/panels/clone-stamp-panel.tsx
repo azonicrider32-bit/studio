@@ -179,7 +179,7 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
           <Separator />
         
           <div className="space-y-4">
-              <h4 className="font-semibold text-sm">Rotation</h4>
+              <h4 className="font-semibold text-sm">Rotation &amp; Flip</h4>
               <div className="space-y-2">
                 <Label htmlFor="rotation-step">Scroll Step: {settings.rotationStep}°</Label>
                 <Slider
@@ -281,6 +281,19 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
                 onCheckedChange={(checked) => onSettingsChange({ useAdvancedBlending: checked })}
               />
             </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="preview-opacity">Preview Opacity: {settings.previewOpacity}%</Label>
+              <Slider
+                id="preview-opacity"
+                min={0}
+                max={100}
+                step={5}
+                value={[settings.previewOpacity]}
+                onValueChange={(value) => onSettingsChange({ previewOpacity: value[0] })}
+              />
+            </div>
+
 
             {settings.useAdvancedBlending && (
               <div className="p-4 border rounded-lg space-y-4">
@@ -336,3 +349,5 @@ export function CloneStampPanel({ settings, onSettingsChange }: CloneStampPanelP
     </div>
   )
 }
+
+  

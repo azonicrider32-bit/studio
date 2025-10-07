@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -574,6 +575,7 @@ function ProSegmentAIContent() {
     brushSize: 50,
     opacity: 100,
     softness: 0,
+    previewOpacity: 50,
     rotationStep: 5,
     sourceLayer: 'current',
     angle: 0,
@@ -1650,3 +1652,5 @@ export function ProSegmentAI() {
     </SidebarProvider>
   )
 }
+
+  

@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account" | "character-sculpt";
@@ -69,6 +70,7 @@ export interface CloneStampSettings {
     brushSize: number;
     opacity: number;
     softness: number; // Feathering of the brush edge.
+    previewOpacity: number;
     rotationStep: number;
     sourceLayer: 'current' | 'all'; // Sample from the current layer or all visible layers.
     angle: number;
@@ -205,3 +207,5 @@ export const UploadAssetOutputSchema = z.object({
   error: z.string().optional().describe('An error message if the upload failed.'),
 });
 export type UploadAssetOutput = z.infer<typeof UploadAssetOutputSchema>;
+
+  

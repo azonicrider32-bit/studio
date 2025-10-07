@@ -440,7 +440,7 @@ const drawLayers = React.useCallback(() => {
 
         if (activeTool === 'clone' && ghostPreview && canvasMousePos) {
             overlayCtx.save();
-            overlayCtx.globalAlpha = 0.5;
+            overlayCtx.globalAlpha = cloneStampSettings.previewOpacity / 100;
             overlayCtx.drawImage(
                 ghostPreview,
                 canvasMousePos.x - cloneStampSettings.brushSize / 2,
@@ -873,15 +873,19 @@ const drawLayers = React.useCallback(() => {
     const sourceCanvas = layersCanvasRef.current;
     if (!sourceCanvas || !cloneSource) return;
 
-    const { brushSize, angle, sourceLayer, flipX, flipY } = cloneStampSettings;
-    const sourceCtx = sourceCanvas.getContext('2d');
-    if (!sourceCtx) return;
-
+    const { brushSize, angle, flipX, flipY } = cloneStampSettings;
+    
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = brushSize;
     tempCanvas.height = brushSize;
     const tempCtx = tempCanvas.getContext('2d');
     if (!tempCtx) return;
+
+    // Create a circular clip
+    tempCtx.beginPath();
+    tempCtx.arc(brushSize / 2, brushSize / 2, brushSize / 2, 0, Math.PI * 2);
+    tempCtx.closePath();
+    tempCtx.clip();
 
     tempCtx.save();
     tempCtx.translate(brushSize / 2, brushSize / 2);
@@ -1340,3 +1344,6 @@ const drawLayers = React.useCallback(() => {
 
 
 
+
+
+  
