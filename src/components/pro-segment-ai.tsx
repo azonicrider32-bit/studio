@@ -898,7 +898,7 @@ function ProSegmentAIContent() {
         case "chat": return <AiChatPanel />;
         case "color-analysis": return <ColorAnalysisPanel canvas={canvasRef.current} mousePos={canvasMousePos} magicWandSettings={magicWandSettings} onMagicWandSettingsChange={handleMagicWandSettingsChange}/>;
         case "pixel-preview": return <div className="flex-1 flex flex-col min-h-0"><SegmentHoverPreview canvas={canvasRef.current} mousePos={canvasMousePos} settings={magicWandSettings}/></div>;
-        case "color-wheel": return <QuaternionColorWheel layers={activeWorkspace.layers} onToggleVisibility={toggleLayerVisibility} />;
+        case "color-wheel": return <QuaternionColorWheel />;
         default: return null;
     }
   }

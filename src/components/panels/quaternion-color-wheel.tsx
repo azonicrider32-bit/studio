@@ -2,22 +2,29 @@
 "use client";
 
 import React from 'react';
-import { AuraColorWheel } from '../icons/quaternion-logo';
-import { Layer } from '@/lib/types';
+import { AuraColorWheel, type AuraColorWheelProps } from '../icons/quaternion-logo';
 import { Button } from '../ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { Card, CardContent } from '../ui/card';
 import { Separator } from '../ui/separator';
+import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
 
-interface QuaternionColorWheelProps {
-    layers: Layer[];
-    onToggleVisibility: (id: string) => void;
+interface QuaternionColorWheelPanelProps {
+    // Keeping these for potential future use, but not using them for the construction layers
 }
 
-export function QuaternionColorWheel({ layers, onToggleVisibility }: QuaternionColorWheelProps) {
+export function QuaternionColorWheel({ }: QuaternionColorWheelPanelProps) {
     const containerRef = React.useRef<HTMLDivElement>(null);
     const [size, setSize] = React.useState(200);
+    const [constructionLayers, setConstructionLayers] = React.useState<AuraColorWheelProps['constructionLayers']>({
+        showBase: true,
+        showWhiteAura: true,
+        showColorFields: true,
+        showSeparators: true,
+        showVignette: true,
+    });
 
     React.useEffect(() => {
         const container = containerRef.current;
@@ -33,9 +40,15 @@ export function QuaternionColorWheel({ layers, onToggleVisibility }: QuaternionC
         observer.observe(container);
 
         return () => {
-            observer.disconnect();
+            if (container) {
+                observer.unobserve(container);
+            }
         };
     }, []);
+    
+    const handleToggleLayer = (layer: keyof NonNullable<AuraColorWheelProps['constructionLayers']>) => {
+        setConstructionLayers(prev => ({ ...prev, [layer]: !prev?.[layer] }));
+    }
 
 
   return (
@@ -43,29 +56,23 @@ export function QuaternionColorWheel({ layers, onToggleVisibility }: QuaternionC
         <h3 className="font-headline text-lg">Quaternion Color Wheel</h3>
         <p className="text-sm text-muted-foreground mb-4">A projection of the RGB color space.</p>
         <div ref={containerRef} className="w-full aspect-square mb-4">
-            <AuraColorWheel size={size} />
+            <AuraColorWheel size={size} constructionLayers={constructionLayers} />
         </div>
         <Separator className="my-2"/>
-        <h4 className="font-semibold text-sm mb-2">Layers</h4>
+        <h4 className="font-semibold text-sm mb-2">Construction Layers</h4>
         <ScrollArea className="flex-1">
-            <div className="space-y-1 pr-2">
-                {layers.slice().reverse().map(layer => (
-                    <Card key={layer.id} className="bg-muted/30">
-                        <CardContent className="p-2 flex items-center justify-between">
-                            <span className="text-sm truncate">{layer.name}</span>
-                             <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onToggleVisibility(layer.id)}
-                                className="h-7 w-7 p-0"
-                                >
-                                {layer.visible ?
-                                    <Eye className="w-4 h-4 text-slate-300" /> :
-                                    <EyeOff className="w-4 h-4 text-slate-500" />
-                                }
-                            </Button>
-                        </CardContent>
-                    </Card>
+            <div className="space-y-2 pr-2">
+                {Object.keys(constructionLayers).map((key) => (
+                   <div key={key} className="flex items-center justify-between p-2 rounded-md bg-muted/30">
+                       <Label htmlFor={key} className="text-sm capitalize">
+                           {key.replace(/([A-Z])/g, ' $1').replace('Show ', '')}
+                       </Label>
+                       <Switch
+                            id={key}
+                            checked={constructionLayers[key as keyof typeof constructionLayers]}
+                            onCheckedChange={() => handleToggleLayer(key as keyof typeof constructionLayers)}
+                       />
+                   </div>
                 ))}
             </div>
         </ScrollArea>
