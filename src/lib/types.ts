@@ -145,6 +145,10 @@ export interface CharacterSculptSettings {
     nosePosition: number;
     eyeWidth: number;
     eyeSpacing: number;
+    waistSlim?: number;
+    legLength?: number;
+    hairVolume?: number;
+    hairLength?: number;
 }
 
 
@@ -208,6 +212,6 @@ export type UploadAssetInput = z.infer<typeof UploadAssetInputSchema>;
 export const UploadAssetOutputSchema = z.object({
   downloadURL: z.string().optional().describe('The public URL to access the uploaded file.'),
   gcsPath: z.string().optional().describe('The path to the file in Google Cloud Storage.'),
-  error: z.string().optional().describe('An error message if the upload failed.'),
+  error: z.string().optional().describe('An error message if the operation failed.'),
 });
 export type UploadAssetOutput = z.infer<typeof UploadAssetOutputSchema>;

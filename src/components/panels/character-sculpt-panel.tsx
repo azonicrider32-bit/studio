@@ -6,11 +6,12 @@ import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "../ui/button"
-import { Smile, Wand2, Bot } from "lucide-react"
+import { Smile, Wand2, Bot, PersonStanding, Wind } from "lucide-react"
 import { CharacterSculptSettings } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { handleApiError } from "@/lib/error-handling"
 import { generateFacialOverlay } from "@/ai/flows/generate-facial-overlay-flow"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs"
 
 interface CharacterSculptPanelProps {
   settings: CharacterSculptSettings;
@@ -63,12 +64,16 @@ export function CharacterSculptPanel({
     if (settings.nosePosition !== 0) changes.push(`${settings.nosePosition > 0 ? 'lower' : 'raise'} nose by ${Math.abs(settings.nosePosition)}%`);
     if (settings.eyeWidth !== 0) changes.push(`${settings.eyeWidth > 0 ? 'widen' : 'narrow'} eyes by ${Math.abs(settings.eyeWidth)}%`);
     if (settings.eyeSpacing !== 0) changes.push(`${settings.eyeSpacing > 0 ? 'increase' : 'decrease'} eye spacing by ${Math.abs(settings.eyeSpacing)}%`);
+    if (settings.waistSlim && settings.waistSlim !== 0) changes.push(`slim waist by ${Math.abs(settings.waistSlim)}%`);
+    if (settings.legLength && settings.legLength !== 0) changes.push(`${settings.legLength > 0 ? 'increase' : 'decrease'} leg length by ${Math.abs(settings.legLength)}%`);
+    if (settings.hairVolume && settings.hairVolume !== 0) changes.push(`${settings.hairVolume > 0 ? 'increase' : 'decrease'} hair volume by ${Math.abs(settings.hairVolume)}%`);
+    if (settings.hairLength && settings.hairLength !== 0) changes.push(`${settings.hairLength > 0 ? 'increase' : 'decrease'} hair length by ${Math.abs(settings.hairLength)}%`);
     
     if (changes.length === 0) {
         return "Slightly enhance the facial features in the selected area, preserving identity and photorealism.";
     }
 
-    return `Modify the face in the masked area according to the visual overlay and these instructions: ${changes.join(', ')}. Preserve identity, skin texture, lighting, and realistic anatomy. High detail, photorealistic.`;
+    return `Modify the character in the masked area according to the visual overlay and these instructions: ${changes.join(', ')}. Preserve identity, texture, lighting, and realistic anatomy. High detail, photorealistic.`;
   };
 
   const handleApplyClick = async () => {
@@ -122,6 +127,10 @@ export function CharacterSculptPanel({
         nosePosition: 0,
         eyeWidth: 0,
         eyeSpacing: 0,
+        waistSlim: 0,
+        legLength: 0,
+        hairVolume: 0,
+        hairLength: 0,
     });
     setOverlayImageUrl(imageUrl);
   }
@@ -159,43 +168,75 @@ export function CharacterSculptPanel({
             Character Sculpt
         </h3>
         <p className="text-sm text-muted-foreground">
-          Use sliders to morph facial features with AI precision.
+          Use sliders to morph features with AI precision.
         </p>
       </div>
       <Separator />
+
+      <Tabs defaultValue="face" className="flex-1 flex flex-col min-h-0">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="face"><Smile className="w-4 h-4 mr-2"/>Face</TabsTrigger>
+          <TabsTrigger value="body"><PersonStanding className="w-4 h-4 mr-2"/>Body</TabsTrigger>
+          <TabsTrigger value="hair"><Wind className="w-4 h-4 mr-2"/>Hair</TabsTrigger>
+        </TabsList>
+        <TabsContent value="face" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
+          <div className="aspect-square w-full bg-muted rounded-md border overflow-hidden">
+              <canvas ref={canvasRef} />
+          </div>
+
+          <Button onClick={handleGenerateOverlay} variant="outline" className="w-full" disabled={isAnalyzing}>
+              <Bot className="w-4 h-4 mr-2" />
+              {isAnalyzing ? "Analyzing Face..." : "Analyze & Generate Overlay"}
+          </Button>
+          <SliderControl 
+            label="Forehead Height"
+            value={settings.foreheadHeight}
+            onValueChange={(val) => onSettingsChange({ foreheadHeight: val })}
+          />
+          <SliderControl 
+            label="Nose Position"
+            value={settings.nosePosition}
+            onValueChange={(val) => onSettingsChange({ nosePosition: val })}
+          />
+          <SliderControl 
+            label="Eye Width"
+            value={settings.eyeWidth}
+            onValueChange={(val) => onSettingsChange({ eyeWidth: val })}
+          />
+          <SliderControl 
+            label="Eye Spacing"
+            value={settings.eyeSpacing}
+            onValueChange={(val) => onSettingsChange({ eyeSpacing: val })}
+          />
+        </TabsContent>
+        <TabsContent value="body" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
+            <div className="text-center text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">Body overlay and analysis coming soon.</div>
+            <SliderControl 
+                label="Waist Slimness"
+                value={settings.waistSlim || 0}
+                onValueChange={(val) => onSettingsChange({ waistSlim: val })}
+            />
+             <SliderControl 
+                label="Leg Length"
+                value={settings.legLength || 0}
+                onValueChange={(val) => onSettingsChange({ legLength: val })}
+            />
+        </TabsContent>
+        <TabsContent value="hair" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
+            <div className="text-center text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">Hair overlay and analysis coming soon.</div>
+            <SliderControl 
+                label="Hair Volume"
+                value={settings.hairVolume || 0}
+                onValueChange={(val) => onSettingsChange({ hairVolume: val })}
+            />
+             <SliderControl 
+                label="Hair Length"
+                value={settings.hairLength || 0}
+                onValueChange={(val) => onSettingsChange({ hairLength: val })}
+            />
+        </TabsContent>
+      </Tabs>
       
-       <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-        <div className="aspect-square w-full bg-muted rounded-md border overflow-hidden">
-            <canvas ref={canvasRef} />
-        </div>
-
-        <Button onClick={handleGenerateOverlay} variant="outline" className="w-full" disabled={isAnalyzing}>
-            <Bot className="w-4 h-4 mr-2" />
-            {isAnalyzing ? "Analyzing Face..." : "Analyze Face & Generate Overlay"}
-        </Button>
-
-        <SliderControl 
-          label="Forehead Height"
-          value={settings.foreheadHeight}
-          onValueChange={(val) => onSettingsChange({ foreheadHeight: val })}
-        />
-        <SliderControl 
-          label="Nose Position"
-          value={settings.nosePosition}
-          onValueChange={(val) => onSettingsChange({ nosePosition: val })}
-        />
-        <SliderControl 
-          label="Eye Width"
-          value={settings.eyeWidth}
-          onValueChange={(val) => onSettingsChange({ eyeWidth: val })}
-        />
-        <SliderControl 
-          label="Eye Spacing"
-          value={settings.eyeSpacing}
-          onValueChange={(val) => onSettingsChange({ eyeSpacing: val })}
-        />
-      </div>
-
        <Separator />
        <div className="space-y-2">
         <Button onClick={handleApplyClick} disabled={isGenerating || isAnalyzing} className="w-full">
