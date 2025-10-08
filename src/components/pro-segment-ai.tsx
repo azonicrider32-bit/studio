@@ -321,6 +321,8 @@ function ProSegmentAIContent() {
   const [customAiTools, setCustomAiTools] = React.useState<any[]>([]); // Using 'any' as CustomAiTool is not in types.ts
   const [editingTool, setEditingTool] = React.useState<any | null>(null);
   const previousToolRef = React.useRef<Tool>(activeTool);
+  
+  const [characterTargetPoint, setCharacterTargetPoint] = React.useState<{x:number, y:number} | null>(null);
 
 
   // State for Nano Banana Tool
@@ -460,6 +462,7 @@ function ProSegmentAIContent() {
 
   const [lassoSettings, setLassoSettings] = React.useState<LassoSettings>({
     drawMode: 'magic',
+    selectionMode: 'copy',
     useAiEnhancement: false,
     showMouseTrace: true,
     showAllMasks: true,
@@ -487,6 +490,7 @@ function ProSegmentAIContent() {
     }
   });
   const [magicWandSettings, setMagicWandSettings] = React.useState<MagicWandSettings>({
+    selectionMode: 'copy',
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     contiguous: true,
     useAiAssist: false,
@@ -515,6 +519,7 @@ function ProSegmentAIContent() {
     previewMode: 'real-time',
   });
   const [wandV2Settings, setWandV2Settings] = React.useState<MagicWandSettings>({
+    selectionMode: 'copy',
     tolerances: { r: 30, g: 30, b: 30, h: 10, s: 20, v: 20, l: 20, a: 10, b_lab: 10 },
     contiguous: true,
     useAiAssist: false,
@@ -543,6 +548,7 @@ function ProSegmentAIContent() {
     previewMode: 'real-time',
   });
   const [negativeMagicWandSettings, setNegativeMagicWandSettings] = React.useState<MagicWandSettings>({
+    selectionMode: 'copy',
     tolerances: { r: 10, g: 10, b: 10, h: 5, s: 10, v: 10, l: 10, a: 5, b_lab: 5 },
     contiguous: true,
     useAiAssist: false,
@@ -1069,7 +1075,7 @@ function ProSegmentAIContent() {
     }
 
     const maskDataUri = getSelectionMaskRef.current ? getSelectionMaskRef.current() : undefined;
-    if (!maskDataUri) {
+    if (!maskDataUri && activeTool !== 'character-sculpt') {
       toast({ variant: "destructive", title: "No selection made.", description: "Please use a selection tool to select an area to inpaint." })
       return
     }
@@ -1086,7 +1092,7 @@ function ProSegmentAIContent() {
     try {
       const result = await inpaintWithPrompt({
         photoDataUri: currentImageUrl,
-        maskDataUri: maskDataUri,
+        maskDataUri: maskDataUri || '',
         prompt: finalPrompt,
       })
       
@@ -1227,9 +1233,17 @@ function ProSegmentAIContent() {
       }
     }
   }
+  
+  const getCursorStyle = () => {
+    if (activeTool === 'character-sculpt') {
+      return 'crosshair'; // A simple crosshair for targeting
+    }
+    // ... other cursor logic
+    return 'default';
+  }
 
   return (
-    <div className="h-screen w-screen bg-background overflow-hidden relative">
+    <div className="h-screen w-screen bg-background overflow-hidden relative" style={{ cursor: getCursorStyle() }}>
       <header className="absolute top-0 left-0 right-0 h-12 flex items-center border-b border-border/50 px-4 z-40 bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <AuraColorWheel size={28} />
@@ -1425,6 +1439,8 @@ function ProSegmentAIContent() {
               globalSettings={globalSettings}
               measurePerformance={measurePerformance}
               wandV2Settings={wandV2Settings}
+              onCharacterTargetSet={setCharacterTargetPoint}
+              characterTargetPoint={characterTargetPoint}
               />
           </div>
       </main>
@@ -1477,6 +1493,8 @@ function ProSegmentAIContent() {
                 imageData={selectionEngineRef.current?.imageData ?? null}
                 layers={activeWorkspace.layers}
                 selectionMaskUri={getSelectionMaskRef.current?.()}
+                characterTargetPoint={characterTargetPoint}
+                setCharacterTargetPoint={setCharacterTargetPoint}
               />
             </div>
           </SidebarContent>
