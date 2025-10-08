@@ -66,6 +66,8 @@ interface ImageCanvasProps {
   globalSettings: GlobalSettings;
   measurePerformance: (op: () => void, tool: string, operation: string) => void;
   wandV2Settings: MagicWandSettings;
+  onCharacterTargetSet: (point: { x: number, y: number }) => void;
+  characterTargetPoint: { x: number, y: number } | null;
 }
 
 const HorizontalRuler = ({ width, zoom, panX }: { width: number, zoom: number, panX: number }) => {
@@ -204,6 +206,8 @@ export function ImageCanvas({
   globalSettings,
   measurePerformance,
   wandV2Settings,
+  onCharacterTargetSet,
+  characterTargetPoint
 }: ImageCanvasProps) {
   const image = PlaceHolderImages.find(img => img.imageUrl === imageUrl);
   const imageRef = React.useRef<HTMLImageElement>(null);
@@ -974,6 +978,12 @@ const drawLayers = React.useCallback(() => {
         onDragMouseDown(e);
         return;
     }
+    
+    if (activeTool === 'character-sculpt') {
+      onCharacterTargetSet(pos);
+      toast({title: "Character Target Set", description: "You can now generate the character sheet."});
+      return;
+    }
 
     if (!engine) return;
 
@@ -1238,6 +1248,7 @@ const drawLayers = React.useCallback(() => {
     if (activeTool === 'pan') return 'grab';
     if (activeTool === 'transform') return 'move';
     if (activeTool === 'clone' && isSampling) return 'crosshair';
+    if (activeTool === 'character-sculpt') return 'crosshair';
     if (activeTool === 'clone' && cloneSource) {
       const size = cloneStampSettings.brushSize * mainCanvasZoom;
       const cursorCanvas = document.createElement('canvas');
@@ -1336,14 +1347,3 @@ const drawLayers = React.useCallback(() => {
   );
 }
     
-
-
-
-
-
-
-
-
-
-
-  

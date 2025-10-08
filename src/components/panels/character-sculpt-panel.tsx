@@ -7,7 +7,7 @@ import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "../ui/button"
-import { Smile, Wand2, Bot, PersonStanding, Wind, Eye, Upload, ChevronRight } from "lucide-react"
+import { Smile, Wand2, Bot, PersonStanding, Wind, Eye, Upload, ChevronRight, View, PanelsTopBottom, UserSquare } from "lucide-react"
 import { CharacterSculptSettings, CharacterSheet } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { handleApiError } from "@/lib/error-handling"
@@ -17,6 +17,7 @@ import { executeCustomTool } from "@/ai/flows/custom-tool-flow"
 import { createCharacterSheet } from "@/ai/flows/create-character-sheet-flow"
 import { Card } from "../ui/card"
 import Image from "next/image"
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 
 interface CharacterSculptPanelProps {
   settings: CharacterSculptSettings;
@@ -38,7 +39,7 @@ const AssetThumbnail: React.FC<{ label: string, url: string | undefined, onSelec
                 <div className="w-full h-full bg-muted animate-pulse"></div>
             )}
         </div>
-        <p className="text-xs text-muted-foreground text-center capitalize truncate">{label}</p>
+        <p className="text-xs text-muted-foreground text-center capitalize truncate">{label.replace(/([A-Z])/g, ' $1')}</p>
     </div>
 );
 
@@ -57,6 +58,11 @@ export function CharacterSculptPanel({
   const [activePreview, setActivePreview] = React.useState<string | undefined>(undefined);
   const [overlayImage, setOverlayImage] = React.useState<string | null>(null);
   const { toast } = useToast();
+  
+  const [generationOptions, setGenerationOptions] = React.useState({
+      views: new Set(['front']),
+      body: 'face',
+  });
 
   const handleCharacterAnalysis = async () => {
       if (!imageUrl || !characterTargetPoint || !canvas) {
@@ -74,6 +80,7 @@ export function CharacterSculptPanel({
       }
 
       try {
+        // TODO: Pass generationOptions to the flow
         const result = await createCharacterSheet({
             photoDataUri: imageUrl,
             maskDataUri: hintMask,
@@ -171,11 +178,30 @@ export function CharacterSculptPanel({
   if (!characterSheet) {
     return (
         <div className="p-4 flex flex-col h-full items-center justify-center text-center">
-            <Smile className="w-12 h-12 text-muted-foreground mb-4"/>
-            <p className="text-sm text-muted-foreground mb-6">Click on a person in the image to set a target, then click below to start sculpting.</p>
-            <Button onClick={handleCharacterAnalysis} disabled={!characterTargetPoint || isAnalyzing}>
+            <p className="text-sm text-muted-foreground mb-4">Click on a person in the image to set a target, then configure generation options below.</p>
+            
+            <Card className="w-full p-4 space-y-4">
+                <div className="space-y-2">
+                    <Label>Views to Generate</Label>
+                    <ToggleGroup type="multiple" value={[...generationOptions.views]} onValueChange={(value) => setGenerationOptions(prev => ({...prev, views: new Set(value)}))} className="grid grid-cols-4 gap-2">
+                        <ToggleGroupItem value="front" aria-label="Front view"><View className="w-4 h-4"/></ToggleGroupItem>
+                        <ToggleGroupItem value="threeQuarter" aria-label="3/4 view"><UserSquare className="w-4 h-4"/></ToggleGroupItem>
+                        <ToggleGroupItem value="side" aria-label="Side view"><ChevronRight className="w-4 h-4"/></ToggleGroupItem>
+                        <ToggleGroupItem value="rear" aria-label="Rear view" disabled><PanelsTopBottom className="w-4 h-4"/></ToggleGroupItem>
+                    </ToggleGroup>
+                </div>
+                <div className="space-y-2">
+                    <Label>Body</Label>
+                     <ToggleGroup type="single" value={generationOptions.body} onValueChange={(value) => value && setGenerationOptions(prev => ({...prev, body: value}))} className="grid grid-cols-2 gap-2">
+                        <ToggleGroupItem value="face" aria-label="Face only">Face Only</ToggleGroupItem>
+                        <ToggleGroupItem value="full" aria-label="Full body">Full Body</ToggleGroupItem>
+                    </ToggleGroup>
+                </div>
+            </Card>
+
+            <Button onClick={handleCharacterAnalysis} disabled={!characterTargetPoint || isAnalyzing} className="mt-6 w-full">
                 <Bot className="w-4 h-4 mr-2"/>
-                {isAnalyzing ? "Analyzing..." : "Analyze Character"}
+                {isAnalyzing ? "Analyzing..." : "Generate Character"}
             </Button>
         </div>
     );
@@ -197,7 +223,7 @@ export function CharacterSculptPanel({
             </Button>
         </div>
       </div>
-      <Tabs defaultValue="face" className="flex-1 flex flex-col min-h-0">
+      <Tabs defaultValue="views" className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="views"><Eye className="w-4 h-4 mr-2"/>Views</TabsTrigger>
           <TabsTrigger value="face"><Smile className="w-4 h-4 mr-2"/>Face</TabsTrigger>

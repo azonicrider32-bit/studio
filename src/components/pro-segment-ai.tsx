@@ -1236,7 +1236,7 @@ function ProSegmentAIContent() {
   
   const getCursorStyle = () => {
     if (activeTool === 'character-sculpt') {
-      return 'crosshair'; // A simple crosshair for targeting
+      return 'crosshair';
     }
     // ... other cursor logic
     return 'default';
