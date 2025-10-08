@@ -40,7 +40,7 @@ The desired aspect ratio is: {{aspectRatio}}
 
 **Your response MUST be a single Markdown string and follow this exact structure:**
 
-## Step-by-Step Generation Plan: [User's Prompt Title-Cased]
+## Step-by-Step Generation Plan: {{prompt}}
 
 **Prompt:** {{prompt}}
 **Aspect Ratio:** {{aspectRatio}}
