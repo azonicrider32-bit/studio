@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion"
 import { Label } from "../ui/label"
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
+import { Separator } from "../ui/separator"
 
 interface VerticalToleranceSliderProps {
     id: keyof MagicWandSettings['tolerances'];
