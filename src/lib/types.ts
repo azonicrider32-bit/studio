@@ -1,8 +1,11 @@
 
 
 import { z } from 'zod';
+import { CreateCharacterSheetOutputSchema } from '@/ai/flows/create-character-sheet-flow';
 
 export type Tool = "magic-wand" | "wand-v2" | "lasso" | "brush" | "eraser" | "settings" | "clone" | "transform" | "pan" | "line" | "banana" | "blemish-remover" | "project" | "account" | "character-sculpt";
+
+export type CharacterSheet = z.infer<typeof CreateCharacterSheetOutputSchema>['characterSheet'];
 
 export interface AITool {
     id: string;
@@ -212,6 +215,6 @@ export type UploadAssetInput = z.infer<typeof UploadAssetInputSchema>;
 export const UploadAssetOutputSchema = z.object({
   downloadURL: z.string().optional().describe('The public URL to access the uploaded file.'),
   gcsPath: z.string().optional().describe('The path to the file in Google Cloud Storage.'),
-  error: z.string().optional().describe('An error message if the operation failed.'),
+  error: z.string().optional().describe('An error message if the upload failed.'),
 });
 export type UploadAssetOutput = z.infer<typeof UploadAssetOutputSchema>;

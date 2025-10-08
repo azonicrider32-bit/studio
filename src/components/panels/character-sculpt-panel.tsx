@@ -6,13 +6,16 @@ import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "../ui/button"
-import { Smile, Wand2, Bot, PersonStanding, Wind } from "lucide-react"
-import { CharacterSculptSettings } from "@/lib/types"
+import { Smile, Wand2, Bot, PersonStanding, Wind, Eye, Upload, ChevronRight } from "lucide-react"
+import { CharacterSculptSettings, CharacterSheet } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { handleApiError } from "@/lib/error-handling"
 import { generateFacialOverlay } from "@/ai/flows/generate-facial-overlay-flow"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs"
 import { executeCustomTool } from "@/ai/flows/custom-tool-flow"
+import { createCharacterSheet } from "@/ai/flows/create-character-sheet-flow"
+import { Card } from "../ui/card"
+import Image from "next/image"
 
 interface CharacterSculptPanelProps {
   settings: CharacterSculptSettings;
@@ -23,6 +26,19 @@ interface CharacterSculptPanelProps {
   selectionMaskUri: string | undefined;
 }
 
+const AssetThumbnail: React.FC<{ label: string, url: string | undefined, onSelect: () => void, isActive: boolean }> = ({ label, url, onSelect, isActive }) => (
+    <div className="space-y-1 cursor-pointer group" onClick={onSelect}>
+        <div className={`aspect-square rounded-md overflow-hidden border bg-muted hover:border-primary transition-all ring-2 ${isActive ? 'ring-primary' : 'ring-transparent'}`}>
+            {url ? (
+                <Image src={url} alt={label} width={80} height={80} className="object-cover w-full h-full transition-transform group-hover:scale-105" />
+            ) : (
+                <div className="w-full h-full bg-muted animate-pulse"></div>
+            )}
+        </div>
+        <p className="text-xs text-muted-foreground text-center capitalize truncate">{label}</p>
+    </div>
+);
+
 export function CharacterSculptPanel({
   settings,
   onSettingsChange,
@@ -31,97 +47,40 @@ export function CharacterSculptPanel({
   imageUrl,
   selectionMaskUri,
 }: CharacterSculptPanelProps) {
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const [overlayImageUrl, setOverlayImageUrl] = React.useState<string | undefined>(imageUrl);
+  const [characterSheet, setCharacterSheet] = React.useState<CharacterSheet | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [activePreview, setActivePreview] = React.useState<string | undefined>(undefined);
   const { toast } = useToast();
-  
-  React.useEffect(() => {
-    setOverlayImageUrl(imageUrl);
-  }, [imageUrl]);
 
-  React.useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!ctx || !overlayImageUrl) return;
-
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = overlayImageUrl;
-    img.onload = () => {
-        canvas.width = 256;
-        canvas.height = 256;
-        ctx.clearRect(0, 0, 256, 256);
-        ctx.drawImage(img, 0, 0, 256, 256);
-
-        // This part is now handled by the AI, but we could add client-side previews too.
-        // For now, we rely on the AI-generated overlay.
-    };
-  }, [settings, overlayImageUrl]);
-
-  const generateMorphPrompt = () => {
-    const changes: string[] = [];
-    if (settings.foreheadHeight !== 0) changes.push(`${settings.foreheadHeight > 0 ? 'increase' : 'decrease'} forehead height by ${Math.abs(settings.foreheadHeight)}%`);
-    if (settings.nosePosition !== 0) changes.push(`${settings.nosePosition > 0 ? 'lower' : 'raise'} nose by ${Math.abs(settings.nosePosition)}%`);
-    if (settings.eyeWidth !== 0) changes.push(`${settings.eyeWidth > 0 ? 'widen' : 'narrow'} eyes by ${Math.abs(settings.eyeWidth)}%`);
-    if (settings.eyeSpacing !== 0) changes.push(`${settings.eyeSpacing > 0 ? 'increase' : 'decrease'} eye spacing by ${Math.abs(settings.eyeSpacing)}%`);
-    if (settings.waistSlim && settings.waistSlim !== 0) changes.push(`slim waist by ${Math.abs(settings.waistSlim)}%`);
-    if (settings.legLength && settings.legLength !== 0) changes.push(`${settings.legLength > 0 ? 'increase' : 'decrease'} leg length by ${Math.abs(settings.legLength)}%`);
-    if (settings.hairVolume && settings.hairVolume !== 0) changes.push(`${settings.hairVolume > 0 ? 'increase' : 'decrease'} hair volume by ${Math.abs(settings.hairVolume)}%`);
-    if (settings.hairLength && settings.hairLength !== 0) changes.push(`${settings.hairLength > 0 ? 'increase' : 'decrease'} hair length by ${Math.abs(settings.hairLength)}%`);
-    
-    if (changes.length === 0) {
-        return "Slightly enhance the facial features in the selected area, preserving identity and photorealism.";
-    }
-
-    return `Modify the character in the masked area according to the visual overlay and these instructions: ${changes.join(', ')}. Preserve identity, texture, lighting, and realistic anatomy. High detail, photorealistic.`;
-  };
-
-  const handleApplyClick = async () => {
-    if (!imageUrl || !selectionMaskUri) {
-        toast({ title: "Error", description: "An image and a selection are required.", variant: "destructive"});
+  const handleCharacterAnalysis = async () => {
+      if (!imageUrl || !selectionMaskUri) {
+        toast({ title: 'Missing Selection', description: 'Please select a character on the canvas first.', variant: 'destructive'});
         return;
-    }
-    
-    const prompt = generateMorphPrompt();
-    const overlayUri = canvasRef.current?.toDataURL();
-
-    if (!overlayUri) {
-         toast({ title: "Error", description: "Could not generate overlay.", variant: "destructive"});
-        return;
-    }
-    
-    onApply(prompt, overlayUri);
-  };
-
-  const handleGenerateOverlay = async () => {
-    if (!imageUrl) {
-      toast({ title: "No Image", description: "Please select an image first.", variant: "destructive" });
-      return;
-    }
-    setIsAnalyzing(true);
-    toast({ title: "AI is analyzing...", description: "Generating facial landmarks overlay." });
-
-    try {
-      const result = await generateFacialOverlay({
-        photoDataUri: imageUrl,
-        overlayTemplatePrompt: "Draw a grid over the forehead, a vertical line down the nose, horizontal lines through the pupils, and lines indicating jaw width. Use bright green lines.",
-      });
-
-      if (result.error || !result.overlayImageUri) {
-        throw new Error(result.error || "Failed to generate overlay.");
       }
-      
-      setOverlayImageUrl(result.overlayImageUri);
-      toast({ title: "Analysis Complete", description: "Facial overlay has been generated." });
+      setIsAnalyzing(true);
+      toast({ title: "Analyzing Character...", description: "The AI is creating a character sheet. This may take a moment." });
 
-    } catch (error) {
-      handleApiError(error, toast, { title: "Overlay Generation Failed" });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-  
+      try {
+        const result = await createCharacterSheet({
+            photoDataUri: imageUrl,
+            maskDataUri: selectionMaskUri,
+        });
+
+        if (result.error || !result.characterSheet) {
+            throw new Error(result.error || "Failed to generate character sheet.");
+        }
+        
+        setCharacterSheet(result.characterSheet);
+        setActivePreview(result.characterSheet.views?.front);
+        toast({ title: "Character Analysis Complete!", description: `Generated a sheet for ${result.characterSheet.name}.` });
+
+      } catch(error) {
+         handleApiError(error, toast, { title: "Character Analysis Failed" });
+      } finally {
+        setIsAnalyzing(false);
+      }
+  }
+
   const handleReset = () => {
     onSettingsChange({
         foreheadHeight: 0,
@@ -133,7 +92,9 @@ export function CharacterSculptPanel({
         hairVolume: 0,
         hairLength: 0,
     });
-    setOverlayImageUrl(imageUrl);
+    if (characterSheet) {
+        setActivePreview(characterSheet.views?.front);
+    }
   }
 
   const SliderControl = ({
@@ -160,24 +121,60 @@ export function CharacterSculptPanel({
       />
     </div>
   )
+  
+  if (!characterSheet) {
+    return (
+        <div className="p-4 flex flex-col h-full items-center justify-center text-center">
+            <Smile className="w-12 h-12 text-muted-foreground mb-4"/>
+            <h4 className="font-semibold text-lg">Character Sculptor</h4>
+            <p className="text-sm text-muted-foreground mb-6">Select a person on the canvas using the Lasso or Magic Wand tool, then click below to begin.</p>
+            <Button onClick={handleCharacterAnalysis} disabled={!selectionMaskUri || isAnalyzing}>
+                <Bot className="w-4 h-4 mr-2"/>
+                {isAnalyzing ? "Analyzing..." : "Analyze Selected Character"}
+            </Button>
+        </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-4 flex flex-col h-full">
+      <div className="flex items-center gap-3">
+        <div className="w-20 h-20 rounded-md overflow-hidden border bg-muted flex-shrink-0">
+            {activePreview && <Image src={activePreview} alt="Character Preview" width={80} height={80} className="object-cover w-full h-full" />}
+        </div>
+        <div className="space-y-1">
+            <h3 className="font-bold text-lg">{characterSheet.name}</h3>
+            <p className="text-xs text-muted-foreground">{characterSheet.description}</p>
+        </div>
+      </div>
       <Tabs defaultValue="face" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="views"><Eye className="w-4 h-4 mr-2"/>Views</TabsTrigger>
           <TabsTrigger value="face"><Smile className="w-4 h-4 mr-2"/>Face</TabsTrigger>
           <TabsTrigger value="body"><PersonStanding className="w-4 h-4 mr-2"/>Body</TabsTrigger>
           <TabsTrigger value="hair"><Wind className="w-4 h-4 mr-2"/>Hair</TabsTrigger>
         </TabsList>
+        <TabsContent value="views" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
+            <h4 className="font-semibold text-sm">Character Views</h4>
+            <div className="grid grid-cols-4 gap-2">
+                {characterSheet.views && Object.entries(characterSheet.views).map(([key, url]) => (
+                    url && <AssetThumbnail key={key} label={key} url={url} onSelect={() => setActivePreview(url)} isActive={activePreview === url}/>
+                ))}
+            </div>
+             <h4 className="font-semibold text-sm">Expressions</h4>
+            <div className="grid grid-cols-4 gap-2">
+                {characterSheet.expressions && Object.entries(characterSheet.expressions).map(([key, url]) => (
+                    url && <AssetThumbnail key={key} label={key} url={url} onSelect={() => setActivePreview(url)} isActive={activePreview === url}/>
+                ))}
+            </div>
+             <h4 className="font-semibold text-sm">Outfits</h4>
+            <div className="grid grid-cols-4 gap-2">
+                {characterSheet.outfits && Object.entries(characterSheet.outfits).map(([key, url]) => (
+                    url && <AssetThumbnail key={key} label={key} url={url} onSelect={() => setActivePreview(url)} isActive={activePreview === url}/>
+                ))}
+            </div>
+        </TabsContent>
         <TabsContent value="face" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
-          <div className="aspect-square w-full bg-muted rounded-md border overflow-hidden">
-              <canvas ref={canvasRef} />
-          </div>
-
-          <Button onClick={handleGenerateOverlay} variant="outline" className="w-full" disabled={isAnalyzing}>
-              <Bot className="w-4 h-4 mr-2" />
-              {isAnalyzing ? "Analyzing Face..." : "Analyze & Generate Overlay"}
-          </Button>
           <SliderControl 
             label="Forehead Height"
             value={settings.foreheadHeight}
@@ -200,7 +197,7 @@ export function CharacterSculptPanel({
           />
         </TabsContent>
         <TabsContent value="body" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
-            <div className="text-center text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">Body overlay and analysis coming soon.</div>
+            <div className="text-center text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">Body sculpting tools.</div>
             <SliderControl 
                 label="Waist Slimness"
                 value={settings.waistSlim || 0}
@@ -213,7 +210,7 @@ export function CharacterSculptPanel({
             />
         </TabsContent>
         <TabsContent value="hair" className="flex-1 overflow-y-auto pr-2 mt-4 space-y-4 no-scrollbar">
-            <div className="text-center text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">Hair overlay and analysis coming soon.</div>
+            <div className="text-center text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">Hair sculpting tools.</div>
             <SliderControl 
                 label="Hair Volume"
                 value={settings.hairVolume || 0}
@@ -229,7 +226,7 @@ export function CharacterSculptPanel({
       
        <Separator />
        <div className="space-y-2">
-        <Button onClick={handleApplyClick} disabled={isGenerating || isAnalyzing} className="w-full">
+        <Button onClick={() => {}} disabled={isGenerating || isAnalyzing} className="w-full">
             <Wand2 className="w-4 h-4 mr-2"/>
             {isGenerating ? 'Applying...' : 'Apply Morph'}
         </Button>
@@ -237,6 +234,15 @@ export function CharacterSculptPanel({
             Reset Sliders
         </Button>
        </div>
+       <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   )
 }

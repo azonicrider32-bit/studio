@@ -13,3 +13,4 @@ import '@/ai/flows/text-to-speech-flow.ts';
 import '@/ai/flows/summarize-app-event.ts';
 import '@/ai/flows/custom-tool-flow.ts';
 import '@/ai/flows/generate-facial-overlay-flow.ts';
+import '@/ai/flows/create-character-sheet-flow.ts';
