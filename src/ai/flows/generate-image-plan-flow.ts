@@ -1,9 +1,11 @@
+
 'use server';
 
 /**
  * @fileOverview A Genkit flow for generating a detailed, multi-step image generation plan from a simple user prompt.
+ * This flow is now multimodal and can analyze a provided image for additional context.
  *
- * - generateImagePlan - A function that takes a short user prompt and returns a detailed generation plan.
+ * - generateImagePlan - A function that takes a short user prompt and an optional image and returns a detailed generation plan.
  * - GenerateImagePlanInputSchema - The input type for the function.
  * - GenerateImagePlanOutputSchema - The output type for the function.
  */
@@ -13,6 +15,7 @@ import { z } from 'zod';
 
 export const GenerateImagePlanInputSchema = z.object({
   prompt: z.string().describe("The user's short, initial prompt (e.g., 'motoko kusanagi')."),
+  imageDataUri: z.string().optional().describe("An optional source image to analyze for context, as a data URI."),
   aspectRatio: z.string().optional().default('1:1').describe("The desired aspect ratio for the final image."),
 });
 export type GenerateImagePlanInput = z.infer<typeof GenerateImagePlanInputSchema>;
@@ -33,7 +36,14 @@ const prompt = ai.definePrompt({
   output: { schema: GenerateImagePlanOutputSchema },
   prompt: `You are an expert creative director and prompt engineer for an advanced AI image generation model.
 Your task is to take a user's simple prompt and expand it into a detailed, professional, 3-step generation plan.
-This plan, which you will call "Generation Plan (GoT)", should be structured, easy to follow, and provide the AI with clear instructions for each stage of image creation.
+
+{{#if imageDataUri}}
+**First, perform a detailed analysis of the provided source image.** Identify the main subject, style, composition, lighting, and color palette.
+Use this analysis to inform the generation plan, ensuring the new elements blend seamlessly or purposefully contrast with the existing content.
+
+**Source Image for Analysis:**
+{{media url=imageDataUri}}
+{{/if}}
 
 The user's prompt is: "{{prompt}}"
 The desired aspect ratio is: {{aspectRatio}}
@@ -44,7 +54,9 @@ The desired aspect ratio is: {{aspectRatio}}
 
 **Prompt:** {{prompt}}
 **Aspect Ratio:** {{aspectRatio}}
-
+{{#if imageDataUri}}
+**Image Analysis Summary:** [Provide a one-sentence summary of your image analysis here.]
+{{/if}}
 ---
 
 ### Step 1: Establish Core Design & Pose
@@ -52,7 +64,7 @@ The desired aspect ratio is: {{aspectRatio}}
 **Purpose:** To lay down the fundamental character model, pose, and overall composition.
 
 **Details:**
-*   **Structure:** [Describe the main subject's pose, framing (e.g., full body, portrait), and placement in the frame.]
+*   **Structure:** [Describe the main subject's pose, framing (e.g., full body, portrait), and placement in the frame. If an image was provided, describe how the new element integrates with the existing composition.]
 *   **Core Features:** [Describe the most important, non-negotiable features of the subject. e.g., for a character, their iconic hair, face structure, or primary outfit.]
 *   **Composition:** [Describe the overall layout and how the subject fits into the scene.]
 
@@ -67,12 +79,12 @@ The desired aspect ratio is: {{aspectRatio}}
 
 **Details:**
 *   **Refinement:** [Describe specific details to add, e.g., texture on clothing, reflections, secondary features.]
-*   **Background:** [Describe the environment behind the subject. Should it be detailed or abstract? What elements should be present?]
-*   **Lighting:** [Describe the lighting setup. e.g., "dramatic, directional lighting from off-camera," "soft, ambient light."]
-*   **Color Palette:** [Describe the dominant colors for the subject and the background.]
+*   **Background:** [Describe the environment behind the subject. Should it be detailed or abstract? What elements should be present? If an image was provided, describe how the background should be modified or extended.]
+*   **Lighting:** [Describe the lighting setup. e.g., "dramatic, directional lighting from off-camera," "soft, ambient light." Match the lighting from the source image if one was provided.]
+*   **Color Palette:** [Describe the dominant colors for the subject and the background. Harmonize with the source image's palette if provided.]
 
 **Blends:**
-*   [List of 5-7 comma-separated keywords for refining details and atmosphere, e.g., "Intricate details, glowing accents, neon cityscape background..."]
+*   [List of 5-7 comma-separated keywords for refining details and atmosphere, e.g., "Intricate details, glowing accents on armor, neon cityscape background..."]
 
 ---
 
