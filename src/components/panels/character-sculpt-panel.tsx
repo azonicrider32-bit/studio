@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { handleApiError } from "@/lib/error-handling"
 import { generateFacialOverlay } from "@/ai/flows/generate-facial-overlay-flow"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs"
+import { executeCustomTool } from "@/ai/flows/custom-tool-flow"
 
 interface CharacterSculptPanelProps {
   settings: CharacterSculptSettings;
@@ -162,17 +163,6 @@ export function CharacterSculptPanel({
 
   return (
     <div className="p-4 space-y-4 flex flex-col h-full">
-      <div className="space-y-2">
-        <h3 className="font-headline text-lg flex items-center gap-2">
-            <Smile className="w-5 h-5"/>
-            Character Sculpt
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Use sliders to morph features with AI precision.
-        </p>
-      </div>
-      <Separator />
-
       <Tabs defaultValue="face" className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="face"><Smile className="w-4 h-4 mr-2"/>Face</TabsTrigger>
